@@ -1,0 +1,1023 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+    background: #0a0a0a;
+    min-height: 100vh;
+    color: #e4e4e7;
+    overflow-x: auto;
+    position: relative;
+    min-width: 800px;
+}
+
+/* Grille subtile en arrière-plan */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+        linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+    background-size: 80px 80px;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Header */
+.header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 1.5rem 2.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 100;
+    background: rgba(10, 10, 10, 0.6);
+    backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.logo {
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: #fafafa;
+    cursor: pointer;
+}
+
+.back-btn {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fafafa;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.back-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-1px);
+}
+
+/* Container principal */
+.main-container {
+    min-height: 100vh;
+    padding: 8rem 2rem 4rem;
+    position: relative;
+    z-index: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+    min-width: 800px;
+}
+
+/* Informations de l'anime */
+.anime-info {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 3rem;
+    align-items: flex-start;
+}
+
+.anime-poster {
+    width: 300px;
+    height: 400px;
+    object-fit: cover;
+    border-radius: 12px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    flex-shrink: 0;
+}
+
+.anime-details {
+    flex: 1;
+    padding: 1rem 0;
+}
+
+.anime-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: #fafafa;
+    line-height: 1.2;
+}
+
+.anime-subtitle {
+    font-size: 1.2rem;
+    color: #a1a1aa;
+    margin-bottom: 1rem;
+}
+
+.anime-native {
+    font-size: 1rem;
+    color: #71717a;
+    margin-bottom: 1.5rem;
+}
+
+.anime-format {
+    display: inline-block;
+    background: rgba(74, 222, 128, 0.1);
+    color: #4ade80;
+    padding: 0.3rem 0.8rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    margin-bottom: 1.5rem;
+}
+
+.anime-synopsis {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #d4d4d8;
+    margin-bottom: 2rem;
+}
+
+/* Section des saisons */
+.seasons-section {
+    margin-top: 2rem;
+}
+
+.seasons-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    color: #fafafa;
+}
+
+.seasons-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.season-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    padding: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.season-card:hover {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.12);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.season-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.season-card:hover::before {
+    opacity: 1;
+}
+
+.season-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #fafafa;
+    margin-bottom: 0.5rem;
+}
+
+.season-info {
+    font-size: 0.9rem;
+    color: #a1a1aa;
+}
+
+/* Loading */
+.loading {
+    text-align: center;
+    padding: 3rem;
+    color: #71717a;
+    font-size: 1rem;
+}
+
+.loading-spinner {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    border-top-color: #6366f1;
+    animation: spin 1s ease-in-out infinite;
+    margin-bottom: 1rem;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Error */
+.error {
+    text-align: center;
+    padding: 3rem;
+    color: #ef4444;
+}
+
+.error-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.7;
+}
+
+/* Chibis flottants (réutilisés de la page principale) */
+.floating-chibi {
+    position: fixed;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+    transition: all 0.3s ease;
+}
+
+.floating-chibi img {
+    width: 50px;
+    height: 50px;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+}
+
+.chibi-float-1 {
+    animation: float1 8s ease-in-out infinite;
+}
+
+.chibi-float-2 {
+    animation: float2 10s ease-in-out infinite;
+}
+
+.chibi-float-3 {
+    animation: float3 12s ease-in-out infinite;
+}
+
+.chibi-float-4 {
+    animation: float4 9s ease-in-out infinite;
+}
+
+@keyframes float1 {
+    0%, 100% { transform: translateY(0px) rotate(0deg) scale(1); opacity: 0.3; }
+    25% { transform: translateY(-15px) rotate(3deg) scale(1.05); opacity: 0.5; }
+    50% { transform: translateY(-8px) rotate(-2deg) scale(0.95); opacity: 0.4; }
+    75% { transform: translateY(-20px) rotate(1deg) scale(1.02); opacity: 0.45; }
+}
+
+@keyframes float2 {
+    0%, 100% { transform: translateY(0px) rotate(0deg) scale(1); opacity: 0.2; }
+    33% { transform: translateY(-18px) rotate(-3deg) scale(1.1); opacity: 0.6; }
+    66% { transform: translateY(-10px) rotate(4deg) scale(0.9); opacity: 0.3; }
+}
+
+@keyframes float3 {
+    0%, 100% { transform: translateY(0px) rotate(0deg) scale(1); opacity: 0.4; }
+    20% { transform: translateY(-12px) rotate(2deg) scale(1.05); opacity: 0.5; }
+    40% { transform: translateY(-6px) rotate(-1deg) scale(0.95); opacity: 0.3; }
+    60% { transform: translateY(-20px) rotate(3deg) scale(1.08); opacity: 0.45; }
+    80% { transform: translateY(-8px) rotate(-1deg) scale(0.98); opacity: 0.35; }
+}
+
+@keyframes float4 {
+    0%, 100% { transform: translateY(0px) rotate(0deg) scale(1); opacity: 0.3; }
+    30% { transform: translateY(-16px) rotate(-4deg) scale(1.05); opacity: 0.6; }
+    60% { transform: translateY(-4px) rotate(2deg) scale(0.92); opacity: 0.25; }
+    90% { transform: translateY(-18px) rotate(-1deg) scale(1.02); opacity: 0.4; }
+}
+
+/* Section des épisodes */
+.episodes-section {
+    margin-top: 2rem;
+}
+
+.episodes-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    color: #fafafa;
+}
+
+.sources-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.source-tab {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #a1a1aa;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.source-tab:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #fafafa;
+}
+
+.source-tab.active {
+    background: rgba(99, 102, 241, 0.2);
+    border-color: rgba(99, 102, 241, 0.4);
+    color: #6366f1;
+}
+
+/* Affichage Netflix pour les épisodes */
+.episodes-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.episode-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem 0;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    min-height: 160px;
+}
+
+.episode-item:hover {
+    background: rgba(255, 255, 255, 0.02);
+    transform: translateX(8px);
+}
+
+.episode-item:last-child {
+    border-bottom: none;
+}
+
+.episode-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #fafafa;
+    min-width: 80px;
+    text-align: center;
+    margin-right: 1.5rem;
+}
+
+.episode-thumbnail {
+    width: 240px;
+    height: 135px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-right: 1.5rem;
+    flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.episode-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.episode-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #fafafa;
+    margin-bottom: 0.5rem;
+    line-height: 1.3;
+}
+
+.episode-description {
+    font-size: 0.9rem;
+    color: #a1a1aa;
+    line-height: 1.4;
+    margin-bottom: 0.5rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.episode-meta {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 0.8rem;
+    color: #71717a;
+}
+
+.episode-duration {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.episode-rating {
+    background: rgba(74, 222, 128, 0.1);
+    color: #4ade80;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.episode-airdate {
+    font-weight: 500;
+}
+
+.episode-source {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: rgba(0, 0, 0, 0.7);
+    color: #fafafa;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 500;
+}
+
+.back-to-seasons {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fafafa;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.back-to-seasons:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-1px);
+}
+
+/* Sélecteur de langue */
+.language-selector {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.language-label {
+    font-size: 0.9rem;
+    color: #a1a1aa;
+    font-weight: 500;
+}
+
+.language-tabs {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.language-tab {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #a1a1aa;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.language-tab:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #fafafa;
+}
+
+.language-tab.active {
+    background: rgba(99, 102, 241, 0.2);
+    border-color: rgba(99, 102, 241, 0.4);
+    color: #6366f1;
+}
+
+.episodes-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+/* Responsive */
+@media (min-width: 1400px) {
+    .episode-thumbnail {
+        width: 280px;
+        height: 157px;
+    }
+    
+    .episode-number {
+        font-size: 2.8rem;
+        min-width: 90px;
+    }
+}
+
+@media (max-width: 1200px) {
+    .episode-thumbnail {
+        width: 200px;
+        height: 112px;
+    }
+    
+    .episode-number {
+        font-size: 2.2rem;
+        min-width: 70px;
+    }
+}
+
+@media (max-width: 992px) {
+    .episode-thumbnail {
+        width: 180px;
+        height: 101px;
+    }
+    
+    .episode-number {
+        font-size: 2rem;
+        min-width: 60px;
+    }
+    
+    .episode-content {
+        padding-right: 1rem;
+    }
+}
+
+@media (max-width: 799px) {
+    .anime-info {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .anime-poster {
+        width: 200px;
+        height: 280px;
+    }
+
+    .anime-title {
+        font-size: 2rem;
+    }
+
+    .seasons-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .episode-item {
+        flex-direction: column;
+        align-items: flex-start;
+        text-align: left;
+        padding: 1.5rem 0;
+    }
+
+    .episode-number {
+        font-size: 1.8rem;
+        margin-bottom: 0.5rem;
+        align-self: flex-start;
+    }
+
+    .episode-thumbnail {
+        width: 100%;
+        height: 200px;
+        margin-bottom: 1rem;
+        margin-right: 0;
+    }
+
+    .episode-meta {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .sources-tabs {
+        justify-content: center;
+    }
+
+    .episodes-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .language-selector {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .floating-chibi img {
+        width: 35px;
+        height: 35px;
+    }
+}
+
+@media (max-width: 600px) {
+    .episode-item {
+        padding: 1rem 0;
+    }
+
+    .episode-thumbnail {
+        height: 160px;
+    }
+
+    .episode-number {
+        font-size: 1.5rem;
+    }
+
+    .episode-title {
+        font-size: 1rem;
+    }
+
+    .episode-description {
+        font-size: 0.85rem;
+    }
+
+    .episode-meta {
+        font-size: 0.75rem;
+    }
+}
+
+/* Styles pour l'extraction de vidéo */
+.video-extraction-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(10px);
+}
+
+.video-extraction-content {
+    background: rgba(10, 10, 10, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 2rem;
+    max-width: 600px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+.extraction-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #fafafa;
+    margin-bottom: 1rem;
+}
+
+.extraction-status {
+    font-size: 1rem;
+    color: #a1a1aa;
+    margin-bottom: 1.5rem;
+}
+
+.extraction-url {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+    word-break: break-all;
+    font-family: monospace;
+    font-size: 0.9rem;
+    color: #4ade80;
+}
+
+.extraction-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 1.5rem;
+}
+
+.extraction-btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+}
+
+.extraction-btn-primary {
+    background: #6366f1;
+    color: white;
+}
+
+.extraction-btn-primary:hover {
+    background: #5856eb;
+    transform: translateY(-1px);
+}
+
+.extraction-btn-secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: #a1a1aa;
+}
+
+.extraction-btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fafafa;
+}
+
+.extraction-spinner {
+    display: inline-block;
+    width: 30px;
+    height: 30px;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    border-top-color: #6366f1;
+    animation: spin 1s ease-in-out infinite;
+    margin-right: 0.5rem;
+}
+
+.extraction-success {
+    color: #4ade80;
+}
+
+.extraction-error {
+    color: #ef4444;
+}
+
+/* Styles du player vidéo */
+.video-player-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.9);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    backdrop-filter: blur(10px);
+}
+
+.video-player-modal.active {
+    display: flex;
+}
+
+.video-player-container {
+    width: 80%;
+    max-width: 1000px;
+    height: 60%;
+    max-height: 70vh;
+    background: #000;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+}
+
+.video-player-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    background: rgba(0, 0, 0, 0.8);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    flex-shrink: 0;
+}
+
+.video-player-title {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.video-player-title span:first-child {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #fafafa;
+}
+
+.video-player-anime {
+    font-size: 0.9rem;
+    color: #a1a1aa;
+}
+
+.video-player-close {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 6px;
+    padding: 0.5rem;
+    color: #fafafa;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.video-player-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.video-player-wrapper {
+    position: relative;
+    width: 100%;
+    flex: 1;
+    background: #000;
+    overflow: hidden;
+}
+
+.plyr-video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+/* Styles Plyr responsive */
+.plyr {
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.plyr__video-wrapper {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.plyr__video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+/* Responsive Plyr */
+@media (max-width: 768px) {
+    .plyr {
+        font-size: 14px;
+    }
+    
+    .plyr__controls {
+        padding: 0.5rem;
+    }
+    
+    .plyr__control {
+        padding: 0.5rem;
+    }
+    
+    .plyr__progress {
+        height: 3px;
+    }
+}
+
+@media (max-width: 480px) {
+    .plyr {
+        font-size: 12px;
+    }
+    
+    .plyr__controls {
+        padding: 0.25rem;
+    }
+    
+    .plyr__control {
+        padding: 0.25rem;
+    }
+    
+    .plyr__control--overlaid {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .plyr__progress {
+        height: 2px;
+    }
+    
+    .plyr__time {
+        font-size: 11px;
+    }
+}
+
+/* Force Plyr à être responsive */
+.plyr--video {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+}
+
+.plyr__poster {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain !important;
+}
+
+/* Navigation épisodes */
+.episode-navigation {
+    display: flex;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    background: rgba(0, 0, 0, 0.8);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    flex-shrink: 0;
+}
+
+.nav-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem;
+    color: #fafafa;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.nav-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-1px);
+}
+
+.nav-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.nav-btn:disabled:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: none;
+}
+
+/* Responsive pour le conteneur */
+@media (max-width: 768px) {
+    .video-player-container {
+        width: 90%;
+        height: 70%;
+        max-height: 60vh;
+    }
+    
+    .video-player-header {
+        padding: 0.75rem 1rem;
+    }
+    
+    .episode-navigation {
+        padding: 0.75rem 1rem;
+    }
+    
+    .nav-btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .video-player-container {
+        width: 95%;
+        height: 60%;
+        max-height: 50vh;
+    }
+    
+    .video-player-title span:first-child {
+        font-size: 1rem;
+    }
+    
+    .video-player-anime {
+        font-size: 0.8rem;
+    }
+    
+    .nav-btn {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.75rem;
+    }
+}

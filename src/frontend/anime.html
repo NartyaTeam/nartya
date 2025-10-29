@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AnimeStream - Détails</title>
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="styles/anime.css">
+
+    <!-- Plyr CSS -->
+    <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+</head>
+<body>
+    <div class="header">
+        <div class="logo" onclick="goHome()">AnimeStream</div>
+        <button class="back-btn" onclick="goHome()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            Retour
+        </button>
+    </div>
+
+    <div class="main-container">
+        <div id="animeContent">
+            <div class="loading">
+                <div class="loading-spinner"></div>
+                <div>Chargement des informations de l'anime...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Player vidéo -->
+    <div class="video-player-modal" id="videoPlayerModal">
+        <div class="video-player-container">
+            <div class="video-player-header">
+                <div class="video-player-title">
+                    <span id="playerEpisodeTitle">Épisode 1</span>
+                    <span class="video-player-anime" id="playerAnimeTitle">Anime Title</span>
+                </div>
+                <button class="video-player-close" onclick="closeVideoPlayer()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="video-player-wrapper">
+                <video id="videoPlayer" class="plyr-video" preload="metadata" playsinline>
+                    <source id="videoSource" src="" type="video/mp4">
+                    Votre navigateur ne supporte pas la lecture vidéo HTML5.
+                </video>
+            </div>
+            
+            <!-- Navigation épisodes -->
+            <div class="episode-navigation">
+                <button class="nav-btn nav-prev" id="prevEpisodeBtn" onclick="navigateEpisode(-1)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 12H5M12 19l-7-7 7-7"/>
+                    </svg>
+                    Précédent
+                </button>
+                <button class="nav-btn nav-next" id="nextEpisodeBtn" onclick="navigateEpisode(1)">
+                    Suivant
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentAnime = null;
+        let currentSeason = null;
+        let currentEpisodes = null;
+        let currentLanguage = 'vostfr'; // Par défaut VOSTFR
+        let currentSource = null;
+        let episodeMetadata = null;
+
+        // Fonction pour retourner à la page principale
+        function goHome() {
+            window.location.href = '../frontend/index.html';
+        }
+
+        // Fonction pour charger les informations de l'anime
+        async function loadAnimeInfo() {
+            try {
+                // Récupérer l'ID de l'anime depuis l'URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const animeId = urlParams.get('id');
+                
+                if (!animeId) {
+                    throw new Error('ID de l\'anime non fourni');
+                }
+
+                // Charger les données de l'anime depuis le fichier JSON
+                const animes = await window.electronAPI.searchLocalAnimes('');
+                const anime = animes.results.find(a => a.slug === animeId || a.id === animeId);
+                
+                if (!anime) {
+                    throw new Error('Anime non trouvé');
+                }
+
+                currentAnime = anime;
+                displayAnimeInfo(anime);
+
+                // Charger les saisons
+                await loadSeasons(animeId);
+
+            } catch (error) {
+                console.error('Erreur lors du chargement:', error);
+                displayError(error.message);
+            }
+        }
+
+        // Fonction pour afficher les informations de l'anime
+        function displayAnimeInfo(anime) {
+            const title = anime.title?.romaji || anime.title?.english || anime.title?.native || 'Titre inconnu';
+            const englishTitle = anime.title?.english || '';
+            const nativeTitle = anime.title?.native || '';
+            const image = anime.coverImage?.large || anime.coverImage?.medium || '';
+            const format = anime.format || '';
+            const synopsis = anime.synopsis || 'Aucune description disponible.';
+
+            document.getElementById('animeContent').innerHTML = `
+                <div class="anime-info">
+                    ${image ? `<img src="${image}" alt="${title}" class="anime-poster" />` : ''}
+                    <div class="anime-details">
+                        <h1 class="anime-title">${title}</h1>
+                        ${englishTitle && englishTitle !== title ? `<div class="anime-subtitle">${englishTitle}</div>` : ''}
+                        ${nativeTitle && nativeTitle !== title && nativeTitle !== englishTitle ? `<div class="anime-native">${nativeTitle}</div>` : ''}
+                        ${format ? `<div class="anime-format">${format}</div>` : ''}
+                        <div class="anime-synopsis">${synopsis}</div>
+                    </div>
+                </div>
+                <div class="seasons-section">
+                    <h2 class="seasons-title">Saisons</h2>
+                    <div id="seasonsContainer">
+                        <div class="loading">
+                            <div class="loading-spinner"></div>
+                            <div>Chargement des saisons...</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Fonction pour charger les saisons
+        async function loadSeasons(animeId) {
+            try {
+                const result = await window.electronAPI.getAnimeSeasons(animeId);
+
+                if (result.success) {
+                    displaySeasons(result.seasons);
+                } else {
+                    throw new Error(result.error || 'Erreur lors du chargement des saisons');
+                }
+            } catch (error) {
+                console.error('Erreur lors du chargement des saisons:', error);
+                document.getElementById('seasonsContainer').innerHTML = `
+                    <div class="error">
+                        <div class="error-icon">⚠️</div>
+                        <div>Impossible de charger les saisons: ${error.message}</div>
+                    </div>
+                `;
+            }
+        }
+
+        // Fonction pour afficher les saisons
+        function displaySeasons(seasons) {
+            const seasonsContainer = document.getElementById('seasonsContainer');
+            
+            if (!seasons || seasons.length === 0) {
+                seasonsContainer.innerHTML = `
+                    <div class="error">
+                        <div class="error-icon">📺</div>
+                        <div>Aucune saison disponible pour cet anime.</div>
+                    </div>
+                `;
+                return;
+            }
+
+            seasonsContainer.innerHTML = `
+                <div class="seasons-grid">
+                    ${seasons.map((season, index) => `
+                        <div class="season-card" onclick="selectSeason('${season.id}', '${season.name}', '${season.url}')">
+                            <div class="season-name">${season.name}</div>
+                            <div class="season-info">Saison ${index + 1}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // Fonction pour sélectionner une saison
+        async function selectSeason(seasonId, seasonName) {
+            console.log(`Saison sélectionnée: ${seasonName}`);
+            console.log(`Id: ${seasonId}`);
+            
+            currentSeason = { id: seasonId, name: seasonName };
+            
+            // Récupérer l'ID de l'anime depuis l'URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const animeId = urlParams.get('id');
+            
+            if (!animeId) {
+                console.error('ID de l\'anime non trouvé');
+                return;
+            }
+            
+            try {
+                // Charger les épisodes
+                await loadEpisodes(animeId, seasonId);
+            } catch (error) {
+                console.error('Erreur lors du chargement des épisodes:', error);
+                alert('Erreur lors du chargement des épisodes: ' + error.message);
+            }
+        }
+
+        // Fonction pour charger les épisodes
+        async function loadEpisodes(animeId, seasonId) {
+            try {
+                // Charger les épisodes et les métadonnées en parallèle
+                const [episodesResult, metadataResult] = await Promise.all([
+                    window.electronAPI.getAnimeEpisodes(animeId, seasonId),
+                    currentAnime?.id ? window.electronAPI.getEpisodeMetadata(currentAnime.id) : Promise.resolve({ success: false })
+                ]);
+                
+                if (episodesResult.success) {
+                    currentEpisodes = episodesResult.episodes;
+                    
+                    if (metadataResult.success) {
+                        episodeMetadata = metadataResult.metadata;
+                    }
+                    
+                    displayEpisodes(episodesResult.episodes);
+                } else {
+                    throw new Error(episodesResult.error || 'Erreur lors du chargement des épisodes');
+                }
+            } catch (error) {
+                console.error('Erreur lors du chargement des épisodes:', error);
+                document.getElementById('seasonsContainer').innerHTML = `
+                    <div class="error">
+                        <div class="error-icon">⚠️</div>
+                        <div>Impossible de charger les épisodes: ${error.message}</div>
+                    </div>
+                `;
+            }
+        }
+
+        // Fonction pour afficher les épisodes
+        function displayEpisodes(episodes) {
+            const seasonsContainer = document.getElementById('seasonsContainer');
+            
+            if (!episodes || Object.keys(episodes).length === 0) {
+                seasonsContainer.innerHTML = `
+                    <div class="error">
+                        <div class="error-icon">📺</div>
+                        <div>Aucun épisode disponible pour cette saison.</div>
+                    </div>
+                `;
+                return;
+            }
+
+            // Obtenir les langues disponibles
+            const languages = Object.keys(episodes);
+            
+            // S'assurer que la langue par défaut existe, sinon prendre la première
+            if (!languages.includes(currentLanguage)) {
+                currentLanguage = languages[0];
+            }
+
+            // Obtenir les sources pour la langue actuelle
+            const currentLanguageEpisodes = episodes[currentLanguage];
+            const sources = Object.keys(currentLanguageEpisodes);
+            currentSource = sources[0]; // Sélectionner la première source par défaut
+
+            seasonsContainer.innerHTML = `
+                <div class="episodes-section">
+                    <button class="back-to-seasons" onclick="showSeasons()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M19 12H5M12 19l-7-7 7-7"/>
+                        </svg>
+                        Retour aux saisons
+                    </button>
+                    
+                    <div class="episodes-header">
+                        <h2 class="episodes-title">Épisodes - ${currentSeason.name}</h2>
+                        
+                        <div class="language-selector">
+                            <div class="language-label">Langue:</div>
+                            <div class="language-tabs">
+                                ${languages.map(lang => `
+                                    <button class="language-tab ${lang === currentLanguage ? 'active' : ''}" 
+                                            onclick="switchLanguage('${lang}')">
+                                        ${lang.toUpperCase()}
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="sources-tabs">
+                        ${sources.map(source => `
+                            <button class="source-tab ${source === currentSource ? 'active' : ''}" 
+                                    onclick="switchSource('${source}')">
+                                ${source.toUpperCase()}
+                            </button>
+                        `).join('')}
+                    </div>
+                    
+                    <div class="episodes-grid" id="episodesGrid">
+                        ${displayEpisodesForLanguageAndSource(currentLanguage, currentSource)}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Fonction pour afficher les épisodes d'une langue et source spécifiques
+        function displayEpisodesForLanguageAndSource(language, source) {
+            if (!currentEpisodes || !currentEpisodes[language] || !currentEpisodes[language][source]) {
+                return '<div class="error">Aucun épisode disponible pour cette langue et source.</div>';
+            }
+
+            const episodes = currentEpisodes[language][source];
+            
+            return `
+                <div class="episodes-list">
+                    ${episodes.map((episodeUrl, index) => {
+                        const episodeNumber = index + 1;
+                        const episodeData = episodeMetadata?.episodes?.[episodeNumber.toString()];
+                        
+                        return `
+                            <div class="episode-item" onclick="playEpisode('${episodeUrl}', ${episodeNumber})">
+                                <div class="episode-source">${source.toUpperCase()}</div>
+                                <div class="episode-number">${episodeNumber}</div>
+                                <img src="${episodeData?.image || ''}" 
+                                     alt="Épisode ${episodeNumber}" 
+                                     class="episode-thumbnail"
+                                     onerror="this.style.display='none'">
+                                <div class="episode-content">
+                                    <div class="episode-title">
+                                        ${episodeData?.title?.en || episodeData?.title?.ja || `Épisode ${episodeNumber}`}
+                                    </div>
+                                    <div class="episode-description">
+                                        ${episodeData?.overview || episodeData?.summary || 'Aucune description disponible.'}
+                                    </div>
+                                    <div class="episode-meta">
+                                        ${episodeData?.runtime ? `<span class="episode-duration">${episodeData.runtime} min</span>` : ''}
+                                        ${episodeData?.rating ? `<span class="episode-rating">⭐ ${episodeData.rating}</span>` : ''}
+                                        ${episodeData?.airDate ? `<span class="episode-airdate">📅 ${new Date(episodeData.airDate).toLocaleDateString('fr-FR')}</span>` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }
+
+        // Fonction pour changer de langue
+        function switchLanguage(language) {
+            currentLanguage = language;
+            
+            // Mettre à jour les onglets de langue actifs
+            document.querySelectorAll('.language-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Obtenir les sources pour la nouvelle langue
+            const sources = Object.keys(currentEpisodes[language]);
+            currentSource = sources[0]; // Sélectionner la première source
+            
+            // Mettre à jour les onglets de sources
+            const sourcesContainer = document.querySelector('.sources-tabs');
+            sourcesContainer.innerHTML = sources.map(source => `
+                <button class="source-tab ${source === currentSource ? 'active' : ''}" 
+                        onclick="switchSource('${source}')">
+                    ${source.toUpperCase()}
+                </button>
+            `).join('');
+            
+            // Mettre à jour la grille des épisodes
+            document.getElementById('episodesGrid').innerHTML = displayEpisodesForLanguageAndSource(language, currentSource);
+        }
+
+        // Fonction pour changer de source
+        function switchSource(source) {
+            currentSource = source;
+            
+            // Mettre à jour les onglets actifs
+            document.querySelectorAll('.source-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Mettre à jour la grille des épisodes
+            document.getElementById('episodesGrid').innerHTML = displayEpisodesForLanguageAndSource(currentLanguage, source);
+        }
+
+        // Fonction pour jouer un épisode
+        async function playEpisode(episodeUrl, episodeNumber) {
+            console.log(`Extraction de l'épisode ${episodeNumber}:`, episodeUrl);
+            
+            // Initialiser la liste des épisodes pour la navigation
+            if (currentEpisodes && currentEpisodes[currentLanguage] && currentEpisodes[currentLanguage][currentSource]) {
+                currentEpisodeList = currentEpisodes[currentLanguage][currentSource];
+                currentEpisodeIndex = episodeNumber - 1; // Convertir en index (0-based)
+                
+                // Vider le cache pour une nouvelle série
+                preloadedEpisodes.clear();
+                console.log('🗑️ Cache vidé pour une nouvelle série');
+            }
+            
+            // Afficher le modal d'extraction
+            showExtractionModal(episodeNumber, episodeUrl);
+            
+            try {
+                // Extraire l'URL de la vidéo depuis l'embed
+                const result = await window.electronAPI.extractVideoUrl(episodeUrl.replace("vidmoly.to", "vidmoly.net")); // Remplacer .to par .net pour éviter le blocage
+                
+                if (result.success && result.videoUrl) {
+                    console.log('✅ URL de la vidéo extraite:', result.videoUrl);
+                    
+                    // Mettre en cache l'épisode actuel
+                    const cacheKey = `episode_${currentEpisodeIndex}`;
+                    preloadedEpisodes.set(cacheKey, {
+                        videoUrl: result.videoUrl,
+                        episodeUrl: episodeUrl,
+                        timestamp: Date.now()
+                    });
+                    
+                    // Fermer le modal d'extraction
+                    closeExtractionModal();
+                    
+                    // Ouvrir le player vidéo
+                    const animeTitle = currentAnime?.title || 'Anime';
+                    openVideoPlayer(result.videoUrl, episodeNumber, animeTitle);
+                    
+                    // Déclencher le preloading de l'épisode suivant
+                    setTimeout(() => {
+                        preloadNextEpisode();
+                    }, 2000); // Attendre 2 secondes pour ne pas surcharger
+                } else {
+                    console.error('❌ Échec de l\'extraction:', result.error);
+                    showExtractionError(episodeNumber, result.error || 'URL non trouvée');
+                }
+            } catch (error) {
+                console.error('❌ Erreur lors de l\'extraction:', error);
+                showExtractionError(episodeNumber, error.message);
+            }
+        }
+
+        // Fonction pour afficher le modal d'extraction
+        function showExtractionModal(episodeNumber, episodeUrl) {
+            const modal = document.createElement('div');
+            modal.className = 'video-extraction-modal';
+            modal.id = 'extractionModal';
+            modal.innerHTML = `
+                <div class="video-extraction-content">
+                    <h3 class="extraction-title">🎬 Extraction de l'épisode ${episodeNumber}</h3>
+                    <div class="extraction-status">
+                        <div class="extraction-spinner"></div>
+                        Extraction de la vidéo en cours...
+                    </div>
+                    <div class="extraction-url" style="display: none;">
+                        <strong>URL de l'embed:</strong><br>
+                        ${episodeUrl}
+                    </div>
+                    <div class="extraction-buttons">
+                        <button class="extraction-btn extraction-btn-secondary" onclick="closeExtractionModal()">
+                            Annuler
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        // Fonction pour afficher le succès de l'extraction
+        function showExtractionSuccess(episodeNumber, videoUrl) {
+            const modal = document.getElementById('extractionModal');
+            if (!modal) return;
+
+            modal.innerHTML = `
+                <div class="video-extraction-content">
+                    <h3 class="extraction-title extraction-success">✅ Extraction réussie !</h3>
+                    <div class="extraction-status extraction-success">
+                        L'URL de la vidéo a été extraite avec succès
+                    </div>
+                    <div class="extraction-url">
+                        <strong>URL de la vidéo:</strong><br>
+                        ${videoUrl}
+                    </div>
+                    <div class="extraction-buttons">
+                        <button class="extraction-btn extraction-btn-primary" onclick="copyVideoUrl('${videoUrl}')">
+                            📋 Copier l'URL
+                        </button>
+                        <button class="extraction-btn extraction-btn-primary" onclick="openVideoUrl('${videoUrl}')">
+                            🎥 Ouvrir la vidéo
+                        </button>
+                        <button class="extraction-btn extraction-btn-secondary" onclick="closeExtractionModal()">
+                            Fermer
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Fonction pour afficher l'erreur d'extraction
+        function showExtractionError(episodeNumber, errorMessage) {
+            const modal = document.getElementById('extractionModal');
+            if (!modal) return;
+
+            modal.innerHTML = `
+                <div class="video-extraction-content">
+                    <h3 class="extraction-title extraction-error">❌ Échec de l'extraction</h3>
+                    <div class="extraction-status extraction-error">
+                        Impossible d'extraire l'URL de la vidéo
+                    </div>
+                    <div class="extraction-url" style="color: #ef4444;">
+                        <strong>Erreur:</strong><br>
+                        ${errorMessage}
+                    </div>
+                    <div class="extraction-buttons">
+                        <button class="extraction-btn extraction-btn-primary" onclick="closeExtractionModal()">
+                            Réessayer
+                        </button>
+                        <button class="extraction-btn extraction-btn-secondary" onclick="closeExtractionModal()">
+                            Fermer
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Fonction pour fermer le modal d'extraction
+        function closeExtractionModal() {
+            const modal = document.getElementById('extractionModal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        // Fonction pour copier l'URL de la vidéo
+        async function copyVideoUrl(videoUrl) {
+            try {
+                await navigator.clipboard.writeText(videoUrl);
+                console.log('URL copiée dans le presse-papiers');
+                
+                // Feedback visuel
+                const button = event.target;
+                const originalText = button.textContent;
+                button.textContent = '✅ Copié !';
+                button.style.background = '#4ade80';
+                
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.style.background = '#6366f1';
+                }, 2000);
+            } catch (error) {
+                console.error('Erreur lors de la copie:', error);
+                alert('Erreur lors de la copie de l\'URL');
+            }
+        }
+
+        // Fonction pour ouvrir l'URL de la vidéo
+        function openVideoUrl(videoUrl) {
+            window.open(videoUrl, '_blank');
+        }
+
+        // ===== PLAYER VIDÉO =====
+        let videoPlayer = null;
+        let plyrInstance = null;
+        let hlsInstance = null; // Instance HLS pour les flux m3u8
+        let currentEpisodeIndex = 0;
+        let currentEpisodeList = [];
+        let preloadedEpisodes = new Map(); // Cache des épisodes pré-chargés
+        let isPreloading = false;
+
+        // Fonction pour initialiser Plyr
+        function initializePlyr() {
+            if (plyrInstance) return;
+            
+            videoPlayer = document.getElementById('videoPlayer');
+            if (!videoPlayer) return;
+
+            // Configuration Plyr responsive
+            const options = {
+                controls: [
+                    'play-large',
+                    'play',
+                    'progress',
+                    'current-time',
+                    'duration',
+                    'mute',
+                    'volume',
+                    'settings',
+                    'fullscreen'
+                ],
+                settings: ['quality', 'speed'],
+                quality: {
+                    default: 720,
+                    options: [1080, 720, 480, 360]
+                },
+                speed: {
+                    selected: 1,
+                    options: [0.5, 0.75, 1, 1.25, 1.5, 2]
+                },
+                keyboard: {
+                    focused: true,
+                    global: false
+                },
+                tooltips: {
+                    controls: true,
+                    seek: true
+                },
+                captions: {
+                    active: false,
+                    language: 'auto',
+                    update: false
+                },
+                fullscreen: {
+                    enabled: true,
+                    fallback: true,
+                    iosNative: false
+                },
+                ratio: null, // Pas de ratio fixe pour plus de flexibilité
+                aspectRatio: '16:9',
+                clickToPlay: true,
+                hideControls: true,
+                resetOnEnd: false,
+                disableContextMenu: false
+            };
+
+            plyrInstance = new Plyr(videoPlayer, options);
+
+            // Événements Plyr
+            plyrInstance.on('ready', () => {
+                console.log('Plyr player ready');
+            });
+
+            plyrInstance.on('play', () => {
+                console.log('Video playing');
+            });
+
+            plyrInstance.on('pause', () => {
+                console.log('Video paused');
+            });
+
+            plyrInstance.on('ended', () => {
+                console.log('Video ended');
+            });
+
+            plyrInstance.on('error', (event) => {
+                console.error('❌ Erreur Plyr:', event);
+                const error = videoPlayer.error;
+                if (error) {
+                    console.error('Code d\'erreur vidéo:', error.code);
+                    console.error('Message d\'erreur:', error.message);
+                    switch (error.code) {
+                        case 1: // MEDIA_ERR_ABORTED
+                            console.error('🚫 Lecture annulée par l\'utilisateur');
+                            break;
+                        case 2: // MEDIA_ERR_NETWORK
+                            console.error('🌐 Erreur réseau lors du chargement');
+                            break;
+                        case 3: // MEDIA_ERR_DECODE
+                            console.error('🔧 Erreur de décodage');
+                            break;
+                        case 4: // MEDIA_ERR_SRC_NOT_SUPPORTED
+                            console.error('❌ Format non supporté ou source invalide');
+                            break;
+                        default:
+                            console.error('❓ Erreur inconnue');
+                    }
+                }
+            });
+            
+            // Écouter aussi les erreurs directement sur l'élément video
+            videoPlayer.addEventListener('error', (e) => {
+                console.error('❌ Erreur élément video:', e);
+                const error = videoPlayer.error;
+                if (error) {
+                    console.error('Détails de l\'erreur:', {
+                        code: error.code,
+                        message: error.message,
+                        source: videoPlayer.src || videoPlayer.currentSrc
+                    });
+                }
+            });
+            
+            // Écouter les événements de chargement pour déboguer
+            videoPlayer.addEventListener('loadstart', () => {
+                console.log('📡 Début du chargement de la vidéo');
+            });
+            
+            videoPlayer.addEventListener('loadedmetadata', () => {
+                console.log('✅ Métadonnées chargées:', {
+                    duration: videoPlayer.duration,
+                    videoWidth: videoPlayer.videoWidth,
+                    videoHeight: videoPlayer.videoHeight,
+                    src: videoPlayer.currentSrc
+                });
+            });
+            
+            videoPlayer.addEventListener('canplay', () => {
+                console.log('✅ Vidéo prête à être lue');
+            });
+            
+            videoPlayer.addEventListener('stalled', () => {
+                console.warn('⚠️ Chargement ralenti ou bloqué');
+            });
+            
+            videoPlayer.addEventListener('waiting', () => {
+                console.warn('⏳ En attente de données...');
+            });
+        }
+
+        // Fonction pour nettoyer l'instance HLS
+        function cleanupHLS() {
+            if (hlsInstance) {
+                try {
+                    hlsInstance.destroy();
+                } catch (e) {
+                    console.error('Erreur lors de la destruction de HLS:', e);
+                }
+                hlsInstance = null;
+            }
+        }
+
+        // Fonction pour détecter si l'URL est un flux HLS (m3u8)
+        function isHLS(videoUrl) {
+            return videoUrl && (videoUrl.includes('.m3u8') || videoUrl.includes('application/x-mpegURL'));
+        }
+
+        // Fonction utilitaire pour charger une vidéo (HLS ou classique)
+        function loadVideo(videoUrl) {
+            if (!videoUrl) {
+                console.error('❌ URL vidéo vide');
+                return;
+            }
+            
+            // Nettoyer l'instance HLS précédente si elle existe
+            cleanupHLS();
+            
+            // S'assurer que l'élément video est disponible
+            if (!videoPlayer) {
+                videoPlayer = document.getElementById('videoPlayer');
+            }
+            
+            if (!videoPlayer) {
+                console.error('❌ Élément video introuvable');
+                return;
+            }
+            
+            // Récupérer ou créer l'élément source
+            let videoSource = document.getElementById('videoSource');
+            if (!videoSource) {
+                // Si l'élément source n'existe pas, le créer
+                console.warn('⚠️ Élément source introuvable, création...');
+                videoSource = document.createElement('source');
+                videoSource.id = 'videoSource';
+                videoPlayer.appendChild(videoSource);
+            }
+            
+            // Vérifier si c'est un flux HLS
+            if (isHLS(videoUrl)) {
+                console.log('🚀 Détection d\'un flux HLS (m3u8), initialisation de HLS.js...');
+                
+                // Vérifier que HLS.js est disponible et supporté
+                if (Hls.isSupported()) {
+                    // Créer une nouvelle instance HLS
+                    hlsInstance = new Hls({
+                        enableWorker: true,
+                        lowLatencyMode: false,
+                        backBufferLength: 90
+                    });
+                    
+                    // Charger la source HLS
+                    hlsInstance.loadSource(videoUrl);
+                    hlsInstance.attachMedia(videoPlayer);
+                    
+                    // Gérer les événements HLS
+                    hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
+                        console.log('✅ Manifeste HLS parsé avec succès');
+                        if (hlsInstance.levels && hlsInstance.levels.length > 0) {
+                            console.log(`${hlsInstance.levels.length} niveaux de qualité disponibles`);
+                        }
+                    });
+                    
+                    hlsInstance.on(Hls.Events.ERROR, (event, data) => {
+                        console.error('❌ Erreur HLS:', data);
+                        if (data.fatal) {
+                            switch (data.type) {
+                                case Hls.ErrorTypes.NETWORK_ERROR:
+                                    console.log('Tentative de récupération après erreur réseau...');
+                                    hlsInstance.startLoad();
+                                    break;
+                                case Hls.ErrorTypes.MEDIA_ERROR:
+                                    console.log('Tentative de récupération après erreur média...');
+                                    hlsInstance.recoverMediaError();
+                                    break;
+                                default:
+                                    console.log('Erreur fatale, impossible de récupérer');
+                                    hlsInstance.destroy();
+                                    break;
+                            }
+                        }
+                    });
+                } else if (videoPlayer.canPlayType('application/vnd.apple.mpegurl')) {
+                    // Support natif HLS (Safari)
+                    console.log('✅ Utilisation du support HLS natif (Safari)');
+                    // Pour Safari natif, on peut mettre directement sur l'élément video
+                    videoPlayer.src = videoUrl;
+                    videoPlayer.load();
+                } else {
+                    console.error('❌ HLS non supporté par ce navigateur');
+                    alert('Votre navigateur ne supporte pas la lecture des flux HLS. Veuillez utiliser Chrome, Firefox ou Safari.');
+                }
+            } else {
+                // Vidéo classique (MP4, WebM, etc.)
+                console.log('📹 Chargement d\'une vidéo classique:', videoUrl);
+                
+                // Détecter le type MIME en fonction de l'extension
+                let mimeType = 'video/mp4';
+                if (videoUrl.includes('.webm')) {
+                    mimeType = 'video/webm';
+                } else if (videoUrl.includes('.ogg')) {
+                    mimeType = 'video/ogg';
+                }
+                
+                // Si Plyr est déjà initialisé, utiliser son API pour mettre à jour la source
+                if (plyrInstance) {
+                    try {
+                        // Mettre à jour Plyr avec la nouvelle source (cela mettra aussi à jour l'élément video)
+                        plyrInstance.source = {
+                            type: 'video',
+                            sources: [{
+                                src: videoUrl,
+                                type: mimeType
+                            }]
+                        };
+                        console.log('✅ Source Plyr mise à jour via API');
+                    } catch (e) {
+                        console.warn('⚠️ Erreur lors de la mise à jour de Plyr, utilisation directe de l\'élément video', e);
+                        // Fallback : modifier directement l'élément video ou la source
+                        if (videoSource) {
+                            videoSource.src = videoUrl;
+                            videoSource.type = mimeType;
+                        } else {
+                            // Si pas de source, mettre directement sur l'élément video
+                            videoPlayer.src = videoUrl;
+                        }
+                        videoPlayer.load();
+                    }
+                } else {
+                    // Si Plyr n'est pas encore initialisé, modifier directement l'élément video ou la source
+                    if (videoSource) {
+                        videoSource.src = videoUrl;
+                        videoSource.type = mimeType;
+                    } else {
+                        // Si pas de source, mettre directement sur l'élément video
+                        videoPlayer.src = videoUrl;
+                    }
+                    videoPlayer.load();
+                }
+            }
+        }
+
+        // Fonction pour ouvrir le player avec une vidéo
+        function openVideoPlayer(videoUrl, episodeNumber, animeTitle) {
+            initializePlyr();
+            
+            const modal = document.getElementById('videoPlayerModal');
+            const episodeTitleEl = document.getElementById('playerEpisodeTitle');
+            const animeTitleEl = document.getElementById('playerAnimeTitle');
+            
+            // Mettre à jour les titres
+            episodeTitleEl.textContent = `Épisode ${episodeNumber}`;
+            
+            // Gérer le titre de l'anime (peut être un objet ou une chaîne)
+            let animeTitleText = 'Anime';
+            if (animeTitle && typeof animeTitle === 'string') {
+                animeTitleText = animeTitle;
+            } else if (currentAnime?.title) {
+                if (typeof currentAnime.title === 'string') {
+                    animeTitleText = currentAnime.title;
+                } else if (currentAnime.title.romaji) {
+                    animeTitleText = currentAnime.title.romaji;
+                } else if (currentAnime.title.english) {
+                    animeTitleText = currentAnime.title.english;
+                } else if (currentAnime.title.native) {
+                    animeTitleText = currentAnime.title.native;
+                }
+            }
+            animeTitleEl.textContent = animeTitleText;
+            
+            // Charger la vidéo (HLS ou classique)
+            loadVideo(videoUrl);
+            
+            // Initialiser les boutons de navigation
+            updateNavigationButtons();
+            
+            // Afficher le modal
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Fonction pour fermer le player
+        function closeVideoPlayer() {
+            const modal = document.getElementById('videoPlayerModal');
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+            
+            // Pause la vidéo
+            if (plyrInstance) {
+                plyrInstance.pause();
+            }
+            
+            // Nettoyer l'instance HLS
+            cleanupHLS();
+        }
+
+        // Fonction pour naviguer entre les épisodes
+        async function navigateEpisode(direction) {
+            const newIndex = currentEpisodeIndex + direction;
+            
+            // Vérifier les limites
+            if (newIndex < 0 || newIndex >= currentEpisodeList.length) {
+                return;
+            }
+            
+            currentEpisodeIndex = newIndex;
+            const episodeUrl = currentEpisodeList[currentEpisodeIndex];
+            const episodeNumber = currentEpisodeIndex + 1;
+            const cacheKey = `episode_${currentEpisodeIndex}`;
+            
+            // Mettre à jour les boutons de navigation
+            updateNavigationButtons();
+            
+            // Vérifier si l'épisode est en cache
+            if (preloadedEpisodes.has(cacheKey)) {
+                console.log(`⚡ Épisode ${episodeNumber} chargé depuis le cache (instantané !)`);
+                const cachedData = preloadedEpisodes.get(cacheKey);
+                
+                // Charger la vidéo depuis le cache (avec support HLS)
+                loadVideo(cachedData.videoUrl);
+                
+                // Mettre à jour le titre
+                const episodeTitleEl = document.getElementById('playerEpisodeTitle');
+                episodeTitleEl.textContent = `Épisode ${episodeNumber}`;
+                
+                // Pré-charger l'épisode suivant/précédent en arrière-plan
+                if (direction === 1) {
+                    preloadNextEpisode();
+                } else if (direction === -1) {
+                    preloadPreviousEpisode();
+                }
+                
+                return;
+            }
+            
+            // Si pas en cache, extraire normalement
+            console.log(`🔄 Extraction de l'épisode ${episodeNumber}...`);
+            try {
+                const result = await window.electronAPI.extractVideoUrl(episodeUrl);
+                
+                if (result.success && result.videoUrl) {
+                    // Mettre en cache pour la prochaine fois
+                    preloadedEpisodes.set(cacheKey, {
+                        videoUrl: result.videoUrl,
+                        episodeUrl: episodeUrl,
+                        timestamp: Date.now()
+                    });
+                    
+                    // Charger la nouvelle vidéo (avec support HLS)
+                    loadVideo(result.videoUrl);
+                    
+                    // Mettre à jour le titre
+                    const episodeTitleEl = document.getElementById('playerEpisodeTitle');
+                    episodeTitleEl.textContent = `Épisode ${episodeNumber}`;
+                    
+                    // Pré-charger l'épisode suivant/précédent en arrière-plan
+                    if (direction === 1) {
+                        preloadNextEpisode();
+                    } else if (direction === -1) {
+                        preloadPreviousEpisode();
+                    }
+                } else {
+                    console.error('Erreur lors du chargement de l\'épisode:', result.error);
+                }
+            } catch (error) {
+                console.error('Erreur lors de la navigation:', error);
+            }
+        }
+
+        // Fonction pour mettre à jour les boutons de navigation
+        function updateNavigationButtons() {
+            const prevBtn = document.getElementById('prevEpisodeBtn');
+            const nextBtn = document.getElementById('nextEpisodeBtn');
+            
+            prevBtn.disabled = currentEpisodeIndex === 0;
+            nextBtn.disabled = currentEpisodeIndex === currentEpisodeList.length - 1;
+            
+            // Déclencher le preloading après la mise à jour des boutons
+            preloadNextEpisode();
+        }
+
+        // Fonction pour pré-charger l'épisode suivant
+        async function preloadNextEpisode() {
+            if (isPreloading) return;
+            
+            const nextIndex = currentEpisodeIndex + 1;
+            if (nextIndex >= currentEpisodeList.length) return;
+            
+            const nextEpisodeUrl = currentEpisodeList[nextIndex];
+            const cacheKey = `episode_${nextIndex}`;
+            
+            // Vérifier si déjà en cache
+            if (preloadedEpisodes.has(cacheKey)) {
+                console.log(`✅ Épisode ${nextIndex + 1} déjà pré-chargé`);
+                return;
+            }
+            
+            isPreloading = true;
+            console.log(`🔄 Pré-chargement de l'épisode ${nextIndex + 1}...`);
+            
+            try {
+                const result = await window.electronAPI.extractVideoUrl(nextEpisodeUrl);
+                
+                if (result.success && result.videoUrl) {
+                    preloadedEpisodes.set(cacheKey, {
+                        videoUrl: result.videoUrl,
+                        episodeUrl: nextEpisodeUrl,
+                        timestamp: Date.now()
+                    });
+                    console.log(`✅ Épisode ${nextIndex + 1} pré-chargé avec succès`);
+                } else {
+                    console.warn(`⚠️ Échec du pré-chargement de l'épisode ${nextIndex + 1}:`, result.error);
+                }
+            } catch (error) {
+                console.error(`❌ Erreur lors du pré-chargement de l'épisode ${nextIndex + 1}:`, error);
+            } finally {
+                isPreloading = false;
+            }
+        }
+
+        // Fonction pour pré-charger l'épisode précédent
+        async function preloadPreviousEpisode() {
+            if (isPreloading) return;
+            
+            const prevIndex = currentEpisodeIndex - 1;
+            if (prevIndex < 0) return;
+            
+            const prevEpisodeUrl = currentEpisodeList[prevIndex];
+            const cacheKey = `episode_${prevIndex}`;
+            
+            // Vérifier si déjà en cache
+            if (preloadedEpisodes.has(cacheKey)) {
+                console.log(`✅ Épisode ${prevIndex + 1} déjà pré-chargé`);
+                return;
+            }
+            
+            isPreloading = true;
+            console.log(`🔄 Pré-chargement de l'épisode ${prevIndex + 1}...`);
+            
+            try {
+                const result = await window.electronAPI.extractVideoUrl(prevEpisodeUrl);
+                
+                if (result.success && result.videoUrl) {
+                    preloadedEpisodes.set(cacheKey, {
+                        videoUrl: result.videoUrl,
+                        episodeUrl: prevEpisodeUrl,
+                        timestamp: Date.now()
+                    });
+                    console.log(`✅ Épisode ${prevIndex + 1} pré-chargé avec succès`);
+                } else {
+                    console.warn(`⚠️ Échec du pré-chargement de l'épisode ${prevIndex + 1}:`, result.error);
+                }
+            } catch (error) {
+                console.error(`❌ Erreur lors du pré-chargement de l'épisode ${prevIndex + 1}:`, error);
+            } finally {
+                isPreloading = false;
+            }
+        }
+
+        // Fonction pour revenir aux saisons
+        function showSeasons() {
+            if (!currentAnime) {
+                console.error('Informations de l\'anime non disponibles');
+                return;
+            }
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const animeId = urlParams.get('id');
+            
+            // Recharger les saisons
+            loadSeasons(animeId);
+        }
+
+        // Fonction pour afficher une erreur
+        function displayError(message) {
+            document.getElementById('animeContent').innerHTML = `
+                <div class="error">
+                    <div class="error-icon">❌</div>
+                    <div>Erreur: ${message}</div>
+                </div>
+            `;
+        }
+
+        // Créer les chibis flottants
+        function createFloatingChibis() {
+            const chibiImages = [
+                { src: '../assets/chibi.png', class: 'chibi-float-1', position: { top: '20%', left: '5%' } },
+                { src: '../assets/chibi1.png', class: 'chibi-float-2', position: { top: '30%', right: '8%' } },
+                { src: '../assets/chibi2.png', class: 'chibi-float-3', position: { bottom: '25%', left: '3%' } },
+                { src: '../assets/chibi3.png', class: 'chibi-float-4', position: { bottom: '35%', right: '5%' } }
+            ];
+
+            chibiImages.forEach((chibi, index) => {
+                const chibiElement = document.createElement('div');
+                chibiElement.className = `floating-chibi ${chibi.class}`;
+                chibiElement.style.cssText = `
+                    position: fixed;
+                    ${Object.entries(chibi.position).map(([key, value]) => `${key}: ${value}`).join('; ')};
+                    z-index: 0;
+                    pointer-events: none;
+                `;
+
+                const img = document.createElement('img');
+                img.src = chibi.src;
+                img.alt = `Chibi ${index + 1}`;
+
+                chibiElement.appendChild(img);
+                document.body.appendChild(chibiElement);
+
+                setTimeout(() => {
+                    chibiElement.style.opacity = '0.4';
+                }, index * 300);
+            });
+        }
+
+        // Initialiser la page
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAnimeInfo();
+            createFloatingChibis();
+        });
+    </script>
+    
+    <!-- Plyr JS -->
+    <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
+    <!-- HLS.js pour le support des flux HLS (m3u8) -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+</body>
+</html>

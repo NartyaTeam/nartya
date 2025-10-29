@@ -1,0 +1,25 @@
+{
+  "name": "anime-viewer",
+  "version": "1.0.0",
+  "description": "Application Electron moderne pour regarder des animes",
+  "main": "src/electron/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "scrape": "node src/scraper/indexer.js",
+    "test-extraction": "node src/utils/test-extraction.js",
+    "test-video": "node src/utils/test-video-extraction.js"
+  },
+  "keywords": [
+    "anime",
+    "viewer"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.13.1",
+    "cheerio": "1.0.0-rc.12",
+    "electron": "^28.0.0",
+    "node-fetch": "2.7.0"
+  }
+}
