@@ -1,6 +1,6 @@
-# AnimeStream
+# Nartya
 
-Application Electron moderne pour regarder des animes avec une interface élégante et des fonctionnalités de scraping avancées.
+Application Electron moderne pour regarder des animes gratuitement avec une interface élégante et sans publicité.
 
 ## 🏗️ Structure du projet
 

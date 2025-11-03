@@ -1,82 +1,202 @@
 <!DOCTYPE html>
 <html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AnimeStream - Détails</title>
-    
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nartya - Anime</title>
+    <link rel="icon" type="image/png" href="../build/icon.png" />
+
     <!-- CSS -->
-    <link rel="stylesheet" href="styles/anime.css">
+    <link rel="stylesheet" href="styles/anime.css" />
 
     <!-- Plyr CSS -->
     <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
-</head>
-<body>
+  </head>
+  <body>
     <div class="header">
-        <div class="logo" onclick="goHome()">AnimeStream</div>
-        <button class="back-btn" onclick="goHome()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M19 12H5M12 19l-7-7 7-7"/>
+      <div class="logo" onclick="goHome()">
+        <div class="logo-icon">
+          <img
+            src="./assets/chibi.png"
+            alt="Nartya"
+            onerror="this.src='../build/icon.png'"
+          />
+        </div>
+        <span class="logo-text">Nartya</span>
+      </div>
+      <div class="header-actions">
+        <button
+          class="nav-btn settings"
+          onclick="window.location.href='settings.html'"
+          title="Paramètres"
+        >
+          <div class="nav-btn-icon">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"
+              />
+              <circle cx="12" cy="12" r="3" />
             </svg>
-            Retour
+          </div>
+          <span class="nav-btn-label">Paramètres</span>
         </button>
+
+        <button class="nav-btn back" onclick="goHome()" title="Retour">
+          <div class="nav-btn-icon">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M19 12H5M12 19l-7-7 7-7" />
+            </svg>
+          </div>
+          <span class="nav-btn-label">Retour</span>
+        </button>
+      </div>
     </div>
 
     <div class="main-container">
-        <div id="animeContent">
-            <div class="loading">
-                <div class="loading-spinner"></div>
-                <div>Chargement des informations de l'anime...</div>
-            </div>
+      <div id="animeContent">
+        <div class="loading">
+          <div class="loading-spinner"></div>
+          <div>Chargement des informations de l'anime...</div>
         </div>
+      </div>
     </div>
 
     <!-- Player vidéo -->
     <div class="video-player-modal" id="videoPlayerModal">
-        <div class="video-player-container">
-            <div class="video-player-header">
-                <div class="video-player-title">
-                    <span id="playerEpisodeTitle">Épisode 1</span>
-                    <span class="video-player-anime" id="playerAnimeTitle">Anime Title</span>
-                </div>
-                <button class="video-player-close" onclick="closeVideoPlayer()">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M18 6L6 18M6 6l12 12"/>
-                    </svg>
-                </button>
-            </div>
-            
-            <div class="video-player-wrapper">
-                <video id="videoPlayer" class="plyr-video" preload="metadata" playsinline>
-                    <source id="videoSource" src="" type="video/mp4">
-                    Votre navigateur ne supporte pas la lecture vidéo HTML5.
-                </video>
-            </div>
-            
-            <!-- Navigation épisodes -->
-            <div class="episode-navigation">
-                <button class="nav-btn nav-prev" id="prevEpisodeBtn" onclick="navigateEpisode(-1)">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M19 12H5M12 19l-7-7 7-7"/>
-                    </svg>
-                    Précédent
-                </button>
-                <button class="nav-btn nav-next" id="nextEpisodeBtn" onclick="navigateEpisode(1)">
-                    Suivant
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M5 12h14M12 5l7 7-7 7"/>
-                    </svg>
-                </button>
-            </div>
+      <div class="video-player-container">
+        <div class="video-player-header">
+          <div class="video-player-title">
+            <span id="playerEpisodeTitle">Épisode 1</span>
+            <span class="video-player-anime" id="playerAnimeTitle"
+              >Anime Title</span
+            >
+          </div>
+          <button class="video-player-close" onclick="closeVideoPlayer()">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </button>
         </div>
+
+        <div class="video-player-wrapper">
+          <video
+            id="videoPlayer"
+            class="plyr-video"
+            preload="metadata"
+            playsinline
+          >
+            <source id="videoSource" src="" type="video/mp4" />
+            Votre navigateur ne supporte pas la lecture vidéo HTML5.
+          </video>
+
+          <!-- Navigation épisodes intégrée dans le lecteur -->
+          <div class="player-episode-navigation">
+            <button
+              class="player-nav-btn player-nav-prev"
+              id="prevEpisodeBtn"
+              onclick="navigateEpisode(-1)"
+              title="Épisode précédent"
+            >
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+            </button>
+            <button
+              class="player-nav-btn player-nav-next"
+              id="nextEpisodeBtn"
+              onclick="navigateEpisode(1)"
+              title="Épisode suivant"
+            >
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M9 18l6-6-6-6" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Navigation épisodes (ancienne position - gardée pour compatibilité) -->
+        <div class="episode-navigation" style="display: none">
+          <button
+            class="nav-btn nav-prev"
+            id="prevEpisodeBtnOld"
+            onclick="navigateEpisode(-1)"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M19 12H5M12 19l-7-7 7-7" />
+            </svg>
+            Précédent
+          </button>
+          <button
+            class="nav-btn nav-next"
+            id="nextEpisodeBtnOld"
+            onclick="navigateEpisode(1)"
+          >
+            Suivant
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- Module JavaScript principal -->
     <script type="module" src="js/anime-app.js"></script>
-    
+
     <!-- Plyr JS -->
     <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
     <!-- HLS.js pour le support des flux HLS (m3u8) -->
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-</body>
+  </body>
 </html>

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nartya Premium</title>
+    <link rel="icon" type="image/png" href="../build/icon.png">
+    <link rel="stylesheet" href="styles/premium.css">
+</head>
+<body>
+    <div class="premium-container">
+        <!-- En-tête -->
+        <header class="premium-header">
+            <button class="back-btn" onclick="window.location.href='index.html'">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+                Retour
+            </button>
+            <div class="header-content">
+                <h1>Nartya Premium</h1>
+                <p class="subtitle">Améliorez votre expérience de visionnage</p>
+            </div>
+        </header>
+
+        <!-- Section description -->
+        <section class="premium-intro">
+            <div class="intro-card">
+                <h2>Une application sans pub, sans restrictions</h2>
+                <p>Nartya reste entièrement <strong>gratuit</strong> pour regarder tous vos animes préférés. Premium vous offre simplement des fonctionnalités supplémentaires pour une expérience encore meilleure, sans jamais affecter la qualité vidéo ou ajouter de publicités.</p>
+            </div>
+        </section>
+
+        <!-- Plans premium -->
+        <section class="premium-plans">
+            <div class="plan-card plan-standard">
+                <div class="plan-badge">Populaire</div>
+                <div class="plan-header">
+                    <h3>Premium</h3>
+                    <div class="plan-price">
+                        <span class="price">4,99€</span>
+                        <span class="period">/mois</span>
+                    </div>
+                </div>
+                <div class="plan-features">
+                    <div class="feature-item">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M20 6L9 17l-5-5"/>
+                        </svg>
+                        <span>Téléchargement d'épisodes hors ligne</span>
+                    </div>
+                    <div class="feature-item">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M20 6L9 17l-5-5"/>
+                        </svg>
+                        <span>Synchronisation entre appareils</span>
+                    </div>
+                    <div class="feature-item">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M20 6L9 17l-5-5"/>
+                        </svg>
+                        <span>Thèmes personnalisés</span>
+                    </div>
+                    <div class="feature-item">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M20 6L9 17l-5-5"/>
+                        </svg>
+                        <span>Listes personnalisées illimitées</span>
+                    </div>
+                    <div class="feature-item">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M20 6L9 17l-5-5"/>
+                        </svg>
+                        <span>Badge Premium sur votre profil</span>
+                    </div>
+                </div>
+                <button class="plan-btn" onclick="selectPlan('premium')">Choisir Premium</button>
+            </div>
+
+            <div class="plan-card plan-ultimate">
+                <div class="plan-badge ultimate">Ultimate</div>
+                <div class="plan-header">
+                    <h3>Premium Ultimate</h3>
+                    <div class="plan-price">
+                        <span class="price">8,99€</span>
+                        <span class="period">/mois</span>
+                    </div>
+                </div>
+                <div class="plan-features">
+                    <div class="feature-item">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M20 6L9 17l-5-5"/>
+                        </svg>
+                        <span><strong>Tout de Premium</strong></span>
+                    </div>
+                    <div class="feature-item">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M20 6L9 17l-5-5"/>
+                        </svg>
+                        <span>Accès anticipé aux nouvelles fonctionnalités</span>
+                    </div>
+                    <div class="feature-item">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M20 6L9 17l-5-5"/>
+                        </svg>
+                        <span>Statistiques de visionnage avancées</span>
+                    </div>
+                    <div class="feature-item">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M20 6L9 17l-5-5"/>
+                        </svg>
+                        <span>Mode Picture-in-Picture amélioré</span>
+                    </div>
+                    <div class="feature-item">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M20 6L9 17l-5-5"/>
+                        </svg>
+                        <span>Support prioritaire</span>
+                    </div>
+                    <div class="feature-item">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M20 6L9 17l-5-5"/>
+                        </svg>
+                        <span>Badge Ultimate exclusif</span>
+                    </div>
+                </div>
+                <button class="plan-btn ultimate" onclick="selectPlan('ultimate')">Choisir Ultimate</button>
+            </div>
+        </section>
+
+        <!-- FAQ -->
+        <section class="premium-faq">
+            <h2>Questions fréquentes</h2>
+            <div class="faq-list">
+                <div class="faq-item">
+                    <h3>Est-ce que la version gratuite restera disponible ?</h3>
+                    <p>Absolument ! Nartya restera toujours gratuit pour regarder tous les animes sans limitation de qualité ni publicités.</p>
+                </div>
+                <div class="faq-item">
+                    <h3>Puis-je annuler à tout moment ?</h3>
+                    <p>Oui, vous pouvez annuler votre abonnement à tout moment. Vous conserverez l'accès jusqu'à la fin de votre période de facturation.</p>
+                </div>
+                <div class="faq-item">
+                    <h3>Les vidéos seront-elles de meilleure qualité avec Premium ?</h3>
+                    <p>Non, la qualité vidéo est identique pour tous les utilisateurs. Premium offre des fonctionnalités supplémentaires, pas une meilleure qualité de streaming.</p>
+                </div>
+                <div class="faq-item">
+                    <h3>Comment fonctionne la synchronisation entre appareils ?</h3>
+                    <p>Votre progression de visionnage, vos listes et vos préférences seront automatiquement synchronisées sur tous vos appareils connectés.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="premium-footer">
+            <p>En souscrivant, vous acceptez nos <a href="#">conditions d'utilisation</a> et notre <a href="#">politique de confidentialité</a>.</p>
+        </footer>
+    </div>
+
+    <script src="js/premium-app.js" type="module"></script>
+</body>
+</html>
+

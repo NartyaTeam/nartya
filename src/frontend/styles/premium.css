@@ -1,0 +1,443 @@
+/* ===================================
+   Page Premium - Design cohérent avec la page d'accueil
+   =================================== */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+    background: #0a0a0a;
+    min-height: 100vh;
+    color: #e4e4e7;
+    overflow-x: hidden;
+    position: relative;
+}
+
+/* Grille subtile en arrière-plan (comme page d'accueil) */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+        linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+    background-size: 80px 80px;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Accent lumineux subtil (comme page d'accueil) */
+body::after {
+    content: '';
+    position: fixed;
+    top: -50%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 800px;
+    height: 800px;
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.08) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.premium-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    position: relative;
+    z-index: 1;
+}
+
+/* === HEADER === */
+.premium-header {
+    text-align: center;
+    padding: 4rem 0 3rem;
+    position: relative;
+    animation: fadeInDown 0.8s ease-out;
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.back-btn {
+    position: absolute;
+    top: 0;
+    left: 0;
+    background: rgba(255, 255, 255, 0.03);
+    color: #fafafa;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.back-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+    transform: translateY(-1px);
+}
+
+.header-content h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.8rem;
+    color: #fafafa;
+    letter-spacing: -0.03em;
+    line-height: 1.2;
+    animation: fadeInUp 0.8s ease-out;
+}
+
+.subtitle {
+    font-size: 1rem;
+    color: #71717a;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    animation: fadeInUp 0.8s ease-out 0.1s backwards;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* === INTRO SECTION === */
+.premium-intro {
+    margin: 2rem 0 4rem;
+    animation: fadeInUp 0.8s ease-out 0.2s backwards;
+}
+
+.intro-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    padding: 2rem;
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto;
+    transition: all 0.3s ease;
+}
+
+.intro-card:hover {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+.intro-card h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: #fafafa;
+    letter-spacing: -0.02em;
+}
+
+.intro-card p {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #a1a1aa;
+    font-weight: 400;
+}
+
+.intro-card strong {
+    color: #fafafa;
+    font-weight: 600;
+}
+
+/* === PLANS PREMIUM === */
+.premium-plans {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 2rem;
+    margin: 3rem 0;
+    animation: fadeInUp 0.8s ease-out 0.3s backwards;
+}
+
+.plan-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    padding: 2rem;
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+}
+
+.plan-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(99, 102, 241, 0.2);
+    background: rgba(255, 255, 255, 0.03);
+    box-shadow: 0 12px 32px rgba(99, 102, 241, 0.15);
+}
+
+.plan-ultimate:hover {
+    border-color: rgba(168, 85, 247, 0.2);
+    box-shadow: 0 12px 32px rgba(168, 85, 247, 0.15);
+}
+
+.plan-badge {
+    position: absolute;
+    top: -12px;
+    right: 2rem;
+    background: #fafafa;
+    color: #0a0a0a;
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+}
+
+.plan-badge.ultimate {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    color: #fafafa;
+}
+
+.plan-header {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.plan-header h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: #fafafa;
+    letter-spacing: -0.02em;
+}
+
+.plan-price {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+}
+
+.price {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #fafafa;
+    letter-spacing: -0.02em;
+}
+
+.period {
+    font-size: 1rem;
+    color: #71717a;
+    font-weight: 400;
+}
+
+.plan-features {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    flex: 1;
+}
+
+.feature-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: #d4d4d8;
+    font-size: 0.95rem;
+    font-weight: 400;
+}
+
+.feature-item svg {
+    color: #6366f1;
+    flex-shrink: 0;
+}
+
+.plan-ultimate .feature-item svg {
+    color: #8b5cf6;
+}
+
+.plan-btn {
+    width: 100%;
+    background: #fafafa;
+    border: none;
+    border-radius: 8px;
+    padding: 0.875rem 1.5rem;
+    color: #0a0a0a;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    letter-spacing: -0.01em;
+}
+
+.plan-btn:hover {
+    background: #e4e4e7;
+    transform: translateY(-2px);
+}
+
+.plan-btn.ultimate {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    color: #fafafa;
+}
+
+.plan-btn.ultimate:hover {
+    background: linear-gradient(135deg, #5a5de6 0%, #7c4deb 100%);
+}
+
+/* === FAQ SECTION === */
+.premium-faq {
+    margin: 4rem 0 3rem;
+    animation: fadeInUp 0.8s ease-out 0.4s backwards;
+}
+
+.premium-faq h2 {
+    font-size: 1.8rem;
+    font-weight: 600;
+    margin-bottom: 2rem;
+    text-align: center;
+    color: #fafafa;
+    letter-spacing: -0.02em;
+}
+
+.faq-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.faq-item {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    padding: 1.5rem;
+    transition: all 0.2s ease;
+}
+
+.faq-item:hover {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+.faq-item h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    color: #fafafa;
+    letter-spacing: -0.01em;
+}
+
+.faq-item p {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: #a1a1aa;
+    font-weight: 400;
+}
+
+/* === FOOTER === */
+.premium-footer {
+    text-align: center;
+    padding: 3rem 0 2rem;
+    color: #71717a;
+    font-size: 0.9rem;
+    font-weight: 400;
+}
+
+.premium-footer a {
+    color: #a1a1aa;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.premium-footer a:hover {
+    color: #fafafa;
+    text-decoration: underline;
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 768px) {
+    .premium-container {
+        padding: 1rem;
+    }
+
+    .premium-header {
+        padding: 3rem 0 2rem;
+    }
+
+    .header-content h1 {
+        font-size: 2rem;
+    }
+
+    .subtitle {
+        font-size: 0.9rem;
+    }
+
+    .premium-plans {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .back-btn {
+        position: static;
+        margin-bottom: 2rem;
+        width: fit-content;
+    }
+
+    .intro-card {
+        padding: 1.5rem;
+    }
+
+    .intro-card h2 {
+        font-size: 1.3rem;
+    }
+
+    .intro-card p {
+        font-size: 0.9rem;
+    }
+
+    .plan-card {
+        padding: 1.5rem;
+    }
+
+    .price {
+        font-size: 2rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .header-content h1 {
+        font-size: 1.8rem;
+    }
+
+    .plan-header h3 {
+        font-size: 1.3rem;
+    }
+
+    .feature-item {
+        font-size: 0.9rem;
+    }
+}

@@ -1,4 +1,4 @@
-const { app, BrowserWindow, session } = require('electron');
+const { app, BrowserWindow, session, Menu } = require('electron');
 const path = require('path');
 const IPCHandlers = require('./ipc-handlers');
 
@@ -42,29 +42,31 @@ function configureVideoHeaders() {
 }
 
 function createWindow() {
+    // Désactiver la barre de menu
+    Menu.setApplicationMenu(null);
+
     // Créer la fenêtre du navigateur
     mainWindow = new BrowserWindow({
         width: 1200,
         height: 800,
-        minWidth: 1200,
-        minHeight: 800,
+        minWidth: 1024,  // Réduit pour compatibilité laptop 13"
+        minHeight: 768,  // Standard minimal moderne
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
             preload: path.join(__dirname, 'preload.js'),
             webSecurity: true  // Garder la sécurité activée
         },
-        icon: path.join(__dirname, '..', 'assets', 'chibi.png'),
-        title: 'Anime Viewer',
+        icon: path.join(__dirname, '..', 'build', 'icon.png'),
+        title: 'Nartya',
+        autoHideMenuBar: true  // Cacher automatiquement la barre de menu
     });
-
-    mainWindow.webContents.openDevTools();
 
     // Charger le fichier HTML
     mainWindow.loadFile(path.join(__dirname, '..', 'frontend', 'index.html'));
 
-    // Ouvrir les DevTools en mode développement
-    if (process.argv.includes('--dev')) {
+    // Ouvrir les DevTools UNIQUEMENT en mode développement
+    if (process.argv.includes('--dev') || process.env.NODE_ENV === 'development') {
         mainWindow.webContents.openDevTools();
     }
 

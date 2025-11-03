@@ -15,7 +15,7 @@ const CONFIG = {
 
     // Configuration du scraper
     SCRAPER: {
-        BASE_URL: 'https://anime-sama.fr',
+        BASE_URL: 'https://anime-sama.org',
         SEARCH_ENDPOINT: '/template-php/defaut/fetch.php',
         CATALOG_ENDPOINT: '/catalogue/',
         DELAY_BETWEEN_REQUESTS: 2000, // ms

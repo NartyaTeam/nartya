@@ -8,48 +8,17 @@ export class VideoExtractionUI {
         modal.className = 'video-extraction-modal';
         modal.id = 'extractionModal';
         modal.innerHTML = `
-            <div class="video-extraction-content modern-loading">
-                <div class="extraction-icon-wrapper">
-                    <svg class="extraction-icon-circle" viewBox="0 0 100 100">
-                        <circle class="extraction-circle-bg" cx="50" cy="50" r="45"/>
-                        <circle class="extraction-circle-progress" cx="50" cy="50" r="45"/>
-                    </svg>
-                    <div class="extraction-icon">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                        </svg>
-                    </div>
+            <div class="video-extraction-content simple-loading">
+                <div class="extraction-spinner-simple">
+                    <div class="spinner-ring"></div>
                 </div>
-                <h3 class="extraction-title modern">Extraction en cours</h3>
-                <div class="extraction-episode">Épisode ${episodeNumber}</div>
-                <div class="extraction-status modern">
-                    <div class="extraction-dots">
-                        <span class="dot"></span>
-                        <span class="dot"></span>
-                        <span class="dot"></span>
-                    </div>
-                    <div class="extraction-message">Recherche de la vidéo...</div>
+                <div class="extraction-text-wrapper">
+                    <h3 class="extraction-title-simple">Épisode ${episodeNumber}</h3>
+                    <div class="extraction-message-simple">Extraction en cours...</div>
                 </div>
-                <div class="extraction-progress-bar">
-                    <div class="extraction-progress-fill"></div>
-                </div>
-                <button class="extraction-btn-cancel" onclick="closeExtractionModal()">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M18 6L6 18M6 6l12 12"/>
-                    </svg>
-                    Annuler
-                </button>
             </div>
         `;
         document.body.appendChild(modal);
-
-        // Animation de la barre de progression
-        setTimeout(() => {
-            const progressFill = modal.querySelector('.extraction-progress-fill');
-            if (progressFill) {
-                progressFill.style.width = '70%';
-            }
-        }, 100);
     }
 
     showSuccess(episodeNumber, videoUrl) {

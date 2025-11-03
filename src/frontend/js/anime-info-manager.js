@@ -84,16 +84,13 @@ export class AnimeInfoManager {
         }
 
         return `
-            <div class="seasons-selector-wrapper" data-label="Saison">
-                <label for="seasonSelect" class="season-selector-label">Saison :</label>
-                <select id="seasonSelect" class="season-selector">
-                    ${seasons.map((season, index) => `
-                        <option value="${season.id}" data-name="${season.name}" ${index === 0 ? 'selected' : ''}>
-                            ${season.name}
-                        </option>
-                    `).join('')}
-                </select>
-            </div>
+            <select id="seasonSelect" class="season-selector" style="display: none;">
+                ${seasons.map((season, index) => `
+                    <option value="${season.id}" data-name="${season.name}" ${index === 0 ? 'selected' : ''}>
+                        ${season.name}
+                    </option>
+                `).join('')}
+            </select>
             <div id="episodesContainer">
                 <div class="loading">
                     <div class="loading-spinner"></div>

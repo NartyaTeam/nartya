@@ -225,5 +225,53 @@ export class SourceAnalyzer {
 
         console.groupEnd();
     }
+
+    /**
+     * Détecte si une extraction a échoué (erreur réseau, timeout, HTML invalide)
+     */
+    isExtractionError(error) {
+        if (!error) return false;
+
+        const errorStr = error.toString().toLowerCase();
+        
+        // Patterns d'erreurs connues
+        const errorPatterns = [
+            'timeout',
+            'network error',
+            'failed to fetch',
+            'net::err',
+            'aucune url vidéo',
+            'impossible d\'extraire',
+            '404',
+            '403',
+            '500',
+            'not found',
+            'forbidden',
+            'unavailable'
+        ];
+
+        return errorPatterns.some(pattern => errorStr.includes(pattern));
+    }
+
+    /**
+     * Détecte si le HTML retourné est invalide (page d'erreur, maintenance, etc.)
+     */
+    isInvalidHtml(html) {
+        if (!html || typeof html !== 'string') return true;
+
+        const invalidPatterns = [
+            '404 not found',
+            '403 forbidden',
+            'page not found',
+            'video not found',
+            'file not found',
+            'maintenance',
+            'temporarily unavailable',
+            'error occurred'
+        ];
+
+        const htmlLower = html.toLowerCase();
+        return invalidPatterns.some(pattern => htmlLower.includes(pattern));
+    }
 }
 

@@ -25,12 +25,14 @@ export class SearchManager {
                 return result.results;
             } else {
                 console.error('Erreur de recherche:', result.error);
-                this.uiManager.showError();
+                // Afficher le message utilisateur si disponible
+                const errorMessage = result.userMessage || 'Une erreur est survenue lors de la recherche';
+                this.uiManager.showError(errorMessage);
                 return null;
             }
         } catch (error) {
             console.error('Erreur de recherche:', error);
-            this.uiManager.showError();
+            this.uiManager.showError('Une erreur inattendue s\'est produite');
             return null;
         }
     }

@@ -1,126 +1,410 @@
 /**
  * Application principale pour index.html
- * Orchestre tous les modules
+ * Nouvelle version avec cards Masonry, scroll animation et lazy loading
  */
 
-import { UIManager } from './ui-manager.js';
-import { SearchManager } from './search-manager.js';
 import { ChibiAnimations } from './chibi-animations.js';
 import { KeyboardShortcuts } from './keyboard-shortcuts.js';
 
 class IndexApp {
     constructor() {
-        this.uiManager = new UIManager();
-        this.searchManager = null;
         this.chibiAnimations = new ChibiAnimations();
         this.keyboardShortcuts = null;
+
+        // État de l'application
+        this.allAnimes = [];
+        this.displayedAnimes = [];
+        this.animesPerLoad = 20;
+        this.currentIndex = 0;
+        this.isLoading = false;
+        this.searchQuery = '';
+
+        // Éléments DOM
+        this.header = null;
+        this.heroSection = null;
+        this.searchInput = null;
+        this.searchInputNav = null;
+        this.clearIcon = null;
+        this.clearIconNav = null;
+        this.animesGrid = null;
+        this.lazySentinel = null;
+        this.scrollIndicator = null;
+
+        // Intersection Observer pour lazy loading
+        this.lazyObserver = null;
+
+        // Charger les paramètres
+        this.settings = this.loadSettings();
     }
 
-    initialize() {
-        // Récupérer les éléments DOM
-        const searchInput = document.getElementById('searchInput');
-        const clearIcon = document.getElementById('clearIcon');
-        const resultsContainer = document.getElementById('resultsContainer');
-        const resultsHeader = document.getElementById('resultsHeader');
-        const resultsList = document.getElementById('resultsList');
+    loadSettings() {
+        const defaultSettings = {
+            defaultLanguage: 'vostfr',
+            autoPlay: false,
+            videoQuality: 'auto',
+            preloadRange: 3,
+            visualEffects: true,
+            theme: 'dark',
+            animations: true,
+            watchHistory: true
+        };
 
-        // Initialiser les managers
-        this.uiManager.initialize(resultsContainer, resultsHeader, resultsList);
-        this.searchManager = new SearchManager(window.electronAPI, this.uiManager);
-        this.keyboardShortcuts = new KeyboardShortcuts(searchInput);
+        const saved = localStorage.getItem('nartya_settings');
+        return saved ? { ...defaultSettings, ...JSON.parse(saved) } : defaultSettings;
+    }
+
+    async initialize() {
+        // Récupérer les éléments DOM
+        this.header = document.getElementById('header');
+        this.heroSection = document.getElementById('heroSection');
+        this.searchInput = document.getElementById('searchInput');
+        this.searchInputNav = document.getElementById('searchInputNav');
+        this.clearIcon = document.getElementById('clearIcon');
+        this.clearIconNav = document.getElementById('clearIconNav');
+        this.animesGrid = document.getElementById('animesGrid');
+        this.lazySentinel = document.getElementById('lazySentinel');
+        this.scrollIndicator = document.getElementById('scrollIndicator');
+
+        // Charger tous les animes
+        await this.loadAllAnimes();
 
         // Initialiser les raccourcis clavier
+        this.keyboardShortcuts = new KeyboardShortcuts(this.searchInput);
         this.keyboardShortcuts.initialize();
 
-        // Gérer la recherche
-        searchInput.addEventListener('input', (e) => {
-            const query = e.target.value.trim();
-            clearIcon.style.display = query ? 'block' : 'none';
+        // Gérer le scroll pour l'animation
+        this.setupScrollAnimation();
 
-            this.searchManager.handleInput(query, (results, query) => {
-                this.uiManager.displayResults(results, query, (animeId) => {
-                    console.log('Anime sélectionné:', animeId);
-                    window.location.href = `anime.html?id=${animeId}`;
-                });
-            });
-        });
+        // Synchroniser les deux barres de recherche
+        this.setupSearchSync();
 
-        // Bouton clear
-        clearIcon.addEventListener('click', () => {
-            searchInput.value = '';
-            clearIcon.style.display = 'none';
-            this.uiManager.hideResults();
-            searchInput.focus();
-        });
+        // Setup lazy loading
+        this.setupLazyLoading();
+
+        // Setup scroll indicator
+        this.setupScrollIndicator();
+
+        // Setup typing placeholder effect
+        this.setupTypingPlaceholder();
 
         // Focus automatique
-        searchInput.focus();
+        this.searchInput.focus();
 
-        // Initialiser les chibis
-        this.chibiAnimations.initialize();
-
-        // Bouton de test d'extraction vidéo
-        this.addTestButton();
+        // Initialiser les chibis seulement si les effets visuels sont activés
+        if (this.settings.visualEffects) {
+            this.chibiAnimations.initialize();
+        }
     }
 
-    addTestButton() {
-        const testButton = document.createElement('button');
-        testButton.textContent = '🎬 Tester extraction vidéo';
-        testButton.style.cssText = `
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: #4ade80;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            z-index: 100;
-        `;
-        testButton.addEventListener('click', () => this.testVideoExtraction());
-        document.body.appendChild(testButton);
-    }
-
-    async testVideoExtraction() {
-        const embedUrl = 'https://sendvid.com/embed/d6ypq2pa';
-
+    async loadAllAnimes() {
         try {
-            console.log('🎬 Test d\'extraction de vidéo...');
-            const result = await window.electronAPI.extractVideoUrl(embedUrl);
+            const result = await window.electronAPI.searchLocalAnimes('');
 
-            if (result.success && result.videoUrl) {
-                console.log('✅ URL de la vidéo extraite:', result.videoUrl);
+            if (result.success && result.results) {
+                this.allAnimes = result.results;
+                console.log(`✅ ${this.allAnimes.length} animes chargés`);
 
-                const testResult = document.createElement('div');
-                testResult.style.cssText = `
-                    position: fixed;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%);
-                    background: rgba(0, 0, 0, 0.9);
-                    color: white;
-                    padding: 20px;
-                    border-radius: 10px;
-                    z-index: 1000;
-                    max-width: 80%;
-                    word-break: break-all;
-                `;
-                testResult.innerHTML = `
-                    <h3>🎬 Extraction réussie !</h3>
-                    <p><strong>URL de la vidéo:</strong></p>
-                    <p style="color: #4ade80;">${result.videoUrl}</p>
-                    <button onclick="this.parentElement.remove()" style="margin-top: 10px; padding: 5px 10px;">Fermer</button>
-                `;
-                document.body.appendChild(testResult);
+                // Afficher les premiers animes
+                this.loadMoreAnimes();
             } else {
-                console.log('❌ Échec de l\'extraction:', result.error);
-                alert('Échec de l\'extraction: ' + (result.error || 'URL non trouvée'));
+                console.error('Erreur lors du chargement des animes');
+                this.animesGrid.innerHTML = '<div class="loading">Erreur lors du chargement des animes</div>';
             }
         } catch (error) {
-            console.error('❌ Erreur:', error);
-            alert('Erreur lors de l\'extraction: ' + error.message);
+            console.error('Erreur:', error);
+            this.animesGrid.innerHTML = '<div class="loading">Erreur lors du chargement des animes</div>';
         }
+    }
+
+    loadMoreAnimes() {
+        if (this.isLoading) return;
+
+        this.isLoading = true;
+
+        // Déterminer quels animes afficher
+        const animesToShow = this.searchQuery
+            ? this.filterAnimes(this.searchQuery)
+            : this.allAnimes;
+
+        // Calculer le slice
+        const start = this.currentIndex;
+        const end = Math.min(start + this.animesPerLoad, animesToShow.length);
+        const newAnimes = animesToShow.slice(start, end);
+
+        // Si c'est le premier chargement, vider le loading
+        if (start === 0) {
+            this.animesGrid.innerHTML = '';
+        }
+
+        // Ajouter les nouvelles cards
+        newAnimes.forEach((anime, index) => {
+            const card = this.createAnimeCard(anime);
+            // Délai d'animation échelonné
+            card.style.animationDelay = `${index * 0.05}s`;
+            this.animesGrid.appendChild(card);
+        });
+
+        this.currentIndex = end;
+        this.isLoading = false;
+
+        console.log(`📺 Affichage ${start}-${end} sur ${animesToShow.length}`);
+    }
+
+    createAnimeCard(anime) {
+        const card = document.createElement('div');
+        card.className = 'anime-card';
+        card.dataset.animeId = anime.slug || anime.id;
+
+        const title = anime.title?.romaji || anime.title?.english || anime.title?.native || 'Titre inconnu';
+        const image = anime.coverImage?.large || anime.coverImage?.medium || '';
+        const format = anime.format || '';
+
+        card.innerHTML = `
+            ${image ? `<img src="${image}" alt="${title}" class="anime-card-image" />` : ''}
+            <div class="anime-card-content">
+                <div class="anime-card-title">${title}</div>
+                ${format ? `<div class="anime-card-format">${format}</div>` : ''}
+            </div>
+        `;
+
+        card.addEventListener('click', () => {
+            window.location.href = `anime.html?id=${anime.slug || anime.id}`;
+        });
+
+        return card;
+    }
+
+    filterAnimes(query) {
+        const lowerQuery = query.toLowerCase();
+        return this.allAnimes.filter(anime => {
+            const romaji = anime.title?.romaji?.toLowerCase() || '';
+            const english = anime.title?.english?.toLowerCase() || '';
+            const native = anime.title?.native?.toLowerCase() || '';
+
+            return romaji.includes(lowerQuery) ||
+                english.includes(lowerQuery) ||
+                native.includes(lowerQuery);
+        });
+    }
+
+    handleSearch(query) {
+        this.searchQuery = query.trim();
+
+        // Reset l'index
+        this.currentIndex = 0;
+
+        if (this.searchQuery) {
+            // Mode compact : réduire la hero section pour afficher les résultats
+            this.heroSection.classList.add('compact');
+
+            // Filtrer et afficher
+            const filtered = this.filterAnimes(this.searchQuery);
+            console.log(`🔍 ${filtered.length} résultats pour "${this.searchQuery}"`);
+
+            // Cacher toutes les cards
+            const allCards = this.animesGrid.querySelectorAll('.anime-card');
+            allCards.forEach(card => card.classList.add('hidden'));
+
+            // Si aucun résultat
+            if (filtered.length === 0) {
+                this.animesGrid.innerHTML = `
+                    <div class="loading">
+                        <div style="font-size: 2rem; margin-bottom: 1rem; opacity: 0.4;">🔍</div>
+                        <div>Aucun anime trouvé pour "${this.searchQuery}"</div>
+                    </div>
+                `;
+                return;
+            }
+
+            // Vider et recharger
+            this.animesGrid.innerHTML = '';
+            this.loadMoreAnimes();
+        } else {
+            // Pas de recherche, remettre la hero section en mode normal
+            this.heroSection.classList.remove('compact');
+
+            // Pas de recherche, afficher tous les animes
+            const allCards = this.animesGrid.querySelectorAll('.anime-card');
+
+            if (allCards.length === 0) {
+                // Si rien n'est affiché, charger depuis le début
+                this.currentIndex = 0;
+                this.animesGrid.innerHTML = '';
+                this.loadMoreAnimes();
+            } else {
+                // Réafficher toutes les cards
+                allCards.forEach(card => card.classList.remove('hidden'));
+            }
+        }
+    }
+
+    setupScrollAnimation() {
+        let lastScrollY = window.scrollY;
+        let ticking = false;
+
+        const updateScroll = () => {
+            const scrollY = window.scrollY;
+
+            // Animation du header (apparait après 100px)
+            if (scrollY > 100) {
+                this.header.classList.add('scrolled');
+                document.getElementById('headerSearch').classList.add('visible');
+                this.heroSection.classList.add('hidden');
+            } else {
+                this.header.classList.remove('scrolled');
+                document.getElementById('headerSearch').classList.remove('visible');
+                this.heroSection.classList.remove('hidden');
+            }
+
+            ticking = false;
+        };
+
+        window.addEventListener('scroll', () => {
+            lastScrollY = window.scrollY;
+
+            if (!ticking) {
+                window.requestAnimationFrame(updateScroll);
+                ticking = true;
+            }
+        });
+    }
+
+    setupSearchSync() {
+        // Synchroniser les deux inputs
+        this.searchInput.addEventListener('input', (e) => {
+            const query = e.target.value;
+            this.searchInputNav.value = query;
+            this.clearIcon.style.display = query ? 'block' : 'none';
+            this.clearIconNav.style.display = query ? 'block' : 'none';
+
+            this.handleSearch(query);
+        });
+
+        this.searchInputNav.addEventListener('input', (e) => {
+            const query = e.target.value;
+            this.searchInput.value = query;
+            this.clearIcon.style.display = query ? 'block' : 'none';
+            this.clearIconNav.style.display = query ? 'block' : 'none';
+
+            this.handleSearch(query);
+        });
+
+        // Boutons clear
+        this.clearIcon.addEventListener('click', () => {
+            this.searchInput.value = '';
+            this.searchInputNav.value = '';
+            this.clearIcon.style.display = 'none';
+            this.clearIconNav.style.display = 'none';
+            this.handleSearch('');
+            this.searchInput.focus();
+        });
+
+        this.clearIconNav.addEventListener('click', () => {
+            this.searchInput.value = '';
+            this.searchInputNav.value = '';
+            this.clearIcon.style.display = 'none';
+            this.clearIconNav.style.display = 'none';
+            this.handleSearch('');
+            this.searchInputNav.focus();
+        });
+    }
+
+    setupLazyLoading() {
+        // Intersection Observer pour détecter quand on arrive en bas
+        this.lazyObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting && !this.isLoading) {
+                    // On est arrivé au sentinel, charger plus d'animes
+                    const animesToShow = this.searchQuery
+                        ? this.filterAnimes(this.searchQuery)
+                        : this.allAnimes;
+
+                    if (this.currentIndex < animesToShow.length) {
+                        console.log('📜 Lazy loading...');
+                        this.loadMoreAnimes();
+                    }
+                }
+            });
+        }, {
+            rootMargin: '200px' // Commencer à charger 200px avant d'atteindre le sentinel
+        });
+
+        // Observer le sentinel
+        if (this.lazySentinel) {
+            this.lazyObserver.observe(this.lazySentinel);
+        }
+    }
+
+    setupScrollIndicator() {
+        // Cliquer sur l'indicateur pour scroller vers les résultats
+        if (this.scrollIndicator) {
+            this.scrollIndicator.addEventListener('click', () => {
+                const gridTop = this.animesGrid.getBoundingClientRect().top + window.scrollY;
+                window.scrollTo({
+                    top: gridTop - 100,
+                    behavior: 'smooth'
+                });
+            });
+        }
+    }
+
+    setupTypingPlaceholder() {
+        const placeholders = [
+            'Rechercher un anime...',
+            'Naruto, One Piece, Attack on Titan...',
+            'Découvrez votre prochain anime...',
+            'Des milliers d\'animes vous attendent...',
+            'Shonen, Seinen, Isekai...'
+        ];
+
+        let currentIndex = 0;
+        let charIndex = 0;
+        let isDeleting = false;
+        let isPaused = false;
+
+        const typeEffect = () => {
+            // Ne pas changer le placeholder si l'utilisateur a tapé quelque chose
+            if (this.searchInput.value || document.activeElement === this.searchInput) {
+                setTimeout(typeEffect, 100);
+                return;
+            }
+
+            const currentText = placeholders[currentIndex];
+
+            if (isPaused) {
+                isPaused = false;
+                setTimeout(typeEffect, 2000);
+                return;
+            }
+
+            if (!isDeleting) {
+                // Typing
+                this.searchInput.placeholder = currentText.substring(0, charIndex + 1);
+                charIndex++;
+
+                if (charIndex === currentText.length) {
+                    isPaused = true;
+                    isDeleting = true;
+                }
+
+                setTimeout(typeEffect, 100);
+            } else {
+                // Deleting
+                this.searchInput.placeholder = currentText.substring(0, charIndex - 1);
+                charIndex--;
+
+                if (charIndex === 0) {
+                    isDeleting = false;
+                    currentIndex = (currentIndex + 1) % placeholders.length;
+                    setTimeout(typeEffect, 500);
+                } else {
+                    setTimeout(typeEffect, 50);
+                }
+            }
+        };
+
+        // Démarrer l'effet après 2 secondes
+        setTimeout(typeEffect, 2000);
     }
 }
 
@@ -129,4 +413,3 @@ document.addEventListener('DOMContentLoaded', () => {
     const app = new IndexApp();
     app.initialize();
 });
-

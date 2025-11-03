@@ -11,6 +11,7 @@
  */
 
 const { BrowserWindow, session } = require('electron');
+const logger = require('../utils/logger');
 
 class VideoExtractor {
     constructor() {
@@ -202,11 +203,20 @@ class VideoExtractor {
                 if (!done) {
                     done = true;
                     cleanup();
-                    resolve(null);
+                    // Si on a trouvé une URL mais pas eu de confirmation, la retourner quand même
+                    if (foundUrl) {
+                        logger.log('✅ Extraction via timeout:', foundUrl.substring(0, 100));
+                        resolve(foundUrl);
+                    } else {
+                        resolve(null);
+                    }
                 }
             }, timeoutMs);
 
             const filter = { urls: ['*://*/*'] };
+
+            // Stocker la première URL trouvée (éviter les doublons)
+            let foundUrl = null;
 
             const beforeHandler = (details, callback) => {
                 try {
@@ -218,11 +228,11 @@ class VideoExtractor {
                         return;
                     }
 
-                    console.log('🎯 Vidéo candidate trouvée (beforeRequest):', details.url.substring(0, 100));
-                    done = true;
-                    clearTimeout(timer);
-                    cleanup();
-                    resolve(details.url);
+                    // Stocker l'URL mais ne pas résoudre immédiatement
+                    if (!foundUrl) {
+                        foundUrl = details.url;
+                        logger.log('🎯 Vidéo candidate détectée:', details.url.substring(0, 100));
+                    }
                 } catch (e) { /* ignore */ }
                 callback({});
             };
@@ -234,11 +244,14 @@ class VideoExtractor {
                     // Filtrage rapide
                     if (!this.isVideoCandidate(details.url)) return;
 
-                    console.log('🎯 Vidéo candidate trouvée (completed):', details.url.substring(0, 100));
-                    done = true;
-                    clearTimeout(timer);
-                    cleanup();
-                    resolve(details.url);
+                    // Si c'est la même URL ou une meilleure, résoudre maintenant
+                    if (!foundUrl || details.url === foundUrl) {
+                        logger.log('✅ Extraction réussie:', details.url.substring(0, 100));
+                        done = true;
+                        clearTimeout(timer);
+                        cleanup();
+                        resolve(details.url);
+                    }
                 } catch (e) { }
             };
 
@@ -412,42 +425,44 @@ class VideoExtractor {
             // Attente réduite pour laisser la page s'initialiser
             await new Promise(r => setTimeout(r, this.loadWaitTime));
 
-            // **APPROCHE PARALLÈLE** : Lancer toutes les méthodes en même temps
+            // **APPROCHE RACE** : Wrapper pour transformer les résultats null en promesses qui ne se résolvent jamais
+            const wrapPromise = (promise, method) => {
+                return promise.then(result => {
+                    if (!result) {
+                        // Si pas de résultat, retourner une promesse qui ne se résout jamais
+                        return new Promise(() => { });
+                    }
+
+                    // Valider que c'est bien une URL vidéo
+                    const url = typeof result === 'string' ? result : result?.url;
+                    if (url && this.isVideoCandidate(url)) {
+                        return { url, method };
+                    }
+
+                    // Si pas valide, retourner une promesse qui ne se résout jamais
+                    return new Promise(() => { });
+                }).catch(() => new Promise(() => { })); // En cas d'erreur, ne jamais se résoudre
+            };
+
+            // Lancer toutes les méthodes en parallèle avec race
             const parallelPromises = [
-                // 1. Réseau (déjà en cours)
-                networkPromise,
-
-                // 2. Check DOM direct
-                this.checkDomForDirectUrl(win).catch(() => null),
-
-                // 3. Injection de hooks
-                this.injectHooks(win, this.hookTimeout).catch(() => null)
+                wrapPromise(networkPromise, 'réseau'),
+                wrapPromise(this.checkDomForDirectUrl(win), 'DOM'),
+                wrapPromise(this.injectHooks(win, this.hookTimeout), 'hooks')
             ];
 
-            // Race : la première méthode qui trouve quelque chose gagne !
-            const results = await Promise.all(parallelPromises);
+            // Race : retourner dès que la première méthode trouve quelque chose
+            try {
+                const winner = await Promise.race(parallelPromises);
 
-            // Analyser les résultats
-            for (let i = 0; i < results.length; i++) {
-                const result = results[i];
-
-                if (!result) continue;
-
-                // Résultat du réseau (simple URL string)
-                if (typeof result === 'string' && this.isVideoCandidate(result)) {
+                if (winner && winner.url) {
                     const elapsed = Date.now() - startTime;
-                    console.log(`✅ Trouvé via réseau en ${elapsed}ms:`, result.substring(0, 100));
+                    logger.log(`✅ Extraction complète via ${winner.method} (${elapsed}ms)`);
                     try { win.close(); } catch (e) { }
-                    return { success: true, videoUrl: result };
+                    return { success: true, videoUrl: winner.url };
                 }
-
-                // Résultat des hooks (objet avec type et url)
-                if (result && result.url && this.isVideoCandidate(result.url)) {
-                    const elapsed = Date.now() - startTime;
-                    console.log(`✅ Trouvé via ${result.type} en ${elapsed}ms:`, result.url.substring(0, 100));
-                    try { win.close(); } catch (e) { }
-                    return { success: true, videoUrl: result.url };
-                }
+            } catch (e) {
+                console.error('Erreur lors de la race:', e);
             }
 
             // Dernier recours : check DOM final pour blob URLs
