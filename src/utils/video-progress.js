@@ -10,8 +10,18 @@ const logger = require("./logger");
 
 class VideoProgressManager {
   constructor() {
-    this.progressFilePath = path.join(PATHS.DATA, "video-progress.json");
+    // Utiliser les fichiers .dev.json en mode développement
+    const isDev =
+      process.argv.includes("--dev") || process.env.NODE_ENV === "development";
+    const fileName = isDev ? "video-progress.dev.json" : "video-progress.json";
+    this.progressFilePath = path.join(PATHS.DATA, fileName);
     this.progress = this.loadProgress();
+
+    if (isDev) {
+      logger.log(
+        "🔧 Mode développement: utilisation de video-progress.dev.json"
+      );
+    }
   }
 
   /**

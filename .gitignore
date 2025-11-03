@@ -115,3 +115,6 @@ dist/
 # Application specific
 src/data/animes.json.bak
 src/data/animes-backup.json
+
+# Fichiers de développement (données personnelles)
+src/data/*.dev.json

@@ -7,6 +7,7 @@
   "license": "ISC",
   "scripts": {
     "start": "electron .",
+    "dev": "electron . --dev",
     "build": "electron-builder --win --x64",
     "scrape": "node src/scraper/indexer.js"
   },
