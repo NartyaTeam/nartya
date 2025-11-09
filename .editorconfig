@@ -1,0 +1,38 @@
+# EditorConfig - Configuration de formatage du code
+# https://editorconfig.org
+
+root = true
+
+# Paramètres par défaut pour tous les fichiers
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+# Fichiers JavaScript et JSON
+[*.{js,json}]
+indent_size = 2
+
+# Fichiers CSS
+[*.css]
+indent_size = 2
+
+# Fichiers HTML
+[*.html]
+indent_size = 2
+
+# Fichiers Markdown (garder les espaces de fin)
+[*.md]
+trim_trailing_whitespace = false
+
+# Fichiers YAML
+[*.{yml,yaml}]
+indent_size = 2
+
+# Package.json (formatage strict)
+[package.json]
+indent_size = 2
+

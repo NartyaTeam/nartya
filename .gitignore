@@ -93,7 +93,7 @@ tmp/
 temp/
 
 # Editor directories and files
-.vscode/
+# .vscode/ est conservé pour les configurations partagées
 .idea/
 *.swp
 *.swo

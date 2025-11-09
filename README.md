@@ -1,103 +1,148 @@
-# Nartya
+# 🎌 Nartya
 
-Application Electron moderne pour regarder des animes gratuitement avec une interface élégante et sans publicité.
+> Application de streaming d'animes élégante et performante pour Windows
 
-## 🏗️ Structure du projet
+[![Version](https://img.shields.io/github/v/release/RandomZeleff/nartya-app)](https://github.com/RandomZeleff/nartya-app/releases)
+[![License](https://img.shields.io/badge/license-ISC-blue.svg)](LICENSE)
+[![Electron](https://img.shields.io/badge/Electron-33.2.0-47848F?logo=electron)](https://www.electronjs.org/)
 
-```
-src/
-├── electron/          # Code Electron (main, preload)
-│   ├── main.js       # Processus principal Electron
-│   └── preload.js    # Script de préchargement sécurisé
-├── frontend/          # Interface utilisateur
-│   └── index.html    # Page principale avec CSS intégré
-├── scraper/          # Logique de scraping
-│   ├── index.js      # Classe principale du scraper
-│   └── indexer.js    # Script d'indexation des animes
-├── assets/           # Images et ressources
-│   ├── chibi.png     # Icône de l'application
-│   └── ...           # Autres images
-├── data/             # Données JSON
-│   └── animes.json   # Base de données des animes
-└── utils/            # Utilitaires partagés
-    ├── config.js     # Configuration de l'application
-    ├── paths.js      # Gestion des chemins
-    ├── test-extraction.js      # Tests d'extraction
-    └── test-video-extraction.js # Tests vidéo
-```
+## ✨ Fonctionnalités
 
-## 🚀 Installation et utilisation
+- 🎬 **Streaming HD** - Lecture fluide de vos animes préférés
+- 🔍 **Recherche intelligente** - Trouvez rapidement ce que vous cherchez
+- 📚 **Catalogue complet** - Accès à une vaste bibliothèque d'animes
+- 🌐 **Multi-langues** - Support VF et VOSTFR
+- 📊 **Suivi de progression** - Reprenez là où vous vous êtes arrêté
+- 🔄 **Mises à jour automatiques** - Restez toujours à jour
+- 🎨 **Interface moderne** - Design épuré et intuitif
+- ⚡ **Performances optimales** - Chargement rapide et navigation fluide
 
-### Prérequis
+## 📥 Installation
 
-- Node.js (version 16 ou supérieure)
-- pnpm (recommandé) ou npm
+### Téléchargement
+
+Téléchargez la dernière version depuis la [page des releases](https://github.com/RandomZeleff/nartya-app/releases/latest).
 
 ### Installation
 
-```bash
-# Installer les dépendances
-pnpm install
+1. Exécutez le fichier `Nartya-Setup-x.x.x.exe`
+2. Suivez les instructions de l'installateur
+3. Lancez Nartya depuis le raccourci bureau ou le menu démarrer
 
-# Ou avec npm
-npm install
+## 🚀 Utilisation
+
+### Recherche d'animes
+
+- Utilisez la barre de recherche en haut de l'écran
+- Les résultats s'affichent en temps réel
+- Cliquez sur un anime pour voir les détails
+
+### Lecture de vidéos
+
+- Sélectionnez une saison et un épisode
+- Choisissez la langue (VF/VOSTFR)
+- La lecture démarre automatiquement
+- Votre progression est sauvegardée automatiquement
+
+### Raccourcis clavier
+
+- `Espace` - Lecture/Pause
+- `F` - Plein écran
+- `M` - Muet/Son
+- `←/→` - Reculer/Avancer de 10 secondes
+- `↑/↓` - Augmenter/Diminuer le volume
+
+## 🛠️ Développement
+
+### Prérequis
+
+- [Node.js](https://nodejs.org/) (v18 ou supérieur)
+- [pnpm](https://pnpm.io/) (v8 ou supérieur)
+
+### Installation des dépendances
+
+```bash
+pnpm install
+```
+
+### Lancement en mode développement
+
+```bash
+pnpm dev
+```
+
+### Build de production
+
+```bash
+pnpm build
 ```
 
 ### Scripts disponibles
 
-```bash
-# Lancer l'application
-pnpm start
+- `pnpm start` - Lancer l'application
+- `pnpm dev` - Lancer en mode développement
+- `pnpm build` - Créer un build de production
+- `pnpm scrape` - Mettre à jour la base de données d'animes
+- `pnpm release:patch` - Créer une release patch (1.0.x)
+- `pnpm release:minor` - Créer une release minor (1.x.0)
+- `pnpm release:major` - Créer une release major (x.0.0)
 
-# Lancer en mode développement (avec DevTools)
-pnpm dev
+## 📁 Structure du projet
 
-# Indexer les animes (scraping)
-pnpm scrape
-
-# Tester l'extraction de vidéos
-pnpm test-extraction
-pnpm test-video
+```
+nartya/
+├── src/
+│   ├── electron/          # Processus principal Electron
+│   │   ├── main.js        # Point d'entrée
+│   │   ├── preload.js     # Bridge sécurisé
+│   │   └── ipc-handlers.js # Gestionnaire IPC
+│   ├── frontend/          # Interface utilisateur
+│   │   ├── js/            # Logique frontend
+│   │   └── styles/        # Feuilles de style
+│   ├── scraper/           # Scraping des données
+│   ├── utils/             # Utilitaires
+│   └── data/              # Données locales
+├── scripts/               # Scripts de build et release
+├── .github/               # GitHub Actions
+└── package.json
 ```
 
-## 🎯 Fonctionnalités
+## 🔒 Sécurité
 
-- **Interface moderne** : Design épuré avec animations fluides
-- **Recherche en temps réel** : Recherche locale dans la base d'animes
-- **Scraping intelligent** : Extraction automatique des données d'animes
-- **Extraction vidéo** : Récupération des URLs de vidéos depuis les embeds
-- **Base de données locale** : Stockage JSON des animes indexés
+- Aucune donnée personnelle n'est collectée
+- Pas de tracking ni d'analytics
+- Communication sécurisée via IPC
+- Mises à jour signées et vérifiées
 
-## 🔧 Configuration
+## 🤝 Contribution
 
-La configuration est centralisée dans `src/utils/config.js` :
+Les contributions sont les bienvenues ! Consultez [CONTRIBUTING.md](CONTRIBUTING.md) pour plus d'informations.
 
-- Paramètres Electron (taille de fenêtre, DevTools)
-- Configuration du scraper (URLs, délais)
-- Paramètres AniList API
-- Configuration UI (délais, animations)
+### Processus de contribution
 
-## 📁 Organisation
+1. Fork le projet
+2. Créez votre branche (`git checkout -b feature/AmazingFeature`)
+3. Committez vos changements (`git commit -m 'Add some AmazingFeature'`)
+4. Poussez vers la branche (`git push origin feature/AmazingFeature`)
+5. Ouvrez une Pull Request
 
-- **electron/** : Code côté processus principal Electron
-- **frontend/** : Interface utilisateur (HTML/CSS/JS)
-- **scraper/** : Logique de scraping et indexation
-- **assets/** : Ressources statiques (images, icônes)
-- **data/** : Données persistantes (JSON)
-- **utils/** : Utilitaires partagés et configuration
+## 📝 License
 
-## 🛠️ Développement
+Ce projet est sous licence ISC. Voir le fichier [LICENSE](LICENSE) pour plus de détails.
 
-L'application utilise :
+## 🙏 Remerciements
 
-- **Electron** pour l'interface desktop
-- **Cheerio** pour le parsing HTML
-- **Fetch API** pour les requêtes HTTP
-- **AniList GraphQL** pour les métadonnées d'animes
+- [Anime-Sama](https://anime-sama.org) pour le contenu
+- [Electron](https://www.electronjs.org/) pour le framework
+- [Cheerio](https://cheerio.js.org/) pour le scraping
+- Tous les contributeurs qui ont participé au projet
 
-## 📝 Notes
+## 📧 Contact
 
-- Les données sont stockées localement dans `src/data/animes.json`
-- Le scraping respecte les délais pour éviter la surcharge des serveurs
-- L'extraction vidéo fonctionne avec plusieurs plateformes d'embed
-- L'interface est responsive et optimisée pour différentes tailles d'écran
+Zeleff - [@RandomZeleff](https://github.com/RandomZeleff)
+
+Lien du projet : [https://github.com/RandomZeleff/nartya-app](https://github.com/RandomZeleff/nartya-app)
+
+---
+
+<p align="center">Fait avec ❤️ par Zeleff</p>

@@ -10,12 +10,12 @@
     "dev": "electron . --dev",
     "build": "electron-builder --win --x64",
     "scrape": "node src/scraper/indexer.js",
-    "release": "node release.js",
+    "release": "node scripts/release.js",
     "release:patch": "npm version patch && git push && git push --tags",
     "release:minor": "npm version minor && git push && git push --tags",
     "release:major": "npm version major && git push && git push --tags",
     "postversion": "echo ✅ Version mise à jour et tag poussé. GitHub Actions va créer la release automatiquement !",
-    "check-release": "node -e \"const fs=require('fs');const p='dist/';if(!fs.existsSync(p+'latest.yml')){console.error('❌ latest.yml manquant');process.exit(1)}console.log('✅ Fichiers de release OK')\""
+    "check-release": "node scripts/check-release.js"
   },
   "build": {
     "appId": "com.zeleff.nartya",

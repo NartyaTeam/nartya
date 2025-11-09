@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+pnpm-lock.yaml
+
+# Build outputs
+dist/
+dist-electron/
+
+# Data files
+src/data/*.json
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+

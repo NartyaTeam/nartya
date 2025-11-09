@@ -1,0 +1,12 @@
+# Configuration des sponsors GitHub
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository
+
+# GitHub Sponsors
+github: # [RandomZeleff]
+
+# Autres plateformes (décommenter et remplir si nécessaire)
+# patreon: username
+# ko_fi: username
+# buy_me_a_coffee: username
+# custom: ['https://www.paypal.me/username']
+

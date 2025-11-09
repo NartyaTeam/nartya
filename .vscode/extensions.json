@@ -1,0 +1,12 @@
+{
+  "recommendations": [
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+    "editorconfig.editorconfig",
+    "ms-vscode.vscode-js-profile-flame",
+    "christian-kohler.path-intellisense",
+    "formulahendry.auto-rename-tag",
+    "naumovs.color-highlight",
+    "streetsidesoftware.code-spell-checker"
+  ]
+}
