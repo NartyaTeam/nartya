@@ -8,6 +8,14 @@
   box-sizing: border-box;
 }
 
+/* Amélioration globale de la qualité des images */
+img {
+  image-rendering: -webkit-optimize-contrast;
+  -webkit-backface-visibility: hidden;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI",
     sans-serif;
@@ -530,7 +538,7 @@ body::after {
 }
 
 .anime-card:hover .anime-card-image {
-  transform: scale(1.05);
+  /* Pas de scale pour éviter la pixelisation, juste brightness */
   filter: brightness(1.1);
 }
 
@@ -544,7 +552,17 @@ body::after {
   object-fit: cover;
   display: block;
   background: rgba(255, 255, 255, 0.03);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Rendu haute qualité pour les images */
+  image-rendering: -webkit-optimize-contrast;
+  -webkit-backface-visibility: hidden;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  /* Force le rendu sur GPU pour une meilleure qualité */
+  will-change: filter;
+  /* Anti-aliasing subpixel pour netteté maximale */
+  -webkit-font-smoothing: subpixel-antialiased;
+  /* Transition seulement sur le filtre pour éviter le blur */
+  transition: filter 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .anime-card-content {

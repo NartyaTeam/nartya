@@ -7,12 +7,13 @@ const fs = require("fs");
 const path = require("path");
 const PATHS = require("./paths");
 const logger = require("./logger");
+const CONFIG = require("./config");
 
 class VideoProgressManager {
   constructor() {
     // Utiliser les fichiers .dev.json en mode développement
     const isDev =
-      process.argv.includes("--dev") || process.env.NODE_ENV === "development";
+      CONFIG.ELECTRON.DEV_TOOLS || process.env.NODE_ENV === "development";
     const fileName = isDev ? "video-progress.dev.json" : "video-progress.json";
     this.progressFilePath = path.join(PATHS.DATA, fileName);
     this.progress = this.loadProgress();

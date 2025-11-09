@@ -1,23 +1,89 @@
 const { load } = require("cheerio");
 const fs = require("fs");
 const path = require("path");
-const fetch = require("node-fetch");
 const CONFIG = require("../utils/config");
 
 class Scraper {
-  static async getHtml(url, loadCheerio = true) {
-    const response = await fetch(url, {
-      // Headers importants pour éviter les erreurs cloudflare
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-        Accept:
-          "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "fr-FR,fr;q=0.9,en;q=0.8",
-      },
-    });
-    const text = await response.text();
-    return loadCheerio ? load(text) : text;
+  static async getHtml(url, loadCheerio = true, retries = 5) {
+    let lastError;
+
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try {
+        if (attempt > 1) {
+          // Attendre un peu avant de réessayer (délai progressif + aléatoire pour paraître humain)
+          const baseDelay = attempt * 600; // 600ms, 1200ms, 1800ms, 2400ms, 3000ms
+          const randomDelay = Math.floor(Math.random() * 300); // +0-300ms aléatoire
+          const delay = baseDelay + randomDelay;
+          console.log(`⏳ Attente de ${delay}ms avant nouvelle tentative...`);
+          await new Promise((resolve) => setTimeout(resolve, delay));
+        }
+
+        console.log(
+          `🌐 Requête vers: ${url}${
+            attempt > 1 ? ` (tentative ${attempt}/${retries})` : ""
+          }`
+        );
+
+        // Utiliser le fetch natif de Node.js - fonctionne parfaitement avec Cloudflare!
+        const response = await fetch(url);
+
+        console.log(`📊 Status: ${response.status}`);
+
+        // Si 403, on réessaie (Cloudflare warming up)
+        if (response.status === 403 && attempt < retries) {
+          console.warn(
+            `⚠️ 403 Forbidden - Cloudflare warming up, nouvelle tentative...`
+          );
+          lastError = new Error(`HTTP 403: Forbidden`);
+          continue; // Passer à la tentative suivante
+        }
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const html = await response.text();
+        console.log(`✅ Réponse reçue (${html.length} caractères)`);
+
+        // Vérifier si c'est un VRAI challenge Cloudflare actif (pas juste les scripts)
+        const isRealChallenge =
+          html.includes("Just a moment") && html.length < 10000;
+
+        if (isRealChallenge) {
+          console.error("❌ Challenge Cloudflare actif détecté");
+          console.log(`📄 Aperçu:`, html.substring(0, 500));
+          throw new Error(
+            "Challenge Cloudflare actif. Le site bloque temporairement les requêtes."
+          );
+        }
+
+        // Succès ! On sort de la boucle
+        if (attempt > 1) {
+          console.log(`✅ Succès après ${attempt} tentative(s)`);
+        }
+        return loadCheerio ? load(html) : html;
+      } catch (error) {
+        lastError = error;
+
+        // Si c'est la dernière tentative, on lance l'erreur
+        if (attempt === retries) {
+          console.error(
+            `❌ Échec après ${retries} tentatives pour ${url}:`,
+            error.message
+          );
+          throw error;
+        }
+
+        // Sinon on log et on continue
+        console.warn(
+          `⚠️ Tentative ${attempt}/${retries} échouée:`,
+          error.message
+        );
+      }
+    }
+
+    // Si on arrive ici, toutes les tentatives ont échoué
+    throw lastError;
   }
 
   static async getAnilistInfo(search) {
@@ -59,8 +125,8 @@ class Scraper {
       catalog.each((i, el) => {
         const title = $("h1", el).text();
         const url = $(el).attr("href");
-        const id = url.split("/")[4];
-        animes.push({ title, url, id });
+        const slug = url.split("/")[4];
+        animes.push({ title, url, slug });
       });
       hasNextPage = catalog.length > 0;
       page++;
@@ -130,13 +196,34 @@ class Scraper {
   }
 
   static async getSeasons(animeId) {
+    console.log(
+      `🔍 getSeasons: Récupération de ${CONFIG.SCRAPER.BASE_URL}/catalogue/${animeId}/`
+    );
+
     const $ = await this.getHtml(
       `${CONFIG.SCRAPER.BASE_URL}/catalogue/${animeId}/`
     );
+
+    const allScripts = $("script");
+    console.log(
+      `📜 Nombre total de balises <script> trouvées: ${allScripts.length}`
+    );
+
     const scripts = $("script")
       .map((i, el) => $(el).html())
       .get()
       .filter((code) => code.includes('panneauAnime("'));
+
+    console.log(`📜 Scripts contenant 'panneauAnime("': ${scripts.length}`);
+
+    if (scripts.length === 0) {
+      console.warn(
+        `⚠️ Aucun script contenant 'panneauAnime("' trouvé pour ${animeId}`
+      );
+      // Afficher un échantillon du HTML pour debug
+      const bodyText = $("body").text().substring(0, 500);
+      console.log(`📄 Échantillon du contenu de la page:`, bodyText);
+    }
 
     // 1️⃣ Fusionner tous les scripts
     const code = scripts.join("\n");
@@ -154,38 +241,84 @@ class Scraper {
       ...cleaned.matchAll(/panneauAnime\("([^"]+)",\s*"([^"]+)"\)/g),
     ];
 
+    console.log(`🎯 Nombre de matches trouvés: ${matches.length}`);
+
     // 4️⃣ Transformer en tableau d'objets
     const seasons = matches.map(([_, name, id]) => ({
       name,
       id: id.split("/")[0],
     }));
 
+    console.log(`✅ Saisons extraites:`, seasons);
     return seasons;
   }
 
   static async getEpisodes(animeId, seasonId) {
     const result = {};
+
     for (const lang of ["vf", "vostfr", "va"]) {
       const url = `${CONFIG.SCRAPER.BASE_URL}/catalogue/${animeId}/${seasonId}/${lang}/episodes.js`;
-      const html = await this.getHtml(url, false);
 
-      const regex = /var\s+(eps\d+)\s*=\s*\[([\s\S]*?)\];/g;
-      const matches = [...html.matchAll(regex)];
+      try {
+        console.log(
+          `🔍 Tentative de récupération des épisodes en ${lang.toUpperCase()}...`
+        );
 
-      const sources = {};
-      for (const match of matches) {
-        const [, name, content] = match;
+        // Utiliser fetch directement pour gérer les 404
+        const response = await fetch(url);
 
-        // Nettoyer et transformer le contenu en vrai tableau
-        const urls = content
-          .split(",") // sépare par virgules
-          .map((u) => u.replace(/['"\s]/g, "")) // enlève guillemets et espaces
-          .filter(Boolean); // enlève les vides
+        // Si 404, cette langue n'existe pas pour cet anime
+        if (response.status === 404) {
+          console.log(`⚠️ Pas d'épisodes en ${lang.toUpperCase()} (404)`);
+          result[lang] = {}; // Langue non disponible
+          continue;
+        }
 
-        sources[name] = urls;
+        // Si autre erreur, on la signale mais on continue
+        if (!response.ok) {
+          console.warn(
+            `⚠️ Erreur ${response.status} pour ${lang.toUpperCase()}`
+          );
+          result[lang] = {};
+          continue;
+        }
+
+        const html = await response.text();
+        console.log(
+          `✅ Épisodes ${lang.toUpperCase()} récupérés (${
+            html.length
+          } caractères)`
+        );
+
+        const regex = /var\s+(eps\d+)\s*=\s*\[([\s\S]*?)\];/g;
+        const matches = [...html.matchAll(regex)];
+
+        const sources = {};
+        for (const match of matches) {
+          const [, name, content] = match;
+
+          // Nettoyer et transformer le contenu en vrai tableau
+          const urls = content
+            .split(",") // sépare par virgules
+            .map((u) => u.replace(/['"\s]/g, "")) // enlève guillemets et espaces
+            .filter(Boolean); // enlève les vides
+
+          sources[name] = urls;
+        }
+
+        result[lang] = sources;
+        console.log(
+          `✅ ${
+            Object.keys(sources).length
+          } source(s) trouvée(s) en ${lang.toUpperCase()}`
+        );
+      } catch (error) {
+        console.error(
+          `❌ Erreur lors de la récupération des épisodes en ${lang.toUpperCase()}:`,
+          error.message
+        );
+        result[lang] = {}; // En cas d'erreur, on met un objet vide
       }
-
-      result[lang] = sources;
     }
 
     return result;

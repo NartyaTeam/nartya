@@ -9,6 +9,14 @@
     box-sizing: border-box;
 }
 
+/* Amélioration globale de la qualité des images */
+img {
+    image-rendering: -webkit-optimize-contrast;
+    -webkit-backface-visibility: hidden;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+}
+
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
     background: #0a0a0a;
@@ -195,6 +203,15 @@ body::before {
     border-radius: 12px;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
     flex-shrink: 0;
+    /* Amélioration de la netteté et qualité d'affichage des images */
+    image-rendering: high-quality;
+    image-rendering: -webkit-optimize-contrast;
+    -webkit-backface-visibility: hidden;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    /* Anti-aliasing optimal pour les images */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 .anime-details {
@@ -594,6 +611,12 @@ body::before {
     height: 100%;
     object-fit: cover;
     display: block;
+    /* Amélioration de la netteté des images */
+    image-rendering: high-quality;
+    image-rendering: -webkit-optimize-contrast;
+    -webkit-backface-visibility: hidden;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
 }
 
 .episode-thumbnail-placeholder {

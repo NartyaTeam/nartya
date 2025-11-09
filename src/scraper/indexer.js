@@ -1,8 +1,8 @@
 const fs = require("fs");
-const path = require("path");
 const Scraper = require("./index.js");
+const CONFIG = require("../utils/config");
 const animesIndexed = JSON.parse(
-  fs.readFileSync(path.join(__dirname, "..", "data", "animes.json"), "utf8")
+  fs.readFileSync(CONFIG.SCRAPER.ANIMES_JSON, "utf8")
 );
 
 async function indexer(animes) {
@@ -11,10 +11,10 @@ async function indexer(animes) {
 
     for (const anime of animes) {
       const animeExist = isExist(anime.id);
-      // if (animeExist) continue;
+      if (animeExist) continue;
 
       // Obtention de données supplémentaires concernant l'anime
-      const animeData = await Scraper.getAnime(anime.id);
+      const animeData = await Scraper.getAnime(anime.slug);
       newAnimes.push(animeData);
 
       console.log(`Anime ${anime.title} indexed`, animeData);
@@ -26,7 +26,7 @@ async function indexer(animes) {
     }
 
     fs.writeFileSync(
-      path.join(__dirname, "..", "data", "animes.json"),
+      CONFIG.SCRAPER.ANIMES_JSON,
       JSON.stringify(newAnimes, null, 2)
     );
     return newAnimes;
@@ -42,3 +42,5 @@ function isExist(animeId) {
 function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+module.exports = indexer;

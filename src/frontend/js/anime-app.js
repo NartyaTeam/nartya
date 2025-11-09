@@ -91,12 +91,22 @@ class AnimeApp {
         throw new Error(result.error);
       }
 
+      // Utiliser le slug de l'anime trouvé comme identifiant unique
+      // pour garantir la cohérence dans toute l'application
+      if (result.anime && result.anime.slug) {
+        this.currentAnimeId = result.anime.slug;
+        console.log(
+          "✅ Utilisation du slug comme ID unique:",
+          this.currentAnimeId
+        );
+      }
+
       const animeContent = document.getElementById("animeContent");
       animeContent.innerHTML = this.animeInfoManager.displayAnimeInfo(
         result.anime
       );
 
-      await this.loadSeasons(animeId);
+      await this.loadSeasons(this.currentAnimeId);
     } catch (error) {
       console.error("Erreur lors du chargement:", error);
       this.displayError(error.message);
@@ -163,8 +173,17 @@ class AnimeApp {
 
   async loadEpisodes(animeId, seasonId, seasonName = null) {
     const currentAnime = this.animeInfoManager.getCurrentAnime();
+
+    // Utiliser le slug de l'anime au lieu de l'animeId
+    // car le scraper a besoin du slug, pas de l'ID AniList
+    if (!currentAnime || !currentAnime.slug) {
+      throw new Error("Anime non chargé ou slug manquant");
+    }
+
+    const slug = currentAnime.slug;
+
     const result = await this.episodeManager.loadEpisodes(
-      animeId,
+      slug,
       seasonId,
       currentAnime,
       seasonName
@@ -646,8 +665,10 @@ class AnimeApp {
 
     // Items d'épisodes
     const episodeItems = document.querySelectorAll(".episode-item");
-    console.log(`📌 Attachement des événements à ${episodeItems.length} épisodes`);
-    
+    console.log(
+      `📌 Attachement des événements à ${episodeItems.length} épisodes`
+    );
+
     episodeItems.forEach((item) => {
       item.addEventListener("click", () => {
         console.log("🖱️ Clic sur épisode détecté");

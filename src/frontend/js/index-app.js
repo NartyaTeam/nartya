@@ -160,7 +160,7 @@ class IndexApp {
         const format = anime.format || '';
 
         card.innerHTML = `
-            ${image ? `<img src="${image}" alt="${title}" class="anime-card-image" />` : ''}
+            ${image ? `<img src="${image}" alt="${title}" class="anime-card-image" loading="lazy" decoding="async" />` : ''}
             <div class="anime-card-content">
                 <div class="anime-card-title">${title}</div>
                 ${format ? `<div class="anime-card-format">${format}</div>` : ''}
