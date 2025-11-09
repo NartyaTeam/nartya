@@ -35,9 +35,7 @@
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
-      "createStartMenuShortcut": true,
-      "installerIcon": "src/build/icon.png",
-      "uninstallerIcon": "src/build/icon.png"
+      "createStartMenuShortcut": true
     },
     "publish": {
       "provider": "github",
