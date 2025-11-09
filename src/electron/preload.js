@@ -53,8 +53,51 @@ contextBridge.exposeInMainWorld("electronAPI", {
   cleanOldProgress: (daysOld) =>
     ipcRenderer.invoke("clean-old-progress", daysOld),
 
-  // Autres fonctions utiles pour l'application
+  // Rafraîchissement de la base de données
+  refreshAnimeDatabase: () => ipcRenderer.invoke("refresh-anime-database"),
+  isRefreshing: () => ipcRenderer.invoke("is-refreshing"),
+  onRefreshProgress: (callback) => {
+    ipcRenderer.on("refresh-progress", (event, progress) => callback(progress));
+  },
+  removeRefreshProgressListener: () => {
+    ipcRenderer.removeAllListeners("refresh-progress");
+  },
+
+  // Mises à jour automatiques
   getAppVersion: () => ipcRenderer.invoke("get-app-version"),
+  checkForUpdates: () => ipcRenderer.invoke("check-for-updates"),
+  downloadUpdate: () => ipcRenderer.invoke("download-update"),
+  installUpdate: () => ipcRenderer.invoke("install-update"),
+
+  // Événements de mise à jour
+  onUpdateChecking: (callback) => {
+    ipcRenderer.on("update-checking", () => callback());
+  },
+  onUpdateAvailable: (callback) => {
+    ipcRenderer.on("update-available", (event, info) => callback(info));
+  },
+  onUpdateNotAvailable: (callback) => {
+    ipcRenderer.on("update-not-available", (event, info) => callback(info));
+  },
+  onUpdateError: (callback) => {
+    ipcRenderer.on("update-error", (event, error) => callback(error));
+  },
+  onUpdateDownloadProgress: (callback) => {
+    ipcRenderer.on("update-download-progress", (event, progress) =>
+      callback(progress)
+    );
+  },
+  onUpdateDownloaded: (callback) => {
+    ipcRenderer.on("update-downloaded", (event, info) => callback(info));
+  },
+  removeUpdateListeners: () => {
+    ipcRenderer.removeAllListeners("update-checking");
+    ipcRenderer.removeAllListeners("update-available");
+    ipcRenderer.removeAllListeners("update-not-available");
+    ipcRenderer.removeAllListeners("update-error");
+    ipcRenderer.removeAllListeners("update-download-progress");
+    ipcRenderer.removeAllListeners("update-downloaded");
+  },
 
   // Événements système
   onAppReady: (callback) => ipcRenderer.on("app-ready", callback),

@@ -1,9 +1,14 @@
 const { app, BrowserWindow, session, Menu } = require('electron');
 const path = require('path');
+const { autoUpdater } = require('electron-updater');
 const IPCHandlers = require('./ipc-handlers');
 
 // Garder une référence globale de l'objet window
 let mainWindow;
+
+// Configuration de l'auto-updater
+autoUpdater.autoDownload = false; // Ne pas télécharger automatiquement
+autoUpdater.autoInstallOnAppQuit = true; // Installer automatiquement à la fermeture
 
 /**
  * Configure les headers HTTP pour la lecture de vidéos
@@ -80,6 +85,64 @@ function createWindow() {
 const ipcHandlers = new IPCHandlers();
 ipcHandlers.registerAll();
 
+/**
+ * Configure les événements de l'auto-updater
+ */
+function setupAutoUpdater() {
+    // Vérifier les mises à jour au démarrage (après 3 secondes)
+    setTimeout(() => {
+        autoUpdater.checkForUpdates();
+    }, 3000);
+
+    // Événement: Vérification des mises à jour
+    autoUpdater.on('checking-for-update', () => {
+        console.log('🔍 Vérification des mises à jour...');
+        if (mainWindow) {
+            mainWindow.webContents.send('update-checking');
+        }
+    });
+
+    // Événement: Mise à jour disponible
+    autoUpdater.on('update-available', (info) => {
+        console.log('✨ Mise à jour disponible:', info.version);
+        if (mainWindow) {
+            mainWindow.webContents.send('update-available', info);
+        }
+    });
+
+    // Événement: Pas de mise à jour
+    autoUpdater.on('update-not-available', (info) => {
+        console.log('✅ Application à jour');
+        if (mainWindow) {
+            mainWindow.webContents.send('update-not-available', info);
+        }
+    });
+
+    // Événement: Erreur
+    autoUpdater.on('error', (err) => {
+        console.error('❌ Erreur lors de la mise à jour:', err);
+        if (mainWindow) {
+            mainWindow.webContents.send('update-error', err.message);
+        }
+    });
+
+    // Événement: Progression du téléchargement
+    autoUpdater.on('download-progress', (progressObj) => {
+        console.log(`📥 Téléchargement: ${Math.round(progressObj.percent)}%`);
+        if (mainWindow) {
+            mainWindow.webContents.send('update-download-progress', progressObj);
+        }
+    });
+
+    // Événement: Mise à jour téléchargée
+    autoUpdater.on('update-downloaded', (info) => {
+        console.log('✅ Mise à jour téléchargée:', info.version);
+        if (mainWindow) {
+            mainWindow.webContents.send('update-downloaded', info);
+        }
+    });
+}
+
 // Cette méthode sera appelée quand Electron aura fini de s'initialiser
 app.whenReady().then(() => {
     // Configurer les headers pour la lecture de vidéos
@@ -87,6 +150,11 @@ app.whenReady().then(() => {
 
     // Créer la fenêtre
     createWindow();
+
+    // Configurer l'auto-updater (uniquement en production)
+    if (!process.argv.includes('--dev') && process.env.NODE_ENV !== 'development') {
+        setupAutoUpdater();
+    }
 });
 
 // Quitter quand toutes les fenêtres sont fermées

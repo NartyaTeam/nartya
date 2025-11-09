@@ -3,10 +3,12 @@
  * Gère toutes les communications entre le processus principal et le rendu
  */
 
-const { ipcMain } = require("electron");
+const { ipcMain, app } = require("electron");
 const path = require("path");
+const { autoUpdater } = require("electron-updater");
 const VideoExtractor = require("./video-extractor");
 const Scraper = require(path.join(__dirname, "..", "scraper", "index.js"));
+const indexer = require(path.join(__dirname, "..", "scraper", "indexer.js"));
 const WatchHistoryManager = require(path.join(
   __dirname,
   "..",
@@ -25,6 +27,7 @@ class IPCHandlers {
     this.videoExtractor = new VideoExtractor();
     this.watchHistory = new WatchHistoryManager();
     this.videoProgress = VideoProgressManager;
+    this.isRefreshing = false; // Pour éviter les refresh multiples simultanés
   }
 
   /**
@@ -36,6 +39,8 @@ class IPCHandlers {
     this.registerAnimeData();
     this.registerWatchHistory();
     this.registerVideoProgress();
+    this.registerDataRefresh();
+    this.registerUpdater();
   }
 
   /**
@@ -348,6 +353,112 @@ class IPCHandlers {
       } catch (error) {
         console.error("Erreur lors du nettoyage:", error);
         return { success: false, error: error.message };
+      }
+    });
+  }
+
+  /**
+   * Handlers pour le rafraîchissement des données
+   */
+  registerDataRefresh() {
+    // Rafraîchir la base de données d'animes
+    ipcMain.handle("refresh-anime-database", async (event) => {
+      if (this.isRefreshing) {
+        return {
+          success: false,
+          error: "Un rafraîchissement est déjà en cours",
+        };
+      }
+
+      this.isRefreshing = true;
+
+      try {
+        console.log("🔄 Début du rafraîchissement de la base de données...");
+
+        // 1. Récupérer la liste des animes depuis Anime-Sama
+        console.log("📡 Récupération de la liste des animes...");
+        const animes = await Scraper.getAnimes();
+        console.log(`✅ ${animes.length} animes trouvés sur Anime-Sama`);
+
+        // 2. Indexer les nouveaux animes
+        console.log("📝 Indexation des nouveaux animes...");
+        const result = await indexer(animes, (progress) => {
+          // Envoyer la progression au frontend
+          event.sender.send("refresh-progress", progress);
+        });
+
+        this.isRefreshing = false;
+        return result;
+      } catch (error) {
+        console.error("❌ Erreur lors du rafraîchissement:", error);
+        this.isRefreshing = false;
+        return {
+          success: false,
+          error: error.message,
+        };
+      }
+    });
+
+    // Vérifier si un rafraîchissement est en cours
+    ipcMain.handle("is-refreshing", async () => {
+      return { isRefreshing: this.isRefreshing };
+    });
+  }
+
+  /**
+   * Handlers pour les mises à jour automatiques
+   */
+  registerUpdater() {
+    // Obtenir la version actuelle de l'application
+    ipcMain.handle("get-app-version", async () => {
+      return app.getVersion();
+    });
+
+    // Vérifier les mises à jour manuellement
+    ipcMain.handle("check-for-updates", async () => {
+      try {
+        const result = await autoUpdater.checkForUpdates();
+        return {
+          success: true,
+          updateInfo: result?.updateInfo || null,
+        };
+      } catch (error) {
+        console.error(
+          "Erreur lors de la vérification des mises à jour:",
+          error
+        );
+        return {
+          success: false,
+          error: error.message,
+        };
+      }
+    });
+
+    // Télécharger la mise à jour
+    ipcMain.handle("download-update", async () => {
+      try {
+        await autoUpdater.downloadUpdate();
+        return { success: true };
+      } catch (error) {
+        console.error("Erreur lors du téléchargement:", error);
+        return {
+          success: false,
+          error: error.message,
+        };
+      }
+    });
+
+    // Installer et redémarrer
+    ipcMain.handle("install-update", async () => {
+      try {
+        autoUpdater.quitAndInstall(false, true);
+        return { success: true };
+      } catch (error) {
+        console.error("Erreur lors de l'installation:", error);
+        return {
+          success: false,
+          error: error.message,
+        };
       }
     });
   }

@@ -263,6 +263,25 @@ body::after {
 }
 
 /* Variantes de couleur */
+.nav-btn.refresh:hover {
+    border-color: rgba(34, 197, 94, 0.3);
+    color: #22c55e;
+}
+
+.nav-btn.refresh.refreshing .nav-btn-icon svg {
+    animation: spin 1s linear infinite;
+}
+
+.nav-btn.refresh:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
 .nav-btn.settings:hover {
     border-color: rgba(99, 102, 241, 0.3);
 }
@@ -818,4 +837,225 @@ body::after {
   .anime-card-image {
     height: 200px;
   }
+}
+
+/* === REFRESH MODAL === */
+.refresh-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.refresh-modal-content {
+  background: linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 3rem;
+  max-width: 500px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.refresh-modal-content h2 {
+  font-size: 1.75rem;
+  margin-bottom: 2rem;
+  color: #e5e5e5;
+  font-weight: 600;
+}
+
+.refresh-progress {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.refresh-spinner {
+  width: 60px;
+  height: 60px;
+  border: 4px solid rgba(34, 197, 94, 0.1);
+  border-top-color: #22c55e;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.refresh-modal-content p {
+  font-size: 1rem;
+  color: #a1a1aa;
+  margin: 0;
+}
+
+.refresh-stats {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.refresh-stats > div {
+  text-align: left;
+  width: 100%;
+}
+
+.refresh-stats > div > div {
+  margin: 0.5rem 0;
+  color: #e5e5e5;
+}
+
+/* === UPDATE NOTIFICATION === */
+.update-notification {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  background: linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 15px;
+  padding: 1.5rem;
+  min-width: 350px;
+  max-width: 450px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  transform: translateX(500px);
+  opacity: 0;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.update-notification.show {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.update-notification-content {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.update-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.update-text {
+  flex: 1;
+}
+
+.update-text h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #e5e5e5;
+  margin: 0 0 0.5rem 0;
+}
+
+.update-text p {
+  font-size: 0.875rem;
+  color: #a1a1aa;
+  margin: 0;
+}
+
+.update-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.update-btn {
+  flex: 1;
+  padding: 0.625rem 1rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.update-btn.primary {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  color: white;
+}
+
+.update-btn.primary:hover {
+  background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.update-btn.primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.update-btn.secondary {
+  background: rgba(255, 255, 255, 0.05);
+  color: #a1a1aa;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.update-btn.secondary:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #e5e5e5;
+}
+
+.update-progress {
+  margin-top: 1rem;
+}
+
+.update-progress-bar {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.update-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%);
+  transition: width 0.3s ease;
+  border-radius: 3px;
+}
+
+.update-progress-text {
+  font-size: 0.75rem;
+  color: #a1a1aa;
+  margin-top: 0.5rem;
+  text-align: center;
 }

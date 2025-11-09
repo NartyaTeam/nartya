@@ -24,7 +24,7 @@ class Scraper {
           }`
         );
 
-        // Utiliser le fetch natif de Node.js - fonctionne parfaitement avec Cloudflare!
+        // Utiliser le fetch natif de Node.js - simple et efficace
         const response = await fetch(url);
 
         console.log(`📊 Status: ${response.status}`);

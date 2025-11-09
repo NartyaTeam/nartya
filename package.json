@@ -9,7 +9,13 @@
     "start": "electron .",
     "dev": "electron . --dev",
     "build": "electron-builder --win --x64",
-    "scrape": "node src/scraper/indexer.js"
+    "scrape": "node src/scraper/indexer.js",
+    "release": "node release.js",
+    "release:patch": "npm version patch && git push && git push --tags",
+    "release:minor": "npm version minor && git push && git push --tags",
+    "release:major": "npm version major && git push && git push --tags",
+    "postversion": "echo ✅ Version mise à jour et tag poussé. GitHub Actions va créer la release automatiquement !",
+    "check-release": "node -e \"const fs=require('fs');const p='dist/';if(!fs.existsSync(p+'latest.yml')){console.error('❌ latest.yml manquant');process.exit(1)}console.log('✅ Fichiers de release OK')\""
   },
   "build": {
     "appId": "com.zeleff.nartya",
@@ -23,18 +29,26 @@
     ],
     "win": {
       "target": "nsis",
-      "icon": "src/build/icon.png"
+      "icon": "src/build/icon.png",
+      "publisherName": "Zeleff"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "RandomZeleff",
+      "repo": "nartya-app",
+      "releaseType": "release"
     }
   },
   "dependencies": {
     "cheerio": "1.0.0-rc.12",
     "cloudflare-scraper": "^2.0.0",
+    "electron-updater": "^6.6.2",
     "node-fetch": "2.7.0"
   },
   "devDependencies": {

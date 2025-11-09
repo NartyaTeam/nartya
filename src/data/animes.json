@@ -21590,5 +21590,21 @@
     },
     "isAdult": false,
     "format": "TV"
+  },
+  {
+    "slug": "disney-twisted-wonderland",
+    "synopsis": "L'histoire commence lorsque le personnage principale se retrouve invoqué dans un autre monde par un miroir magique. C'est ainsi qu'il atterrit dans la prestigieuse école de magie nommée Night Ravens College. N'ayant nulle part où aller, le personnage principal se voit offrir la protection du Principal Masqué de l'école. Il va ainsi apprendre à connaître les étudiants les plus brillants de l'établissement tout en essayant de trouver un moyen de rentrer chez lui.",
+    "id": 140291,
+    "title": {
+      "romaji": "Disney Twisted-Wonderland: THE ANIMATION  - Season 1: EPISODE of HEARTSLABYUL",
+      "english": null,
+      "native": "ディズニー ツイステッドワンダーランド ザ アニメーション シーズン1「エピソード オブ ハーツラビュル」"
+    },
+    "coverImage": {
+      "large": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx140291-RAwYjwC9vWDR.png",
+      "medium": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/small/bx140291-RAwYjwC9vWDR.png"
+    },
+    "format": "ONA",
+    "isAdult": false
   }
 ]
