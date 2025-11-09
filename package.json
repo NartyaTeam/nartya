@@ -29,14 +29,15 @@
     ],
     "win": {
       "target": "nsis",
-      "icon": "src/build/icon.png",
-      "publisherName": "Zeleff"
+      "icon": "src/build/icon.png"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
+      "createStartMenuShortcut": true,
+      "installerIcon": "src/build/icon.png",
+      "uninstallerIcon": "src/build/icon.png"
     },
     "publish": {
       "provider": "github",
