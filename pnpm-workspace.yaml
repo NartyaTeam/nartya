@@ -1,7 +1,0 @@
-ignoredBuiltDependencies:
-  - chromium
-
-onlyBuiltDependencies:
-  - electron
-  - electron-winstaller
-  - sleep
