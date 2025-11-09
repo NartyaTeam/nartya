@@ -21,12 +21,19 @@ const VideoProgressManager = require(path.join(
   "utils",
   "video-progress.js"
 ));
+const FavoritesManager = require(path.join(
+  __dirname,
+  "..",
+  "utils",
+  "favorites.js"
+));
 
 class IPCHandlers {
   constructor() {
     this.videoExtractor = new VideoExtractor();
     this.watchHistory = new WatchHistoryManager();
     this.videoProgress = VideoProgressManager;
+    this.favorites = new FavoritesManager();
     this.isRefreshing = false; // Pour éviter les refresh multiples simultanés
   }
 
@@ -41,6 +48,7 @@ class IPCHandlers {
     this.registerVideoProgress();
     this.registerDataRefresh();
     this.registerUpdater();
+    this.registerFavorites();
   }
 
   /**
@@ -460,6 +468,82 @@ class IPCHandlers {
           error: error.message,
         };
       }
+    });
+  }
+
+  /**
+   * Handlers pour les favoris
+   */
+  registerFavorites() {
+    // Récupérer tous les favoris
+    ipcMain.handle("get-favorites", async () => {
+      try {
+        const favorites = this.favorites.getFavorites();
+        return {
+          success: true,
+          favorites,
+        };
+      } catch (error) {
+        console.error("Erreur lors de la récupération des favoris:", error);
+        return {
+          success: false,
+          error: error.message,
+        };
+      }
+    });
+
+    // Vérifier si un anime est en favoris
+    ipcMain.handle("is-favorite", async (event, animeId) => {
+      try {
+        const isFavorite = this.favorites.isFavorite(animeId);
+        return {
+          success: true,
+          isFavorite,
+        };
+      } catch (error) {
+        console.error("Erreur lors de la vérification des favoris:", error);
+        return {
+          success: false,
+          error: error.message,
+        };
+      }
+    });
+
+    // Ajouter aux favoris
+    ipcMain.handle("add-favorite", async (event, anime) => {
+      return this.favorites.addFavorite(anime);
+    });
+
+    // Retirer des favoris
+    ipcMain.handle("remove-favorite", async (event, animeId) => {
+      return this.favorites.removeFavorite(animeId);
+    });
+
+    // Toggle favori
+    ipcMain.handle("toggle-favorite", async (event, anime) => {
+      return this.favorites.toggleFavorite(anime);
+    });
+
+    // Obtenir le nombre de favoris
+    ipcMain.handle("get-favorites-count", async () => {
+      try {
+        const count = this.favorites.getFavoritesCount();
+        return {
+          success: true,
+          count,
+        };
+      } catch (error) {
+        console.error("Erreur lors du comptage des favoris:", error);
+        return {
+          success: false,
+          error: error.message,
+        };
+      }
+    });
+
+    // Effacer tous les favoris
+    ipcMain.handle("clear-favorites", async () => {
+      return this.favorites.clearFavorites();
     });
   }
 }

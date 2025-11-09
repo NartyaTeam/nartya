@@ -10,6 +10,8 @@ export class VideoPlayer {
     this.progressSaveInterval = null;
     this.currentAnimeId = null;
     this.currentEpisodeNumber = null;
+    this.autoPlayNext = null; // Sera initialisé par anime-app
+    this.onVideoEnded = null; // Callback pour la fin de vidéo
   }
 
   initialize() {
@@ -85,6 +87,11 @@ export class VideoPlayer {
       console.log("Video ended");
       this.markAsCompleted();
       this.stopProgressTracking();
+
+      // Appeler le callback de fin de vidéo (pour auto-play next)
+      if (this.onVideoEnded) {
+        this.onVideoEnded();
+      }
     });
 
     this.plyrInstance.on("error", (event) => {

@@ -8,6 +8,8 @@ import { EpisodeManager } from "./episode-manager.js";
 import { VideoPlayer } from "./video-player.js";
 import { VideoExtractionUI } from "./video-extraction-ui.js";
 import { ChibiAnimations } from "./chibi-animations.js";
+import { AutoPlayNext } from "./auto-play-next.js";
+import { FavoritesUIManager } from "./favorites-manager.js";
 
 class AnimeApp {
   constructor() {
@@ -16,6 +18,8 @@ class AnimeApp {
     this.videoPlayer = new VideoPlayer();
     this.extractionUI = new VideoExtractionUI();
     this.chibiAnimations = new ChibiAnimations();
+    this.autoPlayNext = new AutoPlayNext(this.videoPlayer, this);
+    this.favoritesManager = new FavoritesUIManager();
 
     // Debounce pour la navigation d'épisodes
     this.navigationDebounceTimer = null;
@@ -24,12 +28,16 @@ class AnimeApp {
 
     // Données de l'anime
     this.currentAnimeId = null;
+    this.currentEpisodes = []; // Liste des épisodes de la saison actuelle
 
     // Protection contre les extractions multiples
     this.isExtracting = false;
 
     // Charger les paramètres
     this.settings = this.loadSettings();
+
+    // Configurer le callback de fin de vidéo
+    this.videoPlayer.onVideoEnded = () => this.handleVideoEnded();
   }
 
   loadSettings() {
@@ -105,6 +113,9 @@ class AnimeApp {
       animeContent.innerHTML = this.animeInfoManager.displayAnimeInfo(
         result.anime
       );
+
+      // Ajouter le bouton favori
+      await this.addFavoriteButton();
 
       await this.loadSeasons(this.currentAnimeId);
     } catch (error) {
@@ -1717,6 +1728,68 @@ class AnimeApp {
       this.episodeManager.currentEpisodeList.length - 1;
   }
 
+  /**
+   * Gère la fin de la vidéo (pour auto-play next)
+   */
+  handleVideoEnded() {
+    console.log("🎬 Vidéo terminée - vérification du prochain épisode");
+
+    // Vérifier s'il y a un épisode suivant
+    const currentIndex = this.episodeManager.currentEpisodeIndex;
+    const nextIndex = currentIndex + 1;
+
+    if (nextIndex < this.episodeManager.currentEpisodeList.length) {
+      const nextEpisode = {
+        index: nextIndex,
+        number: nextIndex + 1,
+        title: `Épisode ${nextIndex + 1}`,
+      };
+
+      // Démarrer le countdown
+      this.autoPlayNext.startCountdown(nextEpisode);
+    } else {
+      console.log("✅ C'était le dernier épisode de la saison");
+    }
+  }
+
+  /**
+   * Charge un épisode par son index
+   */
+  async loadEpisodeByIndex(index) {
+    console.log(`🎯 Chargement de l'épisode à l'index ${index}`);
+
+    // Utiliser la méthode de navigation existante
+    const direction = index - this.episodeManager.currentEpisodeIndex;
+    await this.navigateEpisode(direction);
+  }
+
+  /**
+   * Ajoute le bouton favori dans l'interface
+   */
+  async addFavoriteButton() {
+    const currentAnime = this.animeInfoManager.getCurrentAnime();
+    if (!currentAnime) return;
+
+    // Créer le bouton favori
+    const favoriteBtn = this.favoritesManager.createFavoriteButton(currentAnime, {
+      size: "medium",
+      showLabel: true,
+      className: "anime-page-favorite-btn",
+    });
+
+    // Ajouter le bouton dans le header
+    const headerActions = document.querySelector(".header-actions");
+    if (headerActions) {
+      // Insérer avant le bouton settings
+      const settingsBtn = headerActions.querySelector(".nav-btn.settings");
+      if (settingsBtn) {
+        headerActions.insertBefore(favoriteBtn, settingsBtn);
+      } else {
+        headerActions.appendChild(favoriteBtn);
+      }
+    }
+  }
+
   displayError(message) {
     document.getElementById("animeContent").innerHTML = `
             <div class="error">
@@ -1770,6 +1843,11 @@ window.closeVideoPlayer = () => {
 
 window.navigateEpisode = (direction) => {
   if (window.animeApp) window.animeApp.navigateEpisode(direction);
+};
+
+// Fonction pour charger un épisode par son index
+window.loadEpisodeByIndex = (index) => {
+  if (window.animeApp) window.animeApp.loadEpisodeByIndex(index);
 };
 
 // Initialiser l'application au chargement de la page

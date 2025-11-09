@@ -99,6 +99,15 @@ contextBridge.exposeInMainWorld("electronAPI", {
     ipcRenderer.removeAllListeners("update-downloaded");
   },
 
+  // Favoris
+  getFavorites: () => ipcRenderer.invoke("get-favorites"),
+  isFavorite: (animeId) => ipcRenderer.invoke("is-favorite", animeId),
+  addFavorite: (anime) => ipcRenderer.invoke("add-favorite", anime),
+  removeFavorite: (animeId) => ipcRenderer.invoke("remove-favorite", animeId),
+  toggleFavorite: (anime) => ipcRenderer.invoke("toggle-favorite", anime),
+  getFavoritesCount: () => ipcRenderer.invoke("get-favorites-count"),
+  clearFavorites: () => ipcRenderer.invoke("clear-favorites"),
+
   // Événements système
   onAppReady: (callback) => ipcRenderer.on("app-ready", callback),
   onAppError: (callback) => ipcRenderer.on("app-error", callback),

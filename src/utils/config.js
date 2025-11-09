@@ -15,6 +15,9 @@ const CONFIG = {
     DEV_TOOLS: process.argv.includes("--dev"),
   },
 
+  // Répertoires de données
+  DATA_DIR: path.join(__dirname, "..", "data"),
+
   // Configuration du scraper
   SCRAPER: {
     BASE_URL: "https://anime-sama.org",

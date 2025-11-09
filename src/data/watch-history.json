@@ -1,1 +1,44 @@
-{}
+{
+  "16bit-sensation-another-layer": {
+    "episodes": {
+      "1": {
+        "currentTime": 1419,
+        "duration": 1419,
+        "percentage": 100,
+        "lastWatched": 1762694432512,
+        "completed": true
+      },
+      "3": {
+        "currentTime": 1420,
+        "duration": 1420,
+        "percentage": 100,
+        "lastWatched": 1762689759721,
+        "completed": true
+      }
+    },
+    "lastWatched": 1762694432512
+  },
+  "2.5-jigen-no-ririsa": {
+    "episodes": {
+      "1": {
+        "currentTime": 1440,
+        "duration": 1440,
+        "percentage": 99,
+        "lastWatched": 1762690192905
+      }
+    },
+    "lastWatched": 1762690192905
+  },
+  "2.43-seiin-koukou-danshi-volley-bu": {
+    "episodes": {
+      "1": {
+        "currentTime": 1383,
+        "duration": 1383,
+        "percentage": 100,
+        "lastWatched": 1762690226479,
+        "completed": true
+      }
+    },
+    "lastWatched": 1762690226479
+  }
+}

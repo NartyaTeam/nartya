@@ -142,6 +142,40 @@
               </label>
             </div>
           </div>
+
+          <!-- Lecture automatique du prochain épisode -->
+          <div class="setting-item">
+            <div class="setting-info">
+              <label for="autoPlayNext">Lecture auto du prochain épisode</label>
+              <p class="setting-description">
+                Lancer automatiquement l'épisode suivant après un compte à rebours
+              </p>
+            </div>
+            <div class="setting-control">
+              <label class="toggle-switch">
+                <input type="checkbox" id="autoPlayNext" checked />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Délai avant lecture auto -->
+          <div class="setting-item">
+            <div class="setting-info">
+              <label for="autoPlayDelay">Délai avant lecture auto</label>
+              <p class="setting-description">
+                Temps d'attente avant de lancer le prochain épisode
+              </p>
+            </div>
+            <div class="setting-control">
+              <select id="autoPlayDelay" class="select-input">
+                <option value="5">5 secondes</option>
+                <option value="10" selected>10 secondes</option>
+                <option value="15">15 secondes</option>
+                <option value="30">30 secondes</option>
+              </select>
+            </div>
+          </div>
         </section>
 
         <!-- Section: Performance -->

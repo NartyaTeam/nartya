@@ -22,7 +22,9 @@ class SettingsApp {
             animations: true,
             watchHistory: true,
             trackProgress: true,
-            autoResume: false
+            autoResume: false,
+            autoPlayNext: true,
+            autoPlayDelay: 10
         };
 
         const saved = localStorage.getItem('nartya_settings');
@@ -67,6 +69,12 @@ class SettingsApp {
 
         // Reprise automatique
         document.getElementById('autoResume').checked = this.settings.autoResume;
+
+        // Lecture auto du prochain épisode
+        document.getElementById('autoPlayNext').checked = this.settings.autoPlayNext;
+
+        // Délai avant lecture auto
+        document.getElementById('autoPlayDelay').value = this.settings.autoPlayDelay;
     }
 
     setupEventListeners() {
@@ -160,6 +168,18 @@ class SettingsApp {
         // Reprise automatique
         document.getElementById('autoResume').addEventListener('change', (e) => {
             this.settings.autoResume = e.target.checked;
+            this.saveSettings();
+        });
+
+        // Lecture auto du prochain épisode
+        document.getElementById('autoPlayNext').addEventListener('change', (e) => {
+            this.settings.autoPlayNext = e.target.checked;
+            this.saveSettings();
+        });
+
+        // Délai avant lecture auto
+        document.getElementById('autoPlayDelay').addEventListener('change', (e) => {
+            this.settings.autoPlayDelay = parseInt(e.target.value);
             this.saveSettings();
         });
     }

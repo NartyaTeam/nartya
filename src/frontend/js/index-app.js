@@ -5,11 +5,13 @@
 
 import { ChibiAnimations } from "./chibi-animations.js";
 import { KeyboardShortcuts } from "./keyboard-shortcuts.js";
+import { FavoritesUIManager } from "./favorites-manager.js";
 
 class IndexApp {
   constructor() {
     this.chibiAnimations = new ChibiAnimations();
     this.keyboardShortcuts = null;
+    this.favoritesManager = new FavoritesUIManager();
 
     // État de l'application
     this.allAnimes = [];
@@ -184,7 +186,20 @@ class IndexApp {
             </div>
         `;
 
-    card.addEventListener("click", () => {
+    // Ajouter le bouton favori
+    const favoriteBtn = this.favoritesManager.createFavoriteButton(anime, {
+      size: "small",
+      showLabel: false,
+      className: "anime-card-favorite-btn",
+    });
+    card.appendChild(favoriteBtn);
+
+    // Événement de clic sur la card (sauf sur le bouton favori)
+    card.addEventListener("click", (e) => {
+      // Ne pas naviguer si on clique sur le bouton favori
+      if (e.target.closest(".favorite-btn")) {
+        return;
+      }
       window.location.href = `anime.html?id=${anime.slug || anime.id}`;
     });
 
