@@ -1,6 +1,6 @@
 {
   "name": "nartya",
-  "version": "1.0.0-beta.1",
+  "version": "1.0.0",
   "description": "Nartya - Application de streaming d'animes",
   "main": "src/electron/main.js",
   "author": "Zeleff",
