@@ -40,8 +40,8 @@
     },
     "publish": {
       "provider": "github",
-      "owner": "NartyaTeam",
-      "repo": "nartya",
+      "owner": "RandomZeleff",
+      "repo": "nartya-app",
       "releaseType": "release"
     }
   },
