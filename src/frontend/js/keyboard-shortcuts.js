@@ -9,6 +9,7 @@ export class KeyboardShortcuts {
       // Navigation
       "ctrl+h": () => this.navigateTo("index.html"),
       "ctrl+f": () => this.navigateTo("favorites.html"),
+      "ctrl+i": () => this.navigateTo("history.html"),
       "ctrl+s": () => this.navigateTo("settings.html"),
 
       // Recherche

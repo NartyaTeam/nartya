@@ -44,7 +44,6 @@ class AnimeApp {
     const defaultSettings = {
       defaultLanguage: "vostfr",
       autoPlay: false,
-      videoQuality: "auto",
       visualEffects: true,
       theme: "dark",
       animations: true,
@@ -72,6 +71,21 @@ class AnimeApp {
       this.displayError("ID de l'anime invalide");
       console.error("⚠️ Tentative d'accès avec ID invalide:", animeId);
       return;
+    }
+
+    // Récupérer les paramètres de reprise depuis l'historique
+    const episodeParam = urlParams.get("episode");
+    const seasonParam = urlParams.get("season");
+    const resumeTime = urlParams.get("resume");
+
+    // Stocker pour une utilisation ultérieure
+    if (episodeParam && seasonParam) {
+      this.autoPlayEpisode = parseInt(episodeParam);
+      this.autoPlaySeason = seasonParam;
+      this.autoPlayResumeTime = resumeTime ? parseFloat(resumeTime) : null;
+      console.log(
+        `🎬 Auto-play demandé: Épisode ${this.autoPlayEpisode}, Reprise: ${this.autoPlayResumeTime}s`
+      );
     }
 
     // Limiter la longueur pour éviter les abus
@@ -113,6 +127,9 @@ class AnimeApp {
       animeContent.innerHTML = this.animeInfoManager.displayAnimeInfo(
         result.anime
       );
+
+      // Initialiser le toggle du synopsis
+      this.setupSynopsisToggle();
 
       // Ajouter le bouton favori
       await this.addFavoriteButton();
@@ -218,6 +235,37 @@ class AnimeApp {
 
     // Démarrer le pré-chargement des premiers épisodes en arrière-plan
     this.startBackgroundPreloading();
+
+    // Lancer l'épisode automatiquement si demandé depuis l'historique
+    if (this.autoPlayEpisode && this.autoPlaySeason === seasonId) {
+      console.log(
+        `🎯 Lancement automatique de l'épisode ${this.autoPlayEpisode}`
+      );
+
+      // Attendre un peu que le DOM soit prêt
+      setTimeout(() => {
+        // Définir le temps de reprise si fourni
+        if (this.autoPlayResumeTime) {
+          this.pendingResumeTime = this.autoPlayResumeTime;
+          console.log(`⏩ Reprise programmée à ${this.autoPlayResumeTime}s`);
+        }
+
+        // Trouver l'épisode et le lancer
+        const episodeItem = document.querySelector(
+          `.episode-item[data-number="${this.autoPlayEpisode}"]`
+        );
+        if (episodeItem) {
+          episodeItem.click();
+        } else {
+          console.warn(`⚠️ Épisode ${this.autoPlayEpisode} introuvable`);
+        }
+
+        // Nettoyer les paramètres pour éviter de relancer
+        this.autoPlayEpisode = null;
+        this.autoPlaySeason = null;
+        this.autoPlayResumeTime = null;
+      }, 500);
+    }
   }
 
   /**
@@ -1289,6 +1337,9 @@ class AnimeApp {
       animeInfo
     );
 
+    // Enregistrer dans l'historique
+    this.addToWatchHistory(episodeNumber, currentAnime, actualSeasonId);
+
     // Afficher le modal
     modal.classList.add("active");
     document.body.style.overflow = "hidden";
@@ -1307,6 +1358,39 @@ class AnimeApp {
     if (this.pendingResumeTime && this.pendingResumeTime > 0) {
       this.videoPlayer.seekToTime(this.pendingResumeTime);
       this.pendingResumeTime = 0; // Réinitialiser
+    }
+  }
+
+  /**
+   * Ajoute un épisode à l'historique de visionnage
+   */
+  async addToWatchHistory(episodeNumber, anime, seasonId) {
+    try {
+      // Récupérer la progression de l'épisode
+      const episodeIndex = episodeNumber - 1;
+      const progress = this.episodeManager.getEpisodeProgress(episodeIndex);
+
+      const entry = {
+        animeId: this.currentAnimeId,
+        slug: this.currentAnimeId,
+        seasonId: seasonId,
+        episodeNumber: episodeNumber,
+        animeTitle: anime?.title || "Titre inconnu",
+        coverImage: anime?.coverImage || {},
+        language: this.episodeManager.currentLanguage || "vostfr",
+        // Ajouter la progression si disponible
+        currentTime: progress?.currentTime || 0,
+        duration: progress?.duration || 0,
+        progressPercent: progress?.progressPercent || 0,
+        completed: progress?.progressPercent >= 95 || false,
+      };
+
+      await window.electronAPI.addWatchHistoryEntry(entry);
+      console.log(
+        `📜 Épisode ${episodeNumber} ajouté à l'historique (${entry.progressPercent}%)`
+      );
+    } catch (error) {
+      console.error("Erreur lors de l'ajout à l'historique:", error);
     }
   }
 
@@ -1431,6 +1515,15 @@ class AnimeApp {
     modal.classList.remove("active");
     document.body.style.overflow = "auto";
 
+    // Mettre à jour l'historique avec la progression finale
+    if (this.episodeManager.currentEpisodeIndex !== null) {
+      const episodeNumber = this.episodeManager.currentEpisodeIndex + 1;
+      const currentAnime = this.animeInfoManager.getCurrentAnime();
+      const actualSeasonId =
+        this.episodeManager.currentSeasonId || this.currentAnimeId;
+      this.addToWatchHistory(episodeNumber, currentAnime, actualSeasonId);
+    }
+
     // Nettoyer le player
     this.videoPlayer.pause();
     this.videoPlayer.cleanupHLS();
@@ -1464,6 +1557,11 @@ class AnimeApp {
    */
   updateProgressBars() {
     const episodeCards = document.querySelectorAll(".episode-card");
+    console.log(
+      `📊 Mise à jour des barres de progression pour ${episodeCards.length} épisodes`
+    );
+
+    let progressCount = 0;
 
     episodeCards.forEach((card) => {
       const episodeNumber = parseInt(card.dataset.episode);
@@ -1482,8 +1580,14 @@ class AnimeApp {
       if (progress) {
         const progressBar = this.createProgressBar(progress);
         card.appendChild(progressBar);
+        progressCount++;
+        console.log(
+          `  ✅ Épisode ${episodeNumber}: ${progress.progressPercent}%`
+        );
       }
     });
+
+    console.log(`📊 ${progressCount} barre(s) de progression affichée(s)`);
   }
 
   /**
@@ -1755,12 +1859,79 @@ class AnimeApp {
   /**
    * Charge un épisode par son index
    */
-  async loadEpisodeByIndex(index) {
-    console.log(`🎯 Chargement de l'épisode à l'index ${index}`);
+  async loadEpisodeByIndex(index, autoPlay = true) {
+    console.log(
+      `🎯 Chargement de l'épisode à l'index ${index} (autoPlay: ${autoPlay})`
+    );
 
     // Utiliser la méthode de navigation existante
     const direction = index - this.episodeManager.currentEpisodeIndex;
     await this.navigateEpisode(direction);
+
+    // Si autoPlay est activé, lancer la lecture après un court délai
+    if (autoPlay && this.videoPlayer && this.videoPlayer.plyrInstance) {
+      setTimeout(() => {
+        console.log("▶️ Lecture automatique de la vidéo");
+        this.videoPlayer.plyrInstance.play();
+      }, 500); // Petit délai pour laisser la vidéo se charger
+    }
+  }
+
+  /**
+   * Initialise le toggle du synopsis (voir plus / voir moins)
+   */
+  setupSynopsisToggle() {
+    const synopsisElement = document.getElementById("animeSynopsis");
+    const toggleBtn = document.getElementById("synopsisToggleBtn");
+    const toggleText = toggleBtn?.querySelector(".synopsis-toggle-text");
+
+    if (!synopsisElement || !toggleBtn || !toggleText) {
+      return;
+    }
+
+    // Vérifier si le synopsis dépasse 3 lignes
+    const checkIfTruncated = () => {
+      // Réinitialiser pour mesurer la hauteur réelle
+      synopsisElement.classList.remove("truncated");
+      const fullHeight = synopsisElement.scrollHeight;
+      const lineHeight = parseFloat(
+        window.getComputedStyle(synopsisElement).lineHeight
+      );
+      const maxHeight = lineHeight * 3; // 3 lignes
+
+      // Si le contenu dépasse 3 lignes, on active la troncature
+      if (fullHeight > maxHeight) {
+        synopsisElement.classList.add("truncated");
+        toggleBtn.style.display = "inline-flex";
+        toggleBtn.classList.remove("expanded");
+        toggleText.textContent = "Voir plus";
+      } else {
+        toggleBtn.style.display = "none";
+      }
+    };
+
+    // Vérifier au chargement
+    checkIfTruncated();
+
+    // Vérifier aussi après un court délai pour s'assurer que les styles sont appliqués
+    setTimeout(checkIfTruncated, 100);
+
+    // Gérer le clic sur le bouton
+    toggleBtn.addEventListener("click", () => {
+      const isExpanded = toggleBtn.classList.contains("expanded");
+
+      if (isExpanded) {
+        // Réduire
+        synopsisElement.classList.add("truncated");
+        toggleBtn.classList.remove("expanded");
+        toggleText.textContent = "Voir plus";
+      } else {
+        // Étendre
+        synopsisElement.classList.remove("truncated");
+        toggleBtn.classList.add("expanded");
+        toggleText.textContent = "Voir moins";
+      }
+    });
   }
 
   /**
@@ -1771,11 +1942,14 @@ class AnimeApp {
     if (!currentAnime) return;
 
     // Créer le bouton favori
-    const favoriteBtn = this.favoritesManager.createFavoriteButton(currentAnime, {
-      size: "medium",
-      showLabel: true,
-      className: "anime-page-favorite-btn",
-    });
+    const favoriteBtn = this.favoritesManager.createFavoriteButton(
+      currentAnime,
+      {
+        size: "medium",
+        showLabel: true,
+        className: "anime-page-favorite-btn",
+      }
+    );
 
     // Ajouter le bouton dans le header
     const headerActions = document.querySelector(".header-actions");

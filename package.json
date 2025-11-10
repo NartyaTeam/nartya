@@ -40,16 +40,14 @@
     },
     "publish": {
       "provider": "github",
-      "owner": "RandomZeleff",
-      "repo": "nartya-app",
+      "owner": "NartyaTeam",
+      "repo": "nartya",
       "releaseType": "release"
     }
   },
   "dependencies": {
     "cheerio": "1.0.0-rc.12",
-    "cloudflare-scraper": "^2.0.0",
-    "electron-updater": "^6.6.2",
-    "node-fetch": "2.7.0"
+    "electron-updater": "^6.6.2"
   },
   "devDependencies": {
     "electron": "^33.2.0",

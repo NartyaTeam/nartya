@@ -29,10 +29,11 @@ class FavoritesApp {
   loadSettings() {
     const defaultSettings = {
       visualEffects: true,
+      animations: true,
     };
 
     try {
-      const saved = localStorage.getItem("settings");
+      const saved = localStorage.getItem("nartya_settings");
       return saved
         ? { ...defaultSettings, ...JSON.parse(saved) }
         : defaultSettings;
@@ -48,6 +49,9 @@ class FavoritesApp {
     // Récupérer les éléments DOM
     this.animesGrid = document.getElementById("animesGrid");
     this.emptyState = document.getElementById("emptyState");
+
+    // Initialiser l'effet de scroll sur le header
+    this.setupHeaderScroll();
     this.favoritesCount = document.getElementById("favoritesCount");
     this.sortSelect = document.getElementById("sortSelect");
     this.clearAllBtn = document.getElementById("clearAllBtn");
@@ -267,6 +271,36 @@ class FavoritesApp {
       toast.style.animation = "slideOut 0.3s ease";
       setTimeout(() => toast.remove(), 300);
     }, 3000);
+  }
+
+  /**
+   * Configure l'effet de scroll sur le header
+   */
+  setupHeaderScroll() {
+    const header = document.getElementById("header");
+    if (!header) return;
+
+    let lastScrollY = window.scrollY;
+    let ticking = false;
+
+    const updateScroll = () => {
+      if (lastScrollY > 50) {
+        header.classList.add("scrolled");
+      } else {
+        header.classList.remove("scrolled");
+      }
+
+      ticking = false;
+    };
+
+    window.addEventListener("scroll", () => {
+      lastScrollY = window.scrollY;
+
+      if (!ticking) {
+        window.requestAnimationFrame(updateScroll);
+        ticking = true;
+      }
+    });
   }
 }
 

@@ -29,18 +29,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
   // Charger tous les animes
   loadAllAnimes: () => ipcRenderer.invoke("load-all-animes"),
 
-  // Historique de visionnage
-  saveWatchProgress: (data) => ipcRenderer.invoke("save-watch-progress", data),
-  getWatchProgress: (data) => ipcRenderer.invoke("get-watch-progress", data),
-  getLastWatchedEpisode: (animeId) =>
-    ipcRenderer.invoke("get-last-watched-episode", animeId),
-  getRecentlyWatched: (limit) =>
-    ipcRenderer.invoke("get-recently-watched", limit),
-  markEpisodeCompleted: (data) =>
-    ipcRenderer.invoke("mark-episode-completed", data),
-  isEpisodeCompleted: (data) =>
-    ipcRenderer.invoke("is-episode-completed", data),
-  clearWatchHistory: () => ipcRenderer.invoke("clear-watch-history"),
+  // Ancien système d'historique supprimé - utiliser VideoProgressManager et WatchHistoryManager à la place
 
   // Progression vidéo détaillée
   saveVideoProgress: (data) => ipcRenderer.invoke("save-video-progress", data),
@@ -107,6 +96,21 @@ contextBridge.exposeInMainWorld("electronAPI", {
   toggleFavorite: (anime) => ipcRenderer.invoke("toggle-favorite", anime),
   getFavoritesCount: () => ipcRenderer.invoke("get-favorites-count"),
   clearFavorites: () => ipcRenderer.invoke("clear-favorites"),
+
+  // Historique de visionnage avancé
+  addWatchHistoryEntry: (entry) =>
+    ipcRenderer.invoke("add-watch-history-entry", entry),
+  getWatchHistory: () => ipcRenderer.invoke("get-watch-history"),
+  getAnimeWatchHistory: (animeId) =>
+    ipcRenderer.invoke("get-anime-watch-history", animeId),
+  getWatchStatistics: () => ipcRenderer.invoke("get-watch-statistics"),
+  removeWatchHistoryEntry: (animeId, seasonId, episodeNumber) =>
+    ipcRenderer.invoke("remove-watch-history-entry", {
+      animeId,
+      seasonId,
+      episodeNumber,
+    }),
+  clearAllWatchHistory: () => ipcRenderer.invoke("clear-all-watch-history"),
 
   // Événements système
   onAppReady: (callback) => ipcRenderer.on("app-ready", callback),

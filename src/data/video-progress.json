@@ -1,1 +1,28 @@
-{}
+{
+  "16bit-sensation-another-layer:saison1:10": {
+    "animeId": "16bit-sensation-another-layer",
+    "seasonId": "saison1",
+    "episodeIndex": 10,
+    "episodeNumber": 11,
+    "currentTime": 330.077285,
+    "duration": 1420.11,
+    "progressPercent": 23,
+    "lastWatched": 1762696652516,
+    "animeTitle": "16bit Sensation: ANOTHER LAYER",
+    "animeCover": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx159559-4JzfnLGIelRC.jpg",
+    "seasonName": "Saison 1"
+  },
+  "7-seeds:saison1:0": {
+    "animeId": "7-seeds",
+    "seasonId": "saison1",
+    "episodeIndex": 0,
+    "episodeNumber": 1,
+    "currentTime": 180.567214,
+    "duration": 1461.8,
+    "progressPercent": 12,
+    "lastWatched": 1762712727990,
+    "animeTitle": "7SEEDS",
+    "animeCover": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx105807-Ivd7xc40XdGF.jpg",
+    "seasonName": "Saison 1"
+  }
+}

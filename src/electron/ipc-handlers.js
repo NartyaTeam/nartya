@@ -6,6 +6,7 @@
 const { ipcMain, app } = require("electron");
 const path = require("path");
 const { autoUpdater } = require("electron-updater");
+const PATHS = require(path.join(__dirname, "..", "utils", "paths.js"));
 const VideoExtractor = require("./video-extractor");
 const Scraper = require(path.join(__dirname, "..", "scraper", "index.js"));
 const indexer = require(path.join(__dirname, "..", "scraper", "indexer.js"));
@@ -70,17 +71,17 @@ class IPCHandlers {
   registerAnimeSearch() {
     ipcMain.handle("search-local-animes", async (event, query) => {
       try {
-        const animesPath = path.join(__dirname, "..", "data", "animes.json");
+        const animesPath = PATHS.ANIMES_JSON;
         const fs = require("fs");
 
         // Vérifier que le fichier existe
         if (!fs.existsSync(animesPath)) {
-          console.error("❌ Fichier animes.json introuvable");
+          console.error("❌ Fichier animes.json introuvable à:", animesPath);
           return {
             success: false,
             error: "Base de données introuvable",
             userMessage:
-              "La base de données des animes n'a pas été trouvée. Veuillez réinstaller l'application.",
+              "La base de données des animes n'a pas été trouvée. Veuillez lancer le rafraîchissement des données.",
           };
         }
 
@@ -191,64 +192,54 @@ class IPCHandlers {
    * Handlers pour l'historique de visionnage
    */
   registerWatchHistory() {
-    // Sauvegarder la progression
-    ipcMain.handle(
-      "save-watch-progress",
-      async (event, { animeId, episodeNumber, currentTime, duration }) => {
-        this.watchHistory.saveProgress(
-          animeId,
-          episodeNumber,
-          currentTime,
-          duration
-        );
-        return { success: true };
-      }
-    );
+    // === HANDLERS POUR L'HISTORIQUE AVANCÉ ===
 
-    // Récupérer la progression d'un épisode
-    ipcMain.handle(
-      "get-watch-progress",
-      async (event, { animeId, episodeNumber }) => {
-        return this.watchHistory.getProgress(animeId, episodeNumber);
-      }
-    );
-
-    // Récupérer le dernier épisode regardé
-    ipcMain.handle("get-last-watched-episode", async (event, animeId) => {
-      return this.watchHistory.getLastWatchedEpisode(animeId);
+    // Ajouter ou mettre à jour une entrée d'historique
+    ipcMain.handle("add-watch-history-entry", async (event, entry) => {
+      return this.watchHistory.addOrUpdateEntry(entry);
     });
 
-    // Récupérer les animes récemment regardés
-    ipcMain.handle("get-recently-watched", async (event, limit) => {
-      return this.watchHistory.getRecentlyWatched(limit);
-    });
-
-    // Marquer comme complété
-    ipcMain.handle(
-      "mark-episode-completed",
-      async (event, { animeId, episodeNumber }) => {
-        this.watchHistory.markAsCompleted(animeId, episodeNumber);
-        return { success: true };
-      }
-    );
-
-    // Vérifier si complété
-    ipcMain.handle(
-      "is-episode-completed",
-      async (event, { animeId, episodeNumber }) => {
-        return this.watchHistory.isCompleted(animeId, episodeNumber);
-      }
-    );
-
-    // Effacer tout l'historique
-    ipcMain.handle("clear-watch-history", async (event) => {
+    // Récupérer tout l'historique
+    ipcMain.handle("get-watch-history", async () => {
       try {
-        this.watchHistory.clearAll();
-        return { success: true };
+        const history = this.watchHistory.getHistory();
+        return { success: true, history };
       } catch (error) {
-        console.error("Erreur lors de l'effacement de l'historique:", error);
         return { success: false, error: error.message };
       }
+    });
+
+    // Récupérer l'historique d'un anime
+    ipcMain.handle("get-anime-watch-history", async (event, animeId) => {
+      try {
+        const history = this.watchHistory.getAnimeHistory(animeId);
+        return { success: true, history };
+      } catch (error) {
+        return { success: false, error: error.message };
+      }
+    });
+
+    // Récupérer les statistiques
+    ipcMain.handle("get-watch-statistics", async () => {
+      try {
+        const stats = this.watchHistory.getStatistics();
+        return { success: true, stats };
+      } catch (error) {
+        return { success: false, error: error.message };
+      }
+    });
+
+    // Supprimer une entrée
+    ipcMain.handle(
+      "remove-watch-history-entry",
+      async (event, { animeId, seasonId, episodeNumber }) => {
+        return this.watchHistory.removeEntry(animeId, seasonId, episodeNumber);
+      }
+    );
+
+    // Effacer tout l'historique (nouveau)
+    ipcMain.handle("clear-all-watch-history", async () => {
+      return this.watchHistory.clearHistory();
     });
   }
 

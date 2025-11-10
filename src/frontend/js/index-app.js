@@ -43,7 +43,6 @@ class IndexApp {
     const defaultSettings = {
       defaultLanguage: "vostfr",
       autoPlay: false,
-      videoQuality: "auto",
       preloadRange: 3,
       visualEffects: true,
       theme: "dark",

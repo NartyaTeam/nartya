@@ -1,5 +1,39 @@
 [
   {
+    "id": 105807,
+    "slug": "7-seeds",
+    "title": {
+      "romaji": "7SEEDS",
+      "english": "7SEEDS",
+      "native": "7SEEDS"
+    },
+    "coverImage": {
+      "large": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx105807-Ivd7xc40XdGF.jpg",
+      "medium": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/small/bx105807-Ivd7xc40XdGF.jpg"
+    },
+    "format": "ONA",
+    "synopsis": "Une gigantesque météorite est entrée en collision avec la Terre. De nombreuses espèces, y compris l'humanité, ont été rayés de la surface de la planète. Le gouvernement japonais, qui avait prévu cette catastrophe, a prit des mesures pour essayer de contrer le pire des scénarios. Le projet \"7SEEDS\", l'une de ces mesures, comporte cinq groupes de sept jeunes hommes et femmes soigneusement sélectionnés et classés en équipes : printemps, été A, été B, automne et hiver. Chaque participant a ensuite été plongé dans un sommeil cryogénique dans l'espoir de préserver la survie de l'humanité.\n\nLorsque ces hommes et femmes se sont réveillés, ils se sont soudainement retrouvés plongés dans un monde cruel. Bien qu'anéantis par la perte de leurs proches, ils vont commencer à chercher des solutions pour survivre.",
+    "genres": [],
+    "addedAt": "2025-11-09T18:25:34.421Z"
+  },
+  {
+    "id": 159559,
+    "slug": "16bit-sensation-another-layer",
+    "title": {
+      "romaji": "16bit Sensation: ANOTHER LAYER",
+      "english": "16bit Sensation: Another Layer",
+      "native": "16bitセンセーション ANOTHER LAYER"
+    },
+    "coverImage": {
+      "large": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx159559-4JzfnLGIelRC.jpg",
+      "medium": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/small/bx159559-4JzfnLGIelRC.jpg"
+    },
+    "format": "TV",
+    "synopsis": "En 1992, une étudiante universitaire, Meiko Uehara, commence à travailler à temps partiel chez un fabricant de jeux érotiques. Elle est douée pour le dessin et est nommée graphiste, mais elle n'a jamais dessiné d'illustrations pour adultes auparavant et n'a aucune idée de ce qu'il faut faire... Sera-t-elle capable de mener à bien son jeu érotique ?",
+    "genres": [],
+    "addedAt": "2025-11-09T18:22:28.242Z"
+  },
+  {
     "id": 113231,
     "slug": "2.43-seiin-koukou-danshi-volley-bu",
     "title": {
@@ -14,23 +48,6 @@
     "format": "TV",
     "synopsis": "Kimichika Haijima, étudiant au secondaire, retourne dans sa ville natale, Fukui, après avoir causé des ennuis à son équipe de volley-ball du collège. Il y retrouve son ami d'enfance, Yuni Kuroba, qui possède des capacités physiques remarquables, mais qui est vulnérable sous la pression. Haijima, avec sa passion débordante et son talent indéniable pour le volley-ball, forme une combinaison d'as avec Kuroba.\n\nLes deux intègrent le lycée Seîn où ils rejoignent le club de volley-ball. Ils y font la connaissance de Shinichirô Oda, capitaine au sang chaud qui mesure 163 cm, Misao Aoki, vice-capitaine talentueux à la langue acérée, et d'autres membres de deuxième et troisième année dont Akito Kanno, qui porte toujours des manches longues en raison de son allergie au soleil.\n\nCette nouvelle équipe est sur le point de devenir l'étoile montante de la préfecture de Fukui !",
     "genres": [],
-    "addedAt": "2025-11-09T13:19:36.469Z"
-  },
-  {
-    "id": 158559,
-    "slug": "2.5-jigen-no-ririsa",
-    "title": {
-      "romaji": "2.5 Jigen no Ririsa",
-      "english": "2.5 Dimensional Seduction",
-      "native": "2.5次元の誘惑"
-    },
-    "coverImage": {
-      "large": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx158559-yCnnnedsSCie.jpg",
-      "medium": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/small/bx158559-yCnnnedsSCie.jpg"
-    },
-    "format": "TV",
-    "synopsis": "\"Je ne suis pas intéressé par les vraies femmes ! Ma femme, Lilliel, est en 2 dimensions !\". Mais quelque chose d'inattendue apparaît devant Okumura, le président du club de manga... la vraie Lilliel ?! La comédie romantique avec ce personnage de cosplay commence !",
-    "genres": [],
-    "addedAt": "2025-11-09T13:17:59.297Z"
+    "addedAt": "2025-11-09T18:22:22.033Z"
   }
 ]

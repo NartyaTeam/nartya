@@ -371,10 +371,8 @@ class Scraper {
    */
   static loadAnimes() {
     try {
-      const animesData = fs.readFileSync(
-        path.join(__dirname, "..", "data", "animes.json"),
-        "utf8"
-      );
+      const PATHS = require(path.join(__dirname, "..", "utils", "paths.js"));
+      const animesData = fs.readFileSync(PATHS.ANIMES_JSON, "utf8");
       return JSON.parse(animesData);
     } catch (error) {
       console.error("Erreur lors du chargement des animes:", error);

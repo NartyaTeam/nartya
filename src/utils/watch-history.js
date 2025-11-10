@@ -1,165 +1,275 @@
+/**
+ * Gestionnaire de l'historique de visionnage
+ * Gère l'enregistrement et la récupération de l'historique
+ */
+
 const fs = require("fs");
 const path = require("path");
+const CONFIG = require("./config");
 
 class WatchHistoryManager {
   constructor() {
-    // Utiliser les fichiers .dev.json en mode développement
-    const isDev =
-      process.argv.includes("--dev") || process.env.NODE_ENV === "development";
-    const fileName = isDev ? "watch-history.dev.json" : "watch-history.json";
-    this.historyPath = path.join(__dirname, "..", "data", fileName);
-    this.history = this.loadHistory();
+    this.historyFile = path.join(CONFIG.DATA_DIR, "watch-history.json");
+    this.ensureFileExists();
+  }
 
-    if (isDev) {
-      console.log(
-        "🔧 Mode développement: utilisation de watch-history.dev.json"
-      );
+  /**
+   * S'assure que le fichier d'historique existe
+   */
+  ensureFileExists() {
+    if (!fs.existsSync(this.historyFile)) {
+      fs.writeFileSync(this.historyFile, JSON.stringify([], null, 2));
     }
   }
 
-  loadHistory() {
+  /**
+   * Récupère tout l'historique
+   * @returns {Array} Liste des entrées d'historique
+   */
+  getHistory() {
     try {
-      if (fs.existsSync(this.historyPath)) {
-        const data = fs.readFileSync(this.historyPath, "utf8");
-        return JSON.parse(data);
-      }
+      const data = fs.readFileSync(this.historyFile, "utf8");
+      return JSON.parse(data);
     } catch (error) {
-      console.error("Erreur lors du chargement de l'historique:", error);
+      console.error("Erreur lors de la lecture de l'historique:", error);
+      return [];
     }
-    return {};
   }
 
-  saveHistory() {
+  /**
+   * Ajoute ou met à jour une entrée dans l'historique
+   * @param {Object} entry - Entrée d'historique
+   * @returns {Object} Résultat de l'opération
+   */
+  addOrUpdateEntry(entry) {
     try {
-      const dir = path.dirname(this.historyPath);
-      if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true });
-      }
-      fs.writeFileSync(
-        this.historyPath,
-        JSON.stringify(this.history, null, 2),
-        "utf8"
+      let history = this.getHistory();
+
+      // Chercher si l'anime/épisode existe déjà
+      const existingIndex = history.findIndex(
+        (h) =>
+          h.animeId === entry.animeId &&
+          h.seasonId === entry.seasonId &&
+          h.episodeNumber === entry.episodeNumber
       );
-    } catch (error) {
-      console.error("Erreur lors de la sauvegarde de l'historique:", error);
-    }
-  }
 
-  // Sauvegarder la progression d'un épisode
-  saveProgress(animeId, episodeNumber, currentTime, duration) {
-    const animeIdStr = String(animeId);
+      const now = new Date().toISOString();
 
-    if (!this.history[animeIdStr]) {
-      this.history[animeIdStr] = {
-        episodes: {},
-        lastWatched: Date.now(),
-      };
-    }
-
-    const episodeKey = String(episodeNumber);
-    this.history[animeIdStr].episodes[episodeKey] = {
-      currentTime: Math.floor(currentTime),
-      duration: Math.floor(duration),
-      percentage: Math.floor((currentTime / duration) * 100),
-      lastWatched: Date.now(),
-    };
-
-    // Marquer l'anime comme regardé récemment
-    this.history[animeIdStr].lastWatched = Date.now();
-
-    this.saveHistory();
-  }
-
-  // Récupérer la progression d'un épisode
-  getProgress(animeId, episodeNumber) {
-    const animeIdStr = String(animeId);
-    const episodeKey = String(episodeNumber);
-
-    if (
-      this.history[animeIdStr] &&
-      this.history[animeIdStr].episodes[episodeKey]
-    ) {
-      return this.history[animeIdStr].episodes[episodeKey];
-    }
-    return null;
-  }
-
-  // Récupérer le dernier épisode regardé d'un anime
-  getLastWatchedEpisode(animeId) {
-    const animeIdStr = String(animeId);
-
-    if (!this.history[animeIdStr] || !this.history[animeIdStr].episodes) {
-      return null;
-    }
-
-    const episodes = this.history[animeIdStr].episodes;
-    let lastEpisode = null;
-    let lastTime = 0;
-
-    for (const [episodeNum, data] of Object.entries(episodes)) {
-      if (data.lastWatched > lastTime) {
-        lastTime = data.lastWatched;
-        lastEpisode = {
-          episodeNumber: parseInt(episodeNum),
-          ...data,
+      if (existingIndex !== -1) {
+        // Mettre à jour l'entrée existante
+        history[existingIndex] = {
+          ...history[existingIndex],
+          ...entry,
+          lastWatchedAt: now,
+          watchCount: (history[existingIndex].watchCount || 0) + 1,
+          // Mettre à jour la progression si fournie
+          currentTime:
+            entry.currentTime !== undefined
+              ? entry.currentTime
+              : history[existingIndex].currentTime,
+          duration:
+            entry.duration !== undefined
+              ? entry.duration
+              : history[existingIndex].duration,
+          progressPercent:
+            entry.progressPercent !== undefined
+              ? entry.progressPercent
+              : history[existingIndex].progressPercent,
+          completed:
+            entry.completed !== undefined
+              ? entry.completed
+              : history[existingIndex].completed,
         };
-      }
-    }
-
-    return lastEpisode;
-  }
-
-  // Récupérer tous les animes récemment regardés
-  getRecentlyWatched(limit = 10) {
-    const recentAnimes = [];
-
-    for (const [animeId, data] of Object.entries(this.history)) {
-      const lastEpisode = this.getLastWatchedEpisode(animeId);
-      if (lastEpisode) {
-        recentAnimes.push({
-          animeId: parseInt(animeId),
-          lastWatched: data.lastWatched,
-          lastEpisode: lastEpisode,
+      } else {
+        // Créer une nouvelle entrée
+        history.unshift({
+          ...entry,
+          firstWatchedAt: now,
+          lastWatchedAt: now,
+          watchCount: 1,
+          currentTime: entry.currentTime || 0,
+          duration: entry.duration || 0,
+          progressPercent: entry.progressPercent || 0,
+          completed: entry.completed || false,
         });
       }
+
+      // Limiter l'historique à 1000 entrées
+      if (history.length > 1000) {
+        history = history.slice(0, 1000);
+      }
+
+      fs.writeFileSync(this.historyFile, JSON.stringify(history, null, 2));
+
+      return {
+        success: true,
+        message: "Historique mis à jour",
+      };
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour de l'historique:", error);
+      return {
+        success: false,
+        message: "Erreur lors de la mise à jour",
+        error: error.message,
+      };
     }
-
-    // Trier par date de dernière visualisation
-    recentAnimes.sort((a, b) => b.lastWatched - a.lastWatched);
-
-    return recentAnimes.slice(0, limit);
   }
 
-  // Marquer un épisode comme complété
-  markAsCompleted(animeId, episodeNumber) {
-    const animeIdStr = String(animeId);
-    const episodeKey = String(episodeNumber);
+  /**
+   * Récupère l'historique d'un anime spécifique
+   * @param {string} animeId - ID de l'anime
+   * @returns {Array} Entrées d'historique pour cet anime
+   */
+  getAnimeHistory(animeId) {
+    const history = this.getHistory();
+    return history.filter((h) => h.animeId === animeId);
+  }
 
-    if (
-      this.history[animeIdStr] &&
-      this.history[animeIdStr].episodes[episodeKey]
-    ) {
-      this.history[animeIdStr].episodes[episodeKey].completed = true;
-      this.history[animeIdStr].episodes[episodeKey].percentage = 100;
-      this.saveHistory();
+  /**
+   * Récupère le dernier épisode regardé d'un anime
+   * @param {string} animeId - ID de l'anime
+   * @returns {Object|null} Dernière entrée ou null
+   */
+  getLastWatchedEpisode(animeId) {
+    const animeHistory = this.getAnimeHistory(animeId);
+    if (animeHistory.length === 0) return null;
+
+    // Trier par date de visionnage
+    return animeHistory.sort(
+      (a, b) => new Date(b.lastWatchedAt) - new Date(a.lastWatchedAt)
+    )[0];
+  }
+
+  /**
+   * Récupère les animes récemment regardés
+   * @param {number} limit - Nombre d'animes à retourner
+   * @returns {Array} Liste des animes récents
+   */
+  getRecentlyWatched(limit = 20) {
+    const history = this.getHistory();
+
+    // Grouper par anime et garder le plus récent
+    const animeMap = new Map();
+
+    history.forEach((entry) => {
+      if (
+        !animeMap.has(entry.animeId) ||
+        new Date(entry.lastWatchedAt) >
+          new Date(animeMap.get(entry.animeId).lastWatchedAt)
+      ) {
+        animeMap.set(entry.animeId, entry);
+      }
+    });
+
+    // Convertir en array et trier par date
+    return Array.from(animeMap.values())
+      .sort((a, b) => new Date(b.lastWatchedAt) - new Date(a.lastWatchedAt))
+      .slice(0, limit);
+  }
+
+  /**
+   * Récupère les statistiques de visionnage
+   * @returns {Object} Statistiques
+   */
+  getStatistics() {
+    const history = this.getHistory();
+
+    // Nombre total d'épisodes regardés
+    const totalEpisodes = history.length;
+
+    // Nombre d'animes différents
+    const uniqueAnimes = new Set(history.map((h) => h.animeId)).size;
+
+    // Temps total de visionnage (estimation : 24min par épisode)
+    const totalMinutes = totalEpisodes * 24;
+    const totalHours = Math.floor(totalMinutes / 60);
+
+    // Anime le plus regardé
+    const animeCount = {};
+    history.forEach((h) => {
+      animeCount[h.animeId] = (animeCount[h.animeId] || 0) + 1;
+    });
+
+    const mostWatchedAnimeId = Object.keys(animeCount).reduce(
+      (a, b) => (animeCount[a] > animeCount[b] ? a : b),
+      null
+    );
+
+    const mostWatchedAnime = mostWatchedAnimeId
+      ? history.find((h) => h.animeId === mostWatchedAnimeId)
+      : null;
+
+    return {
+      totalEpisodes,
+      uniqueAnimes,
+      totalHours,
+      totalMinutes,
+      mostWatchedAnime: mostWatchedAnime
+        ? {
+            id: mostWatchedAnime.animeId,
+            title: mostWatchedAnime.animeTitle,
+            episodesWatched: animeCount[mostWatchedAnimeId],
+          }
+        : null,
+    };
+  }
+
+  /**
+   * Supprime une entrée de l'historique
+   * @param {string} animeId - ID de l'anime
+   * @param {string} seasonId - ID de la saison
+   * @param {number} episodeNumber - Numéro de l'épisode
+   * @returns {Object} Résultat de l'opération
+   */
+  removeEntry(animeId, seasonId, episodeNumber) {
+    try {
+      let history = this.getHistory();
+
+      history = history.filter(
+        (h) =>
+          !(
+            h.animeId === animeId &&
+            h.seasonId === seasonId &&
+            h.episodeNumber === episodeNumber
+          )
+      );
+
+      fs.writeFileSync(this.historyFile, JSON.stringify(history, null, 2));
+
+      return {
+        success: true,
+        message: "Entrée supprimée de l'historique",
+      };
+    } catch (error) {
+      console.error("Erreur lors de la suppression:", error);
+      return {
+        success: false,
+        message: "Erreur lors de la suppression",
+        error: error.message,
+      };
     }
   }
 
-  // Vérifier si un épisode est complété
-  isCompleted(animeId, episodeNumber) {
-    const progress = this.getProgress(animeId, episodeNumber);
-    if (progress) {
-      // Considérer comme complété si > 90% ou marqué explicitement
-      return progress.completed === true || progress.percentage > 90;
+  /**
+   * Efface tout l'historique
+   * @returns {Object} Résultat de l'opération
+   */
+  clearHistory() {
+    try {
+      fs.writeFileSync(this.historyFile, JSON.stringify([], null, 2));
+      console.log("✅ Historique effacé");
+      return {
+        success: true,
+        message: "Historique effacé",
+      };
+    } catch (error) {
+      console.error("Erreur lors de l'effacement de l'historique:", error);
+      return {
+        success: false,
+        message: "Erreur lors de l'effacement",
+        error: error.message,
+      };
     }
-    return false;
-  }
-
-  // Effacer tout l'historique
-  clearAll() {
-    this.history = {};
-    this.saveHistory();
-    console.log("✅ Historique de visionnage effacé");
   }
 }
 

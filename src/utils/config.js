@@ -15,8 +15,16 @@ const CONFIG = {
     DEV_TOOLS: process.argv.includes("--dev"),
   },
 
-  // Répertoires de données
-  DATA_DIR: path.join(__dirname, "..", "data"),
+  // Répertoires de données - sera remplacé par PATHS.DATA au runtime
+  get DATA_DIR() {
+    try {
+      const PATHS = require("./paths");
+      return PATHS.DATA;
+    } catch (error) {
+      // Fallback en cas d'erreur circulaire
+      return path.join(__dirname, "..", "data");
+    }
+  },
 
   // Configuration du scraper
   SCRAPER: {
@@ -25,7 +33,14 @@ const CONFIG = {
     CATALOG_ENDPOINT: "/catalogue/",
     DELAY_BETWEEN_REQUESTS: 2000, // ms
     MAX_RESULTS: 20,
-    ANIMES_JSON: path.join(__dirname, "..", "data", "animes.json"),
+    get ANIMES_JSON() {
+      try {
+        const PATHS = require("./paths");
+        return PATHS.ANIMES_JSON;
+      } catch (error) {
+        return path.join(__dirname, "..", "data", "animes.json");
+      }
+    },
   },
 
   // Configuration AniList API

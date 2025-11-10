@@ -1,44 +1,71 @@
-{
-  "16bit-sensation-another-layer": {
-    "episodes": {
-      "1": {
-        "currentTime": 1419,
-        "duration": 1419,
-        "percentage": 100,
-        "lastWatched": 1762694432512,
-        "completed": true
-      },
-      "3": {
-        "currentTime": 1420,
-        "duration": 1420,
-        "percentage": 100,
-        "lastWatched": 1762689759721,
-        "completed": true
-      }
+[
+  {
+    "animeId": "7-seeds",
+    "slug": "7-seeds",
+    "seasonId": "saison1",
+    "episodeNumber": 3,
+    "animeTitle": {
+      "romaji": "7SEEDS",
+      "english": "7SEEDS",
+      "native": "7SEEDS"
     },
-    "lastWatched": 1762694432512
+    "coverImage": {
+      "large": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx105807-Ivd7xc40XdGF.jpg",
+      "medium": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/small/bx105807-Ivd7xc40XdGF.jpg"
+    },
+    "language": "vostfr",
+    "currentTime": 0,
+    "duration": 0,
+    "progressPercent": 0,
+    "completed": false,
+    "firstWatchedAt": "2025-11-09T18:25:27.988Z",
+    "lastWatchedAt": "2025-11-09T18:25:27.988Z",
+    "watchCount": 1
   },
-  "2.5-jigen-no-ririsa": {
-    "episodes": {
-      "1": {
-        "currentTime": 1440,
-        "duration": 1440,
-        "percentage": 99,
-        "lastWatched": 1762690192905
-      }
+  {
+    "animeId": "7-seeds",
+    "slug": "7-seeds",
+    "seasonId": "saison1",
+    "episodeNumber": 1,
+    "animeTitle": {
+      "romaji": "7SEEDS",
+      "english": "7SEEDS",
+      "native": "7SEEDS"
     },
-    "lastWatched": 1762690192905
+    "coverImage": {
+      "large": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx105807-Ivd7xc40XdGF.jpg",
+      "medium": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/small/bx105807-Ivd7xc40XdGF.jpg"
+    },
+    "language": "vostfr",
+    "currentTime": 0,
+    "duration": 0,
+    "progressPercent": 0,
+    "completed": false,
+    "firstWatchedAt": "2025-11-09T18:24:43.070Z",
+    "lastWatchedAt": "2025-11-09T18:24:43.070Z",
+    "watchCount": 1
   },
-  "2.43-seiin-koukou-danshi-volley-bu": {
-    "episodes": {
-      "1": {
-        "currentTime": 1383,
-        "duration": 1383,
-        "percentage": 100,
-        "lastWatched": 1762690226479,
-        "completed": true
-      }
+  {
+    "animeId": "16bit-sensation-another-layer",
+    "slug": "16bit-sensation-another-layer",
+    "seasonId": "saison1",
+    "episodeNumber": 1,
+    "animeTitle": {
+      "romaji": "16bit Sensation: ANOTHER LAYER",
+      "english": "16bit Sensation: Another Layer",
+      "native": "16bitセンセーション ANOTHER LAYER"
     },
-    "lastWatched": 1762690226479
+    "coverImage": {
+      "large": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx159559-4JzfnLGIelRC.jpg",
+      "medium": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/small/bx159559-4JzfnLGIelRC.jpg"
+    },
+    "language": "vostfr",
+    "currentTime": 0,
+    "duration": 0,
+    "progressPercent": 0,
+    "completed": false,
+    "firstWatchedAt": "2025-11-09T15:28:14.034Z",
+    "lastWatchedAt": "2025-11-09T15:29:01.845Z",
+    "watchCount": 2
   }
-}
+]

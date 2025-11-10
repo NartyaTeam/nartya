@@ -31,12 +31,13 @@
             fill="none"
             stroke="currentColor"
             stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
           >
-            <circle cx="12" cy="12" r="3" />
-            <path d="M12 1v6m0 6v6m9-9h-6m-6 0H3" />
             <path
-              d="m4.93 4.93 4.24 4.24m5.66 5.66 4.24 4.24m0-14.14-4.24 4.24M9.17 14.83l-4.24 4.24"
+              d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"
             />
+            <circle cx="12" cy="12" r="3" />
           </svg>
           Paramètres
         </h1>
@@ -93,24 +94,6 @@
             </div>
           </div>
 
-          <!-- Qualité vidéo -->
-          <div class="setting-item">
-            <div class="setting-info">
-              <label for="videoQuality">Qualité vidéo préférée</label>
-              <p class="setting-description">
-                Qualité sélectionnée en priorité si disponible
-              </p>
-            </div>
-            <div class="setting-control">
-              <select id="videoQuality" class="select-input">
-                <option value="auto">Automatique</option>
-                <option value="1080p">1080p (Full HD)</option>
-                <option value="720p">720p (HD)</option>
-                <option value="480p">480p (SD)</option>
-              </select>
-            </div>
-          </div>
-
           <!-- Suivi de progression -->
           <div class="setting-item">
             <div class="setting-info">
@@ -148,7 +131,8 @@
             <div class="setting-info">
               <label for="autoPlayNext">Lecture auto du prochain épisode</label>
               <p class="setting-description">
-                Lancer automatiquement l'épisode suivant après un compte à rebours
+                Lancer automatiquement l'épisode suivant après un compte à
+                rebours
               </p>
             </div>
             <div class="setting-control">
@@ -199,22 +183,14 @@
             <div class="setting-info">
               <label for="preloadRange">Préchargement des épisodes</label>
               <p class="setting-description">
-                Nombre d'épisodes à précharger automatiquement
+                Précharger automatiquement les épisodes
               </p>
             </div>
             <div class="setting-control">
-              <div class="range-control">
-                <input
-                  type="range"
-                  id="preloadRange"
-                  min="0"
-                  max="10"
-                  value="3"
-                  step="1"
-                  class="range-input"
-                />
-                <span class="range-value" id="preloadValue">3 épisodes</span>
-              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="preloadEpisodes" checked />
+                <span class="toggle-slider"></span>
+              </label>
             </div>
           </div>
 

@@ -79,7 +79,15 @@ export class AnimeInfoManager {
                         : ""
                     }
                     ${format ? `<div class="anime-format">${format}</div>` : ""}
-                    <div class="anime-synopsis">${synopsis}</div>
+                    <div class="anime-synopsis-wrapper">
+                        <div class="anime-synopsis" id="animeSynopsis">${synopsis}</div>
+                        <button class="synopsis-toggle-btn" id="synopsisToggleBtn" style="display: none;">
+                            <span class="synopsis-toggle-text">Voir plus</span>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="synopsis-toggle-icon">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
             </div>
             <div class="seasons-section">

@@ -398,15 +398,7 @@ export class VideoPlayer {
       const duration = this.plyrInstance.duration;
 
       if (currentTime > 0 && duration > 0) {
-        // Sauvegarder avec l'ancien système (watch history)
-        await window.electronAPI.saveWatchProgress({
-          animeId: this.currentAnimeId,
-          episodeNumber: this.currentEpisodeNumber,
-          currentTime,
-          duration,
-        });
-
-        // Sauvegarder avec le nouveau système (video progress) si on a les infos
+        // Sauvegarder uniquement avec le système VideoProgressManager
         if (this.currentSeasonId) {
           await window.electronAPI.saveVideoProgress({
             animeId: this.currentAnimeId,
@@ -424,17 +416,9 @@ export class VideoPlayer {
   }
 
   async markAsCompleted() {
-    if (!this.currentAnimeId || !this.currentEpisodeNumber) return;
-
-    try {
-      await window.electronAPI.markEpisodeCompleted({
-        animeId: this.currentAnimeId,
-        episodeNumber: this.currentEpisodeNumber,
-      });
-      console.log("✅ Épisode marqué comme terminé");
-    } catch (error) {
-      console.error("Erreur lors du marquage comme terminé:", error);
-    }
+    // Cette méthode n'est plus utilisée - la progression est gérée automatiquement
+    // par VideoProgressManager et WatchHistoryManager
+    console.log("✅ Épisode terminé (géré automatiquement)");
   }
 
   isHLS(videoUrl) {
@@ -490,9 +474,6 @@ export class VideoPlayer {
             console.log(
               `${this.hlsInstance.levels.length} niveaux de qualité disponibles`
             );
-
-            // Mettre à jour les options de qualité dans Plyr
-            this.updatePlyrQualityOptions();
           }
         });
 
@@ -599,93 +580,4 @@ export class VideoPlayer {
     }
   }
 
-  /**
-   * Met à jour les options de qualité dans Plyr depuis les niveaux HLS disponibles
-   */
-  updatePlyrQualityOptions() {
-    if (!this.hlsInstance || !this.plyrInstance) return;
-
-    const levels = this.hlsInstance.levels;
-    if (!levels || levels.length === 0) return;
-
-    // Créer la liste des qualités disponibles (format Plyr)
-    const qualityOptions = [];
-
-    // Ajouter "Auto" en premier
-    qualityOptions.push({ label: "Auto", value: -1 });
-
-    // Ajouter chaque niveau de qualité disponible
-    levels.forEach((level, index) => {
-      const height =
-        level.height ||
-        (level.attrs?.RESOLUTION ? level.attrs.RESOLUTION.split("x")[1] : null);
-      const bitrate = level.bitrate
-        ? ` (${Math.round(level.bitrate / 1000)}k)`
-        : "";
-      const label = height
-        ? `${height}p${bitrate}`
-        : `Niveau ${index + 1}${bitrate}`;
-      qualityOptions.push({ label, value: index });
-    });
-
-    // Mettre à jour Plyr avec les nouvelles options de qualité
-    try {
-      // Plyr utilise un format spécifique pour les qualités
-      // On doit accéder directement aux contrôles de qualité
-      const qualityMenu =
-        this.plyrInstance.elements?.buttons?.settings?.querySelector(
-          '[data-plyr="quality"]'
-        );
-
-      if (qualityMenu) {
-        // Supprimer les anciennes options
-        const menuItems = qualityMenu.querySelectorAll(
-          '[role="menuitemradio"]'
-        );
-        menuItems.forEach((item) => item.remove());
-
-        // Ajouter les nouvelles options
-        qualityOptions.forEach((option, index) => {
-          const menuItem = document.createElement("button");
-          menuItem.setAttribute("role", "menuitemradio");
-          menuItem.setAttribute("aria-checked", index === 0 ? "true" : "false");
-          menuItem.setAttribute("data-plyr-quality", option.value);
-          menuItem.textContent = option.label;
-          menuItem.addEventListener("click", () => {
-            if (option.value >= 0 && option.value < levels.length) {
-              console.log(`🎬 Changement de qualité vers: ${option.label}`);
-              this.hlsInstance.currentLevel = option.value;
-            } else {
-              console.log("🎬 Qualité automatique activée");
-              this.hlsInstance.currentLevel = -1; // Auto
-            }
-          });
-          qualityMenu.appendChild(menuItem);
-        });
-      }
-
-      // Écouter les changements de niveau HLS pour mettre à jour l'affichage
-      this.hlsInstance.on(Hls.Events.LEVEL_SWITCHED, (event, data) => {
-        const currentLevel = data.level;
-        console.log(`✅ Qualité changée vers niveau ${currentLevel}`);
-      });
-
-      console.log(
-        "✅ Options de qualité HLS disponibles:",
-        qualityOptions.map((q) => q.label).join(", ")
-      );
-    } catch (e) {
-      console.warn("⚠️ Impossible de mettre à jour les options de qualité:", e);
-      // Fallback : afficher les niveaux dans la console pour debug
-      console.log(
-        "Niveaux HLS disponibles:",
-        levels.map((l, i) => ({
-          index: i,
-          height: l.height,
-          bitrate: l.bitrate,
-          resolution: l.attrs?.RESOLUTION,
-        }))
-      );
-    }
-  }
 }

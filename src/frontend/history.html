@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Ma Liste - Nartya</title>
+    <title>Historique - Nartya</title>
     <link rel="icon" type="image/png" href="../build/icon.ico" />
     <link rel="stylesheet" href="styles/index.css" />
   </head>
@@ -49,9 +49,9 @@
           </button>
 
           <button
-            class="nav-btn history"
-            onclick="window.location.href='history.html'"
-            title="Historique"
+            class="nav-btn favorites"
+            onclick="window.location.href='favorites.html'"
+            title="Ma Liste"
           >
             <div class="nav-btn-icon">
               <svg
@@ -62,11 +62,12 @@
                 stroke-linecap="round"
                 stroke-linejoin="round"
               >
-                <circle cx="12" cy="12" r="10"></circle>
-                <polyline points="12 6 12 12 16 14"></polyline>
+                <path
+                  d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+                />
               </svg>
             </div>
-            <span class="nav-btn-label">Historique</span>
+            <span class="nav-btn-label">Ma Liste</span>
           </button>
 
           <button
@@ -110,38 +111,110 @@
       </div>
     </div>
 
-    <!-- Page Title Section (simple et élégant) -->
+    <!-- Page Title Section -->
     <div class="page-title-section">
       <div class="page-title-content">
         <h1 class="page-title">
           <svg
             class="page-title-icon"
             viewBox="0 0 24 24"
-            fill="currentColor"
-            stroke="none"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
           >
-            <path
-              d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
-            />
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
           </svg>
-          Ma Liste
+          Historique
         </h1>
-        <p class="page-subtitle">
-          <span id="favoritesCount">0</span> anime(s) dans vos favoris
-        </p>
+        <p class="page-subtitle">Vos 10 derniers épisodes regardés</p>
       </div>
 
-      <!-- Actions bar -->
-      <div class="favorites-actions">
-        <div class="sort-controls">
-          <label for="sortSelect">Trier par</label>
-          <select id="sortSelect" class="sort-select">
-            <option value="recent">Récemment ajoutés</option>
-            <option value="title">Titre (A-Z)</option>
-            <option value="title-desc">Titre (Z-A)</option>
-          </select>
+      <!-- Statistiques -->
+      <div class="history-stats">
+        <div class="stat-card">
+          <div class="stat-icon-wrapper">
+            <svg
+              class="stat-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect>
+              <polyline points="17 2 12 7 7 2"></polyline>
+            </svg>
+          </div>
+          <div class="stat-content">
+            <div class="stat-value" id="totalEpisodes">0</div>
+            <div class="stat-label">Épisodes regardés</div>
+          </div>
         </div>
-        <button class="clear-all-btn" id="clearAllBtn">
+
+        <div class="stat-card">
+          <div class="stat-icon-wrapper">
+            <svg
+              class="stat-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+              <path
+                d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"
+              ></path>
+            </svg>
+          </div>
+          <div class="stat-content">
+            <div class="stat-value" id="totalAnimes">0</div>
+            <div class="stat-label">Animes différents</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon-wrapper">
+            <svg
+              class="stat-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+          </div>
+          <div class="stat-content">
+            <div class="stat-value" id="totalHours">0h</div>
+            <div class="stat-label">Temps de visionnage</div>
+          </div>
+        </div>
+
+        <div class="stat-card stat-card-highlight">
+          <div class="stat-icon-wrapper">
+            <svg
+              class="stat-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <polygon
+                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+              ></polygon>
+            </svg>
+          </div>
+          <div class="stat-content">
+            <div class="stat-value" id="mostWatchedAnime">-</div>
+            <div class="stat-label">Anime le plus regardé</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="history-actions">
+        <button class="clear-history-btn" id="clearHistoryBtn">
           <svg
             viewBox="0 0 24 24"
             fill="none"
@@ -153,19 +226,19 @@
               d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
             ></path>
           </svg>
-          Tout supprimer
+          Effacer l'historique
         </button>
       </div>
     </div>
 
-    <!-- Animes Grid -->
-    <div class="animes-grid" id="animesGrid"></div>
+    <!-- Episodes Grid -->
+    <div class="episodes-history-grid" id="episodesGrid"></div>
 
     <!-- Empty State -->
     <div class="empty-state" id="emptyState" style="display: none">
-      <div class="empty-icon">💔</div>
-      <h2>Aucun favori pour le moment</h2>
-      <p>Ajoutez des animes à votre liste en cliquant sur le cœur</p>
+      <div class="empty-icon">📺</div>
+      <h2>Aucun épisode dans l'historique</h2>
+      <p>Commencez à regarder des animes pour voir votre historique ici</p>
       <button class="browse-btn" onclick="window.location.href='index.html'">
         <svg
           viewBox="0 0 24 24"
@@ -183,6 +256,6 @@
     <!-- Chibi animations -->
     <div id="chibiContainer"></div>
 
-    <script type="module" src="js/favorites-app.js"></script>
+    <script type="module" src="js/history-app.js"></script>
   </body>
 </html>
