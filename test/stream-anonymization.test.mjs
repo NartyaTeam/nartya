@@ -95,7 +95,7 @@ test("la recette rend au client de quoi joindre et parser les hébergeurs", { sk
   const recipe = buildSourceRecipe();
   // Indexée par clé opaque : le nom interne ne sort jamais de l'API.
   assert.deepEqual(Object.keys(recipe.sources).sort(), [
-    "s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8",
+    "s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9",
   ]);
   assert.ok(!JSON.stringify(Object.keys(recipe.sources)).includes("ansembed"));
 
