@@ -1,7 +1,13 @@
 <div align="center">
-  <img src="public/icon.png" alt="Nartya" width="120" />
+  <img src="public/icon.png" alt="Nartya" width="96" height="96" align="middle" />
+  &nbsp;&nbsp;&nbsp;<b>×</b>&nbsp;&nbsp;&nbsp;
+  <img src="https://cdn.simpleicons.org/claude/D97757" alt="Claude" width="80" height="80" align="middle" />
   <h1>Nartya</h1>
   <p>Application de streaming d'anime pour le bureau, Android et iOS.</p>
+  <p>
+    <a href="#développé-avec-claude"><img src="https://img.shields.io/badge/maintenu%20avec-Claude-D97757?logo=claude&logoColor=white" alt="Maintenu avec Claude" /></a>
+    <img src="https://img.shields.io/badge/licence-ISC-blue" alt="Licence ISC" />
+  </p>
 </div>
 
 ---
@@ -85,6 +91,16 @@ test/            Tests unitaires
 
 Les adresses du service (site, API, Discord) sont regroupées dans
 [`src/config/instance.js`](src/config/instance.js).
+
+## Développé avec Claude
+
+Nartya n'est pas l'œuvre d'une seule personne. Une grande partie du code est écrite et
+maintenue avec [Claude](https://claude.com/claude-code), l'IA d'Anthropic, en particulier via
+Claude Code. L'équipe décide des fonctionnalités, oriente les choix, teste les changements dans
+l'application et choisit ce qui est publié.
+
+Les contributions sont jugées sur ce qu'elles font, qu'elles aient été écrites à la main ou
+avec une IA.
 
 ## Licence
 
