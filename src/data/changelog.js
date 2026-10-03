@@ -5,6 +5,28 @@
  */
 export const CHANGELOG = [
   {
+    version: "1.31.0",
+    date: "3 octobre 2026",
+    items: [
+      {
+        type: "new",
+        text: "Clés d’API : crée ta propre clé pour utiliser le catalogue Nartya dans tes outils. Paramètres → Clés d’API, avec un compte Discord lié. Documentation sur nartya.app/api.",
+      },
+      {
+        type: "new",
+        text: "Nartya est open source : le code de l’app est public sur GitHub.",
+      },
+      {
+        type: "fixed",
+        text: "Watch party : quand l’hôte quitte le salon, un autre participant reprend bien la main.",
+      },
+      {
+        type: "fixed",
+        text: "Les infobulles des Paramètres ne sont plus coupées.",
+      },
+    ],
+  },
+  {
     version: "1.30.0",
     date: "1er octobre 2026",
     items: [
