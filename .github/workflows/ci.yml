@@ -63,3 +63,10 @@ jobs:
       - name: Tests unitaires Android
         working-directory: android
         run: ./gradlew testDebugUnitTest --console=plain
+
+  ios:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tests du paquet Swift (proxy et téléchargements)
+        run: swift test --package-path ios/NartyaNative
