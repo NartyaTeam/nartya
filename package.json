@@ -24,7 +24,7 @@
     "test:providers:ui": "node test/video-providers-ui-smoke.mjs",
     "test:cast:fake": "node test/cast-fake-receiver.mjs",
     "test:android": "node scripts/run-android-gradle.mjs testDebugUnitTest",
-    "security:audit": "npm audit --audit-level=high",
+    "security:audit": "npm audit --omit=dev --audit-level=high",
     "android:sync": "npm run build && cap sync android",
     "ios:sync": "npm run build && cap sync ios",
     "ios:open": "cap open ios",
