@@ -49,6 +49,13 @@
   },
   "license": "ISC",
   "homepage": "https://nartya.app",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NartyaTeam/nartya.git"
+  },
+  "bugs": {
+    "url": "https://github.com/NartyaTeam/nartya/issues"
+  },
   "dependencies": {
     "castv2-client": "^1.2.0",
     "discord-rpc": "^4.0.1",
