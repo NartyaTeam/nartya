@@ -1,0 +1,32 @@
+node_modules/
+dist/
+release/
+.env
+.env.local
+*.log
+.DS_Store
+
+# Code de l'API, dépôt séparé et privé
+/api/
+
+# Docs et outils internes, dépôt séparé et privé
+/.claude/
+
+# Android (scaffold Capacitor) : artefacts de build et config propre à la machine.
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/.idea/
+android/capacitor-cordova-android-plugins/build/
+
+# Scratch du CLI Supabase (liens de projet, temporaires)
+supabase/.temp/
+
+# Résidus locaux de génération et de tests manuels.
+/tmp/
+/.tmp/
+
+# Benchmarks et réponses capturées pendant le diagnostic local du lecteur.
+/.play.json
+/anime4k-models.html

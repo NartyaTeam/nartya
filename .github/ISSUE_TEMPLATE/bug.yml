@@ -1,0 +1,44 @@
+name: Bug
+description: Quelque chose ne fonctionne pas comme prévu
+labels: [bug]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Ce qui se passe
+      description: Et ce que tu attendais à la place.
+    validations:
+      required: true
+  - type: textarea
+    id: etapes
+    attributes:
+      label: Étapes pour reproduire
+      placeholder: |
+        1. Ouvrir…
+        2. Cliquer sur…
+    validations:
+      required: true
+  - type: dropdown
+    id: plateforme
+    attributes:
+      label: Plateforme
+      options:
+        - Windows
+        - macOS
+        - Linux
+        - Android
+        - iOS
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version de l'application
+      description: Le numéro en tête de la fenêtre « Nouveautés ».
+    validations:
+      required: true
+  - type: textarea
+    id: complement
+    attributes:
+      label: Captures ou journaux
+      description: Facultatif.

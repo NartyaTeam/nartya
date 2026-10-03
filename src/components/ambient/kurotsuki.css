@@ -1,0 +1,17 @@
+.kurotsuki-streaks i {
+  position: absolute;
+  width: 36px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgb(255 243 235 / .7), transparent);
+  transform: rotate(-18deg);
+  animation: kurotsuki-streak 5s ease-in-out infinite;
+}
+@keyframes kurotsuki-streak {
+  0%, 100% { translate: -18px 8px; opacity: 0; }
+  30%, 62% { opacity: .55; }
+  50% { translate: 18px -6px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kurotsuki-streaks { display: none; }
+}
+.reduce-motion .kurotsuki-streaks { display: none; }

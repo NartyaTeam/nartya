@@ -1,0 +1,41 @@
+/*
+ * Design system « 朱 / Vermillion Noir » : encre noire, vermillon des torii, or discret, grain
+ * de pellicule. Couleurs en RGB pour l'opacité Tailwind.
+ */
+:root {
+  --bg: 10 10 12; /* #0a0a0c encre */
+  --bg-2: 14 13 16; /* fond secondaire légèrement chaud */
+  --surface: 20 19 23; /* cartes / panneaux */
+  --surface-2: 30 28 33; /* survol / imbriqué */
+  --border: 42 40 47;
+  --text: 240 237 232; /* blanc os, chaud */
+  --muted: 150 145 154; /* gris encre */
+  --primary: 255 74 45; /* 朱 vermillion signature */
+  --primary-fg: 255 247 244;
+  --accent: 211 173 110; /* 金 or discret */
+  --sakura: 255 138 128; /* surbrillance rosée ponctuelle */
+}
+
+/* Classe sur :root : coupe le grain et neutralise animations et transitions. */
+.reduce-motion .grain-overlay {
+  display: none;
+}
+.reduce-motion *,
+.reduce-motion *::before,
+.reduce-motion *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* En soft-light à faible opacité. */
+.grain-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.018;
+  mix-blend-mode: soft-light;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}

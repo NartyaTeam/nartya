@@ -1,0 +1,712 @@
+@import "./styles/theme.css";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  html {
+    /* Aussi sur `html` : sur Android, l'étirement d'overscroll découvre son fond, blanc par défaut. */
+    background-color: rgb(var(--bg));
+  }
+  body {
+    @apply bg-bg text-text font-sans antialiased;
+    margin: 0;
+    overflow-x: hidden;
+    overscroll-behavior-y: none;
+    font-feature-settings: "palt" 1;
+  }
+  /* Le « fantôme » de drag d'image gêne le drag-to-scroll des carousels. */
+  img {
+    -webkit-user-drag: none;
+    user-select: none;
+  }
+  ::selection {
+    background: rgb(var(--primary) / 0.85);
+    color: rgb(var(--primary-fg));
+  }
+  ::-webkit-scrollbar {
+    width: 9px;
+    height: 9px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgb(var(--surface-2));
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgb(var(--primary) / 0.6);
+  }
+}
+
+@layer components {
+  /* Les backdrop-filter forcent une recomposition continue au scroll ; les fonds mobiles sont assez opaques. */
+  .mobile-runtime [class*="backdrop-blur"] {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+  /*
+   * Chaque rangée Embla est isolée : son déplacement ne repeint pas la page. La piste n'est
+   * promue que pendant le glissement.
+   */
+  .carousel-section {
+    content-visibility: auto;
+    contain: layout paint style;
+    contain-intrinsic-size: auto 310px;
+  }
+  [data-carousel-viewport] {
+    contain: layout paint;
+    touch-action: pan-y pinch-zoom;
+  }
+  [data-carousel-track] {
+    backface-visibility: hidden;
+  }
+  [data-carousel-viewport]:active [data-carousel-track] {
+    will-change: transform;
+  }
+  /* Transforms de survol et backdrop-filters suspendus pendant un swipe. */
+  [data-carousel-viewport]:active img,
+  [data-carousel-viewport]:active [data-carousel-card],
+  [data-carousel-viewport]:active [data-carousel-card] *,
+  .reduce-motion [data-carousel-viewport] img,
+  .reduce-motion [data-carousel-card],
+  .reduce-motion [data-carousel-card] * {
+    transition: none !important;
+  }
+  [data-carousel-viewport]:active [data-carousel-card] img,
+  .reduce-motion [data-carousel-card] img {
+    transform: none !important;
+  }
+  [data-carousel-viewport]:active [data-carousel-card] [class*="backdrop-blur"],
+  .reduce-motion [data-carousel-card] [class*="backdrop-blur"] {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Sur Android, les rangées utilisent le scroll natif ; Embla reste réservé au hero et au desktop. */
+  @media (max-width: 767px) {
+    .mobile-shell [data-carousel-viewport]:not([data-carousel-hero]) {
+      overflow-x: auto;
+      padding-inline: 0;
+      overscroll-behavior-x: contain;
+      scroll-padding-inline: 1rem;
+      scroll-snap-type: x proximity;
+      scrollbar-width: none;
+      touch-action: pan-x pan-y pinch-zoom;
+      -webkit-overflow-scrolling: touch;
+    }
+    .mobile-shell [data-carousel-viewport]:not([data-carousel-hero])::-webkit-scrollbar {
+      display: none;
+    }
+    .mobile-shell [data-carousel-viewport]:not([data-carousel-hero]) [data-carousel-track] {
+      transform: none !important;
+      padding-inline: 1rem;
+    }
+    .mobile-shell [data-carousel-viewport]:not([data-carousel-hero]) [data-carousel-card] {
+      scroll-snap-align: start;
+    }
+  }
+  .eyebrow {
+    @apply text-[0.7rem] font-bold uppercase tracking-kana text-primary;
+  }
+  .vertical-kana {
+    writing-mode: vertical-rl;
+    text-orientation: upright;
+    letter-spacing: 0.15em;
+  }
+  .btn-shu {
+    @apply relative inline-flex items-center justify-center gap-2 rounded-md bg-primary px-6 py-3
+      font-bold text-primary-fg transition-colors duration-200 hover:bg-primary/90;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-md bg-white/[0.07] px-6 py-3
+      font-medium text-text backdrop-blur transition-colors hover:bg-white/[0.12];
+  }
+}
+
+/* ArtPlayer impose `svg { fill }`, ce qui remplirait les icônes Lucide du lecteur. */
+.art-video-player svg.lucide {
+  fill: none;
+}
+
+/* Il capterait les clics. */
+.art-control-progress .art-progress-indicator {
+  pointer-events: none;
+}
+
+/* Redondantes avec les icônes. */
+.art-video-player [class*="hint--"]::before,
+.art-video-player [class*="hint--"]::after {
+  display: none !important;
+}
+
+/* « S1 EP1 — Titre » */
+.art-episode-info {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #fff;
+  text-shadow: 0 1px 4px rgb(0 0 0 / 0.6);
+}
+
+/* `--art-control-icon-scale` grossit les icônes en plein écran : nos contrôles textuels s'y adossent. */
+.art-lang-control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: calc(0.75rem * var(--art-control-icon-scale, 1.1));
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* Icône « sources » en `em`, pour suivre le texte. `> svg` : le drapeau, imbriqué, garde son ratio 3:2. */
+.art-lang-control > svg {
+  width: 1.3em;
+  height: 1.3em;
+  flex-shrink: 0;
+}
+.art-lang-control .nartya-flag {
+  flex-shrink: 0;
+}
+
+.art-control-sources {
+  margin: 0 calc(var(--art-control-height, 46px) * 0.16);
+}
+
+/* Libellés de longueurs inégales. Les trois classes sont nécessaires pour l'emporter sur ArtPlayer. */
+.art-control-selector.art-control-sources .art-selector-list {
+  align-items: stretch;
+  text-align: left;
+}
+.art-control-selector.art-control-sources .art-selector-list .art-selector-item {
+  justify-content: flex-start;
+  text-align: left;
+}
+
+/* Mode conseillé, dans le libellé du sous-menu. */
+.art-anime4k-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.art-anime4k-option small {
+  padding: 3px 6px;
+  border: 1px solid color-mix(in srgb, var(--art-theme) 48%, transparent);
+  border-radius: 4px;
+  color: var(--art-theme);
+  background: color-mix(in srgb, var(--art-theme) 12%, transparent);
+  font-size: 0.65rem;
+  font-weight: 700;
+  line-height: 1;
+  text-shadow: none;
+}
+
+/* « Pause », « Lecture » : masquées. */
+.art-notice {
+  display: none !important;
+}
+
+/* Suit la visibilité des contrôles ArtPlayer. */
+.art-back-btn {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+.art-video-player.art-hover .art-back-btn,
+.art-video-player.art-control-show .art-back-btn {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Pas de `100vw` : l'unité inclut la scrollbar sous Windows. */
+.art-video-player:fullscreen,
+.art-video-player:-webkit-full-screen {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  overflow: hidden;
+}
+
+/* Le remplissage vient d'un dégradé posé en style inline. */
+.cast-range {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 9999px;
+  background: rgb(255 255 255 / 0.14);
+  cursor: pointer;
+  outline: none;
+}
+.cast-range::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 9999px;
+  background: transparent;
+}
+.cast-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  margin-top: -4px;
+  border-radius: 9999px;
+  background: rgb(var(--primary));
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.5);
+  transition: transform 0.15s ease;
+}
+.cast-range::-moz-range-track {
+  height: 4px;
+  border-radius: 9999px;
+  background: transparent;
+}
+.cast-range::-moz-range-progress {
+  height: 4px;
+  border-radius: 9999px;
+  background: rgb(var(--primary));
+}
+.cast-range::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border: none;
+  border-radius: 9999px;
+  background: rgb(var(--primary));
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.5);
+}
+.cast-range:hover::-webkit-slider-thumb,
+.cast-range:active::-webkit-slider-thumb {
+  transform: scale(1.2);
+}
+.cast-range:focus-visible {
+  box-shadow: 0 0 0 2px rgb(var(--primary) / 0.35);
+}
+
+.cast-trigger {
+  outline: none;
+}
+.cast-trigger:focus-visible {
+  outline: 2px solid rgb(var(--primary) / 0.7);
+  outline-offset: 3px;
+  border-radius: 9999px;
+}
+
+:root {
+  --toastify-toast-bd-radius: 14px;
+  --toastify-toast-shadow: 0 12px 32px rgb(0 0 0 / 0.5);
+  --toastify-toast-padding: 14px 16px;
+  --toastify-font-family: "Zen Kaku Gothic Antique", system-ui, sans-serif;
+}
+.Toastify__toast {
+  background: rgb(var(--surface) / 0.72) !important;
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  border-radius: 14px !important;
+  color: rgb(var(--text));
+  font-size: 0.875rem;
+}
+/* Android : snackbar au-dessus de la navigation. Scopé sur le runtime Capacitor, pas la largeur. */
+html.mobile-runtime {
+  --toastify-container-width: min(360px, calc(100vw - 24px));
+  --toastify-toast-width: 100%;
+  --toastify-toast-min-height: 46px;
+  --toastify-toast-padding: 11px 14px;
+  --toastify-toast-shadow: 0 8px 24px rgb(0 0 0 / 0.42);
+}
+.mobile-runtime .Toastify__toast-container--bottom-center {
+  bottom: calc(3.5rem + env(safe-area-inset-bottom) + 12px);
+  left: 50%;
+  width: var(--toastify-container-width);
+  padding: 0;
+  transform: translateX(-50%);
+}
+.mobile-runtime .Toastify__toast {
+  width: 100% !important;
+  max-width: none !important;
+  min-height: var(--toastify-toast-min-height);
+  flex: 0 0 auto !important;
+  align-self: center !important;
+  margin: 0 !important;
+  overflow: hidden;
+  border: 0;
+  border-radius: 12px !important;
+  background: rgb(var(--surface-2) / 0.98) !important;
+  box-shadow: var(--toastify-toast-shadow);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  color: rgb(var(--text));
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+.mobile-runtime .Toastify__toast-body {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  font-weight: 500;
+  letter-spacing: 0.005em;
+}
+.Toastify__close-button {
+  color: rgb(var(--muted));
+  opacity: 0.7;
+}
+.Toastify__close-button:hover {
+  opacity: 1;
+}
+.Toastify__progress-bar {
+  height: 2px;
+  opacity: 0.55;
+}
+
+@keyframes epSelSlide {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes partyFloat {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.6);
+  }
+  15% {
+    opacity: 1;
+    transform: translateY(-10px) scale(1.1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-140px) scale(1);
+  }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .app-drag {
+    -webkit-app-region: drag;
+  }
+  .app-no-drag {
+    -webkit-app-region: no-drag;
+  }
+  .text-glow {
+    text-shadow: 0 2px 30px rgb(0 0 0 / 0.9);
+  }
+  /* Pages de scans hors écran non rendues ; `auto` mémorise leur taille une fois mesurée. */
+  .cv-auto {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 1000px;
+  }
+  .profile-shell {
+    position: relative;
+    overflow: hidden;
+    box-shadow: inset 0 0 0 1px rgb(var(--primary) / 0.16), 0 20px 60px rgb(0 0 0 / 0.16);
+  }
+  .profile-shell::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgb(var(--primary) / 0.6), transparent);
+    pointer-events: none;
+    z-index: 1;
+  }
+  .profile-shell::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background: radial-gradient(100% 72% at 100% 0%, rgb(var(--primary) / 0.08), transparent 58%);
+    pointer-events: none;
+  }
+  .profile-shell > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Fond creusé plutôt qu'une élévation. */
+  .profile-module {
+    box-shadow: inset 0 0 0 1px rgb(var(--primary) / 0.08), inset 0 1px 0 rgb(255 255 255 / 0.02);
+  }
+
+  .loader-dots span {
+    opacity: 0;
+    animation: loader-dot 1.4s infinite ease-in-out;
+  }
+  .loader-dots span:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+  .loader-dots span:nth-child(3) {
+    animation-delay: 0.4s;
+  }
+  @keyframes loader-dot {
+    0%, 20% { opacity: 0; }
+    40%, 100% { opacity: 1; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .loader-dots span { opacity: 1; animation: none; }
+  }
+
+  /* Deux couches imbriquées : la chute et le voltigement animent toutes deux `transform`. */
+  .gift-piece {
+    position: absolute;
+    top: -10%;
+    animation-name: gift-fall;
+    animation-timing-function: cubic-bezier(0.22, 0.5, 0.4, 1);
+    animation-fill-mode: both;
+    will-change: transform, opacity;
+  }
+  .gift-piece > i {
+    display: block;
+    width: 100%;
+    height: 100%;
+    animation-name: gift-flutter;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+    will-change: transform;
+  }
+  @keyframes gift-fall {
+    0%   { transform: translate3d(0, 0, 0); opacity: 0; }
+    8%   { opacity: 1; }
+    80%  { opacity: 1; }
+    100% { transform: translate3d(0, 460px, 0); opacity: 0; }
+  }
+  /* `--sway` : amplitude propre à chaque confetti. */
+  @keyframes gift-flutter {
+    0%   { transform: translateX(calc(var(--sway, 6px) * -1)) rotate3d(1, 1, 0.25, -160deg); }
+    100% { transform: translateX(var(--sway, 6px)) rotate3d(1, 1, 0.25, 160deg); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .gift-piece { display: none; }
+  }
+
+  /*
+   * Cérémonie de succès. L'insigne arrive flou et surdimensionné, percute, puis se pose.
+   * Châssis seul au palier I, trames et rayons au II, or et braises au III.
+   */
+  .ach-stage {
+    --halo: rgb(var(--primary));
+    pointer-events: none;
+    animation: ach-stage-life var(--life, 4s) ease both;
+  }
+  /* Du contraste derrière l'insigne sans masquer la vidéo. */
+  .ach-veil {
+    background: radial-gradient(
+      46% 46% at 50% 44%,
+      rgb(0 0 0 / 0.86) 0%,
+      rgb(0 0 0 / 0.62) 42%,
+      rgb(0 0 0 / 0) 72%
+    );
+    animation: ach-fade 0.5s ease both;
+  }
+  /* Une propriété animée par couche : deux animations sur le même `transform` se battent. */
+  .ach-halo {
+    filter: drop-shadow(0 10px 22px var(--halo));
+    animation: ach-halo 2.6s ease-in-out 1.05s infinite alternate;
+    will-change: filter;
+  }
+  .ach-float {
+    animation: ach-float 3.6s ease-in-out 1.05s infinite alternate;
+    will-change: transform;
+  }
+  .ach-badge {
+    animation: ach-stamp 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+    transform-origin: 50% 50%;
+    backface-visibility: hidden;
+    will-change: transform, opacity, filter;
+  }
+  /* Palier II+, masqué par le PNG de l'insigne (`--badge`). */
+  .ach-gloss {
+    background-image: linear-gradient(
+      105deg,
+      transparent 42%,
+      rgb(255 255 255 / 0.9) 50%,
+      transparent 58%
+    );
+    background-size: 280% 100%;
+    background-repeat: no-repeat;
+    -webkit-mask-image: var(--badge);
+    mask-image: var(--badge);
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+    animation: ach-gloss 1.4s cubic-bezier(0.3, 0, 0.2, 1) var(--delay, 1s) both;
+    will-change: background-position, opacity;
+  }
+  .ach-splash {
+    background: radial-gradient(closest-side, var(--halo), transparent 72%);
+    animation: ach-splash 1.1s cubic-bezier(0.15, 0.8, 0.3, 1) 0.34s both;
+    will-change: transform, opacity;
+  }
+  .ach-punch {
+    animation: ach-punch 0.52s cubic-bezier(0.2, 0.9, 0.3, 1) 0.3s both;
+  }
+  .ach-shock {
+    border: 1px solid var(--halo);
+    animation: ach-shock 1.5s cubic-bezier(0.15, 0.7, 0.3, 1) both;
+    animation-delay: var(--delay, 0.42s);
+    will-change: transform, opacity;
+  }
+  /* Palier II+ : dégradé conique, estompé au centre et aux bords. */
+  .ach-rays {
+    background: repeating-conic-gradient(
+      from 0deg,
+      var(--halo) 0deg 1.1deg,
+      transparent 1.1deg 7deg
+    );
+    -webkit-mask-image: radial-gradient(closest-side, transparent 24%, #000 46%, transparent 78%);
+    mask-image: radial-gradient(closest-side, transparent 24%, #000 46%, transparent 78%);
+    animation: ach-fade 1.1s ease 0.35s both, ach-spin 26s linear infinite;
+    will-change: transform;
+  }
+  /* Palier II+, en dérive lente. */
+  .ach-tone {
+    background-image: radial-gradient(var(--halo) 1px, transparent 1.4px);
+    background-size: 7px 7px;
+    -webkit-mask-image: radial-gradient(closest-side, #000 12%, transparent 68%);
+    mask-image: radial-gradient(closest-side, #000 12%, transparent 68%);
+    animation: ach-fade 1.1s ease 0.5s both, ach-tone 9s linear infinite;
+  }
+  /* Palier III : `--dx`/`--dy` tirées par le composant. */
+  .ach-ember {
+    background: var(--halo);
+    animation:
+      ach-ember var(--ember-life, 2.4s) cubic-bezier(0.25, 0.6, 0.4, 1)
+      var(--delay, 0s) both;
+    will-change: transform, opacity;
+  }
+  .ach-line {
+    background: linear-gradient(90deg, transparent, var(--halo), transparent);
+    animation: ach-sweep 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both;
+  }
+  .ach-text {
+    animation: ach-rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) var(--delay, 0.6s) both;
+  }
+  .ach-timer {
+    background: var(--halo);
+    animation: ach-timer var(--life, 4s) linear both;
+    transform-origin: left;
+  }
+
+  @keyframes ach-fade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes ach-stage-life {
+    0%   { opacity: 0; }
+    7%   { opacity: 1; }
+    86%  { opacity: 1; }
+    100% { opacity: 0; }
+  }
+  @keyframes ach-spin { to { transform: rotate(360deg); } }
+  @keyframes ach-tone { to { background-position: 70px 70px; } }
+  @keyframes ach-stamp {
+    0%   { opacity: 0; transform: scale(1.38) rotate(-3deg); filter: blur(12px); }
+    46%  { opacity: 1; transform: scale(0.94) rotate(0.8deg); filter: blur(0); }
+    66%  { transform: scale(1.025) rotate(-0.35deg); }
+    82%  { transform: scale(0.995) rotate(0.1deg); }
+    100% { opacity: 1; transform: scale(1) rotate(0deg); }
+  }
+  @keyframes ach-shock {
+    0%   { opacity: 0.9; transform: scale(0.2); }
+    100% { opacity: 0;   transform: scale(2.8); }
+  }
+  @keyframes ach-ember {
+    0%   { opacity: 0; transform: translate3d(-50%, -50%, 0) scale(0.5); }
+    18%  { opacity: 1; }
+    100% {
+      opacity: 0;
+      transform: translate3d(
+        calc(var(--dx, 0px) - 50%),
+        calc(var(--dy, -120px) - 50%),
+        0
+      ) scale(1);
+    }
+  }
+  @keyframes ach-sweep {
+    from { opacity: 0; transform: scaleX(0); }
+    to   { opacity: 1; transform: scaleX(1); }
+  }
+  @keyframes ach-rise {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes ach-timer {
+    from { transform: scaleX(1); }
+    to   { transform: scaleX(0); }
+  }
+  @keyframes ach-float {
+    from { transform: translateY(0); }
+    to   { transform: translateY(-8px); }
+  }
+  @keyframes ach-halo {
+    from { filter: drop-shadow(0 10px 22px var(--halo)); }
+    to   { filter: drop-shadow(0 14px 44px var(--halo)); }
+  }
+  @keyframes ach-gloss {
+    0%   { opacity: 0; background-position: 180% 0; }
+    18%  { opacity: 1; }
+    82%  { opacity: 1; }
+    100% { opacity: 0; background-position: -80% 0; }
+  }
+  @keyframes ach-splash {
+    0%   { opacity: 0;    transform: scale(0.3); }
+    22%  { opacity: 0.45; }
+    100% { opacity: 0;    transform: scale(1.7); }
+  }
+  @keyframes ach-punch {
+    0%   { transform: scale(1); }
+    32%  { transform: scale(1.032); }
+    100% { transform: scale(1); }
+  }
+  /* Mouvement réduit (système ou mode performance) : fondu, sans impact ni braises. */
+  @media (prefers-reduced-motion: reduce) {
+    .ach-badge, .ach-text, .ach-line, .ach-veil, .ach-rays, .ach-tone {
+      animation: ach-fade 0.3s ease both;
+    }
+    /* La lueur reste ; seule sa pulsation part. */
+    .ach-halo, .ach-float, .ach-punch { animation: none; }
+    .ach-shock, .ach-ember, .ach-gloss, .ach-splash { display: none; }
+  }
+  .reduce-motion :is(.ach-badge, .ach-text, .ach-line, .ach-veil, .ach-rays, .ach-tone) {
+    animation: ach-fade 0.3s ease both;
+  }
+  .reduce-motion :is(.ach-halo, .ach-float, .ach-punch) { animation: none; }
+  .reduce-motion :is(.ach-shock, .ach-ember, .ach-gloss, .ach-splash) { display: none; }
+
+  .skeleton {
+    @apply relative overflow-hidden bg-surface-2;
+  }
+  .skeleton::after {
+    content: "";
+    @apply absolute inset-0 -translate-x-full animate-shimmer;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgb(255 255 255 / 0.06),
+      transparent
+    );
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "appId": "com.nartya.app",
+  "appName": "Nartya",
+  "webDir": "dist",
+  "android": {
+    "allowMixedContent": true
+  },
+  "ios": {
+    "backgroundColor": "#0B0B0D"
+  },
+  "plugins": {
+    "SystemBars": {
+      "insetsHandling": "css",
+      "style": "DARK",
+      "hidden": false
+    },
+    "App": {
+      "launchUrl": ""
+    }
+  }
+}

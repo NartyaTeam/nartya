@@ -1,0 +1,1308 @@
+openapi: 3.1.0
+info:
+  title: API Nartya
+  version: "1.0"
+  summary: Catalogue d'anime et de manga, fiches, saisons et épisodes.
+  description: |
+    L'API Nartya sert le catalogue d'anime et de manga, les fiches, les saisons, les épisodes
+    et leurs métadonnées, en JSON. C'est l'API qu'utilise l'application Nartya ; vous pouvez
+    vous en servir pour un script, un bot ou votre propre projet.
+
+    # Démarrer
+
+    1. Dans l'application Nartya, ouvrez **Paramètres → Clés d'API** et créez une clé. Il faut
+       un compte (pas un compte invité) avec un compte Discord lié ; sur ordinateur, la liaison
+       Discord se fait depuis le Hub Nartya.
+    2. Copiez la clé : elle commence par `nk_` et n'est affichée qu'une seule fois.
+    3. Envoyez-la dans l'en-tête `Authorization` :
+
+    ```bash
+    curl -H "Authorization: Bearer nk_votre_cle" \
+      "https://anime.nartya.app/v1/anime/search?q=naruto"
+    ```
+
+    Gardez la clé côté serveur : dans le code d'une page web, n'importe quel visiteur pourrait
+    la lire et l'utiliser à votre place.
+
+    # Deux façons d'accéder
+
+    | | Clé d'API | Session de l'application |
+    | --- | --- | --- |
+    | Pour qui | Un script, un bot, un projet tiers | Le développement de l'application Nartya |
+    | Comment | `Authorization: Bearer nk_…` | Se connecter dans l'app, qui envoie le jeton |
+    | Catalogue, fiches, épisodes, manga | Oui | Oui |
+    | Lecture vidéo (`/sources/recipe`, `/streams`) | Non | Oui |
+    | Actions de compte (`POST`) | Non | Oui |
+    | Plafond | 60 / min | 180 / min |
+
+    Chaque route indique, sous **Authorizations**, ce qu'elle accepte : `CleAPI`,
+    `SessionApp`, ou rien pour les routes publiques. Un compte suspendu reçoit `403` partout.
+
+    ## Clé d'API
+
+    Une clé est rattachée à votre compte : elle en partage les limites et le bannissement, et
+    cesse de fonctionner dès que vous la révoquez (une minute au plus). Elle est **en lecture
+    seule** : seules les requêtes `GET` passent. Cinq clés actives au maximum par compte.
+
+    Elle n'ouvre pas la lecture vidéo : ces routes donnent l'adresse des vidéos des
+    hébergeurs, et les ouvrir à des clés permanentes ferait de l'API un résolveur de vidéos pour
+    n'importe quel site. Elles restent liées à une personne connectée dans l'application.
+
+    ## Session de l'application
+
+    C'est l'accès de l'application elle-même, et donc celui de quiconque développe dessus.
+    Depuis le dossier du code de l'application :
+
+    ```bash
+    npm install
+    cp .env.example .env
+    npm run electron:dev
+    ```
+
+    Connectez-vous ensuite avec votre compte Nartya : l'app appelle l'API publique avec votre
+    session, et toutes les routes fonctionnent, lecture vidéo comprise. Rien à configurer :
+    `.env.example` contient les valeurs publiques du projet.
+
+    Pour appeler une route à la main avec votre session, copiez le jeton depuis la console de
+    développement de l'app (`Ctrl+Maj+I`) :
+
+    ```js
+    JSON.parse(localStorage.getItem("nartya-auth")).access_token
+    ```
+
+    puis envoyez-le comme une clé : `Authorization: Bearer <jeton>`. Ce jeton expire au bout
+    d'une heure (l'app le renouvelle seule) et donne accès à votre compte : ne le partagez pas,
+    et préférez une clé d'API pour tout ce qui tourne en dehors de l'app.
+
+    # Réponses
+
+    Un succès renvoie un statut `2xx` et un objet `{ "data": …, "meta": { … } }`. `meta`
+    n'apparaît que sur les listes (`count`, `page`, `query`, `fetchedAt`).
+
+    Un échec renvoie un statut `4xx` ou `5xx` et un objet
+    `{ "error": { "code": "…", "message": "…" } }`. Le message est en français et peut être
+    affiché tel quel ; pour décider quoi faire, fiez-vous à `code`.
+
+    | Statut | `code` | Quand |
+    | --- | --- | --- |
+    | 400 | `invalid_param` | Paramètre absent ou mal formé |
+    | 401 | `unauthorized` | Jeton absent ou invalide, clé révoquée |
+    | 403 | `forbidden` | Compte suspendu, ou action interdite à une clé |
+    | 404 | `not_found` | Anime, saison, genre ou profil inconnu |
+    | 410 | `expired` | Jeton de lecture périmé |
+    | 429 | `rate_limited` | Trop de requêtes |
+    | 500 | `internal` | Erreur du serveur |
+    | 502 | `upstream_error` | Un service tiers n'a pas répondu |
+    | 503 | `unavailable` | Filtre ou service momentanément indisponible |
+
+    # Limites
+
+    Les plafonds sont comptés par compte, sur une minute glissante.
+
+    | Quoi | Plafond |
+    | --- | --- |
+    | Toutes les routes, avec une clé d'API | 60 / min |
+    | Toutes les routes, depuis l'application | 180 / min |
+    | `/anime/search` et `/anime/{slug}/episodes` | 20 / min en plus |
+    | Un `slug` absent du catalogue | 10 / min |
+    | Images de manga | 600 / min |
+
+    Les en-têtes `RateLimit-Limit`, `RateLimit-Remaining` et `RateLimit-Reset` indiquent où
+    vous en êtes. Au-delà, l'API répond `429` : attendez la fin de la fenêtre avant de
+    réessayer. La plupart des réponses sont en cache côté serveur ; si vous interrogez souvent
+    les mêmes fiches, gardez-les aussi en cache de votre côté.
+
+    # Identifiants
+
+    | Nom | Description |
+    | --- | --- |
+    | `slug` | Identifiant d'un anime, par exemple `one-piece`. Lettres, chiffres, `.`, `_` et `-`, 100 caractères au plus. |
+    | `seasonId` | Saison au sein d'un anime : `saison1`, `saison2-1`, `film`, `oav`… Se lit dans `/anime/{slug}/seasons`. |
+    | `oeuvre` | Nom d'une œuvre de manga, tel que renvoyé par l'API. Les espaces finaux comptent : passez la valeur telle quelle, encodée pour l'URL. |
+    | `page` | Entier à partir de 1, plafonné à 200. |
+  contact:
+    name: NartyaTeam
+    url: https://nartya.app
+  x-logo:
+    url: https://nartya.app/assets/hub.png
+    altText: Nartya
+    href: https://nartya.app
+
+servers:
+  - url: https://anime.nartya.app/v1
+
+security:
+  - CleAPI: []
+  - SessionApp: []
+
+tags:
+  - name: État
+    description: Disponibilité du service.
+  - name: Accueil
+    description: Contenu éditorialisé de l'accueil de l'application.
+  - name: Anime
+    description: Recherche et navigation dans le catalogue.
+  - name: Fiche
+    description: Informations détaillées sur un anime.
+  - name: Épisodes
+    description: Saisons, épisodes et moments à sauter.
+  - name: Manga
+    description: Catalogue manga, chapitres et pages.
+  - name: Lecture vidéo
+    description: |
+      Réservé à la session de l'application : une clé d'API reçoit `403` sur ces routes. Elles
+      donnent l'adresse des vidéos des hébergeurs ; les réserver à une personne connectée dans
+      l'app évite que l'API serve de résolveur à d'autres sites.
+  - name: Compte
+    description: |
+      Routes qui écrivent. Une clé d'API étant en lecture seule, elles demandent la session de
+      l'application, sauf le comptage des vues de profil, public.
+
+x-tagGroups:
+  - name: Catalogue
+    tags: [Accueil, Anime, Fiche, Épisodes, Manga]
+  - name: Service
+    tags: [État, Lecture vidéo, Compte]
+
+paths:
+  /health:
+    get:
+      tags: [État]
+      operationId: getHealth
+      summary: Santé du service
+      description: |
+        `ready` passe à `true` une fois le cache chargé, quelques secondes après un
+        redémarrage.
+      security: []
+      responses:
+        "200":
+          description: Le service répond.
+          content:
+            application/json:
+              example: {"data":{"service":"nartya-api","ready":false}}
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      service: { type: string, example: nartya-api }
+                      ready: { type: boolean }
+
+  /status:
+    get:
+      tags: [État]
+      operationId: getStatus
+      summary: État des services
+      description: État des services dont dépend l'API (catalogue, métadonnées, base).
+      security: []
+      responses:
+        "200":
+          description: État de chaque service.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      checkedAt: { type: string, format: date-time }
+                      services:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id: { type: string }
+                            label: { type: string }
+                            category: { type: string, example: core }
+                            ok: { type: boolean }
+                            ms: { type: [integer, "null"], description: "Temps de réponse, en millisecondes." }
+                            detail: { type: [string, "null"] }
+
+  /home:
+    get:
+      tags: [Accueil]
+      operationId: getHome
+      summary: Accueil
+      description: |
+        `hero` (mise en avant), `rows` (rangées thématiques) et `spotlight`.
+      responses:
+        "200":
+          description: Contenu de l'accueil.
+          content:
+            application/json:
+              example: {"data":{"hero":[{"id":189046,"slug":"re-zero","title":"Re:Zero kara Hajimeru Isekai Seikatsu 4th Season","titleNative":"Re:ゼロから始める異世界生活 4th season","titles":["Re:Zero kara Hajimeru Isekai Seikatsu 4th Season","Re:ZERO -Starting Life in Another World- Season 4"],"cover":"https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx189046-yaHWtS5FII46.jpg","color":"#e49350","banner":"https://s4.anilist.co/file/anilistcdn/media/anime/banner/189046-MDk2CaVuRWpb.jpg","genres":["Action","Adventure"],"score":9,"description":"In the deadly battle at Priestella, Subaru and his allies emerged victorious, but at great cost. As Subaru searches for a way to save Rem, Crusch, and Julius…","format":"TV","status":"FINISHED","countryOfOrigin":"JP","episodes":19,"chapters":null,"volumes":null,"year":2026,"nextEpisode":null,"fanart":"https://artworks.thetvdb.com/banners/fanart/original/305089-1.jpg","clearLogo":"https://artworks.thetvdb.com/banners/v4/series/305089/clearlogo/611be52a428ea.png","azBanner":"https://artworks.thetvdb.com/banners/graphical/305089-g.jpg"}],"rows":[{"key":"trending","title":"Tendances","kana":"人気","numbered":true,"items":[{"id":189046,"slug":"re-zero","title":"Re:Zero kara Hajimeru Isekai Seikatsu 4th Season","titleNative":"Re:ゼロから始める異世界生活 4th season","titles":["Re:Zero kara Hajimeru Isekai Seikatsu 4th Season","Re:ZERO -Starting Life in Another World- Season 4"],"cover":"https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx189046-yaHWtS5FII46.jpg","color":"#e49350","banner":"https://s4.anilist.co/file/anilistcdn/media/anime/banner/189046-MDk2CaVuRWpb.jpg","genres":["Action","Adventure"],"score":9,"description":"In the deadly battle at Priestella, Subaru and his allies emerged victorious, but at great cost. As Subaru searches for a way to save Rem, Crusch, and Julius…","format":"TV","status":"FINISHED","countryOfOrigin":"JP","episodes":19,"chapters":null,"volumes":null,"year":2026,"nextEpisode":null}]}],"spotlight":[{"id":20,"slug":"naruto","title":"NARUTO","titleNative":"NARUTO -ナルト-","titles":["NARUTO","Naruto"],"cover":"https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx20-dE6UHbFFg1A5.jpg","color":"#e47850","banner":"https://s4.anilist.co/file/anilistcdn/media/anime/banner/20-HHxhPj5JD13a.jpg","genres":["Action","Adventure"],"score":8,"description":"Naruto Uzumaki, a hyperactive and knuckle-headed ninja, lives in Konohagakure, the Hidden Leaf village. Moments prior to his birth, a huge demon known as the…","format":"TV","status":"FINISHED","countryOfOrigin":"JP","episodes":220,"chapters":null,"volumes":null,"year":2002,"nextEpisode":null,"fanart":"https://artworks.thetvdb.com/banners/fanart/original/78857-18.jpg","clearLogo":"https://artworks.thetvdb.com/banners/v4/series/78857/clearlogo/611b6a908fa9d.png","azBanner":"https://artworks.thetvdb.com/banners/graphical/78857-g3.jpg"}]}}
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      hero: { type: array, items: { $ref: "#/components/schemas/MediaCard" } }
+                      rows: { type: array, items: { $ref: "#/components/schemas/Row" } }
+                      spotlight: { type: array, items: { $ref: "#/components/schemas/MediaCard" } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
+  /home/for-you:
+    get:
+      tags: [Accueil]
+      operationId: getForYou
+      summary: Recommandations personnalisées
+      description: |
+        Rangée « Parce que tu as regardé… » calculée à partir d'animes déjà vus. `data` vaut
+        `null` s'il n'y a rien de pertinent.
+      parameters:
+        - name: slugs
+          in: query
+          required: true
+          description: Slugs déjà vus, séparés par des virgules, du plus récent au plus ancien (8 au plus).
+          schema: { type: string, example: "gachiakuta,one-piece" }
+      responses:
+        "200":
+          description: La rangée, ou `null`.
+          content:
+            application/json:
+              example: {"data":{"key":"for-you","title":"Parce que tu as regardé Gachiakuta","kana":"為","items":[{"id":3588,"slug":"soul-eater","title":"Soul Eater","titleNative":"ソウルイーター","titles":["Soul Eater","ソウルイーター"],"cover":"https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx3588-fSMggQoFSbUI.png","color":"#e4bb5d","banner":"https://s4.anilist.co/file/anilistcdn/media/anime/banner/3588-rpnVOMaLD3is.jpg","genres":["Action","Adventure"],"score":7.7,"description":"Set in the Shinigami technical school for weapon meisters, the series revolves around 3 groups of each a weapon meister and a human weapon. Trying to make th…","format":"TV","status":"FINISHED","countryOfOrigin":"JP","episodes":51,"chapters":null,"volumes":null,"year":2008,"nextEpisode":null},{"id":105310,"slug":"fire-force","title":"Enen no Shouboutai","titleNative":"炎炎ノ消防隊","titles":["Enen no Shouboutai","Fire Force"],"cover":"https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx105310-2PKUvoaA6fTn.jpg","color":"#f1bb28","banner":"https://s4.anilist.co/file/anilistcdn/media/anime/banner/105310-ygGL9yweZM2Q.jpg","genres":["Action","Drama"],"score":7.6,"description":"Year 198 of the Solar Era in Tokyo, special fire brigades are fighting against a phenomenon called spontaneous human combustion where human beings are turned…","format":"TV","status":"FINISHED","countryOfOrigin":"JP","episodes":24,"chapters":null,"volumes":null,"year":2019,"nextEpisode":null}]}}
+              schema:
+                type: object
+                properties:
+                  data:
+                    oneOf:
+                      - $ref: "#/components/schemas/Row"
+                      - type: "null"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /anime/catalog:
+    get:
+      tags: [Anime]
+      operationId: getAnimeCatalog
+      summary: Catalogue filtré
+      description: |
+        Recherche filtrée dans le catalogue, une trentaine de résultats par page. Les filtres
+        `epMin`, `epMax` et `lang` demandent la base de données : si elle est indisponible, la
+        route répond `503` plutôt que d'ignorer le filtre.
+      parameters:
+        - { name: search, in: query, description: Texte cherché dans le titre (100 caractères au plus)., schema: { type: string } }
+        - { name: genre, in: query, description: "Genres séparés par des virgules (8 au plus), tous requis.", schema: { type: string, example: "Action,Comédie" } }
+        - { name: type, in: query, description: Type de contenu., schema: { type: string, example: Anime } }
+        - { name: epMin, in: query, description: Nombre d'épisodes minimal., schema: { type: integer, minimum: 0 } }
+        - { name: epMax, in: query, description: Nombre d'épisodes maximal., schema: { type: integer, minimum: 0 } }
+        - { name: lang, in: query, description: Langue disponible., schema: { type: string, enum: [vf, vostfr, va] } }
+        - { name: verified, in: query, description: Ne garder que les fiches reliées à AniList., schema: { type: boolean } }
+        - $ref: "#/components/parameters/page"
+      responses:
+        "200":
+          description: Une page de résultats.
+          content:
+            application/json:
+              example: {"data":[{"slug":"zombie-sagashitemasu","title":"#Zombie Sagashitemasu","image":"https://cdn.jsdelivr.net/gh/Anime-Sama/IMG@img/contenu/thumb/zombie-sagashitemasu.webp","episodeCount":0,"anilistId":null,"genres":["Action","Aventure"],"type":"Anime","languages":["vostfr"]},{"slug":"07-ghost","title":"07 Ghost","image":"https://cdn.jsdelivr.net/gh/Anime-Sama/IMG@img/contenu/thumb/07-ghost.webp","episodeCount":25,"anilistId":null,"genres":["Action","Aventure"],"type":"Anime","languages":["vostfr"]},{"slug":"29-sai-dokushin-chuuken-boukensha-no-nichijou","title":"29-Sai Dokushin Chuuken Boukensha no Nichijou","image":"https://cdn.jsdelivr.net/gh/Anime-Sama/IMG@img/contenu/thumb/29-sai-dokushin-chuuken-boukensha-no-nichijou.webp","episodeCount":12,"anilistId":192261,"genres":["Action","Aventure"],"type":"Anime","languages":["vostfr"]}],"meta":{"count":36,"page":1}}
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: "#/components/schemas/CatalogItem" } }
+                  meta: { $ref: "#/components/schemas/PageMeta" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+
+  /anime/search:
+    get:
+      tags: [Anime]
+      operationId: searchAnime
+      summary: Recherche par titre
+      description: Plafond dédié de 20 requêtes par minute.
+      parameters:
+        - { name: q, in: query, required: true, description: Texte recherché (100 caractères au plus)., schema: { type: string, example: naruto } }
+        - $ref: "#/components/parameters/limit"
+      responses:
+        "200":
+          description: Résultats.
+          content:
+            application/json:
+              example: {"data":[{"slug":"naruto","title":"Naruto  ","image":"https://cdn.jsdelivr.net/gh/Anime-Sama/IMG@img/contenu/thumb/naruto.webp"},{"slug":"naruto-shippuden","title":"Naruto Shippuden","image":"https://cdn.jsdelivr.net/gh/Anime-Sama/IMG@img/contenu/thumb/naruto-shippuden.webp"},{"slug":"naruto-sd-rock-lee","title":"Naruto SD Rock Lee","image":"https://cdn.jsdelivr.net/gh/Anime-Sama/IMG@img/contenu/thumb/naruto-sd-rock-lee.webp"}],"meta":{"query":"naruto","count":3}}
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: "#/components/schemas/TitleCard" } }
+                  meta:
+                    type: object
+                    properties:
+                      query: { type: string }
+                      count: { type: integer }
+        "400": { $ref: "#/components/responses/InvalidParam" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
+  /anime/planning:
+    get:
+      tags: [Anime]
+      operationId: getPlanning
+      summary: Planning de la semaine
+      description: Sorties de la semaine, jour par jour.
+      responses:
+        "200":
+          description: Les sept jours.
+          content:
+            application/json:
+              example: {"data":[{"index":0,"name":"Lundi","date":"28/09","items":[{"slug":"bleach","season":"saison2-4","seasonLabel":null,"langs":["vostfr"],"title":"Bleach TYBW","image":"https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx185874-aU3e6tBT6wwA.jpg","type":"Anime","time":"17h30","status":"Partie 4","color":null},{"slug":"liar-game","season":"saison1","seasonLabel":"Saison 1","langs":["vostfr"],"title":"Liar Game","image":"https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx197754-Q5KqcUhIdypp.png","type":"Anime","time":"18h30","status":null,"color":null}]}],"meta":{"fetchedAt":1790946491470}}
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        index: { type: integer, description: "0 pour lundi." }
+                        name: { type: string, example: Lundi }
+                        date: { type: string, example: "28/09" }
+                        items:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              slug: { type: string, example: bleach }
+                              season: { type: string, example: saison2-4 }
+                              seasonLabel: { type: [string, "null"] }
+                              title: { type: string, example: Bleach TYBW }
+                              langs: { type: array, items: { type: string }, example: [vostfr] }
+                              time: { type: string, example: 17h30 }
+                              image: { type: string, format: uri }
+                              type: { type: string, example: Anime }
+                              status: { type: [string, "null"], example: Partie 4 }
+                              color: { type: [string, "null"], description: Teinte dominante de l'affiche. }
+                  meta:
+                    type: object
+                    properties:
+                      fetchedAt: { type: integer, description: Horodatage en millisecondes. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /anime/genres:
+    get:
+      tags: [Anime]
+      operationId: getGenres
+      summary: Genres populaires
+      description: Genres populaires, avec une image représentative.
+      responses:
+        "200":
+          description: Les genres.
+          content:
+            application/json:
+              example: {"data":[{"genre":"Action","image":"https://cdn.jsdelivr.net/gh/Anime-Sama/IMG@img/contenu/thumb/86-eighty-six1.webp","slug":"86-eighty-six"},{"genre":"Aventure","image":"https://cdn.jsdelivr.net/gh/Anime-Sama/IMG@img/contenu/thumb/29-sai-dokushin-chuuken-boukensha-no-nichijou.webp","slug":"29-sai-dokushin-chuuken-boukensha-no-nichijou"},{"genre":"Comédie","image":"https://cdn.jsdelivr.net/gh/Anime-Sama/IMG@img/contenu/thumb/a-centaurs-life0.webp","slug":"a-centaurs-life"}],"meta":{"count":12}}
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        genre: { type: string, example: Action }
+                        image: { type: string, format: uri }
+                        slug: { type: string, description: Anime dont vient l'image., example: 86-eighty-six }
+                  meta:
+                    type: object
+                    properties:
+                      count: { type: integer }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /anime/genres/{genre}:
+    get:
+      tags: [Anime]
+      operationId: getAnimeByGenre
+      summary: Animes d'un genre
+      parameters:
+        - { name: genre, in: path, required: true, schema: { type: string, example: Action } }
+        - $ref: "#/components/parameters/page"
+      responses:
+        "200":
+          description: Une page d'animes.
+          content:
+            application/json:
+              example: {"data":[{"slug":"zombie-sagashitemasu","title":"#Zombie Sagashitemasu","image":"https://cdn.jsdelivr.net/gh/Anime-Sama/IMG@img/contenu/thumb/zombie-sagashitemasu.webp"},{"slug":"07-ghost","title":"07 Ghost","image":"https://cdn.jsdelivr.net/gh/Anime-Sama/IMG@img/contenu/thumb/07-ghost.webp"},{"slug":"29-sai-dokushin-chuuken-boukensha-no-nichijou","title":"29-Sai Dokushin Chuuken Boukensha no Nichijou","image":"https://cdn.jsdelivr.net/gh/Anime-Sama/IMG@img/contenu/thumb/29-sai-dokushin-chuuken-boukensha-no-nichijou.webp"}],"meta":{"count":48,"page":1}}
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: "#/components/schemas/TitleCard" } }
+                  meta: { $ref: "#/components/schemas/PageMeta" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /anime/resolve:
+    get:
+      tags: [Anime]
+      operationId: resolveAnilist
+      summary: Slug d'un identifiant AniList
+      parameters:
+        - { name: anilist, in: query, required: true, description: Identifiant AniList., schema: { type: integer, example: 21 } }
+      responses:
+        "200":
+          description: Le slug correspondant.
+          content:
+            application/json:
+              example: {"data":{"slug":"one-piece"}}
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      slug: { type: string, example: one-piece }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /anime/{slug}:
+    get:
+      tags: [Fiche]
+      operationId: getAnime
+      summary: Fiche d'un anime
+      description: |
+        Informations du catalogue (`anime`), métadonnées AniList (`anilist`), images
+        (`images`) et liste des saisons. Avec `lite=1`, `anilist` et `images` valent `null` et
+        la réponse est plus rapide.
+      parameters:
+        - $ref: "#/components/parameters/slug"
+        - { name: lite, in: query, description: "`1` pour une fiche allégée.", schema: { type: integer, enum: [1] } }
+      responses:
+        "200":
+          description: La fiche.
+          content:
+            application/json:
+              example: {"data":{"lite":false,"anime":{"url":"https://anime-sama.to/catalogue/gachiakuta/","news":"Une saison 2 est en production.","slug":"gachiakuta","image":"https://cdn.jsdelivr.net/gh/Anime-Sama/IMG@img/contenu/thumb/gachiakuta.webp","title":"Gachiakuta","status":"En cours","mapping":{"saison1":178025},"synopsis":"Les descendants de criminels vivent dans des bidonvilles et sont méprisés par les gens de l'autre côté de la frontière. Ludo, un orphelin, vit avec son père …","externalWatch":[],"alternativeTitles":["Gachi Akuta"]},"images":{"banner":"https://artworks.thetvdb.com/banners/v4/series/450537/banners/6867cf226c9c2.jpg","fanart":"https://artworks.thetvdb.com/banners/v4/series/450537/backgrounds/666a4a9e2c7e0.jpg","poster":"https://artworks.thetvdb.com/banners/v4/series/450537/posters/686b6c42832ef.jpg","clearLogo":"https://artworks.thetvdb.com/banners/v4/series/450537/icons/666a4d0d7de7a.png"},"anilist":{"id":178025,"tags":["Super Power","Urban Fantasy"],"year":2025,"cover":"https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx178025-cWJKEsZynkil.jpg","score":8.2,"title":"Gachiakuta","banner":"https://s4.anilist.co/file/anilistcdn/media/anime/banner/178025-WvcXi1J2SGRa.jpg","format":"TV","genres":["Action","Drama"],"status":"FINISHED","studios":["bones film"],"trailer":{"id":"VpMwWDgZqtI","site":"youtube"},"volumes":null,"chapters":null,"episodes":24,"mediaType":"ANIME","relations":[{"id":144946,"type":"MANGA","title":"Gachiakuta","format":"MANGA","relationType":"SOURCE"},{"id":196224,"type":"ANIME","title":"Tomoshibi","format":"MUSIC","relationType":"OTHER"}],"description":"Dans une ville flottante où les riches se débarrassent de leurs déchets, comme de leurs habitants indésirables, Rudo est accusé de meurtre et jeté dans la Fo…","titleNative":"ガチアクタ","countryOfOrigin":"JP"},"seasons":[{"id":"saison1","name":"Saison 1"}],"anilistId":178025,"isMangaOnly":false,"seasonsCount":1}}
+              schema:
+                type: object
+                properties:
+                  data: { $ref: "#/components/schemas/AnimePage" }
+        "400": { $ref: "#/components/responses/InvalidParam" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /anime/{slug}/recommendations:
+    get:
+      tags: [Fiche]
+      operationId: getRecommendations
+      summary: Recommandations
+      description: Animes recommandés par la communauté AniList, limités à ceux disponibles sur Nartya.
+      parameters:
+        - $ref: "#/components/parameters/slug"
+      responses:
+        "200":
+          description: Les recommandations.
+          content:
+            application/json:
+              example: {"data":[{"slug":"soul-eater","title":"Soul Eater","cover":"https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx3588-fSMggQoFSbUI.png","score":7.7,"genres":["Action","Adventure"]},{"slug":"fire-force","title":"Enen no Shouboutai","cover":"https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx105310-2PKUvoaA6fTn.jpg","score":7.6,"genres":["Action","Drama"]},{"slug":"dorohedoro","title":"Dorohedoro","cover":"https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx105228-I4xr84QS9Pvk.jpg","score":7.9,"genres":["Action","Adventure"]}]}
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        slug: { type: string, example: soul-eater }
+                        title: { type: string, example: Soul Eater }
+                        cover: { type: string, format: uri }
+                        score: { type: [number, "null"], example: 7.7 }
+                        genres: { type: array, items: { type: string } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /anime/{slug}/themes:
+    get:
+      tags: [Fiche]
+      operationId: getThemes
+      summary: Génériques
+      description: Génériques d'ouverture (`OP`) et de fin (`ED`), avec un extrait vidéo.
+      parameters:
+        - $ref: "#/components/parameters/slug"
+      responses:
+        "200":
+          description: Les génériques.
+          content:
+            application/json:
+              example: {"data":[{"id":13845,"type":"OP","sequence":1,"title":"HUGs","artists":["Paledusk"],"episodes":"1-13","videoUrl":"https://v.animethemes.moe/Gachiakuta-OP1.webm","resolution":720},{"id":14029,"type":"OP","sequence":2,"title":"LET'S JUST CRASH","artists":["Mori Calliope"],"episodes":"14-24","videoUrl":"https://v.animethemes.moe/Gachiakuta-OP2.webm","resolution":720},{"id":13846,"type":"ED","sequence":1,"title":"Tomoshibi","artists":["DUSTCELL"],"episodes":"2-12","videoUrl":"https://v.animethemes.moe/Gachiakuta-ED1.webm","resolution":720}]}
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: integer }
+                        type: { type: string, enum: [OP, ED] }
+                        sequence: { type: integer, example: 1 }
+                        title: { type: string, example: HUGs }
+                        artists: { type: array, items: { type: string }, example: [Paledusk] }
+                        episodes: { type: [string, "null"], example: "1-13" }
+                        videoUrl: { type: [string, "null"], format: uri }
+                        resolution: { type: [integer, "null"], example: 720 }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /anime/{slug}/gallery:
+    get:
+      tags: [Fiche]
+      operationId: getGallery
+      summary: Galerie d'images
+      parameters:
+        - $ref: "#/components/parameters/slug"
+      responses:
+        "200":
+          description: Images en haute définition.
+          content:
+            application/json:
+              example: {"data":[{"full":"https://image.tmdb.org/t/p/original/qjPSJeXyg6QXf27mcmxGW1HEsF8.jpg","thumb":"https://image.tmdb.org/t/p/w1280/qjPSJeXyg6QXf27mcmxGW1HEsF8.jpg","width":3840,"height":2160,"rating":3.334,"type":"backdrop"},{"full":"https://image.tmdb.org/t/p/original/vlFoUig0nHKH0cH0OY1tk2uxGRL.jpg","thumb":"https://image.tmdb.org/t/p/w1280/vlFoUig0nHKH0cH0OY1tk2uxGRL.jpg","width":3840,"height":2160,"rating":3.334,"type":"backdrop"},{"full":"https://image.tmdb.org/t/p/original/sSA8AFJitrS6z3fd6D1avHSgXak.jpg","thumb":"https://image.tmdb.org/t/p/w1280/sSA8AFJitrS6z3fd6D1avHSgXak.jpg","width":3840,"height":2160,"rating":2.278,"type":"backdrop"}]}
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type: { type: string, enum: [backdrop, poster] }
+                        full: { type: string, format: uri }
+                        thumb: { type: string, format: uri }
+                        width: { type: integer, example: 3840 }
+                        height: { type: integer, example: 2160 }
+                        rating: { type: number }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /anime/{slug}/manga:
+    get:
+      tags: [Fiche]
+      operationId: getAnimeManga
+      summary: Manga liés
+      description: Œuvres de manga liées à l'anime. `oeuvre` sert ensuite aux routes Manga.
+      parameters:
+        - $ref: "#/components/parameters/slug"
+      responses:
+        "200":
+          description: Les œuvres.
+          content:
+            application/json:
+              example: {"data":[{"label":"Scans (couleur)","oeuvre":"One Piece Couleur"},{"label":"Scans (noir et blanc)","oeuvre":"One Piece"}]}
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        label: { type: string, example: Scans (couleur) }
+                        oeuvre: { type: string, example: One Piece Couleur }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /anime/{slug}/episodes:
+    get:
+      tags: [Fiche]
+      operationId: getAllEpisodes
+      summary: Tous les épisodes
+      description: |
+        Numéros de tous les épisodes, toutes saisons confondues, sans métadonnées. Plafond
+        dédié de 20 requêtes par minute.
+      parameters:
+        - $ref: "#/components/parameters/slug"
+      responses:
+        "200":
+          description: Les épisodes.
+          content:
+            application/json:
+              example: {"data":[{"number":1,"episodeNumber":1,"seasonId":"saison1","seasonName":"Saison 1","title":"Épisode 1"},{"number":2,"episodeNumber":2,"seasonId":"saison1","seasonName":"Saison 1","title":"Épisode 2"},{"number":3,"episodeNumber":3,"seasonId":"saison1","seasonName":"Saison 1","title":"Épisode 3"}]}
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        number: { type: integer, example: 1 }
+                        episodeNumber: { type: integer, description: Identique à `number`. }
+                        seasonId: { type: string, example: saison1 }
+                        seasonName: { type: string, example: Saison 1 }
+                        title: { type: string, example: Épisode 1 }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
+  /anime/{slug}/seasons:
+    get:
+      tags: [Épisodes]
+      operationId: getSeasons
+      summary: Saisons
+      parameters:
+        - $ref: "#/components/parameters/slug"
+      responses:
+        "200":
+          description: Les saisons.
+          content:
+            application/json:
+              example: {"data":[{"name":"Saga 1 East Blue [Episode 1 à 61]","id":"saison1"},{"name":"Saga 2 Alabasta [Episode 62 à 143]","id":"saison2"},{"name":"Saga 3 Ile céleste [Episode 144 à 206]","id":"saison3"}],"meta":{"count":27}}
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: "#/components/schemas/Season" } }
+                  meta:
+                    type: object
+                    properties:
+                      count: { type: integer }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /anime/{slug}/seasons/{seasonId}/episodes:
+    get:
+      tags: [Épisodes]
+      operationId: getSeasonEpisodes
+      summary: Épisodes d'une saison
+      description: |
+        Titres, résumés en français quand ils existent, vignettes, dates de diffusion et notes.
+        `lite=1` ne garde que la numérotation et les lecteurs.
+
+        - `number` peut ne pas commencer à 1 : certaines saisons reprennent la numérotation de la série.
+        - `lecteurs` est rangé par langue. Chaque lecteur expose un `id` opaque, à échanger contre l'adresse de la vidéo avec `/streams/{id}` (session de l'application).
+        - `seasonDescription` n'est renseigné que si un résumé en français existe.
+      parameters:
+        - $ref: "#/components/parameters/slug"
+        - $ref: "#/components/parameters/seasonId"
+        - { name: lite, in: query, description: "`1` pour une liste allégée.", schema: { type: integer, enum: [1] } }
+      responses:
+        "200":
+          description: Les épisodes de la saison.
+          content:
+            application/json:
+              example: {"data":{"episodes":[{"episode":1,"lecteurs":{"vostfr":{"eps2":{"id":"AbC9…","key":"s1","label":"Source A","rank":10,"recommended":true}},"vf":{"eps2":{"id":"AbC9…","key":"s1","label":"Source A","rank":10,"recommended":true}}},"number":1,"title":"La Cité céleste","description":"Rudo vit avec Regto, son père adoptif, près de la Cité céleste.","image":"https://artworks.thetvdb.com/banners/v4/episode/10541264/screencap/68635e8960c74.jpg","thumbnail":"https://artworks.thetvdb.com/banners/v4/episode/10541264/screencap/68635e8960c74.jpg","airDate":"2025-07-06","length":25,"rating":7.8,"ratingCount":26},{"episode":2,"lecteurs":{"vostfr":{"eps2":{"id":"AbC9…","key":"s1","label":"Source A","rank":10,"recommended":true}},"vf":{"eps2":{"id":"AbC9…","key":"s1","label":"Source A","rank":10,"recommended":true}}},"number":2,"title":"Réceptacles","description":"Jeté dans la Fosse par les Apôtres, Rudo découvre les Composites.","image":"https://artworks.thetvdb.com/banners/v4/episode/11180307/screencap/686fa690ebef0.jpg","thumbnail":"https://artworks.thetvdb.com/banners/v4/episode/11180307/screencap/686fa690ebef0.jpg","airDate":"2025-07-13","length":25,"rating":7.5,"ratingCount":21}],"totalEpisodes":24,"seasonName":"Saison 1","nextEpisode":null,"seasonCover":"https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx178025-cWJKEsZynkil.jpg","seasonBanner":"https://s4.anilist.co/file/anilistcdn/media/anime/banner/178025-WvcXi1J2SGRa.jpg","seasonDescription":null,"lite":false}}
+              schema:
+                type: object
+                properties:
+                  data: { $ref: "#/components/schemas/SeasonEpisodes" }
+        "400": { $ref: "#/components/responses/InvalidParam" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /anime/{slug}/seasons/{seasonId}/episodes/{number}/skip:
+    get:
+      tags: [Épisodes]
+      operationId: getSkipSegments
+      summary: Moments à sauter
+      description: |
+        Générique de début et de fin d'un épisode, en secondes. Chaque valeur peut être `null`,
+        et `data` aussi si rien n'est connu.
+      parameters:
+        - $ref: "#/components/parameters/slug"
+        - $ref: "#/components/parameters/seasonId"
+        - { name: number, in: path, required: true, description: Numéro de l'épisode., schema: { type: integer, minimum: 1, example: 1 } }
+      responses:
+        "200":
+          description: Les segments.
+          content:
+            application/json:
+              example: {"data":{"intro":{"start":41.5,"end":131.4},"outro":{"start":1329,"end":1418}}}
+              schema:
+                type: object
+                properties:
+                  data:
+                    oneOf:
+                      - type: object
+                        properties:
+                          intro: { $ref: "#/components/schemas/Segment" }
+                          outro: { $ref: "#/components/schemas/Segment" }
+                      - type: "null"
+        "400": { $ref: "#/components/responses/InvalidParam" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /manga/home:
+    get:
+      tags: [Manga]
+      operationId: getMangaHome
+      summary: Accueil manga
+      description: "`hero` et `rows`, même forme que `/home`."
+      responses:
+        "200":
+          description: Contenu de l'accueil manga.
+          content:
+            application/json:
+              example: {"data":{"hero":[{"id":"manga-201009","slug":"raising-villains-the-right-way","title":"Akdangdeurui Huwonjaga Doeeotda","titleNative":"악당들의 후원자가 되었다","titles":["Akdangdeurui Huwonjaga Doeeotda","The Patron of Villains"],"cover":"https://s4.anilist.co/file/anilistcdn/media/manga/cover/large/bx201009-jTY2arWw21sc.jpg","color":"#d61a50","banner":"https://s4.anilist.co/file/anilistcdn/media/manga/banner/201009-kUre2tjoXghs.jpg","genres":["Action","Fantasy"],"score":7.8,"description":"One day, I woke up as a noble inside the game I used to play. Unfortunately, the game ends in an apocalypse. With ten years left, I track down the future vil…","format":"MANGA","status":"RELEASING","countryOfOrigin":"KR","episodes":null,"chapters":null,"volumes":null,"year":null,"nextEpisode":null,"mangaAnilistId":201009,"mediaType":"manga"}],"rows":[{"key":"manga-trending","title":"Tendances","kana":"人気","numbered":true,"items":[{"id":"manga-201009","slug":"raising-villains-the-right-way","title":"Akdangdeurui Huwonjaga Doeeotda","titleNative":"악당들의 후원자가 되었다","titles":["Akdangdeurui Huwonjaga Doeeotda","The Patron of Villains"],"cover":"https://s4.anilist.co/file/anilistcdn/media/manga/cover/large/bx201009-jTY2arWw21sc.jpg","color":"#d61a50","banner":"https://s4.anilist.co/file/anilistcdn/media/manga/banner/201009-kUre2tjoXghs.jpg","genres":["Action","Fantasy"],"score":7.8,"description":"One day, I woke up as a noble inside the game I used to play. Unfortunately, the game ends in an apocalypse. With ten years left, I track down the future vil…","format":"MANGA","status":"RELEASING","countryOfOrigin":"KR","episodes":null,"chapters":null,"volumes":null,"year":null,"nextEpisode":null,"mangaAnilistId":201009,"mediaType":"manga"}]}]}}
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      hero: { type: array, items: { $ref: "#/components/schemas/MediaCard" } }
+                      rows: { type: array, items: { $ref: "#/components/schemas/Row" } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /manga/catalog:
+    get:
+      tags: [Manga]
+      operationId: getMangaCatalog
+      summary: Catalogue manga
+      description: 30 résultats par page.
+      parameters:
+        - { name: search, in: query, schema: { type: string } }
+        - { name: genre, in: query, description: "Genres séparés par des virgules, tous requis.", schema: { type: string } }
+        - $ref: "#/components/parameters/page"
+      responses:
+        "200":
+          description: Une page de résultats.
+          content:
+            application/json:
+              example: {"data":[{"slug":"nightmare-realm-summoner","title":"Nightmare Realm Summoner","image":"https://cdn.jsdelivr.net/gh/Anime-Sama/IMG@img/contenu/thumb/nightmare-realm-summoner.webp","genres":["Action","Aventure"]},{"slug":"necromancer-becoming-a-god-starting-with-skeleton-clone","title":"Necromancer: Becoming a God Starting with Skeleton Clone","image":"https://cdn.jsdelivr.net/gh/Anime-Sama/IMG@img/contenu/thumb/necromancer-becoming-a-god-starting-with-skeleton-clone.webp","genres":["Aventure","Fantastique"]},{"slug":"one-punch-man","title":"One Punch Man","image":"https://cdn.jsdelivr.net/gh/Anime-Sama/IMG@img/contenu/thumb/one-punch-man.webp","genres":["Action","Aventure"]}],"meta":{"count":20,"page":1}}
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: "#/components/schemas/MangaCard" } }
+                  meta: { $ref: "#/components/schemas/PageMeta" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /manga/search:
+    get:
+      tags: [Manga]
+      operationId: searchManga
+      summary: Recherche manga
+      parameters:
+        - { name: q, in: query, required: true, schema: { type: string, example: one } }
+        - $ref: "#/components/parameters/limit"
+      responses:
+        "200":
+          description: Résultats.
+          content:
+            application/json:
+              example: {"data":[{"slug":"nightmare-realm-summoner","title":"Nightmare Realm Summoner","image":"https://cdn.jsdelivr.net/gh/Anime-Sama/IMG@img/contenu/thumb/nightmare-realm-summoner.webp","genres":["Action","Aventure"]},{"slug":"necromancer-becoming-a-god-starting-with-skeleton-clone","title":"Necromancer: Becoming a God Starting with Skeleton Clone","image":"https://cdn.jsdelivr.net/gh/Anime-Sama/IMG@img/contenu/thumb/necromancer-becoming-a-god-starting-with-skeleton-clone.webp","genres":["Aventure","Fantastique"]},{"slug":"one-punch-man","title":"One Punch Man","image":"https://cdn.jsdelivr.net/gh/Anime-Sama/IMG@img/contenu/thumb/one-punch-man.webp","genres":["Action","Aventure"]}],"meta":{"query":"one","count":3}}
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: "#/components/schemas/MangaCard" } }
+                  meta:
+                    type: object
+                    properties:
+                      query: { type: string }
+                      count: { type: integer }
+        "400": { $ref: "#/components/responses/InvalidParam" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /manga/{oeuvre}/chapters:
+    get:
+      tags: [Manga]
+      operationId: getChapters
+      summary: Chapitres d'une œuvre
+      description: |
+        `chapter` est le numéro à afficher, `folder` celui qui construit l'adresse des pages.
+        Les deux diffèrent quand une œuvre commence par un prologue (`chapterOffset`). L'adresse
+        d'une page est `{imageBase}/{oeuvre encodée}/{folder}/{page}.jpg`, pages à partir de 1.
+      parameters:
+        - $ref: "#/components/parameters/oeuvre"
+      responses:
+        "200":
+          description: Les chapitres.
+          content:
+            application/json:
+              example: {"data":{"oeuvre":"One Piece","imageBase":"https://anime.nartya.app/v1/manga/images","chapterOffset":0,"chapters":[{"folder":1,"chapter":1,"pages":57},{"folder":2,"chapter":2,"pages":25}]}}
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      oeuvre: { type: string, example: One Piece }
+                      imageBase: { type: string, format: uri, example: "https://anime.nartya.app/v1/manga/images" }
+                      chapterOffset: { type: integer, example: 0 }
+                      chapters:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            folder: { type: integer, example: 1 }
+                            chapter: { type: number, example: 1 }
+                            pages: { type: integer, example: 57 }
+        "400": { $ref: "#/components/responses/InvalidParam" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /manga/images/{oeuvre}/{folder}/{page}:
+    get:
+      tags: [Manga]
+      operationId: getMangaPage
+      summary: Page d'un chapitre
+      description: Image d'une page. Sans authentification, car une balise `<img>` ne peut pas envoyer de jeton.
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/oeuvre"
+        - { name: folder, in: path, required: true, schema: { type: integer, example: 1 } }
+        - { name: page, in: path, required: true, description: "Numéro de page suivi de l'extension, à partir de 1.", schema: { type: string, example: 1.jpg } }
+      responses:
+        "200":
+          description: L'image.
+          content:
+            image/jpeg: {}
+            image/png: {}
+            image/webp: {}
+        "400": { $ref: "#/components/responses/InvalidParam" }
+        "404":
+          description: Page introuvable.
+
+  /sources/recipe:
+    get:
+      tags: [Lecture vidéo]
+      operationId: getSourceRecipe
+      security:
+        - SessionApp: []
+      summary: Table des hébergeurs
+      description: |
+        Table des hébergeurs et de la façon de lire leurs vidéos.
+
+        **Accès** : session de l'application uniquement. Une clé d'API reçoit `403`, pour que
+        l'API ne serve pas de résolveur de vidéos à des services tiers. En développement, elle
+        fonctionne dès que vous êtes connecté dans l'app.
+      responses:
+        "200": { description: La table. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /streams/{id}:
+    get:
+      tags: [Lecture vidéo]
+      operationId: openStream
+      security:
+        - SessionApp: []
+      summary: Adresse d'une vidéo
+      description: |
+        Échange l'`id` d'un lecteur (voir « Épisodes d'une saison ») contre l'adresse de la
+        vidéo. L'`id` expire quelques heures après avoir été servi : rechargez alors les
+        épisodes. Plafond de 60 requêtes par minute.
+
+        **Accès** : session de l'application uniquement, pour la même raison que
+        `/sources/recipe`.
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: L'adresse.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      url: { type: string, format: uri }
+                      provider: { type: [string, "null"] }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "410": { $ref: "#/components/responses/Expired" }
+
+  /profiles/{handle}/views:
+    post:
+      tags: [Compte]
+      operationId: recordProfileView
+      summary: Compter une vue de profil
+      description: Compte une vue sur un profil public, une fois par visiteur et par période.
+      security: []
+      parameters:
+        - { name: handle, in: path, required: true, description: Pseudo public., schema: { type: string } }
+      responses:
+        "200":
+          description: Vue comptée ou déjà comptée.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      counted: { type: boolean }
+        "400": { $ref: "#/components/responses/InvalidParam" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /me/discord:
+    post:
+      tags: [Compte]
+      operationId: syncDiscord
+      security:
+        - SessionApp: []
+      summary: Synchroniser les visuels Discord
+      description: |
+        Synchronise l'avatar et la bannière Discord du compte connecté. `inspect-link` décrit
+        les visuels disponibles sans rien modifier.
+
+        **Accès** : session de l'application uniquement. Elle modifie le profil du compte
+        connecté ; une clé d'API est en lecture seule.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                action:
+                  type: string
+                  enum: [refresh-avatar, inspect-link, sync-profile]
+                  default: refresh-avatar
+                avatar: { type: boolean, description: "Avec `sync-profile` : importer l'avatar." }
+                banner: { type: boolean, description: "Avec `sync-profile` : importer la bannière." }
+      responses:
+        "200": { description: Visuels synchronisés ou décrits. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /episode-thumbs:
+    post:
+      tags: [Compte]
+      operationId: getEpisodeThumbs
+      security:
+        - SessionApp: []
+      summary: Vignettes d'épisodes
+      description: |
+        Vignettes de 60 épisodes au plus par appel.
+
+        **Accès** : session de l'application uniquement : la route met en cache les vignettes
+        en base, et une clé d'API est en lecture seule. Pour un projet tiers, le champ `image`
+        de « Épisodes d'une saison » donne la même vignette.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                items:
+                  type: array
+                  maxItems: 60
+                  items:
+                    type: object
+                    properties:
+                      slug: { type: string, example: gachiakuta }
+                      season: { type: string, example: saison1 }
+                      episode: { type: integer, example: 1 }
+      responses:
+        "200":
+          description: Vignette de chaque épisode, indexée par `slug|season|episode`.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    additionalProperties: { type: [string, "null"], format: uri }
+                    example: { "gachiakuta|saison1|1": "https://artworks.thetvdb.com/banners/v4/episode/10541264/screencap.jpg" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+components:
+  securitySchemes:
+    CleAPI:
+      type: http
+      scheme: bearer
+      bearerFormat: nk_…
+      description: |
+        Clé d'API créée dans **Paramètres → Clés d'API** de l'application (compte avec Discord
+        lié). Lecture seule, sans lecture vidéo, 60 requêtes par minute.
+    SessionApp:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Jeton de session de l'application, envoyé automatiquement une fois connecté. Toutes les
+        routes, 180 requêtes par minute. Voir « Session de l'application ».
+
+  parameters:
+    slug:
+      name: slug
+      in: path
+      required: true
+      description: Identifiant de l'anime.
+      schema: { type: string, pattern: "^[a-zA-Z0-9._-]{1,100}$", example: gachiakuta }
+    seasonId:
+      name: seasonId
+      in: path
+      required: true
+      description: Identifiant de la saison, lu dans `/anime/{slug}/seasons`.
+      schema: { type: string, pattern: "^[a-zA-Z0-9_-]{1,60}$", example: saison1 }
+    oeuvre:
+      name: oeuvre
+      in: path
+      required: true
+      description: Nom de l'œuvre tel que renvoyé par l'API, encodé pour l'URL.
+      schema: { type: string, example: One Piece }
+    page:
+      name: page
+      in: query
+      description: Page, à partir de 1.
+      schema: { type: integer, minimum: 1, maximum: 200, default: 1 }
+    limit:
+      name: limit
+      in: query
+      description: Nombre de résultats.
+      schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
+
+  responses:
+    InvalidParam:
+      description: Paramètre absent ou mal formé.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+          example: { error: { code: invalid_param, message: Slug invalide } }
+    Unauthorized:
+      description: Jeton absent ou invalide, clé révoquée.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+          example: { error: { code: unauthorized, message: "Authentification requise : session de l'app ou clé d'API." } }
+    Forbidden:
+      description: Compte suspendu, ou action interdite à une clé d'API.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+          example: { error: { code: forbidden, message: Les clés d'API sont en lecture seule. } }
+    NotFound:
+      description: Ressource inconnue.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+          example: { error: { code: not_found, message: Saison inconnue } }
+    Expired:
+      description: Jeton de lecture périmé.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+          example: { error: { code: expired, message: "Lien expiré, recharge l'épisode." } }
+    RateLimited:
+      description: Trop de requêtes.
+      headers:
+        RateLimit-Limit: { schema: { type: integer }, description: Plafond de la fenêtre. }
+        RateLimit-Remaining: { schema: { type: integer }, description: Requêtes restantes. }
+        RateLimit-Reset: { schema: { type: integer }, description: Secondes avant la fin de la fenêtre. }
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+          example: { error: { code: rate_limited, message: "Trop de requêtes, réessaie plus tard." } }
+    Unavailable:
+      description: Filtre ou service momentanément indisponible.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+          example: { error: { code: unavailable, message: Filtre par langue indisponible } }
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              enum: [invalid_param, unauthorized, forbidden, not_found, expired, rate_limited, internal, upstream_error, unavailable]
+            message: { type: string }
+
+    PageMeta:
+      type: object
+      properties:
+        count: { type: integer, description: Nombre de résultats sur cette page. }
+        page: { type: integer }
+
+    TitleCard:
+      type: object
+      properties:
+        slug: { type: string, example: naruto }
+        title: { type: string, example: Naruto }
+        image: { type: [string, "null"], format: uri }
+
+    CatalogItem:
+      type: object
+      properties:
+        slug: { type: string }
+        title: { type: string }
+        image: { type: [string, "null"], format: uri }
+        episodeCount: { type: integer, example: 12 }
+        anilistId: { type: [integer, "null"], example: 21 }
+        genres: { type: array, items: { type: string }, example: [Action] }
+        type: { type: string, example: Anime }
+        languages: { type: array, items: { type: string, enum: [vf, vostfr, va] } }
+
+    MangaCard:
+      type: object
+      properties:
+        slug: { type: string }
+        title: { type: string }
+        image: { type: [string, "null"], format: uri }
+        genres: { type: array, items: { type: string } }
+
+    MediaCard:
+      type: object
+      description: Anime ou manga mis en avant, avec ses métadonnées AniList.
+      properties:
+        id: { type: [integer, string], description: Identifiant AniList. }
+        slug: { type: string, example: re-zero }
+        mediaType: { type: string, enum: [anime, manga], description: Présent sur l'accueil manga. }
+        mangaAnilistId: { type: integer, description: Identifiant AniList du manga. }
+        title: { type: string }
+        titleNative: { type: [string, "null"] }
+        titles: { type: array, items: { type: string }, description: "Titres connus, toutes langues." }
+        cover: { type: string, format: uri }
+        banner: { type: [string, "null"], format: uri }
+        fanart: { type: [string, "null"], format: uri }
+        clearLogo: { type: [string, "null"], format: uri, description: "Logo du titre, fond transparent." }
+        azBanner: { type: [string, "null"], format: uri }
+        color: { type: [string, "null"], example: "#e49350" }
+        genres: { type: array, items: { type: string } }
+        score: { type: [number, "null"], example: 9 }
+        description: { type: [string, "null"], description: En anglais. }
+        format: { type: [string, "null"], example: TV }
+        status: { type: [string, "null"], example: FINISHED }
+        countryOfOrigin: { type: [string, "null"], example: JP }
+        episodes: { type: [integer, "null"] }
+        chapters: { type: [integer, "null"] }
+        volumes: { type: [integer, "null"] }
+        year: { type: [integer, "null"] }
+        nextEpisode:
+          type: [object, "null"]
+          description: Prochaine diffusion connue.
+          properties:
+            episode: { type: integer }
+            airingAt: { type: integer, description: Horodatage en secondes. }
+
+    Row:
+      type: object
+      properties:
+        key: { type: string, example: trending }
+        title: { type: string, example: Tendances }
+        kana: { type: [string, "null"], example: 人気 }
+        numbered: { type: boolean, description: Afficher un classement. }
+        items: { type: array, items: { $ref: "#/components/schemas/MediaCard" } }
+
+    Season:
+      type: object
+      properties:
+        id: { type: string, example: saison1 }
+        name: { type: string, example: Saison 1 }
+
+    AnimePage:
+      type: object
+      properties:
+        anime:
+          type: object
+          properties:
+            slug: { type: string, example: gachiakuta }
+            title: { type: string, example: Gachiakuta }
+            alternativeTitles: { type: array, items: { type: string } }
+            synopsis: { type: [string, "null"] }
+            status: { type: [string, "null"], example: En cours }
+            news: { type: [string, "null"], description: Annonce du catalogue (nouvelle saison…). }
+            image: { type: [string, "null"], format: uri }
+            url: { type: string, format: uri, description: Page de l'anime sur le site source. }
+            mapping:
+              type: object
+              description: Identifiant AniList de chaque saison.
+              additionalProperties: { type: [integer, array] }
+              example: { saison1: 178025 }
+            externalWatch:
+              type: array
+              description: Plateformes légales où regarder l'œuvre, quand elle n'a pas d'épisodes ici.
+              items: { type: object }
+        anilist:
+          type: [object, "null"]
+          description: Métadonnées AniList, `null` en mode allégé.
+          properties:
+            id: { type: integer, example: 178025 }
+            mediaType: { type: string, example: ANIME }
+            title: { type: string }
+            titleNative: { type: [string, "null"] }
+            description: { type: [string, "null"] }
+            cover: { type: [string, "null"], format: uri }
+            banner: { type: [string, "null"], format: uri }
+            countryOfOrigin: { type: [string, "null"], example: JP }
+            chapters: { type: [integer, "null"] }
+            volumes: { type: [integer, "null"] }
+            relations:
+              type: array
+              description: Œuvres liées (source, suite…).
+              items:
+                type: object
+                properties:
+                  id: { type: integer }
+                  type: { type: string, example: MANGA }
+                  title: { type: string }
+                  format: { type: [string, "null"] }
+                  relationType: { type: string, example: SOURCE }
+            genres: { type: array, items: { type: string } }
+            tags: { type: array, items: { type: string } }
+            score: { type: [number, "null"] }
+            format: { type: [string, "null"] }
+            status: { type: [string, "null"] }
+            episodes: { type: [integer, "null"] }
+            year: { type: [integer, "null"] }
+            studios: { type: array, items: { type: string } }
+            trailer:
+              type: [object, "null"]
+              properties:
+                id: { type: string }
+                site: { type: string, example: youtube }
+        images:
+          type: [object, "null"]
+          properties:
+            banner: { type: [string, "null"], format: uri }
+            fanart: { type: [string, "null"], format: uri }
+            poster: { type: [string, "null"], format: uri }
+            clearLogo: { type: [string, "null"], format: uri }
+        seasons: { type: array, items: { $ref: "#/components/schemas/Season" } }
+        seasonsCount: { type: integer }
+        anilistId: { type: [integer, "null"] }
+        isMangaOnly: { type: boolean }
+        lite: { type: boolean }
+
+    Player:
+      type: object
+      description: Un lecteur vidéo. `id` ne sert qu'à la lecture vidéo.
+      properties:
+        id: { type: string, description: Jeton opaque. }
+        key: { type: string, example: s1 }
+        label: { type: string, example: Source A }
+        rank: { type: integer, description: "Ordre de préférence, 1 en premier." }
+        recommended: { type: boolean }
+
+    Episode:
+      type: object
+      properties:
+        number: { type: number, example: 1 }
+        episode: { type: number, description: Identique à `number`. }
+        title: { type: [string, "null"], example: La Cité céleste }
+        description: { type: [string, "null"] }
+        image: { type: [string, "null"], format: uri }
+        thumbnail: { type: [string, "null"], format: uri }
+        airDate: { type: [string, "null"], format: date }
+        length: { type: [integer, "null"], description: Durée en minutes., example: 25 }
+        rating: { type: [number, "null"], example: 7.8 }
+        ratingCount: { type: [integer, "null"] }
+        lecteurs:
+          type: object
+          description: "Lecteurs rangés par langue (`vostfr`, `vf`, `va`…), puis par nom."
+          additionalProperties:
+            type: object
+            additionalProperties: { $ref: "#/components/schemas/Player" }
+
+    SeasonEpisodes:
+      type: object
+      properties:
+        episodes: { type: array, items: { $ref: "#/components/schemas/Episode" } }
+        totalEpisodes: { type: integer, example: 24 }
+        seasonName: { type: [string, "null"], example: Saison 1 }
+        seasonDescription: { type: [string, "null"], description: "Résumé de la saison, seulement en français." }
+        seasonCover: { type: [string, "null"], format: uri }
+        seasonBanner: { type: [string, "null"], format: uri }
+        nextEpisode:
+          description: Prochain épisode attendu.
+          oneOf:
+            - $ref: "#/components/schemas/Episode"
+            - type: "null"
+        lite: { type: boolean }
+
+    Segment:
+      oneOf:
+        - type: object
+          properties:
+            start: { type: number, example: 41.5 }
+            end: { type: number, example: 131.4 }
+        - type: "null"

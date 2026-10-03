@@ -1,0 +1,213 @@
+.profile-weather {
+  --weather-tint: 170 207 234;
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+  isolation: isolate;
+  perspective: 600px;
+}
+.profile-weather--panel { position: absolute; z-index: 5; border-radius: inherit; }
+.profile-weather__light, .profile-weather__mist, .profile-weather__field { position: absolute; inset: 0; }
+.profile-weather__light {
+  background: radial-gradient(ellipse at 82% 0%, rgb(var(--weather-tint) / .16), transparent 52%),
+    radial-gradient(ellipse at 0% 80%, rgb(var(--weather-tint) / .06), transparent 45%);
+}
+.profile-weather__mist {
+  inset: -10%;
+  background: radial-gradient(ellipse at 20% 75%, rgb(var(--weather-tint) / .07), transparent 45%);
+  animation: profile-weather-mist 24s ease-in-out infinite alternate;
+}
+.profile-weather--panel .profile-weather__light { opacity: .7; }
+.profile-weather--panel .profile-weather__field {
+  opacity: .92;
+  /* Retenue au centre, pour ne pas noyer le texte. */
+  mask-image: linear-gradient(90deg, #000, rgb(0 0 0 / .6) 22%, rgb(0 0 0 / .6) 78%, #000);
+}
+.profile-weather__lane {
+  position: absolute;
+  top: -24px;
+  height: calc(100% + 48px);
+  width: var(--size);
+  animation: profile-weather-fall var(--duration) var(--delay) linear infinite;
+}
+.profile-weather__lane b {
+  display: block;
+  width: var(--size);
+  height: var(--size);
+  opacity: var(--alpha);
+  animation: profile-weather-sway var(--sway) var(--delay) ease-in-out infinite alternate;
+}
+/* Flocons dendritiques (cf. ProfileWeather.jsx). */
+.weather-snow .profile-weather__lane svg {
+  display: block;
+  width: var(--size);
+  height: var(--size);
+  opacity: var(--alpha);
+  color: #eaf6ff;
+  filter: drop-shadow(0 0 3px rgb(235 246 255 / .55));
+  animation: profile-weather-sway-snow var(--sway) var(--delay) ease-in-out infinite alternate;
+  /* `--alpha` code déjà la profondeur : ici, seulement taille, flou et lueur. */
+}
+.weather-snow .depth-2 svg { filter: drop-shadow(0 0 5px rgb(235 246 255 / .75)); }
+.weather-snow .depth-0 svg { filter: blur(.5px); }
+
+/* Pluie / Orage : gouttes en traits filés. */
+.weather-rain { --weather-tint: 88 138 168; }
+.weather-storm { --weather-tint: 96 108 168; }
+.weather-rain .profile-weather__light {
+  background: radial-gradient(ellipse at 82% 0%, rgb(var(--weather-tint) / .22), transparent 55%),
+    linear-gradient(165deg, rgb(10 14 26 / .35), transparent 60%);
+}
+.weather-storm .profile-weather__light {
+  background: radial-gradient(ellipse at 82% 0%, rgb(var(--weather-tint) / .22), transparent 55%),
+    linear-gradient(165deg, rgb(4 5 14 / .72), transparent 66%);
+}
+.weather-rain .profile-weather__lane,
+.weather-storm .profile-weather__lane {
+  animation-name: profile-weather-fall-rain;
+  transform: rotate(11deg);
+}
+.weather-rain .profile-weather__lane b,
+.weather-storm .profile-weather__lane b {
+  width: 1.5px;
+  height: 30px;
+  border-radius: 100px;
+  background: linear-gradient(rgb(198 224 245 / 0), rgb(198 224 245 / .85) 60%, rgb(224 241 255 / .95));
+  animation: none;
+}
+.weather-storm .profile-weather__lane b {
+  background: linear-gradient(rgb(210 220 255 / 0), rgb(210 220 255 / .9) 55%, rgb(236 240 255 / 1));
+}
+.weather-rain .depth-0 b, .weather-storm .depth-0 b { height: 16px; width: 1px; }
+.weather-rain .depth-1 b, .weather-storm .depth-1 b { height: 26px; }
+.weather-rain .depth-2 b, .weather-storm .depth-2 b { height: 40px; width: 2px; }
+
+/* Éclat plein champ et éclairs (orage). */
+.profile-weather__flash {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 78% 8%, rgb(214 226 255 / .9), rgb(180 198 255 / .28) 38%, transparent 70%);
+  opacity: 0;
+  mix-blend-mode: screen;
+  animation: profile-weather-flash 9s infinite;
+}
+.profile-weather--panel .profile-weather__flash { animation-name: profile-weather-flash-panel; }
+.profile-weather__bolt {
+  position: absolute;
+  top: 0;
+  width: 150px;
+  height: 62%;
+  max-height: 560px;
+  fill: none;
+  stroke: #e4eaff;
+  stroke-width: 2;
+  filter: drop-shadow(0 0 10px #9fb3ff) drop-shadow(0 0 22px #6f8bff);
+  opacity: 0;
+}
+.profile-weather__bolt--a { right: 16%; animation: profile-weather-bolt-a 9s infinite; }
+.profile-weather__bolt--b { right: 38%; height: 46%; width: 110px; stroke-width: 1.4; animation: profile-weather-bolt-b 9s infinite; animation-delay: -3.4s; }
+.profile-weather--panel .profile-weather__bolt--a { right: 6%; stroke-width: 1.1; animation-name: profile-weather-bolt-a-panel; }
+.profile-weather--panel .profile-weather__bolt--b { right: 30%; stroke-width: .9; animation-name: profile-weather-bolt-b-panel; }
+
+/* Automne : feuilles qui tourbillonnent. */
+.weather-autumn .profile-weather__lane { animation-name: profile-weather-fall-leaf; }
+.weather-autumn .profile-weather__lane b {
+  position: relative;
+  width: var(--size);
+  height: calc(var(--size) * .82);
+  border-radius: 0% 100% 0% 100%;
+  background: linear-gradient(135deg, #f4c579, #d9752f 55%, #a8451f);
+  box-shadow: inset -2px -2px 3px rgb(0 0 0 / .25), inset 1px 1px 0 rgb(255 224 150 / .35);
+  animation: profile-weather-tumble var(--sway) var(--delay) ease-in-out infinite;
+  transform: rotate(var(--tilt));
+}
+.weather-autumn .profile-weather__lane b::after {
+  content: "";
+  position: absolute;
+  inset: 12% 46%;
+  background: rgb(0 0 0 / .22);
+  transform: rotate(45deg);
+  border-radius: 2px;
+}
+.weather-autumn .depth-0 b { background: linear-gradient(135deg, #f6d38f, #d9752f 55%, #8f3a1c); }
+.weather-autumn .depth-1 b { background: linear-gradient(135deg, #e2a24f, #b4491f 55%, #7a2f16); }
+.weather-autumn .depth-2 b { background: linear-gradient(135deg, #f0e07a, #c46a2c 55%, #7a2f16); filter: blur(.3px); }
+.weather-autumn .profile-weather__lane:nth-child(5n) b { background: linear-gradient(135deg, #e6d371, #b3541f 55%, #6e2c14); }
+
+@keyframes profile-weather-fall {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(var(--drift), 100%, 0); }
+}
+@keyframes profile-weather-fall-rain {
+  from { transform: rotate(11deg) translate3d(0, 0, 0); }
+  to { transform: rotate(11deg) translate3d(var(--drift), 100%, 0); }
+}
+@keyframes profile-weather-fall-leaf {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(var(--drift), 100%, 0); }
+}
+@keyframes profile-weather-sway {
+  from { transform: translateX(-14px); }
+  to { transform: translateX(22px); }
+}
+@keyframes profile-weather-sway-snow {
+  from { transform: translateX(-14px) rotate(var(--rot)); }
+  to { transform: translateX(22px) rotate(calc(var(--rot) + 50deg)); }
+}
+@keyframes profile-weather-tumble {
+  0% { transform: rotate(var(--tilt)) rotateY(0deg) translateX(-16px); }
+  50% { transform: rotate(calc(var(--tilt) * -1)) rotateY(180deg) translateX(18px); }
+  100% { transform: rotate(var(--spin)) rotateY(360deg) translateX(-16px); }
+}
+@keyframes profile-weather-mist { to { transform: translate3d(5%, -3%, 0); opacity: .5; } }
+/* Montée franche, chute, second pic plus bref, puis traîne. */
+@keyframes profile-weather-flash {
+  0%, 54%, 58.5%, 100% { opacity: 0; }
+  54.6% { opacity: 1; }
+  55.4% { opacity: .25; }
+  56% { opacity: .9; }
+  56.6% { opacity: .1; }
+  57.4% { opacity: .55; }
+}
+@keyframes profile-weather-flash-panel {
+  0%, 54%, 58.5%, 100% { opacity: 0; }
+  54.6% { opacity: .65; }
+  55.4% { opacity: .15; }
+  56% { opacity: .55; }
+  56.6% { opacity: .06; }
+  57.4% { opacity: .32; }
+}
+@keyframes profile-weather-bolt-a {
+  0%, 53%, 62%, 100% { opacity: 0; }
+  54% { opacity: 1; }
+  56% { opacity: .2; }
+  58% { opacity: .85; }
+}
+@keyframes profile-weather-bolt-b {
+  0%, 53.5%, 60%, 100% { opacity: 0; }
+  54.5% { opacity: .75; }
+  57% { opacity: .1; }
+}
+@keyframes profile-weather-bolt-a-panel {
+  0%, 53%, 62%, 100% { opacity: 0; }
+  54% { opacity: .6; }
+  56% { opacity: .1; }
+  58% { opacity: .45; }
+}
+@keyframes profile-weather-bolt-b-panel {
+  0%, 53.5%, 60%, 100% { opacity: 0; }
+  54.5% { opacity: .4; }
+  57% { opacity: .05; }
+}
+@media (max-width: 640px) {
+  .profile-weather__lane:nth-child(n+55) { display: none; }
+  .profile-weather--panel .profile-weather__lane:nth-child(n+26) { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .profile-weather__field, .profile-weather__bolt, .profile-weather__flash { display: none; }
+  .profile-weather__mist { animation: none; }
+}
+.reduce-motion .profile-weather__field, .reduce-motion .profile-weather__bolt, .reduce-motion .profile-weather__flash { display: none; }
+.reduce-motion .profile-weather__mist { animation: none; }

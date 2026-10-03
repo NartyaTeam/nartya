@@ -1,0 +1,94 @@
+import groovy.json.JsonSlurper
+
+apply plugin: 'com.android.application'
+
+// Keystore local, jamais commité. Absent, l'APK release reste non signé.
+def keystorePropsFile = rootProject.file('keystore.properties')
+def keystoreProps = new Properties()
+def hasReleaseSigning = keystorePropsFile.exists()
+if (hasReleaseSigning) {
+    keystoreProps.load(new FileInputStream(keystorePropsFile))
+}
+
+// Indépendante du desktop. Le versionCode reste strictement croissant, même si le versionName
+// repart à 1.0.0 ; 12800 succède aux premières APK de validation.
+def androidVersionMetadata = new JsonSlurper().parse(rootProject.file('version.json'))
+def androidVersionName = androidVersionMetadata.versionName as String
+def androidVersionCode = androidVersionMetadata.versionCode as Integer
+def nartyaProxyProbe = project.findProperty('nartyaProxyProbe') == 'true'
+if (!(androidVersionName ==~ /\d+\.\d+\.\d+/)) {
+    throw new GradleException("versionName Android invalide dans android/version.json: ${androidVersionName}")
+}
+if (androidVersionCode < 12800 || androidVersionCode > 2100000000) {
+    throw new GradleException("versionCode Android invalide dans android/version.json: ${androidVersionCode}")
+}
+
+android {
+    namespace = "com.nartya.app"
+    compileSdk = rootProject.ext.compileSdkVersion
+    defaultConfig {
+        applicationId "com.nartya.app"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode androidVersionCode
+        versionName androidVersionName
+        // `-PnartyaProxyProbe=true` : sonde Java contre l'APK release minifié, sans AndroidX/JUnit.
+        testInstrumentationRunner nartyaProxyProbe
+                ? "com.nartya.app.proxy.NartyaProxyProbeInstrumentation"
+                : "androidx.test.runner.AndroidJUnitRunner"
+        aaptOptions {
+            ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+        }
+    }
+    signingConfigs {
+        if (hasReleaseSigning) {
+            release {
+                storeFile rootProject.file(keystoreProps['storeFile'])
+                storePassword keystoreProps['storePassword']
+                keyAlias keystoreProps['keyAlias']
+                keyPassword keystoreProps['keyPassword']
+            }
+        }
+    }
+    buildTypes {
+        release {
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            if (hasReleaseSigning) {
+                signingConfig signingConfigs.release
+            }
+        }
+    }
+}
+
+repositories {
+    flatDir{
+        dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
+    implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
+    implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
+    implementation project(':capacitor-android')
+    implementation 'org.nanohttpd:nanohttpd:2.3.1'
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+    testImplementation "junit:junit:$junitVersion"
+    androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
+    implementation project(':capacitor-cordova-android-plugins')
+}
+
+apply from: 'capacitor.build.gradle'
+
+try {
+    def servicesJSON = file('google-services.json')
+    if (servicesJSON.text) {
+        apply plugin: 'com.google.gms.google-services'
+    }
+} catch(Exception e) {
+    logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
+}

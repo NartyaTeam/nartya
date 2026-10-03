@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  front:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install
+        run: npm ci
+      - name: Audit des dépendances de production
+        run: npm run security:audit
+      - name: Lint
+        run: npm run lint
+      - name: Tests unitaires
+        run: npm run test:unit
+      - name: Build front (Vite)
+        run: npm run build
+
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Install (build web nécessaire à cap sync)
+        run: npm ci
+      - name: Build front (assets embarqués dans le shell Android)
+        run: npm run build
+      - uses: android-actions/setup-android@v3
+        with:
+          # Le paquet `tools`, défaut de l'action, n'existe plus dans les cmdline-tools récents.
+          packages: platform-tools
+      - name: Sync Capacitor
+        run: npx cap sync android
+      - name: Gradle cache
+        uses: gradle/actions/setup-gradle@v4
+      - name: Lint Android
+        working-directory: android
+        run: ./gradlew lintDebug --console=plain
+      - name: Tests unitaires Android
+        working-directory: android
+        run: ./gradlew testDebugUnitTest --console=plain

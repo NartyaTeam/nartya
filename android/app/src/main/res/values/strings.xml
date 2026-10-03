@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Nartya</string>
+    <string name="title_activity_main">Nartya</string>
+    <string name="package_name">com.nartya.app</string>
+    <string name="custom_url_scheme">com.nartya.app</string>
+</resources>

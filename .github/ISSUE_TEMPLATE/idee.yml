@@ -1,0 +1,25 @@
+name: Idée
+description: Proposer une fonctionnalité ou une amélioration
+labels: [idée]
+body:
+  - type: textarea
+    id: besoin
+    attributes:
+      label: Le besoin
+      description: Ce que tu cherches à faire, et ce qui te bloque aujourd'hui.
+    validations:
+      required: true
+  - type: textarea
+    id: proposition
+    attributes:
+      label: Ce que tu proposes
+    validations:
+      required: true
+  - type: checkboxes
+    id: plateformes
+    attributes:
+      label: Plateformes concernées
+      options:
+        - label: Desktop
+        - label: Android
+        - label: iOS
