@@ -37,3 +37,7 @@ supabase/.temp/
 # Benchmarks et réponses capturées pendant le diagnostic local du lecteur.
 /.play.json
 /anime4k-models.html
+
+# Config locale de l'IDE et brouillons de notes de version.
+/.idea/
+/PATCHNOTE-DISCORD.md
