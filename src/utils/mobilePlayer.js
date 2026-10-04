@@ -85,6 +85,8 @@ function injectHudStyles() {
   style.id = "nartya-player-hud-style";
   style.textContent =
     ".nartya-mobile-player .art-control-volume{display:none!important}" +
+    // ArtPlayer ne fait que rendre sa barre transparente : ses boutons restaient cliquables.
+    ".nartya-mobile-player:not(.art-control-show):not(.art-hover) .art-bottom *{pointer-events:none!important}" +
     // Fenêtre PiP d'Android : la WebView entière y est réduite, seule l'image doit rester.
     ".nartya-pip>:not(.art-video):not(.nartya-comp-guard){display:none!important}" +
     // iPhone en paysage : la plus grande de la marge d'ArtPlayer et de la zone sûre.
@@ -283,7 +285,28 @@ export function setupMobilePlayerControls(art) {
     else art.play?.()?.catch?.(() => {});
   });
 
+  // Nos taps sont consommés au `touchend` : le `click` qui ferme les menus d'ArtPlayer ne part
+  // jamais. Tout appui hors d'un menu le referme, sans rien faire d'autre.
+  let tapClosedMenu = false;
+  const closeMenusOnTouch = (event) => {
+    const inside = (el) => !!el && el.contains(event.target);
+    if (art.setting?.show && !inside(art.template?.$setting) && !inside(art.controls?.setting)) {
+      art.setting.show = false;
+      art.setting.render?.();
+      tapClosedMenu = true;
+    }
+    if (art.contextmenu?.show && !inside(art.template?.$contextmenu)) {
+      art.contextmenu.show = false;
+      tapClosedMenu = true;
+    }
+  };
+
   const onTouchStart = (event) => {
+    if (tapClosedMenu) {
+      tapClosedMenu = false;
+      active = false;
+      return;
+    }
     if (event.target.closest?.(".art-bottom, .art-control, .art-layers, .art-settings, .art-contextmenus, .nartya-center, .art-back-btn, .nartya-touch-ui")) {
       active = false;
       return;
@@ -437,6 +460,8 @@ export function setupMobilePlayerControls(art) {
     event.stopPropagation();
   };
 
+  // En capture : passe avant `onTouchStart`, qui ignore alors ce tap.
+  host.addEventListener("touchstart", closeMenusOnTouch, { capture: true, passive: true });
   host.addEventListener("touchstart", onTouchStart, { passive: true });
   host.addEventListener("touchmove", onTouchMove, { passive: false });
   host.addEventListener("touchend", onTouchEnd, { passive: false });
@@ -445,6 +470,7 @@ export function setupMobilePlayerControls(art) {
   host.addEventListener("contextmenu", onVideoContextMenuCapture, true);
 
   return () => {
+    host.removeEventListener("touchstart", closeMenusOnTouch, { capture: true });
     host.removeEventListener("touchstart", onTouchStart);
     host.removeEventListener("touchmove", onTouchMove);
     host.removeEventListener("touchend", onTouchEnd);
