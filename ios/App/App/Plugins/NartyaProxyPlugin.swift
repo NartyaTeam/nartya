@@ -3,8 +3,7 @@ import NartyaProxyCore
 import UIKit
 
 /// Même surface JS que NartyaProxyPlugin.java.
-/// iOS récupère le socket d'écoute d'une app suspendue : au retour, le serveur est relancé sur
-/// le même port, et `proxyRestarted` prévient le JS s'il a dû en changer.
+/// Au retour au premier plan, le serveur est éprouvé puis relancé au besoin (voir docs/MOBILE.md).
 /// En arrière-plan, iOS accorde une trentaine de secondes : les téléchargements continuent, puis
 /// sont figés en « interrupted » (fragments conservés) et relancés au retour dans l'app.
 @objc(NartyaProxyPlugin)
@@ -53,6 +52,9 @@ public class NartyaProxyPlugin: CAPPlugin, CAPBridgedPlugin {
 
     override public func load() {
         Self.activePlugin = self
+        Self.engine.onRestart = { port, portChanged in
+            Self.activePlugin?.notifyRestart(port: port, portChanged: portChanged, cause: "auto")
+        }
         let center = NotificationCenter.default
         center.addObserver(self, selector: #selector(appDidBecomeActive),
                            name: UIApplication.didBecomeActiveNotification, object: nil)
@@ -69,14 +71,22 @@ public class NartyaProxyPlugin: CAPPlugin, CAPBridgedPlugin {
         guard started else { return }
         Task {
             do {
-                let result = try await Self.engine.ensureRunning()
-                if result.portChanged {
-                    notifyListeners("proxyRestarted", data: ["port": Int(result.port), "token": Self.engine.token])
+                let result = try await Self.engine.ensureRunning(verify: true)
+                if result.restarted {
+                    notifyRestart(port: result.port, portChanged: result.portChanged, cause: "foreground")
                 }
             } catch {
                 CAPLog.print("[NartyaProxy] relance impossible : \(error.localizedDescription)")
             }
         }
+    }
+
+    /// Toute relance, pour que le JS l'adopte et la journalise. `cause` : `auto` (perte signalée
+    /// par l'écouteur), `foreground` (retour dans l'app), `request` (requête du JS sans réponse).
+    private func notifyRestart(port: UInt16, portChanged: Bool, cause: String) {
+        notifyListeners("proxyRestarted", data: [
+            "port": Int(port), "token": Self.engine.token, "portChanged": portChanged, "cause": cause,
+        ])
     }
 
     /// Délai de grâce demandé, puis gel juste avant la suspension, sinon ils mourraient en « erreur ».
@@ -98,15 +108,20 @@ public class NartyaProxyPlugin: CAPPlugin, CAPBridgedPlugin {
         backgroundTask = .invalid
     }
 
+    /// Aussi appelé par le JS quand le proxy ne répond plus : sans `configs`, la recette en place
+    /// est gardée.
     @objc func start(_ call: CAPPluginCall) {
         if let configs = call.options["configs"] as? [String: Any] {
             Self.engine.updateConfig(ProxyConfig(json: configs))
         }
         Task {
             do {
-                let port = try await Self.engine.start()
+                let result = try await Self.engine.ensureRunning(verify: true)
+                if started, result.restarted {
+                    notifyRestart(port: result.port, portChanged: result.portChanged, cause: "request")
+                }
                 started = true
-                call.resolve(["port": Int(port), "token": Self.engine.token])
+                call.resolve(["port": Int(result.port), "token": Self.engine.token])
             } catch {
                 call.reject("Échec démarrage proxy: \(error.localizedDescription)")
             }

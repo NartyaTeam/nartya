@@ -37,17 +37,26 @@ function currentAccessToken() {
   }
 }
 
+function adoptProxy(port, token) {
+  if (!Number.isInteger(port) || port <= 0) throw new Error("Port du proxy natif invalide");
+  if (!token || typeof token !== "string") throw new Error("Jeton du proxy natif manquant");
+  const base = `http://127.0.0.1:${port}/video/proxy`;
+  // Les URL de flux déjà construites pointent vers l'ancien port.
+  if (proxyBaseUrl && (base !== proxyBaseUrl || token !== proxyToken)) {
+    streamCache.clear();
+    downloadHandles.clear();
+  }
+  proxyToken = token;
+  proxyBaseUrl = base;
+  proxyPromise = Promise.resolve(base);
+  return base;
+}
+
 function ensureProxy() {
   if (proxyBaseUrl) return Promise.resolve(proxyBaseUrl);
   if (!proxyPromise) {
     proxyPromise = NartyaProxy.start({ configs: {} })
-      .then(({ port, token }) => {
-        if (!Number.isInteger(port) || port <= 0) throw new Error("Port du proxy natif invalide");
-        if (!token || typeof token !== "string") throw new Error("Jeton du proxy natif manquant");
-        proxyToken = token;
-        proxyBaseUrl = `http://127.0.0.1:${port}/video/proxy`;
-        return proxyBaseUrl;
-      })
+      .then(({ port, token }) => adoptProxy(port, token))
       .catch((error) => {
         proxyPromise = null;
         throw error;
@@ -56,17 +65,78 @@ function ensureProxy() {
   return proxyPromise;
 }
 
-// iOS récupère le socket d'écoute d'une app suspendue : si le proxy change de port, les URL
-// de flux déjà construites pointent vers un port mort.
+let revivePromise = null;
+
+/** Le natif éprouve le proxy et le relance au besoin ; sans `configs`, la recette est gardée. */
+function reviveProxy() {
+  if (!proxyBaseUrl) return ensureProxy();
+  if (!revivePromise) {
+    revivePromise = NartyaProxy.start()
+      .then(({ port, token }) => adoptProxy(port, token))
+      .finally(() => {
+        revivePromise = null;
+      });
+  }
+  return revivePromise;
+}
+
+/** `fetch` rejette en `TypeError` (« Load failed ») quand rien ne répond. */
+function isNetworkError(error) {
+  return error instanceof TypeError;
+}
+
+// Contexte des relances du proxy, pour en trouver la cause dans le journal du support.
+const lifecycle = { hiddenAt: 0, shownAt: 0, offlineAt: 0 };
+
+const secondsSince = (at) => (at ? Math.round((Date.now() - at) / 1000) : null);
+
+function reportProxyRestart({ cause, portChanged }) {
+  const returned = lifecycle.shownAt > lifecycle.hiddenAt && lifecycle.hiddenAt > 0;
+  const detail = {
+    cause: cause || "unknown",
+    portChanged: !!portChanged,
+    watching: window.location.hash.startsWith("#/watch"),
+    hidden: document.hidden,
+    secondsSinceReturn: returned ? secondsSince(lifecycle.shownAt) : null,
+    lastBackgroundSeconds: returned
+      ? Math.round((lifecycle.shownAt - lifecycle.hiddenAt) / 1000)
+      : null,
+    online: navigator.onLine,
+    secondsSinceOffline: secondsSince(lifecycle.offlineAt),
+  };
+  void import("@/api/clientLogs")
+    .then(({ logClientEvent }) =>
+      logClientEvent("proxy_restarted", {
+        level: "warn",
+        message: `Proxy local relancé (${detail.cause})`,
+        detail,
+      }),
+    )
+    .catch(() => {});
+}
+
 if (Capacitor.getPlatform() === "ios") {
-  void NartyaProxy.addListener("proxyRestarted", ({ port, token }) => {
-    if (!Number.isInteger(port) || port <= 0 || !token) return;
-    proxyToken = token;
-    proxyBaseUrl = `http://127.0.0.1:${port}/video/proxy`;
-    proxyPromise = Promise.resolve(proxyBaseUrl);
-    streamCache.clear();
-    downloadHandles.clear();
+  void NartyaProxy.addListener("proxyRestarted", (event) => {
+    try {
+      adoptProxy(event.port, event.token);
+    } catch (_) {}
+    reportProxyRestart(event);
   }).catch(() => {});
+  // Une lecture relancée au retour attend que le proxy ait été éprouvé. Écouteur posé à
+  // l'import, donc avant celui du lecteur.
+  const reviveOnReturn = () => {
+    if (document.hidden) return;
+    if (proxyBaseUrl) void reviveProxy().catch(() => {});
+  };
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) lifecycle.hiddenAt = Date.now();
+    else lifecycle.shownAt = Date.now();
+    reviveOnReturn();
+  });
+  void App.addListener("resume", reviveOnReturn).catch(() => {});
+  window.addEventListener("offline", () => {
+    lifecycle.offlineAt = Date.now();
+  });
 }
 
 async function configureProxy(recipe) {
@@ -242,11 +312,16 @@ export const capacitorPlatform = {
   getMachineId: hashedDeviceId,
 
   async fetchEmbedUrl(embedUrl, options = {}) {
+    const provider = options.sourceKey || options.provider;
     try {
-      const base = await ensureProxy();
-      const response = await fetch(
-        proxyUrl(base, embedUrl, options.sourceKey || options.provider, options),
-      );
+      let response;
+      try {
+        response = await fetch(proxyUrl(await ensureProxy(), embedUrl, provider, options));
+      } catch (error) {
+        if (!isNetworkError(error)) throw error;
+        // Proxy muet après une suspension : relancé, puis une seconde tentative.
+        response = await fetch(proxyUrl(await reviveProxy(), embedUrl, provider, options));
+      }
       if (!response.ok) return { success: false, error: `HTTP ${response.status}` };
       return { success: true, html: await response.text() };
     } catch (error) {
@@ -261,6 +336,8 @@ export const capacitorPlatform = {
       return { success: false, error: "API non configurée (URL absolue attendue)" };
     }
 
+    // Retour au premier plan : le proxy est peut-être en cours de relance.
+    if (revivePromise) await revivePromise.catch(() => {});
     if (forceRefresh) streamCache.delete(token);
     const cached = streamCache.get(token);
     if (cached && Date.now() - cached.at < STREAM_CACHE_TTL_MS) {
@@ -277,10 +354,20 @@ export const capacitorPlatform = {
     let embedUrl;
     let provider;
     try {
-      const response = await fetch(`${apiBaseUrl}/v1/streams/${encodeURIComponent(token)}`, {
-        headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
-        signal: AbortSignal.timeout(10_000),
-      });
+      const request = () =>
+        fetch(`${apiBaseUrl}/v1/streams/${encodeURIComponent(token)}`, {
+          headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+          signal: AbortSignal.timeout(10_000),
+        });
+      let response;
+      try {
+        response = await request();
+      } catch (error) {
+        if (!isNetworkError(error)) throw error;
+        // Après une longue veille, la première requête part parfois sur une connexion morte.
+        await new Promise((resolve) => setTimeout(resolve, 400));
+        response = await request();
+      }
       if (response.status === 401) {
         return { success: false, error: "Connecte-toi pour lancer la lecture." };
       }

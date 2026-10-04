@@ -70,8 +70,10 @@ Chaque plateforme a sa propre version et son propre journal des nouveautés :
 
 **iOS**
 
-- iOS récupère le port d'écoute d'une app suspendue : le proxy redémarre au retour au premier
-  plan, sur le même port si possible, sinon l'événement `proxyRestarted` vide le cache de flux.
+- iOS récupère le port d'écoute d'une app suspendue, parfois sans que `NWListener` change
+  d'état : au retour au premier plan, le proxy est éprouvé par une vraie requête et relancé sur
+  le même port si possible, sinon l'événement `proxyRestarted` vide le cache de flux. Côté JS,
+  une requête au proxy qui échoue en réseau le fait vérifier et relancer avant un second essai.
 - `URLSession` n'a pas de point d'entrée DNS : le filtrage d'adresse se fait avant chaque
   requête et à chaque redirection.
 - `URLSession` décompresse les réponses : le `Content-Length` amont n'est relayé que sans

@@ -19,6 +19,10 @@ public final class ProxyEngine: NSObject, @unchecked Sendable {
     private var config = ProxyConfig.empty
     private var server: LoopbackServer?
     private var lastPort: UInt16?
+    /// Seule une relance déjà réussie est reprise d'elle-même ; `stop()` y met fin.
+    private var wantsRunning = false
+    /// Appels arrivés pendant une vérification ou une relance en cours.
+    private var pendingRuns: [(Result<RunState, Error>) -> Void]?
     private var exchanges: [Int: Exchange] = [:]
     private lazy var session: URLSession = makeSession()
 
@@ -33,6 +37,9 @@ public final class ProxyEngine: NSObject, @unchecked Sendable {
 
     public var port: UInt16? { queue.sync { server?.isReady == true ? server?.port : nil } }
 
+    /// Relance spontanée réussie (port, a-t-il changé). Sur la file interne.
+    public var onRestart: ((UInt16, Bool) -> Void)?
+
     public func updateConfig(_ next: ProxyConfig) {
         queue.async { self.config = next }
     }
@@ -42,30 +49,21 @@ public final class ProxyEngine: NSObject, @unchecked Sendable {
         try await ensureRunning().port
     }
 
-    /// Après une suspension iOS : même port d'abord, pour garder valides les URL du lecteur ;
-    /// `portChanged` dit au JS de vider ses caches sinon.
-    public func ensureRunning() async throws -> (port: UInt16, restarted: Bool, portChanged: Bool) {
+    public typealias RunState = (port: UInt16, restarted: Bool, portChanged: Bool)
+
+    /// Même port d'abord, pour garder valides les URL du lecteur ; `portChanged` dit au JS de vider
+    /// ses caches sinon. `verify` éprouve l'écouteur par une vraie requête.
+    public func ensureRunning(verify: Bool = false) async throws -> RunState {
         try await withCheckedThrowingContinuation { continuation in
             queue.async {
-                if let server = self.server, server.isReady, let port = server.port {
-                    continuation.resume(returning: (port, false, false))
-                    return
-                }
-                let previous = self.lastPort
-                self.bind(preferredPort: previous) { result in
-                    switch result {
-                    case .success(let port):
-                        continuation.resume(returning: (port, previous != nil, previous != nil && previous != port))
-                    case .failure(let error):
-                        continuation.resume(throwing: error)
-                    }
-                }
+                self.ensureRunningOnQueue(verify: verify) { continuation.resume(with: $0) }
             }
         }
     }
 
     public func stop() {
         queue.sync {
+            wantsRunning = false
             server?.stop()
             server = nil
             for exchange in exchanges.values { exchange.task?.cancel() }
@@ -78,11 +76,82 @@ public final class ProxyEngine: NSObject, @unchecked Sendable {
         queue.sync { server?.stop() }
     }
 
+    /// Tests : socket repris alors que l'écouteur se croit encore prêt.
+    func simulateSilentListenerLoss() {
+        queue.sync { server?.simulateSilentLoss() }
+    }
+
+    /// Tests : perte signalée par l'écouteur pendant que l'app tourne.
+    func simulateReportedListenerLoss() {
+        queue.sync { server?.simulateReportedLoss() }
+    }
+
+    private func ensureRunningOnQueue(verify: Bool, completion: @escaping (Result<RunState, Error>) -> Void) {
+        // Le JS et le retour au premier plan vérifient en même temps : un seul rebind.
+        if pendingRuns != nil {
+            pendingRuns?.append(completion)
+            return
+        }
+        guard let server, server.isReady, let port = server.port else {
+            relaunch(completion)
+            return
+        }
+        guard verify else {
+            completion(.success((port, false, false)))
+            return
+        }
+        pendingRuns = []
+        server.probe { [weak self] alive in
+            guard let self else { return }
+            let waiting = self.pendingRuns ?? []
+            self.pendingRuns = nil
+            if alive, self.server === server {
+                let state: RunState = (port, false, false)
+                for callback in [completion] + waiting { callback(.success(state)) }
+                return
+            }
+            Self.log.error("Écoute muette sur \(port, privacy: .public), relance")
+            self.relaunch { result in
+                for callback in [completion] + waiting { callback(result) }
+            }
+        }
+    }
+
+    private func relaunch(_ completion: @escaping (Result<RunState, Error>) -> Void) {
+        pendingRuns = pendingRuns ?? []
+        let previous = lastPort
+        server?.stop()
+        bind(preferredPort: previous) { result in
+            let waiting = self.pendingRuns ?? []
+            self.pendingRuns = nil
+            let mapped = result.map { port -> RunState in
+                self.wantsRunning = true
+                return (port, previous != nil, previous != nil && previous != port)
+            }
+            for callback in [completion] + waiting { callback(mapped) }
+        }
+    }
+
+    /// Relance spontanée, sans attendre le prochain retour au premier plan.
+    private func listenerLost(_ lost: LoopbackServer) {
+        guard wantsRunning, server === lost else { return }
+        Self.log.error("Écoute perdue, relance")
+        queue.asyncAfter(deadline: .now() + 0.2) { [weak self] in
+            guard let self, self.wantsRunning, self.server === lost else { return }
+            self.ensureRunningOnQueue(verify: false) { result in
+                if case .success(let state) = result, state.restarted {
+                    self.onRestart?(state.port, state.portChanged)
+                }
+            }
+        }
+    }
+
     private func bind(preferredPort: UInt16?, attemptsLeft: Int = 3,
                       completion: @escaping (Result<UInt16, Error>) -> Void) {
         let server = LoopbackServer(queue: queue) { [weak self] request, writer in
             self?.handle(request, writer)
         }
+        server.onUnexpectedStop = { [weak self, unowned server] in self?.listenerLost(server) }
         self.server = server
         server.start(preferredPort: preferredPort) { [weak self] result in
             guard let self else { return }

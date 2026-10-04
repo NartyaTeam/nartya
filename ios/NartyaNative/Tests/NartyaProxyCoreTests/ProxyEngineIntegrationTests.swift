@@ -253,6 +253,56 @@ final class ProxyEngineIntegrationTests: XCTestCase {
         XCTAssertFalse(again.restarted, "rien à faire quand le serveur tourne")
     }
 
+    func testVerifyRevivesAListenerThatStillLooksReady() async throws {
+        engine.simulateSilentListenerLoss()
+        XCTAssertEqual(engine.port, proxyPort, "l'écouteur se croit encore prêt")
+        let unverified = try await engine.ensureRunning()
+        XCTAssertFalse(unverified.restarted)
+
+        let result = try await engine.ensureRunning(verify: true)
+        XCTAssertTrue(result.restarted)
+        XCTAssertEqual(result.port, proxyPort)
+        let (data, _) = try await fetch(proxied("/video.bin"))
+        XCTAssertEqual(data, Self.payload)
+
+        let again = try await engine.ensureRunning(verify: true)
+        XCTAssertFalse(again.restarted, "un écouteur sain passe la vérification")
+    }
+
+    func testConcurrentVerificationsRebindOnce() async throws {
+        engine.simulateSilentListenerLoss()
+        async let first = engine.ensureRunning(verify: true)
+        async let second = engine.ensureRunning(verify: true)
+        let (a, b) = try await (first, second)
+        XCTAssertEqual(a.port, proxyPort)
+        XCTAssertEqual(b.port, proxyPort)
+        let (data, _) = try await fetch(proxied("/video.bin"))
+        XCTAssertEqual(data, Self.payload)
+    }
+
+    func testRestartsByItselfWhenTheListenerReportsALoss() async throws {
+        let restarted = expectation(description: "relance spontanée")
+        engine.onRestart = { port, portChanged in
+            XCTAssertEqual(port, self.proxyPort)
+            XCTAssertFalse(portChanged)
+            restarted.fulfill()
+        }
+        engine.simulateReportedListenerLoss()
+        await fulfillment(of: [restarted], timeout: 3)
+        let (data, _) = try await fetch(proxied("/video.bin"))
+        XCTAssertEqual(data, Self.payload)
+    }
+
+    func testNoSpontaneousRestartAfterStop() async throws {
+        let restarted = expectation(description: "aucune relance")
+        restarted.isInverted = true
+        engine.onRestart = { _, _ in restarted.fulfill() }
+        engine.stop()
+        engine.simulateReportedListenerLoss()
+        await fulfillment(of: [restarted], timeout: 0.6)
+        XCTAssertNil(engine.port)
+    }
+
     func testLargeStreamsArriveIntactThroughBackpressure() async throws {
         let (data, response) = try await fetch(proxied("/big.bin"))
         XCTAssertEqual(response.statusCode, 200)

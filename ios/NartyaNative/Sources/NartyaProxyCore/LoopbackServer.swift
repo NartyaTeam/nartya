@@ -24,6 +24,9 @@ final class LoopbackServer: @unchecked Sendable {
     private(set) var port: UInt16?
     private(set) var isReady = false
 
+    /// Écoute perdue sans `stop()` : iOS reprend le socket d'une app suspendue. Sur `queue`.
+    var onUnexpectedStop: (() -> Void)?
+
     init(queue: DispatchQueue, handler: @escaping HTTPHandler) {
         self.queue = queue
         self.handler = handler
@@ -65,6 +68,10 @@ final class LoopbackServer: @unchecked Sendable {
                 if !settled {
                     settled = true
                     completion(.failure(error))
+                } else {
+                    // Le `.cancelled` qui suit est alors ignoré.
+                    self.listener = nil
+                    self.onUnexpectedStop?()
                 }
             case .cancelled:
                 self.isReady = false
@@ -76,6 +83,57 @@ final class LoopbackServer: @unchecked Sendable {
             self?.accept(connection)
         }
         listener.start(queue: queue)
+    }
+
+    /// Aller-retour HTTP complet, l'état `.ready` ne prouvant rien après une suspension. Sur `queue`.
+    func probe(timeout: TimeInterval = 1.5, completion: @escaping (Bool) -> Void) {
+        guard isReady, let port, let endpointPort = NWEndpoint.Port(rawValue: port) else {
+            completion(false)
+            return
+        }
+        let connection = NWConnection(host: "127.0.0.1", port: endpointPort, using: .tcp)
+        var done = false
+        let finish: (Bool) -> Void = { alive in
+            guard !done else { return }
+            done = true
+            connection.cancel()
+            completion(alive)
+        }
+        connection.stateUpdateHandler = { state in
+            switch state {
+            case .ready:
+                let request = Data("OPTIONS /probe HTTP/1.1\r\nHost: 127.0.0.1\r\n\r\n".utf8)
+                connection.send(content: request, completion: .contentProcessed { error in
+                    if error != nil { finish(false) }
+                })
+                connection.receive(minimumIncompleteLength: 1, maximumLength: 64) { data, _, _, _ in
+                    finish(data?.starts(with: Data("HTTP/1.".utf8)) == true)
+                }
+            case .failed, .waiting:
+                finish(false)
+            default:
+                break
+            }
+        }
+        connection.start(queue: queue)
+        queue.asyncAfter(deadline: .now() + timeout) { finish(false) }
+    }
+
+    /// Tests : socket repris sans que l'écouteur ne change d'état.
+    func simulateSilentLoss() {
+        listener?.stateUpdateHandler = nil
+        listener?.newConnectionHandler = nil
+        listener?.cancel()
+        listener = nil
+    }
+
+    /// Tests : perte signalée par l'écouteur, comme un `.failed` après coup.
+    func simulateReportedLoss() {
+        listener?.stateUpdateHandler = nil
+        listener?.cancel()
+        listener = nil
+        isReady = false
+        onUnexpectedStop?()
     }
 
     func stop() {
