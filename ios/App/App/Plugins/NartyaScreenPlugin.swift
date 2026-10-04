@@ -24,6 +24,9 @@ public class NartyaScreenPlugin: CAPPlugin, CAPBridgedPlugin {
                 controller.applyOrientation(.landscape, immersive: true)
             case "portrait":
                 controller.applyOrientation(.portrait, immersive: false)
+            case "player":
+                // Le lecteur suit le sens du téléphone, portrait compris.
+                controller.applyOrientation(.allButUpsideDown, immersive: true)
             default:
                 controller.applyOrientation(.allButUpsideDown, immersive: false)
             }

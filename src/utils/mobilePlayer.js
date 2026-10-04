@@ -85,6 +85,8 @@ function injectHudStyles() {
   style.id = "nartya-player-hud-style";
   style.textContent =
     ".nartya-mobile-player .art-control-volume{display:none!important}" +
+    // Fenêtre PiP d'Android : la WebView entière y est réduite, seule l'image doit rester.
+    ".nartya-pip>:not(.art-video):not(.nartya-comp-guard){display:none!important}" +
     // iPhone en paysage : la plus grande de la marge d'ArtPlayer et de la zone sûre.
     ".nartya-mobile-player.nartya-ios .art-bottom{padding-left:max(var(--art-padding),env(safe-area-inset-left));padding-right:max(var(--art-padding),env(safe-area-inset-right));padding-bottom:env(safe-area-inset-bottom)}" +
     ".nartya-mobile-player.nartya-ios .art-back-btn{left:max(1.25rem,env(safe-area-inset-left));top:max(1.25rem,env(safe-area-inset-top))}" +
@@ -465,4 +467,61 @@ export function setupMobilePlayerControls(art) {
     volumeHud.remove();
     centerCluster.remove();
   };
+}
+
+/**
+ * Android : PiP natif en quittant l'app pendant la lecture, et bouton PiP. iOS : WebKit refuse le
+ * PiP automatique depuis une lecture intégrée ; hors PiP, la sortie de l'app met en pause.
+ */
+export function setupPictureInPicture(art) {
+  const host = art?.template?.$player;
+  const video = art?.template?.$video;
+  if (!host || !video || typeof document === "undefined") return () => {};
+  const disposers = [];
+  const listen = (target, event, handler) => {
+    target.addEventListener(event, handler);
+    disposers.push(() => target.removeEventListener(event, handler));
+  };
+
+  const pip = platform.nativePip;
+  if (pip) {
+    const sync = () =>
+      pip.setAuto({
+        enabled: !video.paused && !video.ended,
+        width: video.videoWidth || 16,
+        height: video.videoHeight || 9,
+      });
+    for (const event of ["playing", "pause", "ended", "loadedmetadata", "emptied"]) {
+      listen(video, event, sync);
+    }
+    disposers.push(
+      pip.onChange(({ active, dismissed }) => {
+        host.classList.toggle("nartya-pip", !!active);
+        // Fenêtre fermée par sa croix : la lecture s'arrête avec elle.
+        if (dismissed) art.pause();
+      }),
+    );
+    try {
+      art.controls.add({
+        name: "native-pip",
+        position: "right",
+        index: 40,
+        html: art.icons.pip.cloneNode(true),
+        click: () => void pip.enter(),
+      });
+    } catch (_) {}
+    disposers.push(() => {
+      pip.setAuto({ enabled: false });
+      host.classList.remove("nartya-pip");
+    });
+  } else if (platform.os === "ios") {
+    // Le mode audio d'arrière-plan, requis par le PiP, laisserait sinon le son continuer.
+    listen(document, "visibilitychange", () => {
+      if (!document.hidden || video.paused) return;
+      if (video.webkitPresentationMode === "picture-in-picture" || document.pictureInPictureElement) return;
+      art.pause();
+    });
+  }
+
+  return () => disposers.forEach((dispose) => dispose());
 }

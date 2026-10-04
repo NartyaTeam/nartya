@@ -4,7 +4,7 @@ import UIKit
 /// Enregistre les plugins natifs (équivalent des `registerPlugin` de MainActivity.java) et porte
 /// l'orientation de l'app.
 class MainViewController: CAPBridgeViewController {
-    /// Comme l'Activity Android : seul le lecteur passe en paysage.
+    /// Comme l'Activity Android : seul le lecteur quitte le portrait.
     private var orientationMask: UIInterfaceOrientationMask = .portrait
     /// Bords protégés des balayages involontaires. Barre d'état et barre d'accueil sont masquées
     /// par SystemBars (appelé par capacitor.js).
@@ -34,8 +34,11 @@ class MainViewController: CAPBridgeViewController {
             setNeedsUpdateOfSupportedInterfaceOrientations()
             view.window?.windowScene?.requestGeometryUpdate(.iOS(interfaceOrientations: mask)) { _ in }
         } else {
-            let target: UIInterfaceOrientation = mask.contains(.portrait) ? .portrait : .landscapeRight
-            UIDevice.current.setValue(target.rawValue, forKey: "orientation")
+            // Sens libre : rien à forcer, le capteur décide.
+            if mask != .allButUpsideDown {
+                let target: UIInterfaceOrientation = mask.contains(.portrait) ? .portrait : .landscapeRight
+                UIDevice.current.setValue(target.rawValue, forKey: "orientation")
+            }
             UIViewController.attemptRotationToDeviceOrientation()
         }
     }

@@ -93,6 +93,24 @@ export const capacitorLazyPlatform = {
   setVolume: voidCall("setVolume"),
   captureVolumeButtons: voidCall("captureVolumeButtons"),
   onVolumeChange: listener("onVolumeChange"),
+  nativePip:
+    nativeOs === "android"
+      ? {
+          setAuto: (...args) => void implementation().then((platform) => platform.nativePip.setAuto(...args)),
+          enter: (...args) => implementation().then((platform) => platform.nativePip.enter(...args)),
+          onChange: (...args) => {
+            let unsubscribe = null;
+            let cancelled = false;
+            implementation().then((platform) => {
+              if (!cancelled) unsubscribe = platform.nativePip.onChange(...args);
+            });
+            return () => {
+              cancelled = true;
+              unsubscribe?.();
+            };
+          },
+        }
+      : null,
   haptic: voidCall("haptic"),
   share: asyncCall("share"),
   canOpenNewWindow: false,

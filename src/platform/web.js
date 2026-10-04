@@ -31,6 +31,7 @@ export const webPlatform = {
   setVolume: noop,
   captureVolumeButtons: noop,
   onVolumeChange: () => noop,
+  nativePip: null,
   haptic: () => navigator.vibrate?.(10),
   share: async (data) => {
     if (!navigator.share) return false;

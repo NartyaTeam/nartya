@@ -78,6 +78,10 @@ Chaque plateforme a sa propre version et son propre journal des nouveautés :
   requête et à chaque redirection.
 - `URLSession` décompresse les réponses : le `Content-Length` amont n'est relayé que sans
   `Content-Encoding`.
+- WebKit refuse le PiP automatique (sortie de l'app) depuis une vidéo intégrée à la page : il
+  ne le fait que depuis son propre plein écran. Le PiP reste au bouton ; le mode audio
+  d'arrière-plan et la session `.playback` le font continuer hors de l'app. Le simulateur n'a
+  pas de PiP en WKWebView : à tester sur un iPhone.
 - Turnstile refuse l'origine `capacitor://localhost` : le captcha s'ouvre dans le navigateur
   et revient par `nartya://captcha-callback`, comme sur Android.
 - Sans service de premier plan, iOS suspend les téléchargements : ils passent en

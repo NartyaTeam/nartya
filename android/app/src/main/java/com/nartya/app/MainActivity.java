@@ -5,6 +5,7 @@ import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.media.AudioManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.KeyEvent;
 
@@ -12,6 +13,7 @@ import androidx.core.splashscreen.SplashScreen;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
+import androidx.lifecycle.Lifecycle;
 
 import com.getcapacitor.BridgeActivity;
 import com.nartya.app.player.PlayerPlugin;
@@ -64,6 +66,24 @@ public class MainActivity extends BridgeActivity {
         if (hasFocus && immersiveRequested) {
             hideSystemBars();
         }
+    }
+
+    // Android 12+ entre seul en PiP (setAutoEnterEnabled) : le faire ici l'y ferait deux fois.
+    @Override
+    protected void onUserLeaveHint() {
+        super.onUserLeaveHint();
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S && PlayerPlugin.isAutoPip()) {
+            PlayerPlugin.enterPip(this);
+        }
+    }
+
+    @Override
+    public void onPictureInPictureModeChanged(boolean isInPictureInPictureMode, Configuration newConfig) {
+        super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig);
+        // Fermée : l'activité est déjà arrêtée ; agrandie, elle reprend.
+        boolean dismissed = !isInPictureInPictureMode
+            && getLifecycle().getCurrentState() == Lifecycle.State.CREATED;
+        PlayerPlugin.emitPip(isInPictureInPictureMode, dismissed);
     }
 
     private void hideSystemBars() {

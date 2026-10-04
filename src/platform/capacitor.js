@@ -589,7 +589,7 @@ export const capacitorPlatform = {
   },
   setOrientation(orientation) {
     void NartyaScreen.setOrientation({ orientation }).catch(() => {});
-    if (orientation === "landscape") {
+    if (orientation === "landscape" || orientation === "player") {
       void SystemBars.hide().catch(() => {});
     } else {
       void SystemBars.show()
@@ -618,6 +618,27 @@ export const capacitorPlatform = {
     const handle = NartyaPlayer.addListener("volume", callback);
     return () => void handle.then((listener) => listener.remove()).catch(() => {});
   },
+  // Android seulement : iOS passe par le PiP de WebKit.
+  nativePip:
+    Capacitor.getPlatform() === "android"
+      ? {
+          setAuto(options) {
+            void NartyaPlayer.setAutoPip(options).catch(() => {});
+          },
+          async enter() {
+            try {
+              return (await NartyaPlayer.enterPip()).entered === true;
+            } catch {
+              return false;
+            }
+          },
+          onChange(callback) {
+            if (typeof callback !== "function") return noop;
+            const handle = NartyaPlayer.addListener("pip", callback);
+            return () => void handle.then((listener) => listener.remove()).catch(() => {});
+          },
+        }
+      : null,
   haptic(style = "medium") {
     const styles = { light: ImpactStyle.Light, medium: ImpactStyle.Medium, heavy: ImpactStyle.Heavy };
     void Haptics.impact({ style: styles[style] || ImpactStyle.Medium }).catch(() => {});

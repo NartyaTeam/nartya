@@ -14,7 +14,12 @@ import { findPreferredAudioIndex } from "@/utils/audioTrack";
 import { startAnime4k, isAnime4kSupported } from "@/utils/anime4k";
 import { useSettingsStore } from "@/stores/useSettingsStore";
 import { platform } from "@/platform";
-import { acquireWakeLock, releaseWakeLock, setupMobilePlayerControls } from "@/utils/mobilePlayer";
+import {
+  acquireWakeLock,
+  releaseWakeLock,
+  setupMobilePlayerControls,
+  setupPictureInPicture,
+} from "@/utils/mobilePlayer";
 import Anime4kWarningModal from "@/components/player/Anime4kWarningModal";
 import {
   NEXT_SVG,
@@ -153,12 +158,13 @@ export default function VideoPlayer({
       // Le boost est appliqué par le GainNode.
       volume: 1,
       autoplay: true,
-      pip: true,
+      // La WebView Android n'a pas le PiP HTML : son bouton passe par le PiP natif.
+      pip: platform.os !== "android",
       setting: true,
       playbackRate: true,
-      // Sur iPhone, le plein écran d'élément de WebKit plaque son propre bandeau.
-      fullscreen: platform.os !== "ios",
-      fullscreenWeb: platform.os === "ios",
+      // Sur mobile, le lecteur occupe déjà tout l'écran.
+      fullscreen: !platform.isMobile,
+      fullscreenWeb: false,
       miniProgressBar: false,
       mutex: true,
       backdrop: true,
@@ -307,7 +313,10 @@ export default function VideoPlayer({
     })();
     art._seekHud = seekHud;
 
-    if (platform.isMobile) art._mobileControlsDispose = setupMobilePlayerControls(art);
+    if (platform.isMobile) {
+      art._mobileControlsDispose = setupMobilePlayerControls(art);
+      art._pipDispose = setupPictureInPicture(art);
+    }
 
     // Jamais au-delà de (durée − 1 s).
     const seekBy = (delta) => {
@@ -493,6 +502,8 @@ export default function VideoPlayer({
           releaseWakeLock();
           art._mobileControlsDispose?.();
           art._mobileControlsDispose = null;
+          art._pipDispose?.();
+          art._pipDispose = null;
         }
         teardownAudioBoost(art);
         art._pauseHideDispose?.();

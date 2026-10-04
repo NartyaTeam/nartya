@@ -1,8 +1,14 @@
 package com.nartya.app.player;
 
+import android.app.Activity;
+import android.app.PictureInPictureParams;
 import android.content.Context;
 import android.media.AudioManager;
+import android.os.Build;
+import android.util.Rational;
 import android.view.WindowManager;
+
+import androidx.annotation.RequiresApi;
 
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
@@ -12,13 +18,16 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 
 /**
  * Luminosité, volume multimédia et touches volume (capturées dans MainActivity.dispatchKeyEvent,
- * relayées au JS par l'événement `volume`).
+ * relayées au JS par l'événement `volume`). PiP natif : la WebView Android n'a pas le PiP HTML.
  */
 @CapacitorPlugin(name = "NartyaPlayer")
 public class PlayerPlugin extends Plugin {
 
     private static PlayerPlugin instance;
     private static boolean captureVolume = false;
+    /** Vidéo en lecture : quitter l'app passe en PiP. */
+    private static volatile boolean autoPip = false;
+    private static volatile Rational pipRatio = new Rational(16, 9);
 
     @Override
     public void load() {
@@ -74,6 +83,76 @@ public class PlayerPlugin extends Plugin {
         audio.setStreamVolume(AudioManager.STREAM_MUSIC, target, 0);
         emitVolume(target, max);
         call.resolve();
+    }
+
+    @PluginMethod
+    public void setAutoPip(PluginCall call) {
+        autoPip = Boolean.TRUE.equals(call.getBoolean("enabled", false));
+        int width = call.getInt("width", 16);
+        int height = call.getInt("height", 9);
+        if (width > 0 && height > 0) pipRatio = clampRatio(width, height);
+        Activity activity = getActivity();
+        // Android 12+ entre seul en PiP ; avant, MainActivity.onUserLeaveHint s'en charge.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            activity.runOnUiThread(() -> {
+                try {
+                    activity.setPictureInPictureParams(pipParams());
+                } catch (IllegalStateException ignored) {
+                    // PiP désactivé pour l'app dans les réglages.
+                }
+            });
+        }
+        call.resolve();
+    }
+
+    @PluginMethod
+    public void enterPip(PluginCall call) {
+        Activity activity = getActivity();
+        activity.runOnUiThread(() -> {
+            JSObject data = new JSObject();
+            data.put("entered", enterPip(activity));
+            call.resolve(data);
+        });
+    }
+
+    public static boolean enterPip(Activity activity) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return false;
+        try {
+            return activity.enterPictureInPictureMode(pipParams());
+        } catch (IllegalStateException e) {
+            return false;
+        }
+    }
+
+    public static boolean isAutoPip() {
+        return autoPip;
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    public static PictureInPictureParams pipParams() {
+        PictureInPictureParams.Builder builder = new PictureInPictureParams.Builder()
+            .setAspectRatio(pipRatio);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            builder.setAutoEnterEnabled(autoPip).setSeamlessResizeEnabled(true);
+        }
+        return builder.build();
+    }
+
+    /** Android refuse un ratio hors de [1/2.39, 2.39]. */
+    static Rational clampRatio(int width, int height) {
+        double ratio = (double) width / height;
+        if (ratio > 2.39) return new Rational(239, 100);
+        if (ratio < 1 / 2.39) return new Rational(100, 239);
+        return new Rational(width, height);
+    }
+
+    /** `dismissed` : fenêtre fermée, pas agrandie. */
+    public static void emitPip(boolean active, boolean dismissed) {
+        if (instance == null) return;
+        JSObject data = new JSObject();
+        data.put("active", active);
+        data.put("dismissed", dismissed);
+        instance.notifyListeners("pip", data);
     }
 
     public static boolean isCapturingVolume() {

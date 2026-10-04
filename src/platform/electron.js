@@ -40,6 +40,7 @@ export const electronPlatform = {
   setVolume: noop,
   captureVolumeButtons: noop,
   onVolumeChange: () => noop,
+  nativePip: null,
   haptic: noop,
   share: async () => false,
   canOpenNewWindow: !!api?.openNewWindow,

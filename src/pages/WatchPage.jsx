@@ -68,10 +68,10 @@ export default function WatchPage() {
   const liteMode = useSettingsStore((s) => s.liteMode);
   const ensureTracking = useListsStore((s) => s.ensureTracking);
 
-  // Paysage pour le lecteur mobile ; la navigation reste en portrait.
+  // Le lecteur suit le sens du téléphone ; la navigation reste en portrait.
   useEffect(() => {
     if (!platform.isMobile) return undefined;
-    platform.setOrientation("landscape");
+    platform.setOrientation("player");
     return () => platform.setOrientation("portrait");
   }, []);
 
