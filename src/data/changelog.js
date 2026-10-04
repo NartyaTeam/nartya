@@ -5,6 +5,20 @@
  */
 export const CHANGELOG = [
   {
+    version: "1.31.1",
+    date: "4 octobre 2026",
+    items: [
+      {
+        type: "improved",
+        text: "Si la connexion coupe pendant un épisode, la lecture reprend toute seule au même endroit sur la même source, avant de passer à une autre.",
+      },
+      {
+        type: "fixed",
+        text: "La page de profil ne déborde plus dans une fenêtre étroite, même avec un pseudo très long.",
+      },
+    ],
+  },
+  {
     version: "1.31.0",
     date: "3 octobre 2026",
     items: [
