@@ -216,10 +216,17 @@ export default function WatchPage() {
   const playerApiRef = useRef(null);
   // Une fois par anime.
   const trackedRef = useRef(null);
+  // Une coupure (réseau, suspension iOS, proxy local relancé) ne condamne pas la source : elle
+  // est relancée une fois à la même position avant d'être disqualifiée.
+  const retriedSourcesRef = useRef(new Set());
+  const forceRefreshRef = useRef(false);
+  // Relance arrivée app masquée : elle part au retour, proxy éprouvé.
+  const retryOnReturnRef = useRef(false);
 
   // Même référence s'il n'y a rien à effacer : un Set neuf relancerait une extraction complète.
   const clearFailedSources = useCallback(() => {
     fallbackLockRef.current = false;
+    retriedSourcesRef.current = new Set();
     setFailedSources((prev) => (prev.size === 0 ? prev : new Set()));
   }, []);
 
@@ -313,7 +320,18 @@ export default function WatchPage() {
   }, [playLocal, localMode, slug, seasonId, epNumber, lang, localItem?.file, userId, saveProgress]);
 
   useEffect(() => {
+    const onVisibility = () => {
+      if (document.hidden || !retryOnReturnRef.current) return;
+      retryOnReturnRef.current = false;
+      setRetryToken((t) => t + 1);
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+  }, []);
+
+  useEffect(() => {
     setLocalUnavailable(false);
+    retryOnReturnRef.current = false;
     clearFailedSources();
     usedSourceRef.current = null;
     advancedRef.current = false;
@@ -346,6 +364,8 @@ export default function WatchPage() {
           .catch(() => 0);
       }
 
+      const forceRefresh = forceRefreshRef.current;
+      forceRefreshRef.current = false;
       const [resume, result] = await Promise.all([
         resumeLookup,
         getEpisodeVideoUrl(slug, seasonId, currentIndex, lang, {
@@ -353,6 +373,7 @@ export default function WatchPage() {
           episodes,
           selectedSource: source,
           excludeKeys: [...failedSources],
+          forceRefresh,
         }),
       ]);
       if (cancelled) return;
@@ -516,6 +537,21 @@ export default function WatchPage() {
     const failedKey = usedSourceRef.current;
     if (!failedKey || fallbackLockRef.current) return;
     fallbackLockRef.current = true;
+
+    if (!retriedSourcesRef.current.has(failedKey)) {
+      retriedSourcesRef.current.add(failedKey);
+      const { time } = positionRef.current;
+      if (time > 1) carryOverResumeRef.current = time;
+      // Le lien de l'hébergeur a pu expirer : nouvelle extraction.
+      forceRefreshRef.current = true;
+      if (document.hidden) {
+        retryOnReturnRef.current = true;
+      } else {
+        playerApiRef.current?.notice?.("Connexion perdue — reprise de la lecture…");
+        setRetryToken((t) => t + 1);
+      }
+      return;
+    }
 
     const label = sourceOptions.find((s) => s.id === failedKey)?.label || "La source";
     const remaining = sourceOptions.filter(

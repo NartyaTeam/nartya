@@ -48,8 +48,8 @@ async function resolveStreamToken(token, { forceRefresh = false } = {}) {
 }
 
 /** Échec décrit avec le libellé neutre de la source, jamais le nom de l'hébergeur. */
-async function _resolveOneSource({ key, id, label, source }) {
-  const resolved = await resolveStreamToken(id);
+async function _resolveOneSource({ key, id, label, source }, { forceRefresh = false } = {}) {
+  const resolved = await resolveStreamToken(id, { forceRefresh });
   if (!resolved.success) {
     return { success: false, error: `${label}: ${resolved.error}` };
   }
@@ -67,7 +67,7 @@ async function _resolveOneSource({ key, id, label, source }) {
  * Les perdantes continuent en fond et peuplent le cache de résolution.
  * @returns {Promise<{success:true,...}|{success:false,error:string}>}
  */
-function _resolveSourcesHedged(prioritizedSources) {
+function _resolveSourcesHedged(prioritizedSources, { forceRefresh = false } = {}) {
   return new Promise((resolve) => {
     const errors = [];
     let settled = false;
@@ -92,7 +92,7 @@ function _resolveSourcesHedged(prioritizedSources) {
         staggerTimer = setTimeout(advance, HEDGE_STAGGER_MS);
       }
 
-      _resolveOneSource(src)
+      _resolveOneSource(src, { forceRefresh })
         .then((r) => {
           inFlight--;
           if (settled) return;
@@ -171,6 +171,7 @@ export async function prewarmEpisode(slug, seasonId, episodeNumber, language = D
  * @param {number} episodeIndex index dans la saison, à partir de 0
  * @param {{ episode?: Object, episodes?: Array, selectedSource?: string, excludeKeys?: string[] }} [options]
  * `excludeKeys` : sources déjà disqualifiées pour cet épisode
+ * `forceRefresh` : ignore le cache de résolution (flux peut-être expiré)
  */
 export async function getEpisodeVideoUrl(slug, seasonId, episodeIndex, language = DEFAULT_LANGUAGE, options = {}) {
   const {
@@ -178,6 +179,7 @@ export async function getEpisodeVideoUrl(slug, seasonId, episodeIndex, language 
     episodes: existingEpisodes,
     selectedSource,
     excludeKeys = [],
+    forceRefresh = false,
   } = options;
   let episode;
   let episodes;
@@ -217,7 +219,7 @@ export async function getEpisodeVideoUrl(slug, seasonId, episodeIndex, language 
     return { success: false, error: "Toutes les sources de cet épisode ont échoué.", episode };
   }
 
-  const resolved = await _resolveSourcesHedged(prioritizedSources);
+  const resolved = await _resolveSourcesHedged(prioritizedSources, { forceRefresh });
   if (!resolved.success) {
     // Seulement quand toutes les sources ont échoué.
     logClientEvent("extract_failed", {
