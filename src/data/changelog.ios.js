@@ -5,6 +5,44 @@
  */
 export const IOS_CHANGELOG = [
   {
+    version: "1.1.0",
+    date: "4 octobre 2026",
+    items: [
+      {
+        type: "new",
+        text: "Le lecteur suit le sens de ton iPhone : regarde en paysage ou en portrait, comme tu préfères.",
+      },
+      {
+        type: "improved",
+        text: "Picture-in-Picture : lance-le avec son bouton dans le lecteur, puis quitte l’app : la vidéo continue dans sa petite fenêtre.",
+      },
+      {
+        type: "improved",
+        text: "Si la connexion coupe pendant un épisode, la lecture reprend toute seule au même endroit avant de passer à une autre source.",
+      },
+      {
+        type: "new",
+        text: "Une courte intro animée t’accueille à l’ouverture de l’app. Paramètres → Lecture → Intro Nartya pour la couper.",
+      },
+      {
+        type: "fixed",
+        text: "Fini les erreurs « Aucune source » après une pause, une mise en veille ou une coupure réseau : plus besoin de relancer l’app.",
+      },
+      {
+        type: "fixed",
+        text: "Les menus du lecteur se ferment en touchant à côté, et les boutons cachés ne se déclenchent plus par erreur. Le bouton plein écran, inutile sur iPhone, disparaît.",
+      },
+      {
+        type: "fixed",
+        text: "La page de profil s’affiche enfin correctement sur iPhone.",
+      },
+      {
+        type: "fixed",
+        text: "L’épisode 0 d’une saison lançait l’épisode 1, et la progression s’enregistre aussi sur les épisodes spéciaux.",
+      },
+    ],
+  },
+  {
     version: "1.0.0",
     date: "29 septembre 2026",
     items: [
