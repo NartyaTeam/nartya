@@ -3,9 +3,15 @@ import { Link } from "react-router-dom";
 import { getCoversByTitle } from "@/api/anilist";
 import { formatWatchTime } from "./StatsRow";
 
-// Rang 1 → 5, en pixels.
+// Rang 1 → 5, en pixels. Sur téléphone, réduits et en rangée défilante (voir `ROW`).
 const HEIGHTS = [340, 300, 270, 246, 228];
 const RANK_SIZE = [86, 70, 62, 54, 48];
+
+// Cinq colonnes sur un téléphone faisaient des affiches de 60 px de large.
+const ROW =
+  "no-scrollbar mt-3.5 -mx-4 flex snap-x scroll-px-4 items-end gap-3 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:gap-3.5 sm:overflow-visible sm:px-0";
+const ITEM = "w-[30%] shrink-0 snap-start sm:w-auto";
+const POSTER_HEIGHT = "h-[calc(var(--h)*0.56)] sm:h-[var(--h)]";
 
 /** Les cinq favoris épinglés les plus regardés. */
 export default function PodiumSection({ items, username, isSelf = true }) {
@@ -38,14 +44,14 @@ export default function PodiumSection({ items, username, isSelf = true }) {
 
   return (
     <section>
-      <div className="flex items-baseline gap-3">
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <h3 className="font-display text-[0.7rem] font-bold uppercase tracking-kana text-primary">Le podium</h3>
         <p className="text-xs text-muted">les cinq séries que {username || "ce membre"} met en avant</p>
       </div>
       {items === null ? (
-        <div className="mt-3.5 grid grid-cols-5 items-end gap-3.5">
+        <div className={ROW} style={{ gridTemplateColumns: "repeat(5, minmax(0, 1fr))" }}>
           {HEIGHTS.map((h, i) => (
-            <div key={i} className="skeleton rounded-[16px]" style={{ height: h }} />
+            <div key={i} className={`skeleton rounded-[16px] ${ITEM} ${POSTER_HEIGHT}`} style={{ "--h": `${h}px` }} />
           ))}
         </div>
       ) : !top5.length ? (
@@ -57,18 +63,15 @@ export default function PodiumSection({ items, username, isSelf = true }) {
           </p>
         </div>
       ) : (
-      <div
-        className="mt-3.5 grid items-end gap-3.5"
-        style={{ gridTemplateColumns: `repeat(${top5.length}, minmax(0, 1fr))` }}
-      >
+      <div className={ROW} style={{ gridTemplateColumns: `repeat(${top5.length}, minmax(0, 1fr))` }}>
         {top5.map((it, i) => (
-          <Link key={it.slug} to={`/anime/${it.slug}`} className="group min-w-0" title={it.title || it.slug}>
+          <Link key={it.slug} to={`/anime/${it.slug}`} className={`group min-w-0 ${ITEM}`} title={it.title || it.slug}>
             <div
-              className={`relative overflow-hidden rounded-[16px] bg-surface-2 ${
+              className={`relative overflow-hidden rounded-[16px] bg-surface-2 ${POSTER_HEIGHT} ${
                 i === 0 ? "ring-2 ring-inset ring-primary" : "ring-1 ring-inset ring-border/90"
               }`}
               style={{
-                height: HEIGHTS[i],
+                "--h": `${HEIGHTS[i]}px`,
                 boxShadow: i === 0 ? "0 18px 40px rgb(0 0 0 / 0.55)" : "0 14px 32px rgb(0 0 0 / 0.5)",
               }}
             >
@@ -85,9 +88,9 @@ export default function PodiumSection({ items, username, isSelf = true }) {
               <span className="pointer-events-none absolute inset-0 bg-gradient-to-t from-bg/90 via-transparent to-transparent" />
               <span className="pointer-events-none absolute inset-x-2 bottom-0.5 flex items-end gap-2">
                 <span
-                  className="font-display font-black leading-none"
+                  className="font-display text-[length:calc(var(--rank)*0.6)] font-black leading-none sm:text-[length:var(--rank)]"
                   style={{
-                    fontSize: RANK_SIZE[i],
+                    "--rank": `${RANK_SIZE[i]}px`,
                     color: i === 0 ? "rgb(var(--primary))" : i < 3 ? "rgb(var(--text))" : "rgb(var(--text) / 0.85)",
                     textShadow: "0 4px 24px rgb(0 0 0 / 0.9)",
                   }}
@@ -95,7 +98,7 @@ export default function PodiumSection({ items, username, isSelf = true }) {
                   {i + 1}
                 </span>
                 {it.episodesWatched > 0 && (
-                  <span className="mb-1.5 flex items-center gap-2">
+                  <span className="mb-1.5 hidden items-center gap-2 sm:flex">
                     <span
                       className="font-display font-semibold leading-none text-white/30"
                       style={{ fontSize: Math.max(14, RANK_SIZE[i] * 0.26) }}

@@ -57,7 +57,7 @@ export default function IdentityCard({ profile, stats, extra, friends, ornament,
                 Position la plus haute #{extra.bestRank.toLocaleString("fr-FR")}
               </p>
             )}
-            <h2 className="mt-1 line-clamp-1 font-display text-[26px] font-black leading-[1.1] tracking-[-0.02em] text-white">
+            <h2 className="mt-1 truncate font-display text-[22px] font-black sm:text-[26px] leading-[1.1] tracking-[-0.02em] text-white">
               {profile.username || "Utilisateur"}
             </h2>
           </div>

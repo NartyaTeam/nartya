@@ -101,7 +101,7 @@ export default function ProfileColumn({
                 className="pointer-events-none absolute right-5 -top-9 select-none font-display font-bold leading-none"
                 style={{
                   // `soft-light` : le kanji est porté par la lumière de l'image.
-                  fontSize: "13rem",
+                  fontSize: "clamp(8rem, 32vw, 13rem)",
                   color: `rgb(255 255 255 / ${banner ? 0.7 : 0.78})`,
                   WebkitTextStroke: "1px rgb(255 255 255 / 0.1)",
                   mixBlendMode: "soft-light",
@@ -141,7 +141,8 @@ export default function ProfileColumn({
           </div>
 
           {/* La fiche d'identité mord sur le tiers bas de la bannière. */}
-          <div className="relative z-10 grid gap-8 px-4 pb-12 sm:px-10 lg:-mt-[108px] lg:grid-cols-[352px_minmax(0,1fr)]">
+          {/* `minmax(0,1fr)` : un pseudo d'un seul tenant élargissait la colonne au-delà de l'écran. */}
+          <div className="relative z-10 grid grid-cols-[minmax(0,1fr)] gap-8 px-4 pb-12 sm:px-10 lg:-mt-[108px] lg:grid-cols-[352px_minmax(0,1fr)]">
             <div>
               <IdentityCard
                 profile={profile}

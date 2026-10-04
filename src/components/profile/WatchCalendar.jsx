@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { getWatchCalendar } from "@/api/profile";
 import { useCachedResource } from "@/hooks/useCachedResource";
 
@@ -49,13 +49,20 @@ export default function WatchCalendar({ userId }) {
     return { cells, max, total, best, activeDays, labels };
   }, [data]);
 
+  // Sur un écran étroit, l'année défile : on l'ouvre sur les semaines récentes.
+  const scrollerRef = useRef(null);
+  useEffect(() => {
+    const el = scrollerRef.current;
+    if (el) el.scrollLeft = el.scrollWidth;
+  }, [model]);
+
   if (!model) return null;
   const { cells, max, total, best, activeDays, labels } = model;
   const columns = Math.ceil(cells.length / 7);
 
   return (
     <section className="mt-9">
-      <div className="flex items-baseline justify-between border-b-2 border-border pb-2.5">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-b-2 border-border pb-2.5">
         <h3 className="font-display text-[0.7rem] font-bold uppercase tracking-kana text-muted">
           Une année de visionnage
         </h3>
@@ -65,7 +72,7 @@ export default function WatchCalendar({ userId }) {
         </p>
       </div>
 
-      <div className="mt-4 overflow-x-auto pb-1">
+      <div ref={scrollerRef} className="mt-4 overflow-x-auto pb-1">
         <div className="flex gap-2" style={{ minWidth: columns * 14 + 24 }}>
           <div className="flex shrink-0 flex-col gap-[3px] pt-[15px]">
             {DAY_LABELS.map((d, i) => (
