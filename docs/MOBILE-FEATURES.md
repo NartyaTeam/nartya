@@ -5,7 +5,7 @@ par page. [MOBILE.md](MOBILE.md) décrit l'architecture ; ici on ne parle que de
 ce que voit l'utilisateur.
 
 > Dernière vérification dans le code : **2026-09-27** (`main` @ v1.29.1).
-> Dernière APK publiée : **android-v1.0.5** (26 août 2026).
+> Dernière APK publiée : **android-v1.1.0** (4 octobre 2026).
 
 **À mettre à jour à chaque feature** : si tu ajoutes, retires ou adaptes quelque chose,
 corrige la ligne concernée dans le même commit. Un tableau faux est pire que pas de tableau.
@@ -58,13 +58,13 @@ Une entrée à `null` ou `noop` dans `capacitor.js` = fonction absente sur Andro
 | Page | Route | Android | Notes |
 | ---- | ----- | ------- | ----- |
 | Accueil | `/` | 🟡 | Même contenu. Rangées chargées au fil du scroll, carrousels en scroll natif (pas de glisser Embla) |
-| Fiche anime | `/anime/:slug` | 🟡 | Même contenu. Liste d'épisodes chargée par paquets, appui long sur un épisode → actions, vibrations. Mode « no beauty » ⏳ |
+| Fiche anime | `/anime/:slug` | 🟡 | Même contenu. Liste d'épisodes chargée par paquets, appui long sur un épisode → actions, vibrations. Mode « no beauty » |
 | Lecteur | `/watch/:slug` | 🟡 | Voir [Lecteur](#lecteur) |
 | Scans (dans la fiche) | — | 🟡 | Aperçu léger au lieu de charger toutes les pages dans la fiche |
 | Lecteur de scans | `/scan/:slug` | 🟡 | Zoom au pincement |
 | Accueil Mangas | `/mangas` | ✅ | Via le menu « Plus » |
 | Recherche | `/search` | 🟡 | Écran mobile dédié : texte, historique, parcours par genre |
-| Recherche avancée (filtres, onglet manga, filtre de langue) | `/recherche` | 🔗 | Aucun bouton n'y mène sur Android. L'onglet manga et le filtre de langue ⏳ ne sont donc pas accessibles |
+| Recherche avancée (filtres, onglet manga, filtre de langue) | `/recherche` | 🔗 | Aucun bouton n'y mène sur Android. L'onglet manga et le filtre de langue ne sont donc pas accessibles |
 | Genre | `/genre/:genre` | ✅ | |
 | Calendrier | `/planning` | ✅ | Onglet principal |
 | À venir | `/prochainement` | ✅ | Via « Plus » |
@@ -72,15 +72,15 @@ Une entrée à `null` ou `noop` dans `capacitor.js` = fonction absente sur Andro
 | Téléchargements | `/downloads` | 🟡 | Onglet « Hors ligne ». Stockage privé de l'app (pas de choix de dossier), reprise auto des téléchargements interrompus au retour du réseau. Pas de repli automatique sur une autre source quand l'hébergeur lâche en route (desktop seulement) |
 | Favoris | `/favorites` | ✅ | Via « Plus » |
 | Mes listes | `/my-lists` | ✅ | Via « Plus » |
-| Profil | `/profile` | ✅ | Refonte cosmétiques / parures / ambiances ⏳ |
-| Profil public | `/u/:handle` | ✅ | Nouveau design ⏳ |
+| Profil | `/profile` | ✅ | Refonte cosmétiques / parures / ambiances |
+| Profil public | `/u/:handle` | ✅ | Nouveau design |
 | Succès | `/profile/achievements` | ✅ | Via « Plus » |
 | Amis | `/communaute` | ✅ | Via « Plus » |
 | Paramètres | `/settings` | 🟡 | Voir [Paramètres](#paramètres) |
-| Signalements | `/reports` | ✅ ⏳ | Via « Plus ». Anti-spam 1.29 inclus |
+| Signalements | `/reports` | ✅ | Via « Plus ». Anti-spam 1.29 inclus |
 | Nouveautés | `/nouveautes` | 📱 | Journal propre au mobile (`changelog.mobile.js`) |
 | Aide / FAQ | `/faq` | ✅ | Via « Plus » |
-| État du service | `/uptime` | 🔗 ⏳ | Accessible seulement depuis un lien de la FAQ |
+| État du service | `/uptime` | 🔗 | Accessible seulement depuis un lien de la FAQ |
 | Équipe | `/equipe` | 🔗 | Aucun bouton n'y mène |
 | Watch Party (accueil) | `/party` | 🔗 | Retirée de la navigation mobile |
 | Salon Watch Party | `/party/:code` | 🔗 | Ouvrable via un lien d'invitation `nartya://party/<code>`. Écran desktop non adapté au tactile, **à vérifier** |
@@ -90,15 +90,15 @@ Une entrée à `null` ou `noop` dans `capacitor.js` = fonction absente sur Andro
 
 | Élément | Desktop | Android | Notes |
 | ------- | ------- | ------- | ----- |
-| Lecture HLS / MP4 | ✅ | ✅ | Proxy natif (Java) au lieu du proxy Electron. Proxy à jeton ⏳ |
-| Orientation | — | 📱 | En lecture, suit le sens du téléphone (portrait compris) ⏳ ; portrait ailleurs |
-| Bouton plein écran | 🖥️ | ❌ ⏳ | Le lecteur occupe déjà tout l'écran |
-| Picture-in-Picture | Bouton du lecteur | 🟡 ⏳ | PiP natif : bouton du lecteur, et automatique en quittant l'app pendant la lecture. Fermer la fenêtre met en pause |
+| Lecture HLS / MP4 | ✅ | ✅ | Proxy natif (Java) au lieu du proxy Electron. Proxy à jeton |
+| Orientation | — | 📱 | En lecture, suit le sens du téléphone (portrait compris) ; portrait ailleurs |
+| Bouton plein écran | 🖥️ | ❌ | Le lecteur occupe déjà tout l'écran |
+| Picture-in-Picture | Bouton du lecteur | 🟡 | PiP natif : bouton du lecteur, et automatique en quittant l'app pendant la lecture. Fermer la fenêtre met en pause |
 | Gestes | Clavier, souris, double-clic = plein écran | 📱 | Luminosité à gauche, volume à droite, double tap ±5 s, boutons ±5 s au centre |
 | Écran toujours allumé | — | 📱 | Pendant la lecture uniquement |
 | Choix de l'épisode | Panneau au survol | 🟡 | Sélecteur mobile dédié (`EpisodeSelectorMobile`) |
 | Choix de la langue | Dans les réglages du lecteur | 🟡 | Dans le sélecteur d'épisodes |
-| Choix de la source | Réglages du lecteur (si « Contrôles avancés ») | ✅ ⏳ | Code partagé, jamais testé sur téléphone |
+| Choix de la source | Réglages du lecteur (si « Contrôles avancés ») | ✅ | Code partagé, jamais testé sur téléphone |
 | Aperçu de l'épisode suivant au survol | 🖥️ | ❌ | Pas de survol en tactile |
 | Masquage des contrôles en pause | 🖥️ | ❌ | |
 | Upscale Anime4K | 🖥️ | ❌ | Forcé à « off » sur Android |
@@ -119,8 +119,8 @@ Une entrée à `null` ou `noop` dans `capacitor.js` = fonction absente sur Andro
 | Apparence | ✅ | ✅ | |
 | Confidentialité (présence Discord) | 🖥️ | ❌ | |
 | Sauvegarde | ✅ | ✅ | |
-| Clés d'API | ✅ ⏳ | ✅ ⏳ | Comptes uniquement (pas les invités) |
-| Mode « no beauty » | ✅ ⏳ | ✅ ⏳ | Code partagé |
+| Clés d'API | ✅ | ✅ | Comptes uniquement (pas les invités) |
+| Mode « no beauty » | ✅ | ✅ | Code partagé |
 
 ## Éléments globaux (hors pages)
 

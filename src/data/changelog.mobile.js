@@ -5,6 +5,52 @@
  */
 export const MOBILE_CHANGELOG = [
   {
+    version: "1.1.0",
+    date: "4 octobre 2026",
+    items: [
+      {
+        type: "new",
+        text: "Picture-in-Picture : quitte l’app pendant un épisode et la vidéo continue dans une petite fenêtre. Le bouton PiP du lecteur fonctionne aussi.",
+      },
+      {
+        type: "new",
+        text: "Le lecteur suit le sens de ton téléphone : regarde en paysage ou en portrait, comme tu préfères.",
+      },
+      {
+        type: "new",
+        text: "Nouvelle page de profil : rang, activité, succès, calendrier de visionnage et anime préférés, avec tes couleurs, ton fond, tes parures et ta carte Nartya à partager.",
+      },
+      {
+        type: "new",
+        text: "Mode anti-spoiler, onglet Galerie sur les fiches anime et mode rapide pour ouvrir les fiches plus vite (Paramètres → Mode no beauty).",
+      },
+      {
+        type: "new",
+        text: "Signalements suivis : échange avec l’équipe depuis le menu « Plus ».",
+      },
+      {
+        type: "new",
+        text: "Une courte intro animée t’accueille à l’ouverture de l’app. Paramètres → Lecture → Intro Nartya pour la couper.",
+      },
+      {
+        type: "improved",
+        text: "Si la connexion coupe pendant un épisode, la lecture reprend toute seule au même endroit avant de passer à une autre source.",
+      },
+      {
+        type: "improved",
+        text: "Les épisodes démarrent plus vite, et le choix des sources se trouve dans les réglages du lecteur (Paramètres → Contrôles avancés du lecteur).",
+      },
+      {
+        type: "fixed",
+        text: "Les menus du lecteur se ferment en touchant à côté, et les boutons cachés ne se déclenchent plus par erreur. Le bouton plein écran, inutile sur téléphone, disparaît.",
+      },
+      {
+        type: "fixed",
+        text: "L’épisode 0 d’une saison lançait l’épisode 1, et la progression s’enregistre aussi sur les épisodes spéciaux.",
+      },
+    ],
+  },
+  {
     version: "1.0.5",
     date: "26 août 2026",
     items: [
