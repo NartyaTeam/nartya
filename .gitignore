@@ -12,6 +12,13 @@ release/
 # Docs et outils internes, dépôt séparé et privé
 /.claude/
 
+# Autres dépôts de l'écosystème : leurs clones ne vivent pas ici.
+/web/
+/admin/
+/hub/
+/movie/
+/nartya-*/
+
 # Android (scaffold Capacitor) : artefacts de build et config propre à la machine.
 android/.gradle/
 android/build/
