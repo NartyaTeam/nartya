@@ -52,7 +52,6 @@ export default function MangaHomePage() {
           <div key={row.key}>
             <AnimeRow
               title={row.title}
-              kana={row.kana}
               items={row.items}
               numbered={row.numbered}
               variant="manga"

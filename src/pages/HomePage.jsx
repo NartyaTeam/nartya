@@ -93,21 +93,20 @@ export default function HomePage() {
     if (isPlainGenre) {
       plainSeen += 1;
       sections.push(
-        <AnimeRow key={row.key} title={row.title} kana={row.kana} items={row.items} />
+        <AnimeRow key={row.key} title={row.title} items={row.items} />
       );
       // Entre deux rangées de genre, jamais en fin de page.
       if (plainSeen === 6) sections.push(<CommunityBanner key="community" />);
     } else if (row.numbered) {
       // Tendances → Top 10.
       sections.push(
-        <TopTenRow key={row.key} title={row.title} kana={row.kana} items={row.items} />
+        <TopTenRow key={row.key} title={row.title} items={row.items} />
       );
     } else {
       sections.push(
         <AnimeRow
           key={row.key}
           title={row.title}
-          kana={row.kana}
           items={row.items}
           variant={row.variant}
         />

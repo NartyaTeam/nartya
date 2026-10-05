@@ -33,5 +33,5 @@ export default function ForYouRow() {
   }, [canRecommend]);
 
   if (!row?.items?.length) return null;
-  return <AnimeRow title={row.title} kana={row.kana} items={row.items} />;
+  return <AnimeRow title={row.title} items={row.items} />;
 }

@@ -124,7 +124,7 @@ function Item({ to, icon: Icon, label, expanded, badge = 0, nested = false, end 
         }`
       }
     >
-      {({ isActive }) => (
+      {() => (
         <>
           <span className="relative shrink-0">
             <Icon size={iconSize} strokeWidth={2} />
@@ -324,7 +324,7 @@ export default function Sidebar() {
               }`
             }
           >
-            {({ isActive }) => (
+            {() => (
               <>
                 <Settings size={18} className="shrink-0" />
                 <span

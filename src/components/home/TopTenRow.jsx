@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import AnimeCard from "./AnimeCard";
 import { platform } from "@/platform";
 
-export default function TopTenRow({ title, kana, items }) {
+export default function TopTenRow({ title, items }) {
   const top = (items || []).slice(0, 10);
   const [emblaRef, embla] = useEmblaCarousel({ active: !platform.isMobile, dragFree: true, containScroll: "trimSnaps", align: "start" });
   const [canPrev, setCanPrev] = useState(false);

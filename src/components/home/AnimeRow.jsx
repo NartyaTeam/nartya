@@ -6,7 +6,7 @@ import NewEpisodeCard from "./NewEpisodeCard";
 import { platform } from "@/platform";
 
 /** `variant="episode"` : cartes « nouvel épisode ». */
-export default function AnimeRow({ title, kana, items, numbered = false, variant }) {
+export default function AnimeRow({ title, items, numbered = false, variant }) {
   const [emblaRef, embla] = useEmblaCarousel({
     active: !platform.isMobile,
     dragFree: true,
@@ -49,7 +49,7 @@ export default function AnimeRow({ title, kana, items, numbered = false, variant
   return (
     <section className="carousel-section relative">
       <div className="mb-3 flex items-center justify-between px-4 sm:px-8">
-        <h2 className="section-title">
+        <h2 className="section-title">
           {title}
         </h2>
         <div className="hidden gap-1 md:flex">
