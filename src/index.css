@@ -85,11 +85,10 @@
     background: rgb(var(--primary));
     flex-shrink: 0;
   }
-  /* Filet qui s'achève en tirets obliques. */
+  /* Filet continu qui s'estompe vers la droite, sans coupure. */
   .slash-rule {
-    height: 4px;
-    background: linear-gradient(100deg, rgb(var(--primary)) 0 86%, transparent 86% 88%, rgb(var(--primary)) 88% 92%, transparent 92% 94%, rgb(var(--primary)) 94% 96%, transparent 96%);
-    clip-path: polygon(0 0, 100% 0, calc(100% - 4px) 100%, 0 100%);
+    height: 3px;
+    background: linear-gradient(90deg, rgb(var(--primary)) 0%, rgb(var(--primary)) 55%, rgb(var(--primary) / 0) 100%);
   }
   /* Les backdrop-filter forcent une recomposition continue au scroll ; les fonds mobiles sont assez opaques. */
   .mobile-runtime [class*="backdrop-blur"] {

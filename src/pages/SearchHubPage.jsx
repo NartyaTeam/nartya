@@ -198,7 +198,7 @@ export default function SearchHubPage() {
         <header className="mx-auto max-w-2xl text-center">
           <p className="eyebrow">Parcourir le catalogue</p>
           <h1 className="t-impact mt-3 text-5xl text-text sm:text-7xl">Recherche</h1>
-          <div className="slash-rule mx-auto mt-4 w-40" />
+          <div className="mx-auto mt-4 h-[3px] w-40 bg-primary" />
           <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-muted">
             Recherche un titre ou affine directement le catalogue avec les critères qui t'intéressent.
           </p>
