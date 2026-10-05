@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
+import { Fox } from "@/components/brand/NartyaMark";
 import { useNavigate } from "react-router-dom";
 import { Clock, Film, Layers, Trophy, Crown, CalendarDays, Infinity as InfinityIcon } from "lucide-react";
 import { useAuthStore } from "@/stores/useAuthStore";
-import { getLeaderboard } from "@/api/leaderboard";
-import { resolveAvatar } from "@/api/profile";
+import { getLeaderboard, getMyLeaderboardRank } from "@/api/leaderboard";
+import { resolveAvatar, getProfileExtraStats } from "@/api/profile";
+import { useCachedResource } from "@/hooks/useCachedResource";
 import { formatWatchTime } from "@/components/profile/StatsRow";
 import { Avatar } from "@/components/ui/Avatar";
 import RoleBadge from "@/components/profile/RoleBadge";
@@ -38,7 +40,7 @@ function PodiumCard({ row, place, metric, onOpen }) {
   return (
     <button
       onClick={() => onOpen(row)}
-      className={`group relative flex flex-1 flex-col items-center rounded-xl border bg-surface/70 px-3 pb-4 pt-8 text-center backdrop-blur-sm transition-transform duration-300 hover:-translate-y-1 ${
+      className={`group relative flex flex-1 flex-col items-center rounded-md border-2 bg-surface/70 px-3 pb-4 pt-8 text-center transition-transform duration-300 hover:-translate-y-1 ${
         first ? "border-[#d6aa68]/40 shadow-glow sm:-translate-y-3" : "border-border/70"
       }`}
     >
@@ -80,7 +82,7 @@ function MobilePodiumRow({ row, metric, onOpen }) {
   return (
     <button
       onClick={() => onOpen(row)}
-      className={`relative flex w-full items-center gap-3 overflow-hidden rounded-xl border p-3 text-left active:scale-[0.99] ${
+      className={`relative flex w-full items-center gap-3 overflow-hidden rounded-md border-2 p-3 text-left active:scale-[0.99] ${
         first
           ? "border-[#d6aa68]/40 bg-[#d6aa68]/[0.07]"
           : "border-border/60 bg-surface/45"
@@ -135,7 +137,7 @@ function RankRow({ row, metric, onOpen, isSelf }) {
   return (
     <button
       onClick={() => onOpen(row)}
-      className={`group flex w-full items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors sm:gap-4 sm:px-4 ${
+      className={`group flex w-full items-center gap-3 rounded-md border-2 px-3 py-2.5 text-left transition-colors sm:gap-4 sm:px-4 ${
         isSelf
           ? "border-primary/50 bg-primary/[0.06]"
           : "border-border/60 bg-surface/40 hover:border-white/20 hover:bg-surface/70"
@@ -170,8 +172,93 @@ function RankRow({ row, metric, onOpen, isSelf }) {
   );
 }
 
+/** Valeur brute de la métrique, pour l'écart avec le membre juste au-dessus. */
+const RAW = {
+  watch_time: (r) => r.totalWatchSeconds,
+  episodes: (r) => r.totalEpisodes,
+  animes: (r) => r.totalAnimes,
+};
+
+/** Écart lisible avec le membre au-dessus, dans l'unité de la métrique. */
+function gapLabel(metricKey, gap) {
+  if (metricKey === "watch_time") return formatWatchTime(gap);
+  const n = nf.format(gap);
+  return metricKey === "episodes" ? `${n} épisode${gap > 1 ? "s" : ""}` : `${n} anime${gap > 1 ? "s" : ""}`;
+}
+
+/**
+ * Place de l'utilisateur.  (RPC get_my_leaderboard_rank) donne le rang exact partout ; sans elle on
+ * se rabat sur la liste chargée, puis sur le rang « temps de visionnage, depuis toujours » du profil.
+ */
+function MyRankCard({ me, rows, metric, periodKey, mine, extra, onOpen }) {
+  const index = rows.findIndex((r) => r.id === me.id);
+  const row = index >= 0 ? rows[index] : null;
+  const exactElsewhere = metric.key === "watch_time" && periodKey === "all" && extra?.rank > 0;
+  const own = mine || row;
+
+  const rank = mine ? mine.rank : row ? row.rank : exactElsewhere ? extra.rank : null;
+  const total = mine?.totalMembers || (exactElsewhere ? extra.totalMembers : 0);
+  const aboveRow = !mine && row && index > 0 ? rows[index - 1] : null;
+  const gap =
+    mine && mine.aboveValue != null
+      ? Math.max(0, mine.aboveValue - RAW[metric.key](mine))
+      : aboveRow
+        ? Math.max(0, RAW[metric.key](aboveRow) - RAW[metric.key](row))
+        : null;
+  const first = rank === 1;
+  const unranked = mine && mine.rank == null;
+
+  return (
+    <section className="relative mb-6 overflow-hidden rounded-md border-2 border-primary bg-primary/[0.07]">
+      <div className="flex items-center gap-4 p-3 sm:gap-5 sm:p-4">
+        <div className="flex h-14 min-w-[4.5rem] shrink-0 items-center justify-center bg-primary px-4 [clip-path:polygon(0_0,100%_0,calc(100%_-_12px)_100%,0_100%)] sm:h-16 sm:min-w-[5.5rem]">
+          <span className="font-impact text-3xl leading-none text-primary-fg sm:text-4xl">
+            {rank ? `#${nf.format(rank)}` : "—"}
+          </span>
+        </div>
+
+        <Avatar
+          src={resolveAvatar(me)}
+          name={me.username}
+          className="hidden h-11 w-11 shrink-0 rounded-full sm:flex"
+          textClassName="text-sm"
+        />
+
+        <div className="min-w-0 flex-1">
+          <p className="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-primary">Ton classement</p>
+          <p className="truncate text-sm font-bold text-text sm:text-base">{me.username || "Toi"}</p>
+          <p className="mt-0.5 text-xs text-muted">
+            {unranked ? (
+              <>Pas encore classé : regarde un épisode pour entrer au classement.</>
+            ) : (
+              <>
+                {own && <>{metric.value(own)} {metric.unit}</>}
+                {total > 0 && <> · sur {nf.format(total)} membre{total > 1 ? "s" : ""}</>}
+                {first && <> · tu es en tête</>}
+                {gap != null && gap > 0 && <> · à {gapLabel(metric.key, gap)} de la place du dessus</>}
+                {!own && !exactElsewhere && <>Hors du top {rows.length} sur ce classement</>}
+              </>
+            )}
+          </p>
+        </div>
+
+        {me.handle && (
+          <button
+            type="button"
+            onClick={() => onOpen(me)}
+            className="hidden shrink-0 rounded-md border-2 border-border px-3 py-1.5 text-xs font-bold text-text transition-colors hover:border-text/40 sm:block"
+          >
+            Mon profil
+          </button>
+        )}
+      </div>
+    </section>
+  );
+}
+
 export default function LeaderboardPage() {
   const me = useAuthStore((s) => s.user);
+  const isGuest = useAuthStore((s) => !!s.session?.user?.is_anonymous);
   const navigate = useNavigate();
   const [metricKey, setMetricKey] = useState("watch_time");
   const [periodKey, setPeriodKey] = useState("week");
@@ -192,6 +279,20 @@ export default function LeaderboardPage() {
     };
   }, [metricKey, periodKey]);
 
+  // Rang « temps de visionnage, depuis toujours », même clé de cache que la page profil.
+  const { data: extra } = useCachedResource(
+    me?.id && !isGuest ? `profile:extra:${me.id}` : null,
+    getProfileExtraStats,
+    5 * 60 * 1000
+  );
+
+  // Rang exact sur la vue affichée (fonction SQL dédiée, absente = repli sur la liste).
+  const { data: mine } = useCachedResource(
+    me?.id && !isGuest ? `leaderboard:mine:${me.id}:${metricKey}:${periodKey}` : null,
+    () => getMyLeaderboardRank(metricKey, periodKey),
+    60 * 1000
+  );
+
   const openProfile = (row) => row.handle && navigate(`/u/${row.handle}`);
 
   const podium = rows?.slice(0, 3) || [];
@@ -201,16 +302,13 @@ export default function LeaderboardPage() {
 
   return (
     <div className="animate-fade-in relative mx-auto max-w-4xl px-4 pb-24 pt-[calc(env(safe-area-inset-top)+4.5rem)] sm:px-8 md:py-10">
-      <span className="pointer-events-none absolute -right-4 top-2 select-none font-display text-[13rem] font-extrabold leading-none text-white/[0.03]">
-        位
-      </span>
+      <Fox className="pointer-events-none absolute -right-10 top-0 h-80 w-80 -rotate-6 select-none text-white/[0.035]" />
 
       <div className="relative md:text-center">
         <div className="flex items-center gap-3 md:justify-center">
-          <span className="font-display text-lg font-medium text-muted/45">ランキング</span>
           <span className="h-px w-8 bg-primary/70" />
         </div>
-        <h1 className="mt-3 font-display text-4xl font-extrabold text-glow md:flex md:items-center md:justify-center md:gap-2.5">
+        <h1 className="t-impact mt-3 text-5xl md:flex md:items-center md:justify-center md:gap-2.5">
           <Trophy size={30} className="hidden text-primary md:block" /> Classement
         </h1>
         <p className="mx-auto mt-3 hidden max-w-lg text-sm leading-relaxed text-muted md:block">
@@ -242,7 +340,7 @@ export default function LeaderboardPage() {
       </div>
 
       <div className="relative mt-4 flex justify-center">
-        <div className="grid w-full max-w-sm grid-cols-2 rounded-xl border border-border/70 bg-surface/40 p-1 text-xs">
+        <div className="grid w-full max-w-sm grid-cols-2 rounded-md border-2 border-border bg-surface/40 p-1 text-xs">
           {PERIODS.map((p) => {
             const on = p.key === periodKey;
             const Icon = p.icon;
@@ -250,7 +348,7 @@ export default function LeaderboardPage() {
               <button
                 key={p.key}
                 onClick={() => setPeriodKey(p.key)}
-                className={`flex items-center justify-center gap-1.5 rounded-lg px-2 py-2 font-semibold transition-colors ${
+                className={`flex items-center justify-center gap-1.5 rounded px-2 py-2 font-bold transition-colors ${
                   on ? "bg-white/10 text-text" : "text-muted hover:text-text"
                 }`}
               >
@@ -264,7 +362,7 @@ export default function LeaderboardPage() {
 
       <div className="relative mt-9">
         {error ? (
-          <p className="rounded-lg border border-border/60 bg-surface/40 py-16 text-center text-sm text-primary">
+          <p className="rounded-md border-2 border-dashed border-border bg-surface/40 py-16 text-center text-sm text-primary">
             {error}
           </p>
         ) : rows === null ? (
@@ -284,13 +382,16 @@ export default function LeaderboardPage() {
             ))}
           </div>
         ) : rows.length === 0 ? (
-          <p className="rounded-lg border border-border/60 bg-surface/40 py-16 text-center text-sm text-muted">
+          <p className="rounded-md border-2 border-dashed border-border bg-surface/40 py-16 text-center text-sm text-muted">
             {periodKey === "week"
               ? "Personne n'a encore été actif cette semaine."
               : "Aucun membre au classement pour l'instant."}
           </p>
         ) : (
           <>
+            {me?.id && !isGuest && (
+              <MyRankCard me={me} rows={rows} metric={metric} periodKey={periodKey} mine={mine} extra={extra} onOpen={openProfile} />
+            )}
             {podium.length > 0 && (
               <>
                 <div className="mb-5 space-y-2 md:hidden">
