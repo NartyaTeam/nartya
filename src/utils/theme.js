@@ -7,9 +7,20 @@
 const FG_INK = "32 28 35";
 const FG_LIGHT = "255 245 224";
 
+/** Luminance relative WCAG : on garde le texte au meilleur contraste (encre sur corail, crème sur teinte sombre). */
+function luminance(triplet) {
+  const [r, g, b] = triplet.split(" ").map((v) => {
+    const c = Number(v) / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
 export function foregroundFor(triplet) {
-  const [r, g, b] = triplet.split(" ").map(Number);
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b > 140 ? FG_INK : FG_LIGHT;
+  const l = luminance(triplet);
+  const contrastInk = (l + 0.05) / (luminance(FG_INK) + 0.05);
+  const contrastLight = (luminance(FG_LIGHT) + 0.05) / (l + 0.05);
+  return contrastInk >= contrastLight ? FG_INK : FG_LIGHT;
 }
 
 /** Triplets "R G B". */

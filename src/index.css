@@ -769,3 +769,84 @@ html.mobile-runtime {
     transform: scaleX(1);
   }
 }
+
+/* Lecteur : habillage « Kitsune Cut » sur les variables d'ArtPlayer (aucune logique touchée). */
+/* Double classe : la feuille d'ArtPlayer est injectée après la nôtre et reprendrait ses valeurs par défaut. */
+.art-video-player.art-video-player {
+  --art-font-color: rgb(255 245 224);
+  --art-widget-background: rgb(23 21 26 / 0.97);
+  --art-tip-background: rgb(var(--primary));
+  --art-border-radius: 6px;
+  --art-progress-height: 10px;
+  --art-progress-color: rgb(255 245 224 / 0.2);
+  --art-loaded-color: rgb(255 245 224 / 0.3);
+  --art-hover-color: rgb(255 245 224 / 0.34);
+  --art-highlight-color: rgb(255 245 224);
+  --art-indicator-size: 18px;
+  --art-control-opacity: 0.9;
+  --art-theme: rgb(var(--primary));
+  --art-settings-max-height: min(70vh, 460px);
+  --art-selector-max-height: min(70vh, 460px);
+  font-family: "Zen Kaku Gothic Antique", system-ui, sans-serif;
+}
+
+/* Dégradé du bas : encre violette plutôt que noir pur. */
+.art-video-player .art-bottom {
+  background-image: linear-gradient(to top, rgb(14 12 17 / 0.94), rgb(14 12 17 / 0.5) 55%, transparent);
+}
+
+/* Repère de lecture : parallélogramme corail, comme les étiquettes d'épisode. */
+.art-video-player .art-bottom .art-progress .art-control-progress .art-control-progress-inner .art-progress-indicator {
+  border-radius: 0;
+  background: rgb(var(--primary));
+  clip-path: polygon(32% 0, 100% 0, 68% 100%, 0 100%);
+}
+.art-video-player .art-progress-indicator .art-icon {
+  display: none;
+}
+
+/* Bulle de temps. */
+.art-video-player .art-bottom .art-progress .art-control-progress .art-control-progress-inner .art-progress-tip {
+  padding: 4px 8px;
+  border-radius: 3px;
+  background: rgb(var(--primary));
+  color: rgb(var(--primary-fg));
+  font-family: "Anton", Impact, sans-serif;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  text-shadow: none;
+}
+
+.art-video-player .art-loading .art-icon svg {
+  fill: rgb(var(--primary));
+}
+
+/* Panneaux : contour franc de 2 px, ligne survolée en aplat corail. */
+.art-video-player .art-settings,
+.art-video-player .art-contextmenus,
+.art-video-player .art-control-volume .art-volume-panel .art-volume-inner,
+.art-video-player .art-selector-list {
+  box-shadow: inset 0 0 0 2px rgb(61 57 68);
+  border-radius: 6px;
+}
+.art-video-player .art-settings .art-setting-panel .art-setting-item,
+.art-video-player .art-contextmenus .art-contextmenu,
+.art-video-player .art-selector-list .art-selector-item {
+  font-weight: 700;
+}
+/* Le menu ne défile que si l'écran est vraiment trop court, sans barre visible. */
+.art-video-player .art-settings,
+.art-video-player .art-selector-list {
+  scrollbar-width: none;
+}
+.art-video-player .art-settings::-webkit-scrollbar,
+.art-video-player .art-selector-list::-webkit-scrollbar {
+  display: none;
+}
+
+/* Survol : voile clair, le texte reste crème (la ligne active garde la couleur de l'app). */
+.art-video-player .art-settings .art-setting-panel .art-setting-item:hover,
+.art-video-player .art-contextmenus .art-contextmenu:hover,
+.art-video-player .art-selector-list .art-selector-item:hover {
+  background-color: rgb(255 245 224 / 0.12);
+}
