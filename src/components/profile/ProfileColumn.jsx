@@ -62,7 +62,7 @@ export default function ProfileColumn({
       </div>
       <ProfileAmbience id={ambience} />
       {/* 1440 moins le rail de 64. */}
-      <div className="relative z-10 mx-auto max-w-[1376px] pb-24 pt-[env(safe-area-inset-top)]">
+      <div className="relative z-10 mx-auto w-full min-w-0 max-w-[1376px] overflow-x-clip md:pb-24 md:pt-[env(safe-area-inset-top)]">
         {/* Fond opaque, pour rester lisible sur le fond de page. */}
         <section
           className="relative"
@@ -76,7 +76,7 @@ export default function ProfileColumn({
         >
           <div className="pointer-events-none absolute inset-0" style={{ background: SCANLINES }} />
           <ProfilePanelAmbience id={ambience} />
-          <div className="relative h-52 w-full overflow-hidden sm:h-[300px]">
+          <div className="relative h-[calc(13rem+env(safe-area-inset-top))] w-full overflow-hidden sm:h-[300px]">
             {banner ? (
               <img src={banner} alt="" className="h-full w-full object-cover" />
             ) : (
@@ -129,13 +129,13 @@ export default function ProfileColumn({
               <button
                 type="button"
                 onClick={onBack}
-                className="absolute left-4 top-4 z-20 flex h-[38px] items-center gap-2 rounded-md bg-bg/85 px-4 text-[13px] font-bold text-text ring-2 ring-border transition-colors hover:bg-bg sm:left-7 sm:top-6"
+                className="absolute left-4 top-[calc(env(safe-area-inset-top)+1rem)] z-20 flex h-[38px] items-center gap-2 rounded-md bg-bg/85 px-4 text-[13px] font-bold text-text ring-2 ring-border transition-colors hover:bg-bg sm:left-7 sm:top-6"
               >
                 <ArrowLeft size={14} /> Retour
               </button>
             )}
             {actions && (
-              <div className="absolute right-4 top-4 z-20 flex flex-wrap justify-end gap-2 sm:right-7 sm:top-6">
+              <div className="absolute right-4 top-[calc(env(safe-area-inset-top)+1rem)] z-20 flex flex-wrap justify-end gap-2 sm:right-7 sm:top-6">
                 {actions}
               </div>
             )}

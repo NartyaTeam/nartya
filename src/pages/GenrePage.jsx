@@ -17,7 +17,7 @@ export default function GenrePage() {
   })();
 
   return (
-    <div className="animate-fade-in mx-auto max-w-[1600px] px-4 pb-10 pt-24 sm:px-8">
+    <div className="animate-fade-in mx-auto max-w-[1600px] px-4 pb-10 pt-[calc(env(safe-area-inset-top)+4.5rem)] sm:px-8">
       <div className="mb-8 flex items-center gap-3">
         <Tag size={24} className="text-primary" />
         <div>

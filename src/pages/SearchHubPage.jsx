@@ -187,7 +187,7 @@ export default function SearchHubPage() {
         : "Tous les animes";
 
   return (
-    <div className="relative min-h-full overflow-hidden px-5 pb-16 pt-24 sm:px-8">
+    <div className="relative min-h-full overflow-hidden px-5 pb-16 pt-[calc(env(safe-area-inset-top)+4.5rem)] sm:px-8">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-x-0 top-0 h-[420px]"

@@ -276,7 +276,7 @@ export default function FAQPage() {
   };
 
   return (
-    <div className="animate-fade-in mx-auto max-w-3xl px-8 py-10">
+    <div className="animate-fade-in mx-auto max-w-3xl px-4 pb-10 pt-[calc(env(safe-area-inset-top)+4.5rem)] sm:px-8 md:py-10">
       <div className="mb-6 flex items-center gap-3">
         <HelpCircle size={26} className="text-primary" />
         <div>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Download, FolderOpen, FolderSearch, Gauge, HardDrive } from "lucide-react";
 import { toast } from "@/lib/toast";
+import { platform } from "@/platform";
 import { useSettingsStore } from "@/stores/useSettingsStore";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useDownloadsStore } from "@/stores/useDownloadsStore";
@@ -54,7 +55,9 @@ function DownloadDirRow() {
         <div className="min-w-0">
           <p className="text-sm font-semibold text-text">Dossier de téléchargement</p>
           <p className="mt-1.5 text-xs leading-5 text-muted">
-            Choisis où conserver les épisodes hors ligne.
+            {platform.isMobile
+              ? "Les épisodes sont conservés dans le stockage privé de Nartya : ils ne sont visibles et lisibles que depuis l'app."
+              : "Choisis où conserver les épisodes hors ligne."}
           </p>
           <p
             className="mt-3 truncate border-l-2 border-primary/45 bg-black/15 px-3 py-2 font-mono text-[11px] text-muted"
@@ -64,6 +67,7 @@ function DownloadDirRow() {
           </p>
         </div>
       </div>
+      {!platform.isMobile && (
       <div className="flex items-center gap-2 md:justify-self-end">
         <button
           type="button"
@@ -84,6 +88,7 @@ function DownloadDirRow() {
           Changer…
         </button>
       </div>
+      )}
     </div>
   );
 }

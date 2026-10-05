@@ -133,7 +133,7 @@ export default function CommunautePage() {
   const showResults = useMemo(() => query.trim().length >= 2, [query]);
 
   return (
-    <div className="animate-fade-in p-8">
+    <div className="animate-fade-in px-4 pb-8 pt-[calc(env(safe-area-inset-top)+4.5rem)] sm:px-8 md:py-8">
       <header className="mb-8">
         <p className="eyebrow">Communauté</p>
         <h1 className="t-impact text-4xl md:text-5xl">

@@ -17,10 +17,11 @@ import {
   Settings,
   Sparkles,
   Trophy,
-  User,
   UserPlus,
   X,
 } from "lucide-react";
+import { Avatar } from "@/components/ui/Avatar";
+import { resolveAvatar } from "@/api/profile";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useNetworkStore } from "@/stores/useNetworkStore";
 import { useChangelog } from "@/hooks/useChangelog";
@@ -50,6 +51,31 @@ function BottomItem({ to, icon: Icon, label }) {
       {active && <span className="absolute inset-x-4 top-0 h-1 -skew-x-[24deg] bg-primary" />}
       <Icon size={20} strokeWidth={active ? 2.4 : 2} />
       <span className="max-w-full truncate">{label}</span>
+    </NavLink>
+  );
+}
+
+function ProfileItem({ user }) {
+  const { pathname } = useLocation();
+  const refreshAvatar = useAuthStore((state) => state.refreshAvatarFromDiscord);
+  const active = routeIsActive(pathname, "/profile");
+  return (
+    <NavLink
+      to="/profile"
+      aria-label="Profil"
+      className={`relative flex min-h-14 flex-1 flex-col items-center justify-center gap-1 px-1 text-[0.62rem] font-medium transition-colors active:scale-95 ${
+        active ? "font-bold text-primary" : "text-muted"
+      }`}
+    >
+      {active && <span className="absolute inset-x-4 top-0 h-1 -skew-x-[24deg] bg-primary" />}
+      <Avatar
+        src={resolveAvatar(user)}
+        name={user?.username}
+        onError={refreshAvatar}
+        className={`h-[22px] w-[22px] max-w-none rounded-full ring-2 ${active ? "ring-primary" : "ring-border"}`}
+        textClassName="text-[0.6rem]"
+      />
+      <span className="max-w-full truncate">Profil</span>
     </NavLink>
   );
 }
@@ -109,7 +135,7 @@ export default function MobileNavigation({ searchPath = "/recherche", forceVisib
         online && { to: "/leaderboard", icon: Trophy, label: "Classement" },
         online && session && { to: "/favorites", icon: Heart, label: "Favoris" },
         online && session && { to: "/my-lists", icon: ListChecks, label: "Mes listes" },
-        session && { to: "/profile", icon: User, label: "Profil" },
+        online && session && { to: "/downloads", icon: Download, label: "Hors ligne" },
         session && { to: "/profile/achievements", icon: Trophy, label: "Succès" },
         session && { to: "/settings", icon: Settings, label: "Paramètres" },
         { to: "/nouveautes", icon: Megaphone, label: "Nouveautés", badge: hasUnreadChangelog },
@@ -148,13 +174,13 @@ export default function MobileNavigation({ searchPath = "/recherche", forceVisib
       >
         {online && <BottomItem to="/" icon={Home} label="Accueil" />}
         {online && <BottomItem to={searchPath} icon={Search} label="Recherche" />}
-        {online && <BottomItem to="/planning" icon={CalendarDays} label="Calendrier" />}
         {session ? (
-          <BottomItem to="/downloads" icon={Download} label="Hors ligne" />
+          <ProfileItem user={profile} />
         ) : (
           <BottomItem to="/login" icon={LogIn} label="Connexion" />
         )}
-        {!online && session && <BottomItem to="/profile" icon={User} label="Profil" />}
+        {online && <BottomItem to="/planning" icon={CalendarDays} label="Calendrier" />}
+        {!online && session && <BottomItem to="/downloads" icon={Download} label="Hors ligne" />}
         <button
           type="button"
           onClick={() => setOpen(true)}
