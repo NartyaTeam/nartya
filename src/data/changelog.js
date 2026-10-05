@@ -5,6 +5,28 @@
  */
 export const CHANGELOG = [
   {
+    version: "1.32.0",
+    date: "5 octobre 2026",
+    items: [
+      {
+        type: "new",
+        text: "Nartya change de visage : nouveau renard, nouvelle icône et nouvelle identité (encre, corail et blanc, titres inclinés, contours francs, boutons en relief) sur toute l’app.",
+      },
+      {
+        type: "new",
+        text: "Ton classement : une carte affiche ta position exacte sur chaque vue du classement.",
+      },
+      {
+        type: "improved",
+        text: "Accueil, fiches anime, barre d’outils des épisodes, lecteur vidéo, intro et fenêtre « Quoi de neuf » repensés pour la nouvelle identité.",
+      },
+      {
+        type: "fixed",
+        text: "Le survol des listes déroulantes est plus net, et l’écran de chargement des pages s’affiche correctement.",
+      },
+    ],
+  },
+  {
     version: "1.31.1",
     date: "4 octobre 2026",
     items: [

@@ -5,6 +5,32 @@
  */
 export const IOS_CHANGELOG = [
   {
+    version: "1.2.0",
+    date: "5 octobre 2026",
+    items: [
+      {
+        type: "new",
+        text: "Nartya change de visage : nouveau renard, nouvelle icône et nouvelle identité (encre, corail et blanc, titres inclinés, contours francs, boutons en relief) sur toute l’app.",
+      },
+      {
+        type: "new",
+        text: "Ton profil prend sa place au centre de la barre du bas, avec ta photo. « Hors ligne » passe dans le menu « Plus » et revient dans la barre quand tu n’as plus de connexion.",
+      },
+      {
+        type: "new",
+        text: "Ton classement : une carte affiche ta position exacte sur chaque vue du classement.",
+      },
+      {
+        type: "improved",
+        text: "La page de profil occupe tout l’écran, sans bandes de fond sur les côtés, en haut ou en bas.",
+      },
+      {
+        type: "fixed",
+        text: "Le bouton retour ne recouvre plus le titre des pages comme Signalements, Aide, Amis, Équipe ou Statut des services.",
+      },
+    ],
+  },
+  {
     version: "1.1.0",
     date: "4 octobre 2026",
     items: [
