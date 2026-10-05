@@ -3,11 +3,11 @@
  * changent.
  */
 
-// Encre sur teinte claire, crème sur teinte sombre.
+// Encre sur teinte claire, blanc sur teinte sombre.
 const FG_INK = "32 28 35";
-const FG_LIGHT = "255 245 224";
+const FG_LIGHT = "250 250 250";
 
-/** Luminance relative WCAG : on garde le texte au meilleur contraste (encre sur corail, crème sur teinte sombre). */
+/** Luminance relative WCAG : on garde le texte au meilleur contraste (encre sur corail, blanc sur teinte sombre). */
 function luminance(triplet) {
   const [r, g, b] = triplet.split(" ").map((v) => {
     const c = Number(v) / 255;

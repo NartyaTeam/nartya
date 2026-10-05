@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Fox } from "@/components/brand/NartyaMark";
 import { getHomeSections } from "@/api/animeApi";
 import { useCachedResource } from "@/hooks/useCachedResource";
 import HeroCarousel from "@/components/home/HeroCarousel";
@@ -8,7 +9,6 @@ import ContinueWatching from "@/components/home/ContinueWatching";
 import ForYouRow from "@/components/home/ForYouRow";
 import GenresRow from "@/components/home/GenresRow";
 import CommunityBanner from "@/components/home/CommunityBanner";
-import { asset } from "@/lib/asset";
 import { platform } from "@/platform";
 
 /**
@@ -59,7 +59,7 @@ export default function HomePage() {
     return (
       <div className="flex h-full items-center justify-center p-8 text-center">
         <div className="flex flex-col items-center">
-          <img src={asset("icon.png")} alt="" className="mb-5 h-20 w-20 object-contain opacity-90" />
+          <Fox className="mb-5 h-20 w-20 text-primary opacity-90" />
           <p className="font-display text-2xl">Impossible de charger le catalogue</p>
           <p className="mt-2 text-sm text-muted">Vérifie que le service API est lancé puis réessaie.</p>
         </div>

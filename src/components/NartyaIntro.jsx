@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { Fox } from "@/components/brand/NartyaMark";
-import { asset } from "@/lib/asset";
 import { playIntroSound } from "@/utils/introSound";
 import "./NartyaIntro.css";
 
@@ -62,7 +61,7 @@ export default function NartyaIntro({ onDone }) {
 
       <div className="nartya-intro__stage">
         <div className="nartya-intro__mark">
-          <img src={asset("icon.png")} alt="" draggable={false} />
+          <Fox />
         </div>
 
         <div className="nartya-intro__word">

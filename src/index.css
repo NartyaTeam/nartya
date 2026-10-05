@@ -176,10 +176,10 @@
   .btn-ghost {
     @apply inline-flex items-center justify-center gap-2 rounded-md bg-white/[0.07] px-6 py-3
       font-bold text-text backdrop-blur transition duration-150 hover:bg-white/[0.12] active:translate-y-[3px];
-    box-shadow: inset 0 0 0 2px rgb(255 245 224 / 0.28), 0 4px 0 rgb(255 245 224 / 0.16);
+    box-shadow: inset 0 0 0 2px rgb(250 250 250 / 0.28), 0 4px 0 rgb(250 250 250 / 0.16);
   }
   .btn-ghost:active {
-    box-shadow: inset 0 0 0 2px rgb(255 245 224 / 0.28), 0 1px 0 rgb(255 245 224 / 0.16);
+    box-shadow: inset 0 0 0 2px rgb(250 250 250 / 0.28), 0 1px 0 rgb(250 250 250 / 0.16);
   }
 }
 
@@ -773,15 +773,15 @@ html.mobile-runtime {
 /* Lecteur : habillage « Kitsune Cut » sur les variables d'ArtPlayer (aucune logique touchée). */
 /* Double classe : la feuille d'ArtPlayer est injectée après la nôtre et reprendrait ses valeurs par défaut. */
 .art-video-player.art-video-player {
-  --art-font-color: rgb(255 245 224);
+  --art-font-color: rgb(250 250 250);
   --art-widget-background: rgb(23 21 26 / 0.97);
   --art-tip-background: rgb(var(--primary));
   --art-border-radius: 6px;
   --art-progress-height: 10px;
-  --art-progress-color: rgb(255 245 224 / 0.2);
-  --art-loaded-color: rgb(255 245 224 / 0.3);
-  --art-hover-color: rgb(255 245 224 / 0.34);
-  --art-highlight-color: rgb(255 245 224);
+  --art-progress-color: rgb(250 250 250 / 0.2);
+  --art-loaded-color: rgb(250 250 250 / 0.3);
+  --art-hover-color: rgb(250 250 250 / 0.34);
+  --art-highlight-color: rgb(250 250 250);
   --art-indicator-size: 18px;
   --art-control-opacity: 0.9;
   --art-theme: rgb(var(--primary));
@@ -844,9 +844,9 @@ html.mobile-runtime {
   display: none;
 }
 
-/* Survol : voile clair, le texte reste crème (la ligne active garde la couleur de l'app). */
+/* Survol : voile clair, le texte reste blanc (la ligne active garde la couleur de l'app). */
 .art-video-player .art-settings .art-setting-panel .art-setting-item:hover,
 .art-video-player .art-contextmenus .art-contextmenu:hover,
 .art-video-player .art-selector-list .art-selector-item:hover {
-  background-color: rgb(255 245 224 / 0.12);
+  background-color: rgb(250 250 250 / 0.12);
 }

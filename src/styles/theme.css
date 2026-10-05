@@ -1,5 +1,5 @@
 /*
- * Design system « Kitsune Cut » : encre violet-noir, corail du renard, crème, miel discret.
+ * Design system « Kitsune Cut » : encre violet-noir, corail du renard, blanc, miel discret.
  * Couleurs en RGB pour l'opacité Tailwind.
  */
 :root {
@@ -8,8 +8,8 @@
   --surface: 32 30 36; /* #201e24 panneaux, l'encre du logo */
   --surface-2: 44 41 49; /* survol / imbriqué */
   --border: 61 57 68;
-  --text: 255 245 224; /* #fff5e0 crème */
-  --muted: 163 156 154;
+  --text: 250 250 250; /* #fafafa blanc */
+  --muted: 160 158 166;
   --primary: 255 113 62; /* #ff713e corail du renard */
   --primary-fg: 32 28 35; /* encre sur corail, comme les bannières */
   --accent: 232 176 72; /* miel */

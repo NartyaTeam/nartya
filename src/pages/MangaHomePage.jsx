@@ -1,10 +1,10 @@
 import { getMangaHomeSections } from "@/api/animeApi";
+import { Fox } from "@/components/brand/NartyaMark";
 import { useCachedResource } from "@/hooks/useCachedResource";
 import HeroCarousel from "@/components/home/HeroCarousel";
 import AnimeRow, { AnimeRowSkeleton } from "@/components/home/AnimeRow";
 import ContinueWatching from "@/components/home/ContinueWatching";
 import CommunityBanner from "@/components/home/CommunityBanner";
-import { asset } from "@/lib/asset";
 
 export default function MangaHomePage() {
   const { data, loading, error } = useCachedResource(
@@ -17,7 +17,7 @@ export default function MangaHomePage() {
     return (
       <div className="flex h-full items-center justify-center p-8 text-center">
         <div className="flex flex-col items-center">
-          <img src={asset("icon.png")} alt="" className="mb-5 h-20 w-20 object-contain opacity-90" />
+          <Fox className="mb-5 h-20 w-20 text-primary opacity-90" />
           <p className="font-display text-2xl">Impossible de charger les mangas</p>
           <p className="mt-2 max-w-sm text-sm text-muted">
             Le catalogue de scans est momentanément indisponible. Réessaie dans quelques instants.
