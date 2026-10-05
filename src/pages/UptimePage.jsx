@@ -75,12 +75,12 @@ function CategorySection({ category, services }) {
     <section>
       <div className="mb-2.5 flex items-center gap-2 px-1">
         <Icon size={14} className="text-primary" />
-        <h2 className="font-display text-xs font-bold uppercase tracking-wider text-text">
+        <h2 className="section-title !text-lg">
           {meta.label}
         </h2>
       </div>
       <p className="mb-3 px-1 text-xs text-muted">{meta.description}</p>
-      <div className="divide-y divide-border/60 overflow-hidden rounded-lg border border-border/60 bg-surface/40">
+      <div className="divide-y divide-border/60 overflow-hidden rounded-md border-2 border-border bg-surface/40">
         {services.map((s) => (
           <ServiceRow key={s.id} service={s} />
         ))}
@@ -176,7 +176,7 @@ export default function UptimePage() {
         <div className="flex items-center gap-3">
           <Activity size={26} className="text-primary" />
           <div>
-            <h1 className="font-display text-3xl font-extrabold text-glow">Uptime</h1>
+            <h1 className="t-impact text-4xl sm:text-5xl">Uptime</h1>
             <p className="mt-1 text-sm text-muted">
               État en direct de tous les services dont dépend Nartya.
             </p>
@@ -193,7 +193,7 @@ export default function UptimePage() {
       </div>
 
       {banner && (
-        <div className={`mb-6 flex items-center gap-2.5 rounded-lg border px-4 py-3 text-sm font-medium ${banner.cls}`}>
+        <div className={`mb-6 flex items-center gap-2.5 rounded-md border-2 px-4 py-3 text-sm font-bold ${banner.cls}`}>
           <BannerIcon size={16} className={banner.icon === RefreshCw ? "animate-spin" : "shrink-0"} />
           {banner.text}
         </div>

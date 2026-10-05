@@ -14,7 +14,7 @@ export function PartyRoomNotice({ kind, code, onBack }) {
       </span>
       <div>
         <p className="eyebrow">{full ? "Salon complet" : "Salon introuvable"}</p>
-        <h1 className="mt-1 font-display text-3xl font-bold tracking-tight text-glow">
+        <h1 className="t-impact mt-2 text-4xl">
           {full ? "Ce salon est plein" : "Personne dans ce salon"}
         </h1>
       </div>

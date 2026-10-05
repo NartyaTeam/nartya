@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { Fox } from "@/components/brand/NartyaMark";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 
@@ -30,9 +31,7 @@ export default function NartyaNote({
       <section className="animate-slide-up relative w-full max-w-[26rem] overflow-hidden rounded-xl border border-border bg-surface shadow-[0_28px_90px_-24px_rgba(0,0,0,0.95)] ring-1 ring-white/10">
         <div className="h-[2px] shrink-0 bg-primary/80" />
 
-        <span className="pointer-events-none absolute -right-4 -top-8 select-none font-display text-[9rem] font-extrabold leading-none text-white/[0.035]">
-          朱
-        </span>
+        <Fox className="pointer-events-none absolute -right-8 -top-10 h-44 w-44 -rotate-6 select-none text-white/[0.04]" />
 
         <header className="relative px-6 pb-1 pt-6">
           <button

@@ -119,13 +119,12 @@ export default function UpcomingPage() {
       <div className="relative mx-auto max-w-[1500px] animate-fade-in">
         <header className="mb-7 md:mb-8">
           <div className="flex items-center gap-3">
-            <span className="font-display text-lg font-medium text-muted/45">予告</span>
             <span className="h-px w-8 bg-primary/70" />
             <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
               Calendrier saisonnier
             </p>
           </div>
-          <h1 className="mt-3 font-display text-4xl font-bold tracking-tight sm:text-5xl">
+          <h1 className="t-impact text-4xl sm:text-5xl mt-3">
             À venir
           </h1>
         </header>
@@ -170,7 +169,7 @@ export default function UpcomingPage() {
               <p className="flex items-center gap-1.5 text-[0.65rem] font-bold uppercase tracking-[0.16em] text-primary">
                 <CalendarDays size={13} /> Programme
               </p>
-              <h2 className="mt-1 font-display text-xl font-bold tracking-tight sm:text-2xl">
+              <h2 className="section-title mt-1 !text-2xl">
                 {SEASON_LABELS[tab.season]} {tab.year}
               </h2>
             </div>

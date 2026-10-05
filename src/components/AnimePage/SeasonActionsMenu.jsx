@@ -5,7 +5,7 @@ function Row({ icon: Icon, label, hint, active = false, onClick }) {
   return (
     <button
       onClick={onClick}
-      className="flex w-full items-center gap-3 rounded px-2.5 py-2 text-left text-sm text-text transition-colors hover:bg-primary hover:text-primary-fg"
+      className="flex w-full items-center gap-3 rounded px-2.5 py-2 text-left text-sm text-text transition-colors hover:bg-text/10"
     >
       <Icon size={16} className="shrink-0" />
       <span className="min-w-0 flex-1">

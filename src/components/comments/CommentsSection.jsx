@@ -98,8 +98,7 @@ export default function CommentsSection({
         <div className="flex items-center gap-3 pb-4">
           {showHeader && (
             <>
-              <h2 className="font-display text-xl font-bold tracking-tight">Commentaires</h2>
-              <span className="font-display text-base text-muted/30">感想</span>
+              <h2 className="section-title !text-xl">Commentaires</h2>
             </>
           )}
           {count != null && count > 0 && (

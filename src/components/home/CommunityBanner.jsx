@@ -1,4 +1,5 @@
 import { ArrowUpRight } from "lucide-react";
+import { Fox } from "@/components/brand/NartyaMark";
 import { openDiscord } from "@/lib/community";
 import DiscordIcon from "@/components/icons/DiscordIcon";
 
@@ -10,12 +11,10 @@ export default function CommunityBanner() {
           aria-hidden
           className="pointer-events-none absolute inset-0 bg-[radial-gradient(110%_130%_at_0%_0%,rgb(88_101_242/0.16),transparent_58%)]"
         />
-        <div
+        <Fox
           aria-hidden
-          className="pointer-events-none absolute -right-4 -top-8 select-none font-display text-[8rem] leading-none text-white/[0.04] transition-transform duration-700 ease-out group-hover:scale-105"
-        >
-          話
-        </div>
+          className="pointer-events-none absolute -right-6 -top-10 h-44 w-44 -rotate-6 select-none text-white/[0.045] transition-transform duration-700 ease-out group-hover:scale-105"
+        />
 
         <div className="relative flex flex-col gap-5 p-5 md:flex-row md:items-center md:justify-between md:px-8 md:py-6">
           <div className="min-w-0">

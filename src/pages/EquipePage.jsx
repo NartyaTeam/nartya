@@ -59,7 +59,7 @@ function TeamCard({ member, meta, onOpen }) {
     <button
       type="button"
       onClick={() => onOpen(member)}
-      className="group relative flex flex-col items-center gap-3 overflow-hidden rounded-xl border border-border/60 bg-surface/40 p-6 text-center transition-[transform,box-shadow,border-color] duration-300 ease-out hover:-translate-y-1 hover:border-[color:rgb(var(--m-rgb)/0.5)] hover:shadow-[0_20px_40px_-24px_rgb(var(--m-rgb)/0.55)] focus-visible:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:rgb(var(--m-rgb))]"
+      className="group relative flex flex-col items-center gap-3 overflow-hidden rounded-md border-2 border-border bg-surface/40 p-6 text-center transition-[transform,box-shadow,border-color] duration-300 ease-out hover:-translate-y-1 hover:border-[color:rgb(var(--m-rgb)/0.5)] hover:shadow-[0_20px_40px_-24px_rgb(var(--m-rgb)/0.55)] focus-visible:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:rgb(var(--m-rgb))]"
       style={{ "--m-rgb": meta.rgb }}
     >
       <span
@@ -125,7 +125,7 @@ function TeamMemberReveal({ member, meta, onClose }) {
         style={{ perspective: 1200 }}
       >
         <div
-          className="relative overflow-hidden rounded-2xl border border-border bg-surface p-8 text-center shadow-[0_40px_80px_-24px_rgba(0,0,0,0.7)] will-change-transform motion-reduce:!transform-none"
+          className="relative overflow-hidden rounded-md border-2 border-border bg-surface p-8 text-center shadow-[0_40px_80px_-24px_rgba(0,0,0,0.7)] will-change-transform motion-reduce:!transform-none"
           style={{
             "--m-rgb": meta.rgb,
             transform: `rotateX(${tilt.rx}deg) rotateY(${tilt.ry}deg)`,
@@ -224,7 +224,7 @@ export default function EquipePage() {
       <div className="mb-8 flex items-center gap-3">
         <Users size={26} className="text-primary" />
         <div>
-          <h1 className="font-display text-3xl font-extrabold text-glow">Équipe</h1>
+          <h1 className="t-impact text-4xl sm:text-5xl">Équipe</h1>
           <p className="mt-1 text-sm text-muted">Les personnes qui font tourner Nartya.</p>
         </div>
       </div>
@@ -238,7 +238,7 @@ export default function EquipePage() {
       {!error && sorted === null && (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="flex flex-col items-center gap-3 rounded-xl border border-border/60 bg-surface/40 p-6">
+            <div key={i} className="flex flex-col items-center gap-3 rounded-md border-2 border-border bg-surface/40 p-6">
               <div className="h-20 w-20 skeleton rounded-full" />
               <div className="h-3 w-16 skeleton rounded" />
             </div>

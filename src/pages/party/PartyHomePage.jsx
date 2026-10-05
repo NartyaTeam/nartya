@@ -106,13 +106,13 @@ export default function PartyHomePage() {
       <div className="mb-8 flex items-center gap-3">
         <Users className="text-primary" size={28} />
         <div>
-          <h1 className="font-display text-3xl font-bold text-text">Watch Party</h1>
+          <h1 className="t-impact text-4xl sm:text-5xl">Watch Party</h1>
           <p className="text-sm text-muted">Regardez vos animes en même temps que vos potes.</p>
         </div>
       </div>
 
       <div className="mb-12 grid gap-4 md:grid-cols-2">
-        <div className="flex flex-col items-start gap-3 rounded-2xl border border-border bg-surface p-6">
+        <div className="flex flex-col items-start gap-3 rounded-md border-2 border-border bg-surface p-6">
           <div className="flex items-center gap-2 text-white">
             <Plus size={18} className="text-primary" />
             <span className="font-display text-lg font-bold">Créer un salon</span>
@@ -128,7 +128,7 @@ export default function PartyHomePage() {
 
         <form
           onSubmit={goJoin}
-          className="flex flex-col items-start gap-3 rounded-2xl border border-border bg-surface p-6"
+          className="flex flex-col items-start gap-3 rounded-md border-2 border-border bg-surface p-6"
         >
           <div className="flex items-center gap-2 text-white">
             <LogIn size={18} className="text-primary" />
@@ -154,8 +154,7 @@ export default function PartyHomePage() {
       {resume.length > 0 && (
         <section className="mb-10">
           <div className="mb-4 flex items-center gap-2">
-            <span className="font-display text-base font-medium text-muted/60">続き</span>
-            <h2 className="font-display text-xl font-bold text-text">Reprendre à plusieurs</h2>
+            <h2 className="section-title !text-xl">Reprendre à plusieurs</h2>
           </div>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
             {resume.map((item) => (
@@ -175,7 +174,7 @@ export default function PartyHomePage() {
         <section className="mb-10">
           <div className="mb-4 flex items-center gap-2">
             <Sparkles size={18} className="text-primary" />
-            <h2 className="font-display text-xl font-bold text-text">À regarder ensemble</h2>
+            <h2 className="section-title !text-xl">À regarder ensemble</h2>
           </div>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
             {recos.map((card) => (

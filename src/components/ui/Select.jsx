@@ -57,7 +57,7 @@ export function Select({
               <RSelect.Item
                 key={opt.value}
                 value={opt.value}
-                className="relative flex cursor-pointer select-none items-center gap-2.5 rounded px-2.5 py-2 pr-8 text-sm text-text outline-none transition-colors data-[highlighted]:bg-primary data-[highlighted]:text-primary-fg data-[state=checked]:font-semibold"
+                className="relative flex cursor-pointer select-none items-center gap-2.5 rounded px-2.5 py-2 pr-8 text-sm text-text outline-none transition-colors data-[highlighted]:bg-text/10 data-[state=checked]:font-bold data-[state=checked]:text-primary"
               >
                 {opt.icon}
                 <RSelect.ItemText>{opt.label}</RSelect.ItemText>
