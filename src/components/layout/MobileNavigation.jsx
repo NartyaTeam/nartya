@@ -44,10 +44,10 @@ function BottomItem({ to, icon: Icon, label }) {
       to={to}
       aria-label={label}
       className={`relative flex min-h-14 flex-1 flex-col items-center justify-center gap-1 px-1 text-[0.62rem] font-medium transition-colors active:scale-95 ${
-        active ? "text-primary" : "text-muted"
+        active ? "font-bold text-primary" : "text-muted"
       }`}
     >
-      {active && <span className="absolute inset-x-3 top-0 h-0.5 rounded-full bg-primary" />}
+      {active && <span className="absolute inset-x-4 top-0 h-1 -skew-x-[24deg] bg-primary" />}
       <Icon size={20} strokeWidth={active ? 2.4 : 2} />
       <span className="max-w-full truncate">{label}</span>
     </NavLink>
@@ -60,10 +60,10 @@ function SheetItem({ to, icon: Icon, label, badge = false }) {
   return (
     <NavLink
       to={to}
-      className={`flex min-h-16 flex-col items-center justify-center gap-1.5 rounded-xl px-2 text-center text-xs font-medium ring-1 transition-colors active:scale-[0.98] ${
+      className={`flex min-h-16 flex-col items-center justify-center gap-1.5 rounded-md px-2 text-center text-xs font-bold ring-2 transition-colors active:scale-[0.98] ${
         active
-          ? "bg-primary/15 text-primary ring-primary/35"
-          : "bg-white/[0.035] text-text ring-border/70 active:bg-white/[0.08]"
+          ? "bg-primary text-primary-fg ring-primary"
+          : "bg-surface/70 text-text ring-border active:bg-surface-2"
       }`}
     >
       <span className="relative">
@@ -144,7 +144,7 @@ export default function MobileNavigation({ searchPath = "/recherche", forceVisib
     <>
       <nav
         aria-label="Navigation mobile"
-        className={`fixed inset-x-0 bottom-0 z-[70] flex border-t border-border/80 bg-bg/95 px-1 pb-[env(safe-area-inset-bottom)] shadow-[0_-12px_35px_rgba(0,0,0,0.45)] backdrop-blur-xl ${forceVisible ? "" : "md:hidden"}`}
+        className={`fixed inset-x-0 bottom-0 z-[70] flex border-t-2 border-border bg-bg/95 px-1 pb-[env(safe-area-inset-bottom)] shadow-[0_-12px_35px_rgba(0,0,0,0.45)] backdrop-blur-xl ${forceVisible ? "" : "md:hidden"}`}
       >
         {online && <BottomItem to="/" icon={Home} label="Accueil" />}
         {online && <BottomItem to={searchPath} icon={Search} label="Recherche" />}
@@ -165,7 +165,7 @@ export default function MobileNavigation({ searchPath = "/recherche", forceVisib
           }`}
         >
           {(open || moreActive) && (
-            <span className="absolute inset-x-3 top-0 h-0.5 rounded-full bg-primary" />
+            <span className="absolute inset-x-4 top-0 h-1 -skew-x-[24deg] bg-primary" />
           )}
           <span className="relative">
             <Menu size={20} strokeWidth={open || moreActive ? 2.4 : 2} />
@@ -188,11 +188,11 @@ export default function MobileNavigation({ searchPath = "/recherche", forceVisib
             onClick={() => setOpen(false)}
             className="absolute inset-0 bg-black/70 backdrop-blur-sm"
           />
-          <div className="absolute inset-x-0 bottom-0 max-h-[78dvh] overflow-y-auto rounded-t-3xl border-t border-border bg-bg px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3 shadow-2xl animate-slide-up">
+          <div className="absolute inset-x-0 bottom-0 max-h-[78dvh] overflow-y-auto rounded-t-xl border-t-2 border-border bg-bg px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3 shadow-2xl animate-slide-up">
             <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-white/20" />
             <div className="mb-4 flex items-center justify-between">
               <div>
-                <p className="font-display text-lg font-bold">Explorer Nartya</p>
+                <p className="t-impact text-2xl">Explorer Nartya</p>
                 <p className="text-xs text-muted">Toutes les destinations</p>
               </div>
               <button

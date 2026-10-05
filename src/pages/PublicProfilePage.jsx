@@ -61,7 +61,7 @@ export default function PublicProfilePage() {
     return (
       <div className="animate-fade-in flex flex-col items-center justify-center px-8 py-32 text-center">
         <UserX size={40} className="text-muted" strokeWidth={1.5} />
-        <h1 className="mt-4 font-display text-2xl font-bold tracking-tight">Profil indisponible</h1>
+        <h1 className="t-impact mt-4 text-4xl">Profil indisponible</h1>
         <p className="mt-2 max-w-sm text-sm text-muted">
           Ce profil n'existe pas ou son propriétaire l'a rendu privé.
         </p>

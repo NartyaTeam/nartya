@@ -11,7 +11,7 @@
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <!-- Filet si un bord de la fenêtre se découvre avant que la WebView ne l'ait peint. -->
-        <item name="android:windowBackground">#0a0a0c</item>
+        <item name="android:windowBackground">#17151a</item>
     </style>
 
 

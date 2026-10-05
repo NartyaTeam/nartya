@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Search, ArrowDownUp, Loader2, X, Flag as FlagIcon, Languages, EyeOff, Eye } from "lucide-react";
+import { Search, Loader2, X, Languages } from "lucide-react";
 import { ExternalWatch } from "@/components/AnimePage/ExternalWatch";
 import { getSeasonEpisodes } from "@/api/animeApi";
 import {
@@ -19,6 +19,7 @@ import { Select } from "@/components/ui/Select";
 import { Flag, getLanguageLabel } from "@/components/ui/Flag";
 import { EpisodeCard } from "./EpisodeCard";
 import { SeasonWatchedMenu } from "./SeasonWatchedMenu";
+import { SeasonActionsMenu } from "./SeasonActionsMenu";
 import { SeasonsMobileToolbar, SeasonDownloadButton, MobileSelectionBar } from "./SeasonsControls";
 import { platform } from "@/platform";
 import { useSeasonWatched } from "@/hooks/useSeasonWatched";
@@ -381,119 +382,115 @@ export function SeasonsSection({
         onSelectSource={selectSource}
       />
 
-      <div className="mb-6 hidden flex-wrap items-center gap-2.5 md:flex">
-        <Select
-          title="Saison"
-          value={selectedSeason?.id || ""}
-          onValueChange={(id) => selectSeason(orderedSeasons.find((s) => s.id === id))}
-          className="min-w-[9rem]"
-          options={orderedSeasons.map((s) => ({ value: s.id, label: s.name }))}
-        />
-
-        {/* Le drapeau VO/VOSTFR suit le pays d'origine. */}
-        {(availableLanguages.length ? availableLanguages : [selectedLanguage]).length > 0 && (
-          <Select
-            title="Langue"
-            value={selectedLanguage}
-            onValueChange={selectLanguage}
-            className="min-w-[8.5rem]"
-            options={(availableLanguages.length
-              ? availableLanguages
-              : [selectedLanguage]
-            ).map((lang) => ({
-              value: lang,
-              label: getLanguageLabel(lang),
-              icon: <Flag lang={lang} countryOfOrigin={countryOfOrigin} size={14} />,
-            }))}
+      {/* Pleine largeur : les filets prolongent celui des onglets. */}
+      <div className={`-mx-8 mb-4 hidden md:block ${frNotice ? "" : "-mt-8"}`}>
+        {/* Niveau 1 : trouver un épisode, sans cadre. */}
+        <div className="flex h-14 items-center gap-3 border-b border-border px-8 transition-colors focus-within:border-primary/60">
+          <Search size={17} className="shrink-0 text-muted" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Rechercher un épisode (numéro ou titre)…"
+            className="h-full w-full min-w-0 bg-transparent text-[0.95rem] outline-none placeholder:text-muted"
           />
-        )}
-
-        {/* Seulement avec les contrôles avancés. */}
-        {availableSources.length > 0 && advancedPlayerControls && (
-          <Select
-            title="Source vidéo"
-            value={selectedSource}
-            onValueChange={selectSource}
-            className="min-w-[9.5rem]"
-            options={sourceSelectOptions(availableSources)}
-          />
-        )}
-
-        {session && !isGuest && episodeCount > 0 && (
-          <SeasonWatchedMenu
-            episodeCount={episodeCount}
-            watchedCount={watchedCount}
-            lastEpisode={lastEpisode}
-            onMarkUpTo={markWatchedUpTo}
-            onMarkAll={() => markWatchedUpTo(lastEpisode)}
-            onUnmarkAll={unmarkSeason}
-            controlH={CONTROL_H}
-          />
-        )}
-
-        {canDownload && (
-          <SeasonDownloadButton
-            seasonDl={seasonDl}
-            selectedSeason={selectedSeason}
-            seasonQueuedCount={seasonQueuedCount}
-            downloadableEpisodes={downloadableEpisodes}
-            onDownload={() => downloadSeason()}
-            onCancel={cancelSeasonDownload}
-            controlH={CONTROL_H}
-          />
-        )}
-
-        {/* Passe sur sa propre ligne si la barre est trop étroite. */}
-        <div className="ml-auto flex min-w-0 flex-1 basis-72 items-center gap-2.5 sm:max-w-sm">
-          <div
-            className={`flex ${CONTROL_H} min-w-0 flex-1 items-center gap-2.5 rounded-md bg-surface px-3.5 ring-1 ring-border transition-colors focus-within:ring-primary/60`}
-          >
-            <Search size={16} className="shrink-0 text-muted" />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Rechercher un épisode (n° ou titre)…"
-              className="w-full bg-transparent text-sm outline-none placeholder:text-muted"
-            />
-            {search && (
-              <button
-                onClick={() => setSearch("")}
-                title="Effacer"
-                className="shrink-0 text-muted transition-colors hover:text-text"
-              >
-                <X size={15} />
-              </button>
-            )}
-          </div>
-          <button
-            onClick={() => setReversed((v) => !v)}
-            title={reversed ? "Ordre décroissant" : "Ordre croissant"}
-            className={`flex ${CONTROL_H} w-10 shrink-0 items-center justify-center rounded-md ring-1 ring-border transition-colors ${
-              reversed ? "bg-primary text-primary-fg" : "bg-surface text-muted hover:text-text"
-            }`}
-          >
-            <ArrowDownUp size={16} />
-          </button>
-          <button
-            onClick={toggleSpoilerMode}
-            title={spoilerMode ? "Afficher les vignettes" : "Flouter les vignettes (anti-spoiler)"}
-            className={`flex ${CONTROL_H} w-10 shrink-0 items-center justify-center rounded-md ring-1 ring-border transition-colors ${
-              spoilerMode ? "bg-primary text-primary-fg" : "bg-surface text-muted hover:text-text"
-            }`}
-          >
-            {spoilerMode ? <EyeOff size={16} /> : <Eye size={16} />}
-          </button>
-          {onReport && (
+          {search && (
             <button
-              onClick={() =>
-                onReport({ kind: "episode", season: selectedSeason?.name || null, episode: null })
-              }
-              title="Signaler un problème sur cette saison (épisode décalé, manquant, mauvaise vidéo…)"
-              className={`flex ${CONTROL_H} w-10 shrink-0 items-center justify-center rounded-md bg-surface text-muted ring-1 ring-border transition-colors hover:text-primary`}
+              onClick={() => setSearch("")}
+              title="Effacer"
+              className="shrink-0 text-muted transition-colors hover:text-text"
             >
-              <FlagIcon size={16} />
+              <X size={15} />
             </button>
           )}
+        </div>
+
+        {/* Niveau 2 : ce qu'on regarde à gauche, ce qu'on fait de la saison à droite. */}
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2.5 px-8 pt-4">
+          {/* Saison, langue et source forment un seul sélecteur, séparé par des obliques. */}
+          <div className={`flex ${CONTROL_H} max-w-full shrink-0 items-stretch overflow-hidden rounded-md bg-surface ring-2 ring-border`}>
+            <Select
+              title="Saison"
+              joined="start"
+              value={selectedSeason?.id || ""}
+              onValueChange={(id) => selectSeason(orderedSeasons.find((s) => s.id === id))}
+              className="min-w-[9rem]"
+              options={orderedSeasons.map((s) => ({ value: s.id, label: s.name }))}
+            />
+            {(availableLanguages.length ? availableLanguages : [selectedLanguage]).length > 0 && (
+              <>
+                <span aria-hidden className="my-2 w-0.5 -skew-x-[14deg] bg-border" />
+                {/* Le drapeau VO/VOSTFR suit le pays d'origine. */}
+                <Select
+                  title="Langue"
+                  joined={availableSources.length > 0 && advancedPlayerControls ? "middle" : "end"}
+                  value={selectedLanguage}
+                  onValueChange={selectLanguage}
+                  className="min-w-[8.5rem]"
+                  options={(availableLanguages.length
+                    ? availableLanguages
+                    : [selectedLanguage]
+                  ).map((lang) => ({
+                    value: lang,
+                    label: getLanguageLabel(lang),
+                    icon: <Flag lang={lang} countryOfOrigin={countryOfOrigin} size={14} />,
+                  }))}
+                />
+              </>
+            )}
+            {/* Seulement avec les contrôles avancés. */}
+            {availableSources.length > 0 && advancedPlayerControls && (
+              <>
+                <span aria-hidden className="my-2 w-0.5 -skew-x-[14deg] bg-border" />
+                <Select
+                  title="Source vidéo"
+                  joined="end"
+                  value={selectedSource}
+                  onValueChange={selectSource}
+                  className="min-w-[9.5rem]"
+                  options={sourceSelectOptions(availableSources)}
+                />
+              </>
+            )}
+          </div>
+
+          <div className="ml-auto flex items-center gap-2.5">
+            {session && !isGuest && episodeCount > 0 && (
+              <SeasonWatchedMenu
+                episodeCount={episodeCount}
+                watchedCount={watchedCount}
+                lastEpisode={lastEpisode}
+                onMarkUpTo={markWatchedUpTo}
+                onMarkAll={() => markWatchedUpTo(lastEpisode)}
+                onUnmarkAll={unmarkSeason}
+                controlH={CONTROL_H}
+              />
+            )}
+
+            {canDownload && (
+              <SeasonDownloadButton
+                seasonDl={seasonDl}
+                selectedSeason={selectedSeason}
+                seasonQueuedCount={seasonQueuedCount}
+                downloadableEpisodes={downloadableEpisodes}
+                onDownload={() => downloadSeason()}
+                onCancel={cancelSeasonDownload}
+                controlH={CONTROL_H}
+              />
+            )}
+
+            <SeasonActionsMenu
+              reversed={reversed}
+              onToggleReversed={() => setReversed((v) => !v)}
+              spoilerMode={spoilerMode}
+              onToggleSpoiler={toggleSpoilerMode}
+              onReport={
+                onReport
+                  ? () => onReport({ kind: "episode", season: selectedSeason?.name || null, episode: null })
+                  : null
+              }
+              controlH={CONTROL_H}
+            />
+          </div>
         </div>
       </div>
 

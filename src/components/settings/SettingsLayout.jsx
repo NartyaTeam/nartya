@@ -10,7 +10,7 @@ export function Toggle({ checked, onChange, label }) {
       aria-checked={checked}
       aria-label={label}
       onClick={() => onChange(!checked)}
-      className={`relative h-7 w-12 shrink-0 rounded-full border transition-colors active:scale-95 ${
+      className={`relative h-7 w-12 shrink-0 rounded-full border-2 transition-colors active:scale-95 ${
         checked ? "border-primary bg-primary" : "border-border bg-surface-2"
       }`}
     >
@@ -143,14 +143,14 @@ export function Section({ id, number, eyebrow, title, description, children }) {
   return (
     <section id={id} className="min-w-0 scroll-mt-40 md:scroll-mt-24 md:border-t md:border-border/70 md:pt-8">
       <header className="grid gap-2 px-1 pb-3 md:grid-cols-[64px_minmax(0,1fr)] md:gap-4 md:px-0 md:pb-7">
-        <span className="hidden font-display text-3xl font-black tabular-nums text-text/[0.11] md:block">
+        <span className="hidden font-impact text-4xl tabular-nums text-primary/25 md:block">
           {number}
         </span>
         <div>
           <p className="hidden text-[0.6rem] font-bold uppercase tracking-[0.24em] text-primary md:block">
             {eyebrow}
           </p>
-          <h2 className="font-display text-lg font-black tracking-[-0.02em] text-text md:mt-2 md:text-2xl">
+          <h2 className="t-impact text-2xl text-text md:mt-2 md:text-3xl">
             {title}
           </h2>
           {description && (
@@ -158,7 +158,7 @@ export function Section({ id, number, eyebrow, title, description, children }) {
           )}
         </div>
       </header>
-      <div className="overflow-hidden rounded-2xl border border-border/60 bg-surface/45 px-4 md:ml-16 md:rounded-none md:border-x-0 md:bg-surface/35 md:px-6">
+      <div className="overflow-hidden rounded-md border-2 border-border bg-surface/45 px-4 md:ml-16 md:bg-surface/35 md:px-6">
         {children}
       </div>
     </section>

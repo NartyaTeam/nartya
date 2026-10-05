@@ -1,7 +1,7 @@
 import { Ban, Check, CloudLightning, CloudRain, Crown, Leaf, Lock, Snowflake, Star } from "lucide-react";
 import { EMBLEMS } from "@/api/profile";
 
-const ACCENT_SWATCHES = ["#FF4A2D", "#F4648C", "#A855F7", "#3B82F6", "#14B8A6", "#EAB308", "#F97316", "#E5E7EB"];
+const ACCENT_SWATCHES = ["#FF713E", "#F4648C", "#A855F7", "#3B82F6", "#14B8A6", "#EAB308", "#F97316", "#E5E7EB"];
 export const AMBIENCES = [
   { id: "storm", label: "Orage", desc: "Éclairs lointains et ciel électrique", color: "#8aa6ff", icon: CloudLightning },
   { id: "rain", label: "Pluie", desc: "Averses fines sur le profil", color: "#59aee8", icon: CloudRain },

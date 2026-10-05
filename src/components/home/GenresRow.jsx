@@ -41,8 +41,7 @@ export default function GenresRow() {
   return (
     <section className="carousel-section relative pt-6">
       <div className="mb-3 flex items-center justify-between px-4 sm:px-8">
-        <h2 className="flex items-baseline gap-2.5 font-display text-xl font-bold tracking-tight">
-          <span className="text-base font-medium text-muted/60">ジャンル</span>
+        <h2 className="section-title">
           Genres
         </h2>
         <div className="hidden gap-1 md:flex">

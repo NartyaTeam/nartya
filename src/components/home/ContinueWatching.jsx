@@ -299,8 +299,7 @@ export default function ContinueWatching({ defaultTab = null, onlyScans = false 
   return (
     <section className="carousel-section relative pt-6">
       <div className={`flex items-center justify-between px-4 sm:px-8 ${scanItems.length && !onlyScans ? "" : "mb-3"}`}>
-        <h2 className="flex items-baseline gap-2.5 font-display text-xl font-bold tracking-tight">
-          <span className="text-base font-medium text-muted/60">{onlyScans ? "読書" : "続き"}</span>
+        <h2 className="section-title">
           {onlyScans ? "Continuer à lire" : "Reprendre"}
         </h2>
         <div className="hidden gap-1 md:flex">

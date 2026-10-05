@@ -1,4 +1,5 @@
 import { ArrowLeft } from "lucide-react";
+import { foregroundFor } from "@/utils/theme";
 import { profileArt } from "@/lib/profileArt";
 import { pageAmbientBackdrop, accentRgb, resolveAccent, resolveBanner, resolveEmblem, resolvePageBackground } from "@/api/profile";
 import { resolveCosmetics } from "@/lib/cosmetics";
@@ -45,7 +46,7 @@ export default function ProfileColumn({
   const emblem = resolveEmblem(profile);
 
   return (
-    <div className="relative animate-fade-in" style={accent ? { "--primary": accent } : undefined}>
+    <div className="relative animate-fade-in" style={accent ? { "--primary": accent, "--primary-fg": foregroundFor(accent) } : undefined}>
       {/* `fixed` : couvre les côtés d'une fenêtre large. */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         {pageBg ? (
@@ -128,7 +129,7 @@ export default function ProfileColumn({
               <button
                 type="button"
                 onClick={onBack}
-                className="absolute left-4 top-4 z-20 flex h-[38px] items-center gap-2 rounded bg-black/50 px-4 text-[13px] font-bold text-white ring-1 ring-white/15 backdrop-blur-md transition-colors hover:bg-black/65 sm:left-7 sm:top-6"
+                className="absolute left-4 top-4 z-20 flex h-[38px] items-center gap-2 rounded-md bg-bg/85 px-4 text-[13px] font-bold text-text ring-2 ring-border transition-colors hover:bg-bg sm:left-7 sm:top-6"
               >
                 <ArrowLeft size={14} /> Retour
               </button>

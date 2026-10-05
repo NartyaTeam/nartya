@@ -6,7 +6,7 @@ const PODIUM = {
   2: "203 213 225",
   3: "205 127 50",
 };
-const DEFAULT_RGB = "255 74 45"; // 4e à 10e place
+const DEFAULT_RGB = "255 113 62"; // 4e à 10e place
 
 export default function RankBadge({ rank, size = "sm" }) {
   if (!rank || rank > 10) return null;

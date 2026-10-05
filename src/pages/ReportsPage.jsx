@@ -69,7 +69,7 @@ function ReportsList({ reports, selectedId, onSelect, loading }) {
       className={`${selectedId ? "hidden md:flex" : "flex"} w-full shrink-0 flex-col border-r border-border/70 bg-surface/45 md:w-[var(--report-list-w)]`}
     >
       <div className="flex min-h-[4.5rem] items-center gap-3 border-b border-border/70 px-4">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary ring-1 ring-primary/25">
+        <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary/10 text-primary ring-2 ring-primary/30">
           <ClipboardList size={17} />
         </div>
         <div>
@@ -93,7 +93,7 @@ function ReportsList({ reports, selectedId, onSelect, loading }) {
                   type="button"
                   key={r.reportId}
                   onClick={() => onSelect(r.reportId)}
-                  className={`w-full rounded-xl border p-3 text-left transition-colors ${
+                  className={`w-full rounded-md border-2 p-3 text-left transition-colors ${
                     selected
                       ? "border-primary/35 bg-primary/[0.08]"
                       : "border-transparent hover:border-border/70 hover:bg-white/[0.035]"
@@ -302,7 +302,7 @@ export default function ReportsPage() {
       <div className="mx-auto mb-3 flex w-full max-w-[96rem] items-end justify-between gap-4 px-1">
         <div>
           <p className="eyebrow">Support · Signalements</p>
-          <h1 className="mt-1 font-display text-2xl font-bold text-text sm:text-3xl">Signalements</h1>
+          <h1 className="t-impact mt-2 text-4xl sm:text-5xl">Signalements</h1>
         </div>
         <button
           type="button"
@@ -316,7 +316,7 @@ export default function ReportsPage() {
 
       <div
         style={{ "--report-list-w": `${listWidth}px` }}
-        className="relative mx-auto flex min-h-0 w-full max-w-[96rem] flex-1 overflow-hidden rounded-md border border-border bg-surface/30 shadow-[0_18px_45px_-30px_rgba(0,0,0,0.95)] backdrop-blur-xl"
+        className="relative mx-auto flex min-h-0 w-full max-w-[96rem] flex-1 overflow-hidden rounded-md border-2 border-border bg-surface/30 shadow-[0_18px_45px_-30px_rgba(0,0,0,0.95)] backdrop-blur-xl"
       >
         <ReportsList
           reports={reports}

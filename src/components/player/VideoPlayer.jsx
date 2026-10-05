@@ -173,7 +173,7 @@ export default function VideoPlayer({
       gesture: !platform.isMobile,
       // L'app gère la reprise par épisode, et le plugin est indexé par `option.url`, vide en HLS.
       autoPlayback: false,
-      theme: "#FF4A2D",
+      theme: "rgb(var(--primary))", // suit la couleur de l'app
       lang: "fr",
       moreVideoAttr: { crossOrigin: "anonymous" },
       controls: [

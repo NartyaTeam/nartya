@@ -57,10 +57,9 @@ export default function ShareCard({ profile, stats, extra, kanji, posters, banne
     }
   };
   return (
-    <section className="mt-6 rounded-2xl bg-surface ring-1 ring-border/90">
+    <section className="mt-6 rounded-md bg-surface ring-2 ring-border">
       <div className="flex items-center gap-2 border-b border-border/90 px-4 py-3">
-        <span className="h-3 w-[3px] bg-primary" />
-        <h3 className="font-display text-[0.7rem] font-bold uppercase tracking-kana text-muted">Ma carte Nartya</h3>
+        <h3 className="section-title !text-xl">Ma carte Nartya</h3>
       </div>
       <div className="p-4">
         <div className="relative overflow-hidden rounded-xl bg-bg" style={{ aspectRatio: "4 / 5" }} aria-busy={!rendered}>

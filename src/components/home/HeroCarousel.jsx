@@ -2,9 +2,21 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import { useNavigate } from "react-router-dom";
 import { BookOpen, Play, Info, Star } from "lucide-react";
+import { clipTitle, titleSizeClass } from "@/utils/displayTitle";
 import AnimeLogo, { isClearLogoUrl } from "@/components/anime/AnimeLogo";
 
 const AUTOPLAY_MS = 8000;
+
+/** Se remplit en AUTOPLAY_MS ; `key` la relance à chaque slide, `paused` la fige (survol, onglet masqué). */
+function ProgressFill({ paused }) {
+  return (
+    <span
+      aria-hidden
+      className="hero-progress absolute inset-0 origin-left rounded-full bg-primary"
+      style={{ animationDuration: `${AUTOPLAY_MS}ms`, animationPlayState: paused ? "paused" : "running" }}
+    />
+  );
+}
 
 /** Les vignettes sont dans le slide, pour que tout glisse ensemble. */
 function HeroSlide({ anime, contentType, isActive, shouldLoad, onOpen, onPrimary }) {
@@ -35,6 +47,7 @@ function HeroSlide({ anime, contentType, isActive, shouldLoad, onOpen, onPrimary
       <div className="absolute inset-0 bg-gradient-to-r from-bg/90 via-bg/30 to-transparent md:from-bg/95 md:via-bg/40" />
       <div className="absolute inset-0 bg-gradient-to-b from-black/35 to-transparent md:from-bg/60" />
 
+      <div className="slash-rule absolute inset-x-0 bottom-0 z-[2] hidden md:block" />
       <div className="absolute inset-0 flex items-end">
         <div
           className={`mx-auto w-full max-w-2xl px-5 pb-6 text-center md:mx-0 md:px-14 md:pb-20 md:text-left ${
@@ -42,7 +55,7 @@ function HeroSlide({ anime, contentType, isActive, shouldLoad, onOpen, onPrimary
           }`}
         >
           <p className="mb-3 flex items-center justify-center gap-2.5 text-[0.65rem] font-bold uppercase tracking-[0.25em] text-white/65 md:mb-4 md:justify-start md:text-[0.7rem] md:text-muted">
-            <span className="h-3 w-[3px] bg-primary" />
+            <span className="h-3.5 w-[6px] -skew-x-[14deg] bg-primary" />
             {isManga ? "Manga à la une" : "À la une"}
           </p>
 
@@ -57,8 +70,10 @@ function HeroSlide({ anime, contentType, isActive, shouldLoad, onOpen, onPrimary
               imageClassName="origin-center object-center md:origin-left md:object-left"
             />
           ) : (
-            <h1 className="mb-4 font-display text-3xl font-extrabold leading-[0.95] text-glow md:mb-5 md:text-6xl">
-              {anime.title}
+            <h1
+              className={`mb-4 block max-w-full break-words leading-[1.05] t-impact [filter:drop-shadow(0_2px_14px_rgb(0_0_0/0.75))] md:mb-6 ${titleSizeClass(anime.title)}`}
+            >
+              {clipTitle(anime.title)}
             </h1>
           )}
 
@@ -110,8 +125,12 @@ export default function HeroCarousel({ items, contentType = "anime" }) {
   const [emblaRef, embla] = useEmblaCarousel({ loop: true, duration: 30 });
   const [selected, setSelected] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
-  const hovering = useRef(false);
+  const [hovering, setHovering] = useState(false);
+  const [tabHidden, setTabHidden] = useState(false);
   const rootRef = useRef(null);
+  const remainingRef = useRef(null);
+  const lastSelectedRef = useRef(null);
+  const paused = hovering || tabHidden || !isVisible;
 
   const slides = useMemo(() => {
     const seen = new Set();
@@ -135,12 +154,30 @@ export default function HeroCarousel({ items, contentType = "anime" }) {
   }, [embla, onSelect]);
 
   useEffect(() => {
-    if (!embla || !isVisible) return;
-    const id = setInterval(() => {
-      if (!hovering.current && document.visibilityState === "visible") embla.scrollNext();
-    }, AUTOPLAY_MS);
-    return () => clearInterval(id);
-  }, [embla, isVisible]);
+    const onVisibility = () => setTabHidden(document.visibilityState !== "visible");
+    onVisibility();
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+  }, []);
+
+  // La barre de progression et la minuterie partagent `selected` et `paused` : elles restent calées.
+  useEffect(() => {
+    if (lastSelectedRef.current !== selected) {
+      lastSelectedRef.current = selected;
+      remainingRef.current = null;
+    }
+    if (!embla || paused) return;
+    const remaining = remainingRef.current ?? AUTOPLAY_MS;
+    const startedAt = Date.now();
+    const id = setTimeout(() => {
+      remainingRef.current = null;
+      embla.scrollNext();
+    }, remaining);
+    return () => {
+      clearTimeout(id);
+      remainingRef.current = Math.max(0, remaining - (Date.now() - startedAt));
+    };
+  }, [embla, selected, paused]);
 
   useEffect(() => {
     const node = rootRef.current;
@@ -159,10 +196,10 @@ export default function HeroCarousel({ items, contentType = "anime" }) {
     <div
       ref={rootRef}
       className="relative w-full px-4 pt-[calc(env(safe-area-inset-top)+0.75rem)] md:h-[70vh] md:min-h-[500px] md:px-0 md:pt-0"
-      onMouseEnter={() => (hovering.current = true)}
-      onMouseLeave={() => (hovering.current = false)}
+      onMouseEnter={() => setHovering(true)}
+      onMouseLeave={() => setHovering(false)}
     >
-      <div className={`relative overflow-hidden rounded-2xl border border-white/10 bg-surface shadow-card md:h-full md:min-h-0 md:max-h-none md:rounded-none md:border-0 md:shadow-none ${
+      <div className={`relative overflow-hidden rounded-lg border-2 border-border bg-surface shadow-card md:h-full md:min-h-0 md:max-h-none md:rounded-none md:border-0 md:shadow-none ${
         contentType === "manga"
           ? "h-[48svh] min-h-[26rem] max-h-[30rem]"
           : "h-[53svh] min-h-[29rem] max-h-[33rem]"
@@ -201,10 +238,12 @@ export default function HeroCarousel({ items, contentType = "anime" }) {
               key={i}
               onClick={() => embla?.scrollTo(i)}
               aria-label={`Afficher le spotlight ${i + 1}`}
-              className={`h-1 rounded-full shadow-sm transition-all duration-300 ${
-                i === selected ? "w-6 bg-primary" : "w-2.5 bg-white/35"
+              className={`relative h-1 overflow-hidden rounded-full shadow-sm transition-all duration-300 ${
+                i === selected ? "w-8 bg-white/35" : "w-2.5 bg-white/35"
               }`}
-            />
+            >
+              {i === selected && <ProgressFill key={selected} paused={paused} />}
+            </button>
           ))}
         </div>
 
@@ -217,10 +256,13 @@ export default function HeroCarousel({ items, contentType = "anime" }) {
               <button
                 key={i}
                 onClick={() => embla?.scrollTo(i)}
-                className={`h-[3px] rounded-full transition-all duration-300 ${
-                  i === selected ? "w-7 bg-primary" : "w-3 bg-white/25 hover:bg-white/50"
+                aria-label={`Afficher le spotlight ${i + 1}`}
+                className={`relative h-1 overflow-hidden rounded-full transition-all duration-300 ${
+                  i === selected ? "w-10 bg-white/25" : "w-3 bg-white/25 hover:bg-white/50"
                 }`}
-              />
+              >
+                {i === selected && <ProgressFill key={selected} paused={paused} />}
+              </button>
             ))}
           </div>
           <span className="font-display text-sm font-bold text-muted">

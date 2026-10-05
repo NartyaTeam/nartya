@@ -49,6 +49,47 @@
 }
 
 @layer components {
+  /* Titre « Kitsune Cut » : condensé, majuscule, incliné comme les bannières. */
+  .t-impact {
+    display: inline-block;
+    font-family: "Anton", Impact, sans-serif;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.01em;
+    line-height: 1;
+    transform: skewX(-8deg);
+  }
+  /* Remplissage du repère actif de la pagination du héros ; la durée est posée en ligne. */
+  .hero-progress {
+    animation-name: hero-progress;
+    animation-timing-function: linear;
+    animation-fill-mode: both;
+  }
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-family: "Anton", Impact, sans-serif;
+    font-weight: 400;
+    font-size: 1.65rem;
+    letter-spacing: 0.02em;
+    line-height: 1;
+    text-transform: uppercase;
+    transform: skewX(-8deg);
+    transform-origin: left center;
+  }
+  .section-title::before {
+    content: "";
+    width: 7px;
+    height: 1.15em;
+    background: rgb(var(--primary));
+    flex-shrink: 0;
+  }
+  /* Filet continu qui s'estompe vers la droite, sans coupure. */
+  .slash-rule {
+    height: 3px;
+    background: linear-gradient(90deg, rgb(var(--primary)) 0%, rgb(var(--primary)) 55%, rgb(var(--primary) / 0) 100%);
+  }
   /* Les backdrop-filter forcent une recomposition continue au scroll ; les fonds mobiles sont assez opaques. */
   .mobile-runtime [class*="backdrop-blur"] {
     -webkit-backdrop-filter: none !important;
@@ -125,11 +166,19 @@
   }
   .btn-shu {
     @apply relative inline-flex items-center justify-center gap-2 rounded-md bg-primary px-6 py-3
-      font-bold text-primary-fg transition-colors duration-200 hover:bg-primary/90;
+      font-bold text-primary-fg transition duration-150 hover:brightness-105 active:translate-y-[3px];
+    box-shadow: 0 4px 0 color-mix(in srgb, rgb(var(--primary)) 58%, black);
+  }
+  .btn-shu:active {
+    box-shadow: 0 1px 0 color-mix(in srgb, rgb(var(--primary)) 58%, black);
   }
   .btn-ghost {
     @apply inline-flex items-center justify-center gap-2 rounded-md bg-white/[0.07] px-6 py-3
-      font-medium text-text backdrop-blur transition-colors hover:bg-white/[0.12];
+      font-bold text-text backdrop-blur transition duration-150 hover:bg-white/[0.12] active:translate-y-[3px];
+    box-shadow: inset 0 0 0 2px rgb(250 250 250 / 0.28), 0 4px 0 rgb(250 250 250 / 0.16);
+  }
+  .btn-ghost:active {
+    box-shadow: inset 0 0 0 2px rgb(250 250 250 / 0.28), 0 1px 0 rgb(250 250 250 / 0.16);
   }
 }
 
@@ -709,4 +758,94 @@ html.mobile-runtime {
       transparent
     );
   }
+}
+
+@keyframes hero-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* Lecteur : habillage « Kitsune Cut » sur les variables d'ArtPlayer (aucune logique touchée). */
+/* Double classe : la feuille d'ArtPlayer est injectée après la nôtre et reprendrait ses valeurs par défaut. */
+.art-video-player.art-video-player {
+  --art-font-color: rgb(250 250 250);
+  --art-widget-background: rgb(23 21 26 / 0.97);
+  --art-tip-background: rgb(var(--primary));
+  --art-border-radius: 6px;
+  --art-progress-height: 10px;
+  --art-progress-color: rgb(250 250 250 / 0.2);
+  --art-loaded-color: rgb(250 250 250 / 0.3);
+  --art-hover-color: rgb(250 250 250 / 0.34);
+  --art-highlight-color: rgb(250 250 250);
+  --art-indicator-size: 18px;
+  --art-control-opacity: 0.9;
+  --art-theme: rgb(var(--primary));
+  --art-settings-max-height: min(70vh, 460px);
+  --art-selector-max-height: min(70vh, 460px);
+  font-family: "Zen Kaku Gothic Antique", system-ui, sans-serif;
+}
+
+/* Dégradé du bas : encre violette plutôt que noir pur. */
+.art-video-player .art-bottom {
+  background-image: linear-gradient(to top, rgb(14 12 17 / 0.94), rgb(14 12 17 / 0.5) 55%, transparent);
+}
+
+/* Repère de lecture : parallélogramme corail, comme les étiquettes d'épisode. */
+.art-video-player .art-bottom .art-progress .art-control-progress .art-control-progress-inner .art-progress-indicator {
+  border-radius: 0;
+  background: rgb(var(--primary));
+  clip-path: polygon(32% 0, 100% 0, 68% 100%, 0 100%);
+}
+.art-video-player .art-progress-indicator .art-icon {
+  display: none;
+}
+
+/* Bulle de temps. */
+.art-video-player .art-bottom .art-progress .art-control-progress .art-control-progress-inner .art-progress-tip {
+  padding: 4px 8px;
+  border-radius: 3px;
+  background: rgb(var(--primary));
+  color: rgb(var(--primary-fg));
+  font-family: "Anton", Impact, sans-serif;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  text-shadow: none;
+}
+
+.art-video-player .art-loading .art-icon svg {
+  fill: rgb(var(--primary));
+}
+
+/* Panneaux : contour franc de 2 px, ligne survolée en aplat corail. */
+.art-video-player .art-settings,
+.art-video-player .art-contextmenus,
+.art-video-player .art-control-volume .art-volume-panel .art-volume-inner,
+.art-video-player .art-selector-list {
+  box-shadow: inset 0 0 0 2px rgb(61 57 68);
+  border-radius: 6px;
+}
+.art-video-player .art-settings .art-setting-panel .art-setting-item,
+.art-video-player .art-contextmenus .art-contextmenu,
+.art-video-player .art-selector-list .art-selector-item {
+  font-weight: 700;
+}
+/* Le menu ne défile que si l'écran est vraiment trop court, sans barre visible. */
+.art-video-player .art-settings,
+.art-video-player .art-selector-list {
+  scrollbar-width: none;
+}
+.art-video-player .art-settings::-webkit-scrollbar,
+.art-video-player .art-selector-list::-webkit-scrollbar {
+  display: none;
+}
+
+/* Survol : voile clair, le texte reste blanc (la ligne active garde la couleur de l'app). */
+.art-video-player .art-settings .art-setting-panel .art-setting-item:hover,
+.art-video-player .art-contextmenus .art-contextmenu:hover,
+.art-video-player .art-selector-list .art-selector-item:hover {
+  background-color: rgb(250 250 250 / 0.12);
 }

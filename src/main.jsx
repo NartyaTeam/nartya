@@ -74,8 +74,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <HashRouter>
       <App />
-      {!platform.isMobile && <div className="grain-overlay" aria-hidden="true" />}
-      {/* Au-dessus du grain : la cérémonie de succès couvre toute l'app, lecteur compris. */}
+      {/* La cérémonie de succès couvre toute l'app, lecteur compris. */}
       <AchievementUnlockHost />
       <AppIntro />
       {platform.isMobile ? (

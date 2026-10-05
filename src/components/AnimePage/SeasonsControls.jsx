@@ -202,7 +202,7 @@ export function SeasonDownloadButton({
       {/* Le libellé ne change pas au survol. */}
       <Loader2 size={16} className="animate-spin group-hover:hidden" />
       <X size={16} className="hidden group-hover:block" />
-      <span className="hidden sm:inline">Annuler la saison</span>
+      <span className="hidden lg:inline">Annuler la saison</span>
       <span className="tabular-nums opacity-70">
         {seasonDl && seasonDl.seasonId === selectedSeason?.id
           ? `${seasonDl.done}/${seasonDl.total}`
@@ -221,7 +221,7 @@ export function SeasonDownloadButton({
       className={`flex ${controlH} items-center gap-2 rounded-md bg-surface px-3.5 text-sm font-medium text-text ring-1 ring-border transition-colors hover:bg-surface-2 hover:text-primary disabled:cursor-not-allowed disabled:opacity-50`}
     >
       <DownloadCloud size={16} />
-      <span className="hidden sm:inline">Télécharger la saison</span>
+      <span className="hidden lg:inline">Télécharger la saison</span>
       {downloadableEpisodes.length > 0 && (
         <span className="tabular-nums opacity-70">({downloadableEpisodes.length})</span>
       )}

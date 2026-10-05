@@ -36,10 +36,10 @@ function Choice({ active, disabled = false, onClick, children }) {
       disabled={disabled}
       aria-pressed={active}
       onClick={onClick}
-      className={`rounded-sm border px-3 py-2 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-30 ${
+      className={`rounded-md border-2 px-3 py-1.5 text-xs font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-30 ${
         active
-          ? "border-primary/55 bg-primary/10 text-primary"
-          : "border-white/[0.09] bg-white/[0.025] text-muted hover:border-white/[0.18] hover:text-text"
+          ? "border-primary bg-primary/15 text-primary"
+          : "border-border bg-surface/60 text-muted hover:border-text/35 hover:text-text"
       }`}
     >
       {children}
@@ -197,9 +197,8 @@ export default function SearchHubPage() {
       <div className="relative mx-auto max-w-[1500px]">
         <header className="mx-auto max-w-2xl text-center">
           <p className="eyebrow">Parcourir le catalogue</p>
-          <h1 className="mt-2 font-display text-4xl font-bold tracking-tight text-text sm:text-5xl">
-            Recherche
-          </h1>
+          <h1 className="t-impact mt-3 text-5xl text-text sm:text-7xl">Recherche</h1>
+          <div className="mx-auto mt-4 h-[3px] w-40 bg-primary" />
           <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-muted">
             Recherche un titre ou affine directement le catalogue avec les critères qui t'intéressent.
           </p>
@@ -212,10 +211,10 @@ export default function SearchHubPage() {
               type="button"
               onClick={() => selectMedia(option.value)}
               aria-pressed={media === option.value}
-              className={`rounded-md border px-4 py-1.5 text-xs font-semibold transition-colors ${
+              className={`rounded-md border-2 px-5 py-1.5 text-xs font-bold uppercase tracking-wider transition-colors ${
                 media === option.value
-                  ? "border-primary/55 bg-primary/10 text-primary"
-                  : "border-white/[0.09] text-muted hover:border-white/[0.18] hover:text-text"
+                  ? "border-primary bg-primary text-primary-fg"
+                  : "border-border text-muted hover:border-text/35 hover:text-text"
               }`}
             >
               {option.label}
@@ -224,7 +223,7 @@ export default function SearchHubPage() {
         </div>
 
         <form onSubmit={applySearch} className="mx-auto mt-4 max-w-3xl">
-          <div className="flex items-center gap-2 rounded-lg border border-white/[0.12] bg-surface/85 p-2 pl-4 shadow-card transition-[border-color,box-shadow] focus-within:border-primary/50 focus-within:shadow-[0_18px_55px_-22px_rgb(var(--primary)/.4)] sm:gap-3">
+          <div className="flex items-center gap-2 rounded-md border-2 border-border bg-surface/90 p-2 pl-4 shadow-card transition-[border-color,box-shadow] focus-within:border-primary/70 focus-within:shadow-[0_18px_55px_-22px_rgb(var(--primary)/.4)] sm:gap-3">
             <Search size={19} className="shrink-0 text-muted" />
             <input
               ref={inputRef}
@@ -252,10 +251,10 @@ export default function SearchHubPage() {
               type="button"
               onClick={() => setFiltersOpen((open) => !open)}
               aria-expanded={filtersOpen}
-              className={`relative inline-flex items-center gap-2 rounded-md border px-3 py-2.5 text-sm font-semibold transition-colors ${
+              className={`relative inline-flex items-center gap-2 rounded-md border-2 px-3 py-2 text-sm font-bold transition-colors ${
                 filtersOpen || draftFiltersCount
-                  ? "border-primary/35 bg-primary/10 text-primary"
-                  : "border-white/[0.09] text-muted hover:border-white/[0.18] hover:text-text"
+                  ? "border-primary bg-primary/15 text-primary"
+                  : "border-border text-muted hover:border-text/35 hover:text-text"
               }`}
             >
               <SlidersHorizontal size={15} />
@@ -269,7 +268,7 @@ export default function SearchHubPage() {
             </button>
             <button
               type="submit"
-              className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2.5 text-sm font-semibold text-primary-fg transition-[filter] hover:brightness-110 sm:px-5"
+              className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2.5 text-sm font-bold text-primary-fg shadow-[0_3px_0_color-mix(in_srgb,rgb(var(--primary))_58%,black)] transition hover:brightness-105 active:translate-y-[2px] active:shadow-none sm:px-5"
             >
               <Search size={15} className="sm:hidden" />
               <span className="hidden sm:inline">Rechercher</span>
@@ -278,7 +277,7 @@ export default function SearchHubPage() {
         </form>
 
         {filtersOpen && (
-          <section className="mx-auto mt-4 max-w-5xl rounded-lg border border-white/[0.09] bg-surface/70 p-5 shadow-card animate-fade-in-fast lg:p-6">
+          <section className="mx-auto mt-4 max-w-5xl rounded-md border-2 border-border bg-surface/80 p-5 shadow-card animate-fade-in-fast lg:p-6">
             <div className={`grid gap-6 ${media === "manga" ? "" : "lg:grid-cols-[0.8fr_1.2fr]"}`}>
               {media !== "manga" && (
                 <div className="space-y-6">
@@ -392,9 +391,7 @@ export default function SearchHubPage() {
 
         <section className="mt-10 border-t border-white/[0.07] pt-7">
           <p className="eyebrow text-center">Catalogue Nartya</p>
-          <h2 className="mb-7 mt-1 text-center font-display text-2xl font-bold text-text">
-            {resultTitle}
-          </h2>
+          <h2 className="t-impact mb-7 mt-2 block text-center text-3xl text-text">{resultTitle}</h2>
           <CatalogResults
             fetchPage={fetchPage}
             resetKey={`${committedMedia}|${committedSearch}|${committedGenresString}|${committedType}|${committedEps}|${committedLang}`}

@@ -36,7 +36,7 @@ function PosterCard({ anime, onOpen }) {
   return (
     <button onClick={() => onOpen(anime)} className="min-w-0 text-left active:scale-[0.98]">
       {anime.image ? (
-        <img src={anime.image} alt="" loading="lazy" className="aspect-[2/3] w-full rounded-sm object-cover ring-1 ring-white/10" />
+        <img src={anime.image} alt="" loading="lazy" className="aspect-[2/3] w-full rounded-md object-cover ring-2 ring-border" />
       ) : (
         <div className="aspect-[2/3] w-full rounded-sm bg-surface-2" />
       )}
@@ -138,7 +138,7 @@ export default function MobileSearchPage() {
             <ArrowLeft size={21} />
           </button>
         ) : null}
-        <div className="flex h-11 min-w-0 flex-1 items-center gap-2.5 rounded-lg bg-surface px-3.5 ring-1 ring-border focus-within:ring-primary/60">
+        <div className="flex h-11 min-w-0 flex-1 items-center gap-2.5 rounded-md bg-surface px-3.5 ring-2 ring-border focus-within:ring-primary/70">
           <Search size={17} className="shrink-0 text-muted" />
           <input
             ref={inputRef}
@@ -165,7 +165,7 @@ export default function MobileSearchPage() {
           )
         ) : genre ? (
           <>
-            <h1 className="mb-4 font-display text-2xl font-bold">{genre}</h1>
+            <h1 className="t-impact mb-4 text-3xl">{genre}</h1>
             {genreLoading ? (
               <div className="grid grid-cols-3 gap-3">
                 {Array.from({ length: 9 }, (_, index) => <div key={index} className="aspect-[2/3] animate-pulse bg-surface-2" />)}
@@ -183,7 +183,7 @@ export default function MobileSearchPage() {
             {recents.length ? (
               <section className="mb-6">
                 <div className="mb-2 flex items-center justify-between">
-                  <h1 className="font-display text-xs uppercase tracking-kana text-muted">Recherches récentes</h1>
+                  <h1 className="section-title !text-xl">Recherches récentes</h1>
                   <button onClick={clearRecents} className="text-xs text-muted">Effacer</button>
                 </div>
                 {recents.map((recent) => (
@@ -194,7 +194,7 @@ export default function MobileSearchPage() {
                 ))}
               </section>
             ) : null}
-            <h1 className="mb-3 font-display text-xs uppercase tracking-kana text-muted">Parcourir par genre</h1>
+            <h1 className="section-title mb-3 !text-xl">Parcourir par genre</h1>
             {genresLoading ? (
               <div className="grid grid-cols-2 gap-3">
                 {Array.from({ length: 8 }, (_, index) => <div key={index} className="aspect-[16/10] animate-pulse bg-surface-2" />)}
@@ -205,11 +205,11 @@ export default function MobileSearchPage() {
                   <button
                     key={card.genre}
                     onClick={() => setParams({ genre: card.genre })}
-                    className="relative aspect-[16/10] overflow-hidden rounded-lg text-left ring-1 ring-white/10 active:scale-[0.98]"
+                    className="relative aspect-[16/10] overflow-hidden rounded-md text-left ring-2 ring-border active:scale-[0.98]"
                   >
                     {card.image ? <img src={card.image} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover" /> : null}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-transparent" />
-                    <span className="absolute inset-x-0 bottom-0 p-2.5 font-display text-base font-bold text-white">{card.genre}</span>
+                    <span className="absolute inset-x-0 bottom-0 p-2.5 font-display text-base font-extrabold text-white">{card.genre}</span>
                   </button>
                 ))}
               </div>

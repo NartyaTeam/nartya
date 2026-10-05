@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
+import { NartyaLockup } from "@/components/brand/NartyaMark";
 import { Loader2, KeyRound, ExternalLink, Download, CheckCircle2 } from "lucide-react";
-import { asset } from "@/lib/asset";
 import { openHub, getHubInfo } from "@/lib/hubAuth";
 import { useAuthStore } from "@/stores/useAuthStore";
 
@@ -49,11 +49,7 @@ export default function HubSignInCard({ onOpenTerms }) {
   return (
     <div className="rounded-lg bg-surface/70 p-7 shadow-card ring-1 ring-white/10 backdrop-blur-2xl">
       <div className="mb-6 text-center">
-        <img
-          src={asset("icon_with_text.png")}
-          alt="Nartya Anime"
-          className="mx-auto mb-3 h-32 w-auto object-contain"
-        />
+        <NartyaLockup className="mb-5" />
         <p className="text-sm leading-relaxed text-muted">
           Ta connexion Nartya se fait maintenant depuis le Hub. Connecte-toi là-bas, et toutes
           tes apps suivent.

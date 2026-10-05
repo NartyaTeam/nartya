@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate, useSearchParams, Link } from "react-router-dom";
 import { ArrowLeft, Heart, Star, ChevronDown, ExternalLink, Megaphone, Play, Languages, Zap } from "lucide-react";
 import { toast } from "@/lib/toast";
+import { clipTitle, titleSizeClass } from "@/utils/displayTitle";
 import { getAnimePage, resolveAnilistToSlug, getAnimeScans } from "@/api/animeApi";
 import { getMediaById } from "@/api/anilist";
 import { fetchAniZipData } from "@/api/anizip";
@@ -339,7 +340,9 @@ export default function AnimePage() {
             imageClassName="object-center"
           />
         ) : (
-          <h1 className="font-display text-3xl font-extrabold leading-tight text-glow">{title}</h1>
+          <h1 className={`block max-w-full break-words leading-[1.05] t-impact [filter:drop-shadow(0_2px_14px_rgb(0_0_0/0.75))] ${titleSizeClass(title, "page")}`}>
+            {clipTitle(title, 90)}
+          </h1>
         )}
 
         <div className="mt-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-sm text-muted">
@@ -447,7 +450,7 @@ export default function AnimePage() {
       <div className="relative z-10 -mt-44 hidden px-4 md:block md:px-14">
         <div className="flex flex-col gap-8 md:flex-row">
           <div className="shrink-0">
-            <div className="relative w-44 overflow-hidden shadow-card ring-1 ring-white/10 md:w-52">
+            <div className="relative w-44 -rotate-2 overflow-hidden rounded-md ring-2 ring-text/25 shadow-[6px_6px_0_rgb(var(--primary))] transition-transform duration-200 hover:rotate-0 md:w-52">
               {cover ? (
                 <img src={cover} alt={title} className="aspect-[2/3] w-full object-cover" />
               ) : (
@@ -466,7 +469,7 @@ export default function AnimePage() {
             <button
               onClick={toggleFavorite}
               className={`mt-3 flex w-44 items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-bold transition-colors md:w-52 ${
-                fav ? "bg-primary text-primary-fg" : "bg-surface text-text ring-1 ring-border hover:bg-surface-2"
+                fav ? "bg-primary text-primary-fg" : "bg-surface text-text ring-2 ring-border hover:bg-surface-2"
               }`}
             >
               <Heart size={16} className={fav ? "fill-current" : ""} />
@@ -500,8 +503,8 @@ export default function AnimePage() {
                 imageClassName="origin-left object-left"
               />
             ) : (
-              <h1 className="font-display text-4xl font-extrabold leading-tight text-glow md:text-5xl">
-                {title}
+              <h1 className={`block max-w-full break-words leading-[1.05] t-impact [filter:drop-shadow(0_2px_14px_rgb(0_0_0/0.75))] ${titleSizeClass(title, "page")}`}>
+                {clipTitle(title, 90)}
               </h1>
             )}
             {altTitle && altTitle !== title && <p className="mt-1.5 text-muted">{altTitle}</p>}
@@ -564,12 +567,12 @@ export default function AnimePage() {
                     <Link
                       key={g}
                       to={`/genre/${encodeURIComponent(browse)}`}
-                      className="rounded bg-white/[0.06] px-2.5 py-1 text-xs text-text transition-colors hover:bg-white/[0.1] hover:text-primary"
+                      className="rounded border-2 border-border bg-surface/70 px-2.5 py-0.5 text-xs font-medium text-text transition-colors hover:border-primary hover:text-primary"
                     >
                       {g}
                     </Link>
                   ) : (
-                    <span key={g} className="rounded bg-white/[0.06] px-2.5 py-1 text-xs text-text">
+                    <span key={g} className="rounded border-2 border-border bg-surface/70 px-2.5 py-0.5 text-xs font-medium text-text">
                       {g}
                     </span>
                   );
@@ -583,7 +586,7 @@ export default function AnimePage() {
                   href={anime.url}
                   target="_blank"
                   rel="noreferrer"
-                  className="group inline-flex items-center gap-2 rounded-md bg-white/[0.06] px-3 py-2 text-sm font-medium text-text ring-1 ring-border transition-colors hover:bg-white/[0.1] hover:text-primary"
+                  className="group inline-flex items-center gap-2 rounded-md bg-surface/70 px-3 py-2 text-sm font-bold text-text ring-2 ring-border transition-colors hover:bg-white/[0.1] hover:text-primary"
                 >
                   <img src={asset("anime-sama.png")} alt="" className="h-4 w-4 rounded-[3px] object-cover" />
                   Voir sur Anime-Sama
@@ -650,7 +653,7 @@ export default function AnimePage() {
                   <button
                     key={t.id}
                     onClick={() => selectTab(t.id)}
-                    className={`border-b-2 px-4 py-2.5 text-sm font-semibold transition-colors ${
+                    className={`-mb-px border-b-4 px-4 py-2.5 text-sm font-bold uppercase tracking-wider transition-colors ${
                       contentTab === t.id
                         ? "border-primary text-text"
                         : "border-transparent text-muted hover:text-text"
@@ -710,7 +713,7 @@ export default function AnimePage() {
                   <button
                     key={tab.id}
                     onClick={() => selectTab(tab.id)}
-                    className={`border-b-2 px-4 py-2.5 text-sm font-semibold transition-colors ${
+                    className={`-mb-px border-b-4 px-4 py-2.5 text-sm font-bold uppercase tracking-wider transition-colors ${
                       contentTab === tab.id
                         ? "border-primary text-text"
                         : "border-transparent text-muted hover:text-text"

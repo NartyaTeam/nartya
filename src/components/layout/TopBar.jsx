@@ -158,14 +158,14 @@ export default function TopBar({ scrolled }) {
         <button
           onClick={() => navigate(-1)}
           title="Retour"
-          className="app-no-drag pointer-events-auto flex items-center gap-2 rounded-md bg-black/40 px-3 py-2.5 text-sm font-medium ring-1 ring-white/15 backdrop-blur-md transition-colors hover:bg-black/60"
+          className="app-no-drag pointer-events-auto flex items-center gap-2 rounded-md bg-surface/85 px-3 py-2.5 text-sm font-medium ring-2 ring-border backdrop-blur-md transition-colors hover:bg-black/60"
         >
           <ArrowLeft size={18} /> <span className="hidden sm:inline">Retour</span>
         </button>
       )}
       {!hideSearch && (
       <div ref={boxRef} className="app-no-drag pointer-events-auto relative ml-auto w-full max-w-md">
-        <div className="flex items-center gap-2 rounded-md bg-black/40 px-3.5 py-2.5 shadow-sm ring-1 ring-white/15 backdrop-blur-md transition focus-within:bg-black/55 focus-within:ring-primary/60">
+        <div className="flex items-center gap-2 rounded-md bg-surface/85 px-3.5 py-2.5 shadow-sm ring-2 ring-border backdrop-blur-md transition focus-within:bg-black/55 focus-within:ring-primary/60">
           <Search size={17} className="text-muted" />
           <input
             ref={inputRef}

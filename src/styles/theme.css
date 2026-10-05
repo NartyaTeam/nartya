@@ -1,19 +1,19 @@
 /*
- * Design system « 朱 / Vermillion Noir » : encre noire, vermillon des torii, or discret, grain
- * de pellicule. Couleurs en RGB pour l'opacité Tailwind.
+ * Design system « Kitsune Cut » : encre violet-noir, corail du renard, blanc, miel discret.
+ * Couleurs en RGB pour l'opacité Tailwind.
  */
 :root {
-  --bg: 10 10 12; /* #0a0a0c encre */
-  --bg-2: 14 13 16; /* fond secondaire légèrement chaud */
-  --surface: 20 19 23; /* cartes / panneaux */
-  --surface-2: 30 28 33; /* survol / imbriqué */
-  --border: 42 40 47;
-  --text: 240 237 232; /* blanc os, chaud */
-  --muted: 150 145 154; /* gris encre */
-  --primary: 255 74 45; /* 朱 vermillion signature */
-  --primary-fg: 255 247 244;
-  --accent: 211 173 110; /* 金 or discret */
-  --sakura: 255 138 128; /* surbrillance rosée ponctuelle */
+  --bg: 23 21 26; /* #17151a encre */
+  --bg-2: 27 25 31;
+  --surface: 32 30 36; /* #201e24 panneaux, l'encre du logo */
+  --surface-2: 44 41 49; /* survol / imbriqué */
+  --border: 61 57 68;
+  --text: 250 250 250; /* #fafafa blanc */
+  --muted: 160 158 166;
+  --primary: 255 113 62; /* #ff713e corail du renard */
+  --primary-fg: 32 28 35; /* encre sur corail, comme les bannières */
+  --accent: 232 176 72; /* miel */
+  --sakura: 255 150 130;
 }
 
 /* Classe sur :root : coupe le grain et neutralise animations et transitions. */

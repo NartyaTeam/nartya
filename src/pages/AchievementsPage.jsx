@@ -105,7 +105,7 @@ function AchievementCard({ family, value, unlockedIds }) {
     : 100;
 
   return (
-    <article className="group relative overflow-hidden rounded-[1.15rem] border border-primary/25 bg-surface/45 transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-glow sm:rounded-xl sm:bg-surface/55">
+    <article className="group relative overflow-hidden rounded-md border-2 border-border bg-surface/60 transition-colors duration-300 hover:border-primary">
       <header className="relative flex items-start gap-3 px-4 pt-4 sm:px-5 sm:pt-5">
         <span className="mt-1 h-7 w-[3px] shrink-0 rounded-full bg-primary shadow-[0_0_12px_rgb(var(--primary)/0.7)]" />
         <div className="min-w-0 flex-1">
@@ -238,7 +238,7 @@ export default function AchievementsPage() {
               <Trophy size={16} />
               <span className="eyebrow">Collection personnelle</span>
             </div>
-            <h1 className="font-display text-[2.1rem] font-extrabold leading-[1.05] tracking-tight text-glow sm:text-5xl">
+            <h1 className="t-impact text-4xl md:text-5xl">
               Tes succès
             </h1>
             <p className="mt-2.5 max-w-[18rem] text-[0.78rem] leading-5 text-text/65 sm:mt-3 sm:max-w-md sm:text-sm sm:leading-6">

@@ -19,14 +19,15 @@ export default {
       },
       fontFamily: {
         display: ['"Zen Maru Gothic"', "sans-serif"],
+        impact: ['"Anton"', "Impact", "sans-serif"],
         sans: ['"Zen Kaku Gothic Antique"', "system-ui", "sans-serif"],
       },
       letterSpacing: {
         kana: "0.35em",
       },
       borderRadius: {
-        xl: "0.75rem",
-        "2xl": "1.1rem",
+        xl: "0.5rem",
+        "2xl": "0.75rem",
       },
       boxShadow: {
         glow: "0 0 60px -12px rgb(var(--primary) / 0.55)",

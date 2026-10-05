@@ -8,7 +8,7 @@ import { usePlanningStore } from "@/stores/usePlanningStore";
 import { useFriendsStore } from "@/stores/useFriendsStore";
 import { useFollowedReleases } from "@/hooks/useFollowedReleases";
 import { countNewReleases } from "@/utils/planning";
-import { asset } from "@/lib/asset";
+import { Fox } from "@/components/brand/NartyaMark";
 import { Avatar } from "@/components/ui/Avatar";
 import { resolveAvatar } from "@/api/profile";
 import RoleBadge from "@/components/profile/RoleBadge";
@@ -119,18 +119,13 @@ function Item({ to, icon: Icon, label, expanded, badge = 0, nested = false, end 
           nested ? "gap-2.5 py-1.5 pr-3 text-[0.8rem] font-normal" : "gap-3 px-[15px] py-2 text-sm font-medium transition-colors"
         } ${
           isActive
-            ? "bg-white/[0.06] text-primary"
+            ? "bg-primary font-bold text-primary-fg"
             : `hover:bg-white/[0.04] hover:text-text ${nested ? "text-muted/90" : "text-muted"}`
         }`
       }
     >
-      {({ isActive }) => (
+      {() => (
         <>
-          {isActive && (
-            <span
-              className={`absolute left-0 top-1/2 w-[3px] -translate-y-1/2 bg-primary ${nested ? "h-3.5" : "h-4"}`}
-            />
-          )}
           <span className="relative shrink-0">
             <Icon size={iconSize} strokeWidth={2} />
             {badge > 0 && !expanded && (
@@ -145,7 +140,7 @@ function Item({ to, icon: Icon, label, expanded, badge = 0, nested = false, end 
           </span>
           {badge > 0 && expanded && (
             <span
-              className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[0.65rem] font-bold text-primary-fg"
+              className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[0.65rem] font-bold text-primary-fg ring-2 ring-bg"
               style={{ opacity: expanded ? 1 : 0, transition: `opacity ${TRANS}` }}
             >
               {badge > 9 ? "9+" : badge}
@@ -224,12 +219,10 @@ export default function Sidebar() {
         }}
       >
         <div className="app-drag flex h-[84px] shrink-0 items-center gap-3 px-[14px]">
-          <img src={asset("icon.png")} alt="Nartya" className="h-9 w-9 shrink-0 object-contain" />
+          <Fox className="h-9 w-9 shrink-0 text-primary" />
           <div className="min-w-0 leading-none" style={fade}>
-            <p className="whitespace-nowrap font-display text-lg font-extrabold tracking-wide">NARTYA</p>
-            <p className="mt-1 whitespace-nowrap text-[0.6rem] uppercase tracking-kana text-muted">
-              アニメ
-            </p>
+            <p className="whitespace-nowrap text-[0.62rem] font-bold uppercase tracking-[0.42em] text-primary">Nartya</p>
+            <p className="t-impact mt-1.5 whitespace-nowrap text-xl">Anime</p>
           </div>
         </div>
 
@@ -327,15 +320,12 @@ export default function Sidebar() {
             title={!expanded ? "Paramètres" : undefined}
             className={({ isActive }) =>
               `app-no-drag relative mx-2 flex items-center gap-3 rounded-md px-[15px] py-2 text-sm font-medium transition-colors ${
-                isActive ? "bg-white/[0.06] text-primary" : "text-muted hover:bg-white/[0.04] hover:text-text"
+                isActive ? "bg-primary font-bold text-primary-fg" : "text-muted hover:bg-white/[0.04] hover:text-text"
               }`
             }
           >
-            {({ isActive }) => (
+            {() => (
               <>
-                {isActive && (
-                  <span className="absolute left-0 top-1/2 h-4 w-[3px] -translate-y-1/2 bg-primary" />
-                )}
                 <Settings size={18} className="shrink-0" />
                 <span
                   className="whitespace-nowrap"

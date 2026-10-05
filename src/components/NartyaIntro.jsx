@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { asset } from "@/lib/asset";
+import { Fox } from "@/components/brand/NartyaMark";
 import { playIntroSound } from "@/utils/introSound";
 import "./NartyaIntro.css";
 
@@ -54,14 +54,14 @@ export default function NartyaIntro({ onDone }) {
       role="presentation"
       aria-hidden="true"
     >
-      <span className="nartya-intro__seal">朱</span>
+      <Fox className="nartya-intro__seal" />
       <div className="nartya-intro__glow" />
       <div className="nartya-intro__trail" />
       <div className="nartya-intro__slash" />
 
       <div className="nartya-intro__stage">
         <div className="nartya-intro__mark">
-          <img src={asset("icon.png")} alt="" draggable={false} />
+          <Fox />
         </div>
 
         <div className="nartya-intro__word">
@@ -73,7 +73,7 @@ export default function NartyaIntro({ onDone }) {
         </div>
 
         <div className="nartya-intro__rule" />
-        <p className="nartya-intro__kana">アニメ</p>
+        <p className="nartya-intro__kana">ANIME</p>
       </div>
     </div>
   );

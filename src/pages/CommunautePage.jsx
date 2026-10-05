@@ -136,7 +136,7 @@ export default function CommunautePage() {
     <div className="animate-fade-in p-8">
       <header className="mb-8">
         <p className="eyebrow">Communauté</p>
-        <h1 className="font-display text-3xl font-bold tracking-tight">
+        <h1 className="t-impact text-4xl md:text-5xl">
           Amis
           {loaded && friends.length > 0 && (
             <span className="ml-2.5 align-middle text-lg font-medium text-muted">{friends.length}</span>
@@ -145,7 +145,7 @@ export default function CommunautePage() {
       </header>
 
       <section className="mb-10">
-        <div className="flex h-10 w-full max-w-md items-center gap-2.5 rounded-md bg-surface px-3.5 ring-1 ring-border focus-within:ring-primary/60">
+        <div className="flex h-10 w-full max-w-md items-center gap-2.5 rounded-md bg-surface px-3.5 ring-2 ring-border focus-within:ring-primary/70">
           {searching ? (
             <Loader2 size={16} className="shrink-0 animate-spin text-muted" />
           ) : (
@@ -180,7 +180,7 @@ export default function CommunautePage() {
 
       {hasRequests && (
         <section className="mb-10">
-          <h2 className="mb-4 font-display text-lg font-bold tracking-tight">Demandes</h2>
+          <h2 className="section-title mb-4 !text-xl">Demandes</h2>
 
           {incoming.length > 0 && (
             <>
@@ -220,7 +220,7 @@ export default function CommunautePage() {
       )}
 
       <section>
-        <h2 className="mb-4 font-display text-lg font-bold tracking-tight">Mes amis</h2>
+        <h2 className="section-title mb-4 !text-xl">Mes amis</h2>
         {!loaded ? (
           <div className={GRID_CLASS}>
             {Array.from({ length: 4 }).map((_, i) => (
@@ -228,7 +228,7 @@ export default function CommunautePage() {
             ))}
           </div>
         ) : friends.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border py-16 text-center">
+          <div className="flex flex-col items-center justify-center rounded-md border-2 border-dashed border-border py-16 text-center">
             <Users size={28} className="text-muted" />
             <p className="mt-3 max-w-sm text-sm text-muted">
               Tu n'as pas encore d'amis. Cherche un membre par son pseudo ci-dessus pour lui envoyer une demande.

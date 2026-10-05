@@ -99,14 +99,14 @@ function AnimeProfile() {
           <button
             type="button"
             onClick={() => setEditing(true)}
-            className="flex h-[38px] items-center gap-2 rounded bg-black/50 px-4 text-[13px] font-bold text-white ring-1 ring-white/15 backdrop-blur-md transition-colors hover:bg-black/65"
+            className="flex h-[38px] items-center gap-2 rounded-md bg-bg/85 px-4 text-[13px] font-bold text-text ring-2 ring-border transition-colors hover:bg-bg"
           >
             <Pencil size={14} /> Éditer
           </button>
           <button
             type="button"
             onClick={() => shareCardRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })}
-            className="flex h-[38px] items-center gap-2 rounded bg-primary px-4 text-[13px] font-bold text-bg transition-opacity hover:opacity-90"
+            className="flex h-[38px] items-center gap-2 rounded-md bg-primary px-4 text-[13px] font-bold text-primary-fg shadow-[0_3px_0_color-mix(in_srgb,rgb(var(--primary))_58%,black)] transition hover:brightness-105 active:translate-y-[2px] active:shadow-none"
           >
             <Camera size={14} /> Ma carte
           </button>
@@ -121,7 +121,7 @@ function AnimeProfile() {
             <button
               type="button"
               onClick={share}
-              className="mt-4 w-full rounded-md bg-surface-2/50 px-3.5 py-2.5 text-center text-xs font-semibold text-muted ring-1 ring-border/60 transition-colors hover:text-text"
+              className="mt-4 w-full rounded-md bg-surface-2/50 px-3.5 py-2.5 text-center text-xs font-bold text-muted ring-2 ring-border transition-colors hover:text-text"
             >
               Copier le lien du profil
             </button>

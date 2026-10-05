@@ -381,7 +381,7 @@ export default function DownloadsPage() {
     <div className="animate-fade-in px-4 pb-8 pt-[calc(env(safe-area-inset-top)+1.5rem)] sm:px-8 sm:py-8">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-display text-2xl font-extrabold tracking-tight sm:text-3xl">Téléchargements</h1>
+          <h1 className="t-impact text-4xl md:text-5xl">Téléchargements</h1>
           <p className="mt-1 text-sm text-muted">
             Vos épisodes disponibles hors ligne, sur cet appareil.
           </p>
@@ -408,11 +408,11 @@ export default function DownloadsPage() {
       </div>
 
       {!downloadsAvailable() ? (
-        <p className="rounded-lg border border-border bg-surface p-6 text-center text-sm text-muted">
+        <p className="rounded-md border-2 border-border bg-surface p-6 text-center text-sm text-muted">
           Le téléchargement n'est disponible que dans l'application de bureau.
         </p>
       ) : items.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border py-20 text-center">
+        <div className="flex flex-col items-center justify-center gap-3 rounded-md border-2 border-dashed border-border py-20 text-center">
           <Download size={32} className="text-muted" />
           <p className="font-display text-lg">Aucun épisode téléchargé</p>
           <p className="max-w-sm text-sm text-muted">
@@ -422,7 +422,7 @@ export default function DownloadsPage() {
           </p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-md ring-1 ring-border">
+        <div className="overflow-hidden rounded-md ring-2 ring-border">
           {groups.map((g, gi) => {
             const isCollapsed = !!collapsed[g.slug];
             const failedInGroup = g.episodes.filter((it) => FAILED_STATUSES.has(it.status));

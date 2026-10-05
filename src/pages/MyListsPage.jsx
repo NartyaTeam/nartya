@@ -38,7 +38,7 @@ function ListCard({ row, summary, onOpen, onRemove }) {
   return (
     <article className="group relative min-w-0">
       <button onClick={onOpen} className="block w-full text-left active:scale-[0.985]">
-        <div className="relative aspect-[2/3] overflow-hidden rounded-xl bg-surface-2 ring-1 ring-white/[0.06] [transform:translateZ(0)]">
+        <div className="relative aspect-[2/3] overflow-hidden rounded-md bg-surface-2 ring-2 ring-border [transform:translateZ(0)]">
           {row.anime_cover ? (
             <img
               src={row.anime_cover}
@@ -134,19 +134,19 @@ function AddAnimeSheet({ rows, onAdd, onClose }) {
   return createPortal(
     <div className="fixed inset-0 z-[100] flex items-end md:items-center md:justify-center md:p-6" role="dialog" aria-modal="true" aria-label="Ajouter un anime">
       <button className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} aria-label="Fermer" />
-      <section className="relative z-10 flex max-h-[88dvh] w-full flex-col overflow-hidden rounded-t-3xl border-t border-white/10 bg-bg shadow-2xl animate-slide-up md:max-w-xl md:rounded-2xl md:border">
+      <section className="relative z-10 flex max-h-[88dvh] w-full flex-col overflow-hidden rounded-t-xl border-t-2 border-border bg-bg shadow-2xl animate-slide-up md:max-w-xl md:rounded-md md:border-2">
         <div className="px-4 pb-3 pt-3 md:px-5">
           <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-white/20 md:hidden" />
           <div className="flex items-center justify-between">
             <div>
               <p className="text-[0.65rem] font-semibold uppercase tracking-[0.24em] text-primary/80">À regarder plus tard</p>
-              <h2 className="mt-1 font-display text-xl font-bold">Ajouter un anime</h2>
+              <h2 className="t-impact mt-1 text-3xl">Ajouter un anime</h2>
             </div>
             <button onClick={onClose} aria-label="Fermer" className="flex h-10 w-10 items-center justify-center rounded-full bg-white/[0.06] text-muted active:bg-white/10">
               <X size={19} />
             </button>
           </div>
-          <div className="mt-4 flex h-12 items-center gap-3 rounded-xl bg-white/[0.055] px-4 ring-1 ring-white/[0.08] focus-within:ring-primary/45">
+          <div className="mt-4 flex h-12 items-center gap-3 rounded-md bg-surface px-4 ring-2 ring-border focus-within:ring-primary/70">
             <Search size={18} className="shrink-0 text-muted" />
             <input
               autoFocus
@@ -309,7 +309,7 @@ export default function MyListsPage() {
               <p className="text-[0.65rem] font-semibold uppercase tracking-[0.28em] text-primary/80">Carnet de visionnage</p>
             </div>
             <div className="flex items-baseline gap-2.5">
-              <h1 className="font-display text-[2rem] font-bold leading-none tracking-tight md:text-3xl">Mes listes</h1>
+              <h1 className="t-impact text-4xl md:text-5xl">Mes listes</h1>
               {rows !== null && <span className="text-sm tabular-nums text-muted">{total}</span>}
             </div>
           </div>
@@ -347,7 +347,7 @@ export default function MyListsPage() {
       </div>
 
       <div className="mb-5">
-        <h2 className="font-display text-lg font-bold text-text">{sectionTitle}</h2>
+        <h2 className="section-title !text-xl">{sectionTitle}</h2>
         <p className="mt-0.5 text-xs leading-relaxed text-muted">
           {sectionCopy} {items.length > 1 && "Glisse une carte pour la réordonner."}
         </p>
@@ -373,7 +373,7 @@ export default function MyListsPage() {
           )}
         />
       ) : (
-        <div className="flex min-h-[40dvh] flex-col items-center justify-center rounded-2xl border border-dashed border-border/80 px-7 text-center">
+        <div className="flex min-h-[40dvh] flex-col items-center justify-center rounded-md border-2 border-dashed border-border px-7 text-center">
           <span className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
             {active === "planned" ? <Bookmark size={24} /> : <ListPlus size={24} />}
           </span>

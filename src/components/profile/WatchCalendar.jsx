@@ -63,7 +63,7 @@ export default function WatchCalendar({ userId }) {
   return (
     <section className="mt-9">
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-b-2 border-border pb-2.5">
-        <h3 className="font-display text-[0.7rem] font-bold uppercase tracking-kana text-muted">
+        <h3 className="section-title !text-xl">
           Une année de visionnage
         </h3>
         <p className="shrink-0 text-[11px] text-muted">

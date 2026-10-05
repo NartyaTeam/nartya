@@ -12,7 +12,7 @@ function normalize(media) {
       "Sans titre",
     titleNative: media.title?.native || "",
     cover: media.coverImage?.extraLarge || media.coverImage?.large || "",
-    color: media.coverImage?.color || "#FF4A2D",
+    color: media.coverImage?.color || "#FF713E",
     banner: media.bannerImage || "",
     genres: media.genres || [],
     score: media.averageScore ? media.averageScore / 10 : null,

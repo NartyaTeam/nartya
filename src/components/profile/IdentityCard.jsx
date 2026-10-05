@@ -73,12 +73,12 @@ export default function IdentityCard({ profile, stats, extra, friends, ornament,
           <p className="text-[0.6rem] font-bold uppercase tracking-kana text-muted">Temps de visionnage</p>
           <div className="mt-1.5 flex items-baseline gap-1.5">
             <span
-              className="font-display text-[76px] font-black leading-[0.9] tracking-[-0.04em] tabular-nums text-white"
+              className="font-impact text-[88px] font-normal leading-[0.9] tabular-nums text-white"
               style={{ textShadow: "0 0 40px rgb(var(--primary) / 0.45)" }}
             >
               {h}
             </span>
-            {m != null && <span className="font-display text-2xl font-bold text-primary">h {m}</span>}
+            {m != null && <span className="font-impact text-3xl font-normal text-primary">h {m}</span>}
           </div>
           {days > 0 && (
             <p className="mt-1.5 text-xs text-muted">
@@ -89,20 +89,20 @@ export default function IdentityCard({ profile, stats, extra, friends, ornament,
 
         <div className="mt-[18px] grid grid-cols-2 gap-px bg-border/70">
           <div className="bg-surface px-3.5 py-3">
-            <div className="font-display text-[22px] font-black leading-none tabular-nums">
+            <div className="font-impact text-2xl font-normal leading-none tabular-nums">
               {stats ? stats.totalEpisodes.toLocaleString("fr-FR") : "—"}
             </div>
             <div className="mt-[5px] text-[0.6rem] uppercase tracking-[0.28em] text-muted">Épisodes</div>
           </div>
           <div className="bg-surface px-3.5 py-3">
-            <div className="font-display text-[22px] font-black leading-none tabular-nums">
+            <div className="font-impact text-2xl font-normal leading-none tabular-nums">
               {stats ? stats.totalAnimes.toLocaleString("fr-FR") : "—"}
             </div>
             <div className="mt-[5px] text-[0.6rem] uppercase tracking-[0.28em] text-muted">Animes</div>
           </div>
           {/* La série de jours n'est calculée que pour soi ; ailleurs, le nombre d'amis. */}
           <div className="bg-surface px-3.5 py-3">
-            <div className="font-display text-[22px] font-black leading-none tabular-nums">
+            <div className="font-impact text-2xl font-normal leading-none tabular-nums">
               {isSelf
                 ? extra ? extra.streakDays : "—"
                 : Number(profile.friendsCount ?? 0).toLocaleString("fr-FR")}
@@ -112,7 +112,7 @@ export default function IdentityCard({ profile, stats, extra, friends, ornament,
             </div>
           </div>
           <div className="bg-surface px-3.5 py-3">
-            <div className="font-display text-[22px] font-black leading-none tabular-nums">
+            <div className="font-impact text-2xl font-normal leading-none tabular-nums">
               {Number(profile.viewsCount ?? profile.views_count ?? 0).toLocaleString("fr-FR")}
             </div>
             <div className="mt-[5px] text-[0.6rem] uppercase tracking-[0.28em] text-muted">Vues du profil</div>
