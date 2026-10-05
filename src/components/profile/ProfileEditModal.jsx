@@ -40,7 +40,7 @@ const MAX_BIO = 300;
 const HANDLE_RE = /^[a-z0-9_]{3,20}$/;
 // Miroir de la validation serveur : lettres de toute écriture, chiffres, espace, _ . -
 const USERNAME_RE = /^[\p{L}\p{N}_. -]{3,24}$/u;
-const legacyAccentHex = (accent) => accent === "sakura" ? "#F4648C" : "#FF4A2D";
+const legacyAccentHex = (accent) => accent === "sakura" ? "#F4648C" : "#FF713E";
 
 export default function ProfileEditModal({ onClose }) {
   const user = useAuthStore((s) => s.user);

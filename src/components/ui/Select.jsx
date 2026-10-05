@@ -7,6 +7,17 @@ import { ChevronDown, Check } from "lucide-react";
 
 const SIZES = { md: "h-10", sm: "h-8 text-xs" };
 
+// Cellule d'un bloc de sélecteurs séparés par des obliques : le fond de survol suit la pente.
+const JOINED_BASE =
+  "relative isolate !rounded-none !bg-transparent !ring-0 before:absolute before:inset-y-0 before:-z-10 before:bg-surface-2 before:opacity-0 before:transition-opacity before:content-[''] hover:before:opacity-100 data-[state=open]:before:opacity-100";
+const JOINED = {
+  start:
+    "before:left-0 before:-right-1.5 before:[clip-path:polygon(0_0,calc(100%_-_1px)_0,calc(100%_-_11px)_100%,0_100%)]",
+  middle:
+    "before:-left-1.5 before:-right-1.5 before:[clip-path:polygon(11px_0,calc(100%_-_1px)_0,calc(100%_-_11px)_100%,1px_100%)]",
+  end: "before:-left-1.5 before:right-0 before:[clip-path:polygon(11px_0,100%_0,100%_100%,1px_100%)]",
+};
+
 export function Select({
   value,
   onValueChange,
@@ -17,6 +28,7 @@ export function Select({
   align = "start",
   disabled = false,
   size = "md",
+  joined,
 }) {
   const selected = options.find((o) => o.value === value);
   return (
@@ -24,7 +36,7 @@ export function Select({
       <RSelect.Trigger
         title={title}
         aria-label={title}
-        className={`${SIZES[size] || SIZES.md} inline-flex cursor-pointer items-center gap-2 rounded-md bg-surface pl-3.5 pr-3 text-sm font-medium text-text outline-none ring-1 ring-border transition-colors hover:bg-surface-2 focus:ring-primary/60 data-[state=open]:ring-primary/60 data-[disabled]:cursor-not-allowed data-[disabled]:opacity-40 data-[disabled]:hover:bg-surface ${className}`}
+        className={`${SIZES[size] || SIZES.md} inline-flex cursor-pointer items-center gap-2 rounded-md bg-surface pl-3.5 pr-3 text-sm font-medium text-text outline-none ring-2 ring-border transition-colors hover:bg-surface-2 focus:ring-primary/60 data-[state=open]:ring-primary/60 data-[disabled]:cursor-not-allowed data-[disabled]:opacity-40 data-[disabled]:hover:bg-surface ${joined ? `${JOINED_BASE} ${JOINED[joined]}` : ""} ${className}`}
       >
         {selected?.icon}
         <RSelect.Value placeholder={placeholder} />

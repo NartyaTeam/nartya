@@ -23,7 +23,7 @@ export default function MobileLayout() {
         className="pointer-events-none fixed inset-0 z-0"
         style={{
           background:
-            "radial-gradient(100% 55% at 85% -10%, rgb(255 74 45 / 0.16), transparent 62%)",
+            "radial-gradient(100% 55% at 85% -10%, rgb(var(--primary) / 0.16), transparent 62%)",
         }}
       />
       {/* Lisibilité de la barre système quand les cartes défilent dessous. */}
@@ -32,7 +32,7 @@ export default function MobileLayout() {
         <button
           onClick={goBack}
           aria-label="Retour"
-          className="fixed left-4 z-30 flex h-10 w-10 items-center justify-center rounded-full bg-black/80 text-white shadow-lg ring-1 ring-white/15 active:scale-90"
+          className="fixed left-4 z-30 flex h-10 w-10 items-center justify-center rounded-full bg-bg/90 text-text shadow-lg ring-2 ring-border active:scale-90"
           style={{ top: "calc(env(safe-area-inset-top) + 0.75rem)" }}
         >
           <ArrowLeft size={21} />

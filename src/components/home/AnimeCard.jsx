@@ -107,7 +107,7 @@ function AnimeCard({
       }}
       className="group block w-full select-none text-left transition-transform active:scale-[0.98] md:active:scale-100"
     >
-      <div className="relative aspect-[2/3] overflow-hidden rounded-lg bg-surface-2">
+      <div className="relative aspect-[2/3] overflow-hidden rounded-md bg-surface-2 after:pointer-events-none after:absolute after:inset-0 after:z-20 after:rounded-md after:ring-2 after:ring-inset after:ring-border after:transition-colors after:content-[''] group-hover:after:ring-primary">
         {anime.cover ? (
           <>
             {!loaded && <div className="absolute inset-0 skeleton" />}
@@ -130,20 +130,20 @@ function AnimeCard({
         )}
 
         <div className="absolute inset-0 hidden items-center justify-center bg-black/0 opacity-0 transition-all duration-200 group-hover:bg-black/45 group-hover:opacity-100 md:flex">
-          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-primary text-primary-fg">
+          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-primary text-primary-fg shadow-[0_3px_0_color-mix(in_srgb,rgb(var(--primary))_58%,black)]">
             <PrimaryIcon size={18} className={openScans ? "" : "ml-0.5 fill-current"} />
           </span>
         </div>
 
         {/* Index éditorial (rangée Tendances) */}
         {typeof index === "number" && (
-          <span className="absolute left-1.5 top-1 font-display text-xl font-extrabold leading-none text-white/90 [text-shadow:0_1px_6px_rgba(0,0,0,0.8)]">
+          <span className="absolute left-0 top-0 z-10 bg-primary py-0.5 pl-2 pr-4 font-impact text-base leading-tight tracking-wide text-primary-fg [clip-path:polygon(0_0,100%_0,calc(100%_-_9px)_100%,0_100%)]">
             {String(index + 1).padStart(2, "0")}
           </span>
         )}
 
         {anime.score != null && (
-          <span className="absolute right-1.5 top-1.5 flex items-center gap-1 rounded bg-black/65 px-1.5 py-0.5 text-[0.68rem] font-semibold backdrop-blur-sm">
+          <span className="absolute right-1.5 top-1.5 z-10 flex items-center gap-1 rounded bg-bg/90 px-1.5 py-0.5 text-[0.68rem] font-bold ring-1 ring-border">
             <Star size={10} className="fill-accent text-accent" />
             {anime.score.toFixed(1)}
           </span>
@@ -152,7 +152,7 @@ function AnimeCard({
         {showFavorite && isFav && (
           <span
             title="Dans tes favoris"
-            className="absolute bottom-1.5 left-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-black/55 backdrop-blur-sm"
+            className="absolute bottom-1.5 left-1.5 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-bg/90 ring-2 ring-primary/60"
           >
             <Heart size={12} className="fill-primary text-primary" />
           </span>
@@ -160,7 +160,7 @@ function AnimeCard({
       </div>
 
       <h3
-        className={`mt-2 text-sm font-semibold text-text transition-colors group-hover:text-primary ${
+        className={`mt-2.5 text-sm font-bold text-text transition-colors group-hover:text-primary ${
           titleLines === 2 ? "min-h-10 line-clamp-2 leading-5" : "line-clamp-1"
         }`}
       >

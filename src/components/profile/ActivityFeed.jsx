@@ -105,7 +105,7 @@ export default function ActivityFeed({
     return (
       <div>
         <div className="flex items-baseline justify-between border-b-2 border-border pb-2.5">
-          <h3 className="font-display text-[0.7rem] font-bold uppercase tracking-kana text-muted">
+          <h3 className="section-title !text-xl">
             Activité
           </h3>
           {(items?.length || 0) > 6 && (

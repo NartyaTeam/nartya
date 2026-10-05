@@ -12,7 +12,7 @@ const TEAM_META = {
     order: 0,
     title: "Développeur principal",
     kanji: "朱",
-    rgb: "255 74 45",
+    rgb: "255 113 62",
     blurb:
       "Le développeur principal de Nartya. Écrit le code, casse le code, répare le code — souvent le même jour, parfois entre deux épisodes qu'il regarde soi-disant « pour tester le lecteur ».",
   },

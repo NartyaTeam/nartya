@@ -90,7 +90,7 @@ export default function FavoritesPage() {
               </p>
             </div>
             <div className="flex items-baseline gap-2.5">
-              <h1 className="font-display text-[2rem] font-bold leading-none tracking-tight md:text-3xl">
+              <h1 className="t-impact text-4xl md:text-5xl">
                 Favoris
               </h1>
               {hasFavorites && (
@@ -110,7 +110,7 @@ export default function FavoritesPage() {
         </div>
         {hasFavorites && (
           <div className="mt-5 flex flex-col gap-2.5 sm:flex-row sm:items-center">
-            <div className="flex h-11 flex-1 items-center gap-2.5 rounded-xl bg-white/[0.045] px-3.5 ring-1 ring-white/[0.07] transition-colors focus-within:bg-white/[0.065] focus-within:ring-primary/40 md:h-10 md:max-w-xs md:rounded-md md:bg-surface">
+            <div className="flex h-11 flex-1 items-center gap-2.5 rounded-md bg-surface px-3.5 ring-2 ring-border transition-colors focus-within:ring-primary/70 md:h-10 md:max-w-xs">
               <Search size={16} className="shrink-0 text-muted" />
               <input
                 value={query}
@@ -131,11 +131,11 @@ export default function FavoritesPage() {
               )}
             </div>
 
-            <div className="flex h-11 shrink-0 items-center gap-1 self-start rounded-xl bg-white/[0.045] p-1 ring-1 ring-white/[0.07] md:h-10 md:rounded-md md:bg-surface">
+            <div className="flex h-11 shrink-0 items-center gap-1 self-start rounded-md bg-surface p-1 ring-2 ring-border md:h-10">
               <button
                 type="button"
                 onClick={() => setSortMode("genre")}
-                className={`flex h-full items-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition-colors md:rounded ${
+                className={`flex h-full items-center gap-1.5 rounded px-3 text-xs font-bold transition-colors ${
                   sortMode === "genre" ? "bg-primary text-primary-fg" : "text-muted hover:text-text"
                 }`}
               >
@@ -145,7 +145,7 @@ export default function FavoritesPage() {
               <button
                 type="button"
                 onClick={() => setSortMode("manual")}
-                className={`flex h-full items-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition-colors md:rounded ${
+                className={`flex h-full items-center gap-1.5 rounded px-3 text-xs font-bold transition-colors ${
                   sortMode === "manual" ? "bg-primary text-primary-fg" : "text-muted hover:text-text"
                 }`}
               >
@@ -169,7 +169,7 @@ export default function FavoritesPage() {
           ))}
         </div>
       ) : favorites.length === 0 ? (
-        <div className="flex min-h-[45dvh] flex-col items-center justify-center rounded-2xl border border-dashed border-border/80 px-7 text-center">
+        <div className="flex min-h-[45dvh] flex-col items-center justify-center rounded-md border-2 border-dashed border-border px-7 text-center">
           <span className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
             <Heart size={24} strokeWidth={1.8} />
           </span>
@@ -179,7 +179,7 @@ export default function FavoritesPage() {
           </p>
         </div>
       ) : filtered.length === 0 ? (
-        <div className="flex min-h-56 flex-col items-center justify-center rounded-2xl border border-dashed border-border/80 px-6 text-center">
+        <div className="flex min-h-56 flex-col items-center justify-center rounded-md border-2 border-dashed border-border px-6 text-center">
           <Search size={26} className="text-muted" />
           <p className="mt-3 text-sm text-muted">
             Aucun favori ne correspond à «&nbsp;{query.trim()}&nbsp;».
@@ -208,7 +208,7 @@ export default function FavoritesPage() {
           {groups.map(([genre, items]) => (
             <section key={genre}>
               <div className="mb-4 flex items-center gap-3">
-                <h2 className="shrink-0 font-display text-lg font-bold text-text">{genre}</h2>
+                <h2 className="section-title shrink-0 !text-xl">{genre}</h2>
                 <span className="text-xs font-medium tabular-nums text-muted">{items.length}</span>
                 <span className="h-px flex-1 bg-gradient-to-r from-border/80 to-transparent" />
               </div>

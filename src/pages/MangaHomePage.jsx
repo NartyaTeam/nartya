@@ -46,7 +46,7 @@ export default function MangaHomePage() {
   return (
     <div className="animate-fade-in pb-24">
       <HeroCarousel items={data?.hero || []} contentType="manga" />
-      <div className="relative z-10 mt-4 space-y-10 md:-mt-10 md:space-y-12">
+      <div className="relative z-10 mt-4 space-y-10 md:mt-0 md:pt-6 md:space-y-12">
         <ContinueWatching defaultTab="scans" onlyScans />
         {rows.map((row, index) => (
           <div key={row.key}>

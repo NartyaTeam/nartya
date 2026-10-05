@@ -14,8 +14,19 @@
   overflow: hidden;
   cursor: pointer;
   user-select: none;
-  background: radial-gradient(ellipse at 50% 50%, #100d12 0%, #060508 62%, #000 100%);
+  background: radial-gradient(ellipse at 50% 50%, #26212b 0%, #231f28 12%, #1f1b24 26%, #1b181f 42%, #17151b 58%, #141217 76%, #121014 100%);
   animation: nartya-intro-out 0.4s cubic-bezier(0.4, 0, 0.6, 1) 2.2s forwards;
+}
+/* Grain fixe : casse les paliers visibles des dégradés sombres (banding) et rend le fondu continu. */
+.nartya-intro::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  opacity: 0.1;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 .nartya-intro.is-leaving {
   animation: nartya-intro-out 0.28s ease-out forwards;
@@ -26,19 +37,18 @@
   position: absolute;
   left: 50%;
   top: 50%;
-  font-family: serif;
-  font-size: 92vmin;
-  line-height: 1;
+  width: 92vmin;
+  height: 92vmin;
+  margin: -46vmin 0 0 -46vmin;
   color: rgb(var(--primary));
   opacity: 0;
-  transform: translate(-50%, -50%) scale(1.08);
   animation: nartya-intro-seal 2.3s ease-out 0.3s forwards;
 }
 
 .nartya-intro__glow {
   position: absolute;
   inset: 0;
-  background: radial-gradient(38vmin 28vmin at 50% 50%, rgb(var(--primary) / 0.28), transparent 70%);
+  background: radial-gradient(52vmin 40vmin at 50% 50%, rgb(var(--primary) / 0.26) 0%, rgb(var(--primary) / 0.21) 14%, rgb(var(--primary) / 0.15) 30%, rgb(var(--primary) / 0.09) 48%, rgb(var(--primary) / 0.045) 66%, rgb(var(--primary) / 0.015) 84%, transparent 100%);
   opacity: 0;
   animation: nartya-intro-glow 1.1s ease-out 0.3s forwards;
 }
@@ -59,6 +69,7 @@
   box-shadow: 0 0 22px 3px rgb(var(--primary) / 0.65);
   /* rotate() d'abord : le translateX suit l'axe incliné, le trait traverse le centre. */
   transform: rotate(-24deg) translateX(-130vmax);
+  will-change: transform, opacity;
   animation: nartya-intro-slash 0.6s cubic-bezier(0.6, 0, 0.3, 1) 0.05s forwards;
 }
 .nartya-intro__trail {
@@ -68,6 +79,7 @@
   background: linear-gradient(90deg, transparent, rgb(var(--primary) / 0.7) 30%, rgb(var(--primary) / 0.7) 70%, transparent);
   transform-origin: 0 50%;
   transform: rotate(-24deg) scaleX(0);
+  will-change: transform, opacity;
   animation: nartya-intro-trail 1.1s cubic-bezier(0.6, 0, 0.3, 1) 0.12s forwards;
 }
 
@@ -77,6 +89,7 @@
   flex-direction: column;
   align-items: center;
   /* Le logo s'efface avant le fond. */
+  will-change: transform, opacity;
   animation: nartya-intro-push 0.32s ease-in 2.02s forwards;
 }
 
@@ -93,7 +106,7 @@
   object-fit: contain;
   opacity: 0;
   transform: scale(1.35);
-  filter: blur(10px);
+  will-change: transform, opacity;
   animation: nartya-intro-mark 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s forwards;
 }
 
@@ -102,21 +115,21 @@
   overflow: hidden;
   margin-top: clamp(14px, 2.6vmin, 26px);
   padding: 0.08em 0;
-  font-family: "Zen Maru Gothic", sans-serif;
-  font-weight: 800;
-  font-size: clamp(30px, 6.4vmin, 64px);
+  font-family: "Anton", Impact, sans-serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(34px, 7.4vmin, 74px);
   line-height: 1;
-  color: #fff;
-  letter-spacing: 0.55em;
+  color: rgb(var(--text));
+  letter-spacing: 0.3em;
   /* Compense l'interlettrage de la dernière lettre pour garder le mot centré. */
-  margin-right: -0.55em;
-  animation: nartya-intro-track 1.1s cubic-bezier(0.2, 0.8, 0.2, 1) 0.7s forwards;
+  margin-right: -0.3em;
 }
 .nartya-intro__word span {
   display: inline-block;
   opacity: 0;
   transform: translateY(110%);
-  filter: blur(6px);
+  will-change: transform, opacity;
   animation: nartya-intro-letter 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
   animation-delay: calc(0.7s + var(--i) * 0.055s);
 }
@@ -135,8 +148,8 @@
   margin-top: clamp(8px, 1.6vmin, 16px);
   font-size: clamp(10px, 1.7vmin, 15px);
   color: rgb(255 255 255 / 0.55);
-  letter-spacing: 1.1em;
-  margin-right: -1.1em;
+  letter-spacing: 0.6em;
+  margin-right: -0.6em;
   opacity: 0;
   animation: nartya-intro-kana 0.7s ease-out 1.2s forwards;
 }
@@ -145,15 +158,15 @@
   to { opacity: 0; }
 }
 @keyframes nartya-intro-seal {
-  0%   { opacity: 0; transform: translate(-50%, -50%) scale(1.08); }
+  0%   { opacity: 0; }
   35%  { opacity: 0.05; }
-  100% { opacity: 0.035; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0.035; }
 }
 /* Éclat bref quand la mascotte se pose, puis lueur stable. */
 @keyframes nartya-intro-glow {
-  0%   { opacity: 0; transform: scale(0.8); }
-  22%  { opacity: 1; transform: scale(1.12); }
-  100% { opacity: 0.7; transform: scale(1); }
+  0%   { opacity: 0; }
+  22%  { opacity: 1; }
+  100% { opacity: 0.7; }
 }
 @keyframes nartya-intro-slash {
   0%   { transform: rotate(-24deg) translateX(-130vmax); opacity: 1; }
@@ -165,24 +178,21 @@
   100% { transform: rotate(-24deg) scaleX(1); opacity: 0; }
 }
 @keyframes nartya-intro-mark {
-  0%   { opacity: 0; transform: scale(1.35); filter: blur(10px); }
-  60%  { opacity: 1; transform: scale(0.96); filter: blur(0); }
-  100% { opacity: 1; transform: scale(1); filter: blur(0); }
-}
-@keyframes nartya-intro-track {
-  to { letter-spacing: 0.2em; margin-right: -0.2em; }
+  0%   { opacity: 0; transform: scale(1.35); }
+  60%  { opacity: 1; transform: scale(0.96); }
+  100% { opacity: 1; transform: scale(1); }
 }
 @keyframes nartya-intro-letter {
-  to { opacity: 1; transform: translateY(0); filter: blur(0); }
+  to { opacity: 1; transform: translateY(0); }
 }
 @keyframes nartya-intro-rule {
   to { transform: scaleX(1); }
 }
 @keyframes nartya-intro-kana {
-  to { opacity: 1; letter-spacing: 0.6em; margin-right: -0.6em; }
+  to { opacity: 1; }
 }
 @keyframes nartya-intro-push {
-  to { transform: scale(1.05); filter: blur(2px); opacity: 0; }
+  to { transform: scale(1.04); opacity: 0; }
 }
 
 /* Mouvements réduits : l'ident reste, sans balayages ni déplacements. */

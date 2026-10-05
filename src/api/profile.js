@@ -4,7 +4,7 @@ import { isPremiumActive, premiumTier } from "@/lib/premium";
 
 /** Tokens de la colonne `accent_color`. */
 const THEMES = {
-  vermillion: { label: "Vermillion", kanji: "朱", rgb: "255 74 45" },
+  vermillion: { label: "Vermillion", kanji: "朱", rgb: "255 113 62" },
   sakura: { label: "Sakura", kanji: "桜", rgb: "255 141 132" },
 };
 

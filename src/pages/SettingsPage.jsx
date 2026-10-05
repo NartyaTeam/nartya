@@ -109,7 +109,7 @@ export default function SettingsPage() {
               </span>
               <span className="h-px w-14 bg-primary/40" />
             </div>
-            <h1 className="font-display text-[2.15rem] font-black tracking-[-0.035em] text-white md:mt-6 md:text-5xl">
+            <h1 className="t-impact text-4xl md:text-5xl md:mt-6">
               Paramètres
             </h1>
             <p className="mt-1.5 max-w-xl text-xs leading-5 text-white/48 md:mt-4 md:text-sm md:leading-6">

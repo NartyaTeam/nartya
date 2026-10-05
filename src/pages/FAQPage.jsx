@@ -224,7 +224,7 @@ const ANIME_CATEGORIES = [
 
 function FaqItem({ q, a, open, onToggle }) {
   return (
-    <div className="overflow-hidden rounded-lg border border-border/60 bg-surface/40">
+    <div className="overflow-hidden rounded-md border-2 border-border bg-surface/40">
       <button
         onClick={onToggle}
         aria-expanded={open}
@@ -280,14 +280,14 @@ export default function FAQPage() {
       <div className="mb-6 flex items-center gap-3">
         <HelpCircle size={26} className="text-primary" />
         <div>
-          <h1 className="font-display text-3xl font-extrabold text-glow">Foire aux questions</h1>
+          <h1 className="t-impact text-4xl md:text-5xl">Foire aux questions</h1>
           <p className="mt-1 text-sm text-muted">
             Les réponses aux questions les plus courantes sur Nartya.
           </p>
         </div>
       </div>
 
-      <div className="mb-4 flex h-11 w-full items-center gap-2.5 rounded-md bg-surface px-3.5 ring-1 ring-border focus-within:ring-primary/60">
+      <div className="mb-4 flex h-11 w-full items-center gap-2.5 rounded-md bg-surface px-3.5 ring-2 ring-border focus-within:ring-primary/70">
         <Search size={16} className="shrink-0 text-muted" />
         <input
           value={query}
@@ -329,7 +329,7 @@ export default function FAQPage() {
               <section key={cat.id} id={`cat-${cat.id}`} className="scroll-mt-6">
                 <div className="mb-3 flex items-center gap-2.5">
                   <Icon size={16} className="text-primary" />
-                  <h2 className="font-display text-sm font-bold uppercase tracking-wider text-text">
+                  <h2 className="section-title !text-lg">
                     {cat.label}
                   </h2>
                   <span className="text-xs font-medium text-muted/60">{cat.items.length}</span>
@@ -354,7 +354,7 @@ export default function FAQPage() {
         </div>
       )}
 
-      <div className="mt-10 rounded-lg border border-border/60 bg-surface/40 p-5 text-center">
+      <div className="mt-10 rounded-md border-2 border-border bg-surface/40 p-5 text-center">
         <p className="text-sm text-text">Tu ne trouves pas ta réponse&nbsp;?</p>
         <p className="mt-1 text-xs text-muted">
           Ouvre un{" "}

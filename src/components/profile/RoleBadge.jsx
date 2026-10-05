@@ -1,7 +1,7 @@
 import { Shield, ShieldCheck, Code2 } from "lucide-react";
 
 // Figé : le badge ne suit pas le `--primary` d'un thème de profil.
-const VERMILLION = "255 74 45";
+const VERMILLION = "255 113 62";
 
 /** `user` est masqué sauf `showMember`. */
 const STYLES = {

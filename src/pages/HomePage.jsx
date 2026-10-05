@@ -120,7 +120,7 @@ export default function HomePage() {
   return (
     <div className="animate-fade-in pb-24">
       <HeroCarousel items={data.hero} />
-      <div className="relative z-10 mt-1 space-y-8 md:-mt-10 md:space-y-12">
+      <div className="relative z-10 mt-1 space-y-8 md:mt-0 md:pt-6 md:space-y-12">
         <GenresRow />
         <ContinueWatching />
         <DeferredHomeSection height={300}>

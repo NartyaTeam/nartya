@@ -24,7 +24,7 @@ export default function AchievementsList({ stats, isSelf }) {
   return (
     <div>
       <div className="flex items-baseline justify-between border-b-2 border-primary pb-2.5">
-        <h3 className="font-display text-[0.7rem] font-bold uppercase tracking-kana text-muted">Succès</h3>
+        <h3 className="section-title !text-xl">Succès</h3>
         {isSelf ? (
           <button
             type="button"

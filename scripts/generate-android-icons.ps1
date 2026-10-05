@@ -8,7 +8,7 @@ Add-Type -AssemblyName System.Drawing
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $sourcePath = Join-Path $projectRoot $Source
 $resPath = Join-Path $projectRoot "android/app/src/main/res"
-$ink = [System.Drawing.Color]::FromArgb(255, 11, 11, 13)
+$ink = [System.Drawing.Color]::FromArgb(255, 32, 28, 35)
 
 $densitySizes = [ordered]@{
     "mdpi" = 48

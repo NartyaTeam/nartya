@@ -1,4 +1,3 @@
-import { asset } from "@/lib/asset";
 
 /**
  * Coquille des écrans bloquants (ban, mise à jour requise). `actions` doit toujours mener
@@ -18,20 +17,16 @@ export default function BlockScreen({
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "radial-gradient(60% 45% at 50% 0%, rgb(255 74 45 / 0.08), transparent 65%)",
+            "radial-gradient(60% 45% at 50% 0%, rgb(var(--primary) / 0.08), transparent 65%)",
         }}
       />
 
       <div className="relative flex w-full max-w-md flex-col items-center gap-8 text-center">
-        <img
-          src={asset("icon.png")}
-          alt="Nartya"
-          className="h-14 w-14 rounded-xl object-contain"
-        />
+        <Fox className="h-16 w-16 text-primary" />
 
         <div className="space-y-3">
           <p className="eyebrow">{eyebrow}</p>
-          <h1 className="font-display text-[1.75rem] font-bold leading-tight tracking-tight text-text">
+          <h1 className="t-impact text-4xl text-text">
             {title}
           </h1>
           <p className="text-sm leading-relaxed text-muted">{description}</p>

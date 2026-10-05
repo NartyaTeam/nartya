@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
+import { Fox, NartyaLockup } from "@/components/brand/NartyaMark";
 import { useNavigate } from "react-router-dom";
 import { Loader2, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { getRow } from "@/api/anilist";
 import TermsDialog from "@/components/legal/TermsDialog";
 import HubSignInCard from "@/components/auth/HubSignInCard";
-import { asset } from "@/lib/asset";
 import { translateAuthError } from "@/lib/authErrors";
 import { authOwnedByHub } from "@/lib/hubAuth";
 
@@ -133,13 +133,11 @@ export default function LoginPage() {
         className="absolute inset-0"
         style={{
           background:
-            "radial-gradient(55% 55% at 50% 50%, rgb(255 74 45 / 0.18), transparent 70%)",
+            "radial-gradient(55% 55% at 50% 50%, rgb(var(--primary) / 0.18), transparent 70%)",
         }}
       />
 
-      <span className="pointer-events-none absolute -left-10 bottom-0 select-none font-display text-[26rem] font-extrabold leading-none text-white/[0.03]">
-        朱
-      </span>
+      <Fox className="pointer-events-none absolute -bottom-24 -left-16 h-[34rem] w-[34rem] -rotate-6 select-none text-white/[0.035]" />
 
       {/* Défilable : le clavier mobile ne coupe pas la carte. */}
       <div className="absolute inset-0 z-10 flex items-center justify-center overflow-y-auto px-6 py-8">
@@ -149,11 +147,7 @@ export default function LoginPage() {
         ) : (
         <div className="rounded-lg bg-surface/70 p-7 shadow-card ring-1 ring-white/10 backdrop-blur-2xl">
           <div className="mb-6 text-center">
-            <img
-              src={asset("icon_with_text.png")}
-              alt="Nartya Anime"
-              className="mx-auto mb-3 h-32 w-auto object-contain"
-            />
+            <NartyaLockup className="mb-5" />
             <p className="text-sm leading-relaxed text-muted">
               {mode === "signup"
                 ? "Crée ton compte pour suivre ta progression et bâtir ta collection."

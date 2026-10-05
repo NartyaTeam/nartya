@@ -36,7 +36,7 @@ function ReleaseCard({ item, dayDate, now }) {
 
   return (
     <button onClick={go} className="group block w-full text-left">
-      <div className="relative aspect-[2/3] overflow-hidden rounded-lg bg-surface-2">
+      <div className="relative aspect-[2/3] overflow-hidden rounded-md bg-surface-2 after:pointer-events-none after:absolute after:inset-0 after:z-20 after:rounded-md after:ring-2 after:ring-inset after:ring-border after:transition-colors after:content-[''] group-hover:after:ring-primary">
         {item.image ? (
           <>
             {!loaded && <div className="absolute inset-0 skeleton" />}
@@ -61,11 +61,11 @@ function ReleaseCard({ item, dayDate, now }) {
 
         {/* Badge épisode, sinon type (TV/Film/OAV) */}
         {ep != null ? (
-          <span className="absolute left-1.5 top-1.5 rounded bg-primary/90 px-1.5 py-0.5 text-[0.68rem] font-bold text-primary-fg backdrop-blur-sm">
+          <span className="absolute left-0 top-0 z-10 bg-primary py-0.5 pl-2 pr-3.5 font-impact text-sm leading-tight tracking-wide text-primary-fg [clip-path:polygon(0_0,100%_0,calc(100%_-_8px)_100%,0_100%)]">
             Ép. {ep}
           </span>
         ) : item.type ? (
-          <span className="absolute left-1.5 top-1.5 rounded bg-black/65 px-1.5 py-0.5 text-[0.62rem] font-bold uppercase tracking-wide text-white/90 backdrop-blur-sm">
+          <span className="absolute left-1.5 top-1.5 z-10 rounded bg-bg/90 px-1.5 py-0.5 text-[0.62rem] font-bold uppercase tracking-wide text-text ring-1 ring-border">
             {item.type}
           </span>
         ) : null}
@@ -119,12 +119,16 @@ function DaySection({ day, now, innerRef }) {
 
   return (
     <section ref={innerRef} className="scroll-mt-28">
-      <div className="mb-4 flex items-baseline gap-3 border-b border-border/40 pb-2.5">
-        <h2 className="font-display text-xl font-bold text-text">
+      <div className="mb-4 flex items-center gap-3 border-b-2 border-border pb-3">
+        <h2 className="section-title !text-2xl">
           {day.name}
-          {day.date && <span className="ml-2 text-base font-normal text-muted">{day.date}</span>}
+          {day.date && <span className="ml-1 font-sans text-base font-medium normal-case text-muted">{day.date}</span>}
         </h2>
-        {isToday && <span className="eyebrow text-primary">Aujourd'hui</span>}
+        {isToday && (
+          <span className="rounded bg-primary px-2 py-0.5 text-[0.65rem] font-bold uppercase tracking-wider text-primary-fg">
+            Aujourd'hui
+          </span>
+        )}
         <span className="ml-auto shrink-0 text-xs text-muted">
           {count > 0 ? `${count} sortie${count > 1 ? "s" : ""}` : "Aucune sortie"}
         </span>
@@ -173,7 +177,7 @@ export default function PlanningPage() {
         <div className="flex items-center gap-3">
           <CalendarDays size={26} className="text-primary" />
           <div>
-            <h1 className="font-display text-2xl font-extrabold text-glow sm:text-3xl">Calendrier</h1>
+            <h1 className="t-impact text-4xl sm:text-5xl">Calendrier</h1>
             <p className="mt-1 text-sm text-muted">
               Les sorties de la semaine. Suis un anime (cloche) pour être notifié à sa sortie.
             </p>
@@ -202,7 +206,7 @@ export default function PlanningPage() {
                   <button
                     key={day.index}
                     onClick={() => jumpTo(day.index)}
-                    className={`group flex shrink-0 items-center gap-2 border-b-2 px-3.5 py-2.5 text-sm font-medium transition-colors ${
+                    className={`group flex shrink-0 items-center gap-2 border-b-4 px-3.5 py-2.5 text-sm font-bold uppercase tracking-wider transition-colors ${
                       isToday
                         ? "border-primary text-text"
                         : "border-transparent text-muted hover:text-text"

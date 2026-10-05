@@ -32,8 +32,7 @@ export default function TopTenRow({ title, kana, items }) {
   return (
     <section className="carousel-section relative">
       <div className="mb-3 flex items-center justify-between px-4 sm:px-8">
-        <h2 className="flex items-baseline gap-2.5 font-display text-xl font-bold tracking-tight">
-          {kana && <span className="text-base font-medium text-muted/60">{kana}</span>}
+        <h2 className="section-title">
           {title}
         </h2>
         <div className="hidden gap-1 md:flex">
@@ -60,12 +59,12 @@ export default function TopTenRow({ title, kana, items }) {
             <div key={anime.id} className="flex shrink-0 grow-0 items-end" data-carousel-card>
               <span
                 aria-hidden="true"
-                className="pointer-events-none select-none font-display font-black leading-[0.72] text-transparent text-[7rem] lg:text-[8.5rem]"
-                style={{ WebkitTextStroke: "2px rgb(96 92 99)" }}
+                className="pointer-events-none inline-block -skew-x-[8deg] select-none font-impact leading-[0.8] text-transparent text-[7rem] lg:text-[8.5rem]"
+                style={{ WebkitTextStroke: "2px rgb(var(--primary) / 0.55)" }}
               >
                 {i + 1}
               </span>
-              <div className="-ml-7 w-[140px] lg:w-[150px]">
+              <div className="-ml-3 w-[140px] lg:w-[150px]">
                 <AnimeCard anime={anime} />
               </div>
             </div>

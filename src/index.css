@@ -49,6 +49,48 @@
 }
 
 @layer components {
+  /* Titre « Kitsune Cut » : condensé, majuscule, incliné comme les bannières. */
+  .t-impact {
+    display: inline-block;
+    font-family: "Anton", Impact, sans-serif;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.01em;
+    line-height: 1;
+    transform: skewX(-8deg);
+  }
+  /* Remplissage du repère actif de la pagination du héros ; la durée est posée en ligne. */
+  .hero-progress {
+    animation-name: hero-progress;
+    animation-timing-function: linear;
+    animation-fill-mode: both;
+  }
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-family: "Anton", Impact, sans-serif;
+    font-weight: 400;
+    font-size: 1.65rem;
+    letter-spacing: 0.02em;
+    line-height: 1;
+    text-transform: uppercase;
+    transform: skewX(-8deg);
+    transform-origin: left center;
+  }
+  .section-title::before {
+    content: "";
+    width: 7px;
+    height: 1.15em;
+    background: rgb(var(--primary));
+    flex-shrink: 0;
+  }
+  /* Filet qui s'achève en tirets obliques. */
+  .slash-rule {
+    height: 4px;
+    background: linear-gradient(100deg, rgb(var(--primary)) 0 86%, transparent 86% 88%, rgb(var(--primary)) 88% 92%, transparent 92% 94%, rgb(var(--primary)) 94% 96%, transparent 96%);
+    clip-path: polygon(0 0, 100% 0, calc(100% - 4px) 100%, 0 100%);
+  }
   /* Les backdrop-filter forcent une recomposition continue au scroll ; les fonds mobiles sont assez opaques. */
   .mobile-runtime [class*="backdrop-blur"] {
     -webkit-backdrop-filter: none !important;
@@ -125,11 +167,19 @@
   }
   .btn-shu {
     @apply relative inline-flex items-center justify-center gap-2 rounded-md bg-primary px-6 py-3
-      font-bold text-primary-fg transition-colors duration-200 hover:bg-primary/90;
+      font-bold text-primary-fg transition duration-150 hover:brightness-105 active:translate-y-[3px];
+    box-shadow: 0 4px 0 color-mix(in srgb, rgb(var(--primary)) 58%, black);
+  }
+  .btn-shu:active {
+    box-shadow: 0 1px 0 color-mix(in srgb, rgb(var(--primary)) 58%, black);
   }
   .btn-ghost {
     @apply inline-flex items-center justify-center gap-2 rounded-md bg-white/[0.07] px-6 py-3
-      font-medium text-text backdrop-blur transition-colors hover:bg-white/[0.12];
+      font-bold text-text backdrop-blur transition duration-150 hover:bg-white/[0.12] active:translate-y-[3px];
+    box-shadow: inset 0 0 0 2px rgb(255 245 224 / 0.28), 0 4px 0 rgb(255 245 224 / 0.16);
+  }
+  .btn-ghost:active {
+    box-shadow: inset 0 0 0 2px rgb(255 245 224 / 0.28), 0 1px 0 rgb(255 245 224 / 0.16);
   }
 }
 
@@ -708,5 +758,14 @@ html.mobile-runtime {
       rgb(255 255 255 / 0.06),
       transparent
     );
+  }
+}
+
+@keyframes hero-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
   }
 }

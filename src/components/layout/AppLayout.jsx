@@ -18,7 +18,7 @@ export default function AppLayout() {
         className="pointer-events-none fixed inset-0 z-0"
         style={{
           background:
-            "radial-gradient(80% 50% at 80% -10%, rgb(255 74 45 / 0.14), transparent 60%)",
+            "radial-gradient(80% 50% at 80% -10%, rgb(var(--primary) / 0.14), transparent 60%)",
         }}
       />
       <Sidebar />

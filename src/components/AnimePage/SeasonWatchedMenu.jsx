@@ -52,10 +52,10 @@ export function SeasonWatchedMenu({
       <button
         onClick={() => setOpen((v) => !v)}
         title="Marquer des épisodes comme vus"
-        className={`flex ${controlH} items-center gap-2 rounded-md bg-surface px-3.5 text-sm font-medium text-text ring-1 ring-border transition-colors hover:bg-surface-2 hover:text-primary`}
+        className={`flex ${controlH} items-center gap-2 rounded-md bg-surface px-3 text-sm font-bold text-text ring-2 ring-border transition-colors hover:bg-surface-2 hover:text-primary`}
       >
         <CheckCheck size={16} />
-        <span className="hidden sm:inline">Marquer vus</span>
+        <span className="hidden lg:inline">Marquer vus</span>
         <span className="tabular-nums opacity-70">
           ({watchedCount}/{episodeCount})
         </span>

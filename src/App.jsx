@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, useRef } from "react";
+import { Fox } from "@/components/brand/NartyaMark";
 import { Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useBanStore } from "@/stores/useBanStore";
@@ -23,7 +24,6 @@ import { WatchPartyProvider } from "@/contexts/WatchPartyProvider";
 import { UpdatePolicyProvider } from "@/contexts/UpdatePolicyContext";
 import SignOutModal from "@/components/SignOutModal";
 import { useSignOutModalStore } from "@/stores/useSignOutModalStore";
-import { asset } from "@/lib/asset";
 
 // Chargées à l'ouverture de leur route : Artplayer et hls.js restent hors du démarrage.
 const LoginPage = lazy(() => import("@/pages/LoginPage"));
@@ -209,7 +209,7 @@ export default function App() {
   if (loading) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-6 bg-bg">
-        <img src={asset("icon.png")} alt="Nartya" className="h-24 w-24 animate-pulse object-contain" />
+        <Fox className="h-24 w-24 animate-pulse text-primary" />
         <div className="h-7 w-7 animate-spin rounded-full border-2 border-border border-t-primary" />
       </div>
     );

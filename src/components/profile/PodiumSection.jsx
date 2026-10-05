@@ -45,7 +45,7 @@ export default function PodiumSection({ items, username, isSelf = true }) {
   return (
     <section>
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <h3 className="font-display text-[0.7rem] font-bold uppercase tracking-kana text-primary">Le podium</h3>
+        <h3 className="section-title !text-xl">Le podium</h3>
         <p className="text-xs text-muted">les cinq séries que {username || "ce membre"} met en avant</p>
       </div>
       {items === null ? (

@@ -307,14 +307,14 @@ function EpisodeCardInner({
   return (
     <div
       ref={rootRef}
-      className={`group relative flex w-full items-center gap-3 rounded-lg p-2 transition-[background-color,box-shadow] duration-500 ${
-        focused ? "bg-primary/10 ring-1 ring-primary/60 " : ""
+      className={`group relative flex w-full items-center gap-3 rounded-md border-2 border-transparent p-2 transition-[background-color,border-color,box-shadow] duration-300 ${
+        focused ? "border-primary/60 bg-primary/10 " : ""
       }${
         upcoming
           ? "opacity-70"
           : watched
-            ? "bg-white/[0.025] hover:bg-white/[0.045] active:bg-white/[0.06] md:bg-transparent md:hover:bg-white/[0.04]"
-            : "hover:bg-white/[0.04] active:bg-white/[0.06]"
+            ? "bg-white/[0.025] hover:border-border hover:bg-surface/70 active:bg-white/[0.06] md:bg-transparent"
+            : "hover:border-border hover:bg-surface/70 active:bg-white/[0.06]"
       }`}
     >
       <button
@@ -337,7 +337,7 @@ function EpisodeCardInner({
       >
         <div
           className={`relative aspect-video w-32 shrink-0 overflow-hidden rounded-md bg-surface-2 sm:w-48 ${
-            progress && !progress.completed && pct > 0 ? "ring-2 ring-primary/70" : ""
+            progress && !progress.completed && pct > 0 ? "ring-2 ring-primary" : "ring-2 ring-border"
           }`}
         >
           {img ? (
@@ -363,7 +363,7 @@ function EpisodeCardInner({
           {!upcoming && watched && (
             <div className="pointer-events-none absolute inset-0 bg-black/10 md:hidden" />
           )}
-          <span className="absolute left-1.5 top-1.5 rounded bg-black/70 px-1.5 py-0.5 text-xs font-bold backdrop-blur-sm">
+          <span className="absolute left-0 top-0 z-10 bg-primary py-0.5 pl-2 pr-3.5 font-impact text-sm leading-tight tracking-wide text-primary-fg [clip-path:polygon(0_0,100%_0,calc(100%_-_8px)_100%,0_100%)]">
             {num}
           </span>
           {upcoming ? (
@@ -389,7 +389,7 @@ function EpisodeCardInner({
               {loading ? (
                 <span className="h-7 w-7 animate-spin rounded-full border-2 border-white/40 border-t-white" />
               ) : (
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-fg">
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-fg shadow-[0_3px_0_color-mix(in_srgb,rgb(var(--primary))_58%,black)]">
                   <Play size={16} className="ml-0.5 fill-current" />
                 </span>
               )}
@@ -420,7 +420,7 @@ function EpisodeCardInner({
             </div>
           )}
           {!upcoming && progress && (
-            <div className="absolute inset-x-0 bottom-0 h-1 bg-black/40">
+            <div className="absolute inset-x-0 bottom-0 h-1 bg-black/50">
               <div
                 className={progress.completed ? "h-full bg-accent" : "h-full bg-primary"}
                 style={{ width: `${pct}%` }}
