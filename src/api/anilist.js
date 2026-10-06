@@ -108,15 +108,26 @@ export async function getCoversByTitle(titles) {
   if (missing.length) {
     const decls = missing.map((_, i) => `$s${i}: String`).join(", ");
     // Un favori peut être un manga : pas de filtre `type`.
+    // Le premier résultat de recherche n'est pas fiable : « Demon Slayer » est un synonyme
+    // exact du court-métrage « Onigiri », dont l'affiche remplaçait celle de Kimetsu no Yaiba.
+    // On n'accepte qu'un titre principal identique, le plus populaire en cas d'égalité.
     const body = missing
-      .map((_, i) => `m${i}: Media(search: $s${i}, isAdult: false) { coverImage { extraLarge large } }`)
+      .map(
+        (_, i) =>
+          `m${i}: Page(perPage: 8) { media(search: $s${i}, isAdult: false, sort: [SEARCH_MATCH, POPULARITY_DESC]) { popularity title { romaji english native userPreferred } coverImage { extraLarge large } } }`
+      )
       .join("\n");
     const vars = {};
     missing.forEach((t, i) => (vars[`s${i}`] = t));
+    const norm = (v) => (v || "").toLowerCase().normalize("NFKD").replace(/[^\p{L}\p{N}]+/gu, " ").trim();
     try {
       const data = await query(`query (${decls}) { ${body} }`, vars);
       missing.forEach((t, i) => {
-        const c = data?.[`m${i}`]?.coverImage;
+        const wanted = norm(t);
+        const best = (data?.[`m${i}`]?.media || [])
+          .filter((m) => Object.values(m.title || {}).some((v) => norm(v) === wanted))
+          .sort((a, b) => (b.popularity || 0) - (a.popularity || 0))[0];
+        const c = best?.coverImage;
         _coverByTitle.set(t.toLowerCase(), c?.extraLarge || c?.large || null);
       });
     } catch {
