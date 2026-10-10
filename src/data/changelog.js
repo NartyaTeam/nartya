@@ -5,6 +5,20 @@
  */
 export const CHANGELOG = [
   {
+    version: "1.32.1",
+    date: "10 octobre 2026",
+    items: [
+      {
+        type: "new",
+        text: "Halloween s’invite sur Nartya pendant tout le mois d’octobre : une intro inédite (orage, pleine lune, nuée de chauves-souris) et un renard coiffé de son chapeau de sorcière, dans l’app comme sur l’icône.",
+      },
+      {
+        type: "fixed",
+        text: "Le podium et l’activité de ton profil affichent de nouveau la bonne affiche pour certains animes, comme Demon Slayer.",
+      },
+    ],
+  },
+  {
     version: "1.32.0",
     date: "5 octobre 2026",
     items: [
