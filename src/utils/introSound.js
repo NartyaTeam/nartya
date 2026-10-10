@@ -15,14 +15,14 @@ function playerVolume() {
   }
 }
 
-function noiseBuffer(ctx, seconds) {
+export function noiseBuffer(ctx, seconds) {
   const buf = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * seconds), ctx.sampleRate);
   const data = buf.getChannelData(0);
   for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
   return buf;
 }
 
-function envelope(param, t, peak, attack, decay) {
+export function envelope(param, t, peak, attack, decay) {
   param.setValueAtTime(0.0001, t);
   param.exponentialRampToValueAtTime(peak, t + attack);
   param.exponentialRampToValueAtTime(0.0001, t + attack + decay);
@@ -94,7 +94,11 @@ function bell(ctx, out, t) {
   });
 }
 
-export function playIntroSound() {
+/**
+ * Contexte, écho et sortie partagés par les intros. `schedule(ctx, out, t0)` pose les sons ;
+ * le tout s'éteint de `fadeAt` à `endS`.
+ */
+export function runIntroAudio({ endS, fadeAt, echo = { time: 0.16, feedback: 0.32, wet: 0.35 }, schedule }) {
   const noop = { stop() {} };
   const volume = playerVolume();
   const Ctx = typeof window !== "undefined" && (window.AudioContext || window.webkitAudioContext);
@@ -113,14 +117,14 @@ export function playIntroSound() {
   master.gain.value = MASTER * volume;
 
   const delay = ctx.createDelay(1);
-  delay.delayTime.value = 0.16;
+  delay.delayTime.value = echo.time;
   const feedback = ctx.createGain();
-  feedback.gain.value = 0.32;
+  feedback.gain.value = echo.feedback;
   const damp = ctx.createBiquadFilter();
   damp.type = "lowpass";
   damp.frequency.value = 2600;
   const wet = ctx.createGain();
-  wet.gain.value = 0.35;
+  wet.gain.value = echo.wet;
   master.connect(delay);
   delay.connect(damp).connect(feedback).connect(delay);
   damp.connect(wet);
@@ -131,11 +135,9 @@ export function playIntroSound() {
   comp.connect(ctx.destination);
 
   const t0 = ctx.currentTime + 0.02;
-  whoosh(ctx, master, t0 + 0.05);
-  impact(ctx, master, t0 + 0.32);
-  bell(ctx, master, t0 + 1.05);
-  master.gain.setValueAtTime(MASTER * volume, t0 + 2.1);
-  master.gain.linearRampToValueAtTime(0, t0 + END_S);
+  schedule(ctx, master, t0);
+  master.gain.setValueAtTime(MASTER * volume, t0 + fadeAt);
+  master.gain.linearRampToValueAtTime(0, t0 + endS);
 
   let closed = false;
   const close = () => {
@@ -143,7 +145,7 @@ export function playIntroSound() {
     closed = true;
     ctx.close?.().catch(() => {});
   };
-  const autoClose = setTimeout(close, (END_S + 1) * 1000);
+  const autoClose = setTimeout(close, (endS + 1) * 1000);
 
   return {
     stop() {
@@ -160,4 +162,16 @@ export function playIntroSound() {
       setTimeout(close, 260);
     },
   };
+}
+
+export function playIntroSound() {
+  return runIntroAudio({
+    endS: END_S,
+    fadeAt: 2.1,
+    schedule(ctx, out, t0) {
+      whoosh(ctx, out, t0 + 0.05);
+      impact(ctx, out, t0 + 0.32);
+      bell(ctx, out, t0 + 1.05);
+    },
+  });
 }

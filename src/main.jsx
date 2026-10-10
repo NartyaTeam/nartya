@@ -9,6 +9,8 @@ import { platform } from "./platform/index.js";
 import { installGlobalErrorLogging } from "./api/clientLogs.js";
 import { useSettingsStore } from "./stores/useSettingsStore.js";
 import NartyaIntro from "./components/NartyaIntro.jsx";
+import HalloweenIntro from "./components/HalloweenIntro.jsx";
+import { isHalloween } from "./lib/season.js";
 import "./index.css";
 
 const AchievementUnlock = lazy(() => import("./components/achievements/AchievementUnlock.jsx"));
@@ -38,7 +40,8 @@ function AppIntro() {
   }, [state]);
 
   if (state !== "playing") return null;
-  return <NartyaIntro onDone={() => setState("done")} />;
+  const Intro = isHalloween() ? HalloweenIntro : NartyaIntro;
+  return <Intro onDone={() => setState("done")} />;
 }
 
 function AchievementUnlockHost() {

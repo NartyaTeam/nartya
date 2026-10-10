@@ -8,7 +8,8 @@ import { usePlanningStore } from "@/stores/usePlanningStore";
 import { useFriendsStore } from "@/stores/useFriendsStore";
 import { useFollowedReleases } from "@/hooks/useFollowedReleases";
 import { countNewReleases } from "@/utils/planning";
-import { Fox } from "@/components/brand/NartyaMark";
+import { Fox, HalloweenFox } from "@/components/brand/NartyaMark";
+import { isHalloween } from "@/lib/season";
 import { Avatar } from "@/components/ui/Avatar";
 import { resolveAvatar } from "@/api/profile";
 import RoleBadge from "@/components/profile/RoleBadge";
@@ -219,7 +220,11 @@ export default function Sidebar() {
         }}
       >
         <div className="app-drag flex h-[84px] shrink-0 items-center gap-3 px-[14px]">
-          <Fox className="h-9 w-9 shrink-0 text-primary" />
+          {isHalloween() ? (
+            <HalloweenFox className="-mx-0.5 h-10 w-10 shrink-0 text-primary" />
+          ) : (
+            <Fox className="h-9 w-9 shrink-0 text-primary" />
+          )}
           <div className="min-w-0 leading-none" style={fade}>
             <p className="whitespace-nowrap text-[0.62rem] font-bold uppercase tracking-[0.42em] text-primary">Nartya</p>
             <p className="t-impact mt-1.5 whitespace-nowrap text-xl">Anime</p>
