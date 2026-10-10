@@ -1,6 +1,6 @@
 {
   "name": "nartya",
-  "version": "1.32.0",
+  "version": "1.32.1",
   "description": "Application de streaming d'anime",
   "main": "electron/main.js",
   "type": "module",
