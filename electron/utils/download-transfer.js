@@ -6,6 +6,13 @@ import { fetchFromProvider } from "./provider-fetch.js";
 export const SEGMENT_STALL_MS = 20_000;
 export const SEGMENT_MAX_ATTEMPTS = 3;
 
+/** Secondes restantes au débit moyen depuis le début, ou null tant que c'est trop tôt pour le dire. */
+export function estimateEta(received, estimatedBytes, startedAt) {
+  const elapsed = (Date.now() - startedAt) / 1000;
+  if (elapsed < 3 || !received || !estimatedBytes) return null;
+  return Math.max(0, Math.round((estimatedBytes - received) / (received / elapsed)));
+}
+
 export function createStallGuard(body, ms) {
   let timer = null;
   const arm = () => {

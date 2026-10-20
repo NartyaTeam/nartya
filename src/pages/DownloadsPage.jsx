@@ -36,6 +36,17 @@ function formatSize(bytes) {
   return `${(mb / 1024).toFixed(1)} Go`;
 }
 
+/** « · ≈ 480 Mo · encore 3 min », d'après l'estimation envoyée en cours de téléchargement. */
+function downloadEstimate(it) {
+  let out = "";
+  if (it.estimatedBytes) out += ` · ≈ ${formatSize(it.estimatedBytes)}`;
+  if (it.etaSeconds != null) {
+    const min = Math.ceil(it.etaSeconds / 60);
+    out += it.etaSeconds < 60 ? " · moins d'une minute" : ` · encore ${min} min`;
+  }
+  return out;
+}
+
 /** Vignette réelle, sinon affiche de l'anime, sinon placeholder. */
 function EpisodeThumb({ item, fallbackCover }) {
   const candidates = [item.epThumb, fallbackCover].filter(Boolean);
@@ -113,7 +124,7 @@ function EpisodeRow({ it, cover, selecting, selected, onToggleSelect, onPlay, on
                 ? "Recherche d'une nouvelle source…"
                 : it.processing
                   ? "Finalisation…"
-                  : `Téléchargement… ${pct}%`}
+                  : `Téléchargement… ${pct}%${downloadEstimate(it)}`}
             </p>
           ) : failed ? (
             <p className="mt-0.5 flex items-center gap-1.5 text-xs text-primary">

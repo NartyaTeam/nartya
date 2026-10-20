@@ -4,7 +4,7 @@ import path from "path";
 import fs from "fs";
 import fsp from "fs/promises";
 import { fetchFromProvider } from "./provider-fetch.js";
-import { createStallGuard, SEGMENT_STALL_MS, SEGMENT_MAX_ATTEMPTS } from "./download-transfer.js";
+import { createStallGuard, estimateEta, SEGMENT_STALL_MS, SEGMENT_MAX_ATTEMPTS } from "./download-transfer.js";
 
 // Les hébergeurs brident chaque connexion : découper en plages multiplie le débit.
 const MP4_CONNECTIONS = 4;
@@ -22,6 +22,7 @@ async function downloadMp4SingleOnce(dir, directUrl, provider, controller, onPro
   const total = Number(res.headers.get("content-length")) || 0;
   let received = 0;
   let lastEmit = 0;
+  const startedAt = Date.now();
 
   await new Promise((resolve, reject) => {
     const out = fs.createWriteStream(tmp);
@@ -36,6 +37,8 @@ async function downloadMp4SingleOnce(dir, directUrl, provider, controller, onPro
         onProgress({
           percent: total ? (received / total) * 100 : 0,
           sizeBytes: received,
+          estimatedBytes: total || null,
+          etaSeconds: total ? estimateEta(received, total, startedAt) : null,
         });
       }
     });
@@ -89,6 +92,7 @@ async function downloadMp4Parallel(dir, directUrl, provider, controller, total, 
   );
   const chunkSize = Math.ceil(total / parts);
   let lastEmit = 0;
+  const startedAt = Date.now();
   // Par plage : sur un retry, elle repart de zéro au lieu de dépasser 100 %.
   const partProgress = new Array(parts).fill(0);
   const totalReceived = () => partProgress.reduce((a, b) => a + b, 0);
@@ -129,6 +133,8 @@ async function downloadMp4Parallel(dir, directUrl, provider, controller, total, 
                 onProgress({
                   percent: (totalReceived() / total) * 100,
                   sizeBytes: totalReceived(),
+                  estimatedBytes: total,
+                  etaSeconds: estimateEta(totalReceived(), total, startedAt),
                 });
               }
               res.body.resume();

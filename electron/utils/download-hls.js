@@ -8,7 +8,7 @@ import fsp from "fs/promises";
 import { execFile } from "child_process";
 import { promisify } from "util";
 import { fetchFromProvider } from "./provider-fetch.js";
-import { downloadToFile } from "./download-transfer.js";
+import { downloadToFile, estimateEta } from "./download-transfer.js";
 
 const execFileAsync = promisify(execFile);
 
@@ -231,6 +231,7 @@ export async function downloadHls(
   let received = 0;
   let done = 0;
   let lastEmit = 0;
+  const startedAt = Date.now();
   let cursor = 0;
   // Un segment en échec définitif arrête les autres, qui réécraseraient le statut d'erreur.
   let stopped = false;
@@ -255,9 +256,13 @@ export async function downloadHls(
       const now = Date.now();
       if (now - lastEmit > 400 || done === total) {
         lastEmit = now;
+        // Taille finale extrapolée des segments reçus, qui ont tous à peu près la même durée.
+        const estimatedBytes = Math.round((received / done) * total);
         onProgress({
           percent: (done / total) * 100,
           sizeBytes: received,
+          estimatedBytes,
+          etaSeconds: estimateEta(received, estimatedBytes, startedAt),
         });
       }
     }
