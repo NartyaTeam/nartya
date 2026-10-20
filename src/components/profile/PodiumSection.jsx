@@ -13,12 +13,17 @@ const ROW =
 const ITEM = "w-[30%] shrink-0 snap-start sm:w-auto";
 const POSTER_HEIGHT = "h-[calc(var(--h)*0.56)] sm:h-[var(--h)]";
 
-/** Les cinq favoris épinglés les plus regardés. */
-export default function PodiumSection({ items, username, isSelf = true }) {
-  const top5 = useMemo(
-    () => [...(items || [])].sort((a, b) => (b.watchSeconds || 0) - (a.watchSeconds || 0)).slice(0, 5),
-    [items]
+/** Ordre d'épinglage (réglable dans « Éditer ») ; le temps de visionnage départage les égalités. */
+export function sortByPinOrder(items) {
+  const at = (it) => (it.pinnedAt ? new Date(it.pinnedAt).getTime() : Number.POSITIVE_INFINITY);
+  return [...(items || [])].sort(
+    (a, b) => at(a) - at(b) || (b.watchSeconds || 0) - (a.watchSeconds || 0)
   );
+}
+
+/** Les cinq premiers favoris à la une, dans l'ordre choisi depuis « Éditer ». */
+export default function PodiumSection({ items, username, isSelf = true }) {
+  const top5 = useMemo(() => sortByPinOrder(items).slice(0, 5), [items]);
 
   const [hiRes, setHiRes] = useState({});
   const titlesKey = top5.map((it) => it.title).filter(Boolean).join("|");

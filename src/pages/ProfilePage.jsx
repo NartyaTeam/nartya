@@ -17,6 +17,7 @@ import {
 import { invalidateCache, useCachedResource } from "@/hooks/useCachedResource";
 import { resolveCosmetics } from "@/lib/cosmetics";
 import ProfileColumn from "@/components/profile/ProfileColumn";
+import { sortByPinOrder } from "@/components/profile/PodiumSection";
 import ShareCard from "@/components/profile/ShareCard";
 import ProfileEditModal from "@/components/profile/ProfileEditModal";
 import { SITE_URL } from "@/config/instance";
@@ -78,8 +79,7 @@ function AnimeProfile() {
   const emblem = resolveEmblem(user);
   const accent = accentRgb(resolveAccent(user));
   // Reprises dans la carte partageable.
-  const podiumCovers = [...(favorites || [])]
-    .sort((a, b) => (b.watchSeconds || 0) - (a.watchSeconds || 0))
+  const podiumCovers = sortByPinOrder(favorites)
     .slice(0, 4)
     .map((it) => it.cover)
     .filter(Boolean);

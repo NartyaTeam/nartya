@@ -16,6 +16,18 @@ function stars(rating) {
   return "★".repeat(n) + "☆".repeat(5 - n);
 }
 
+/** Toujours vers la fiche : un épisode vu y ouvre sa saison, épisode en surbrillance. */
+function activityLink(it, isScan, isComment) {
+  const params = new URLSearchParams();
+  if (it.kind === "watch" && it.seasonId != null) {
+    params.set("season", String(it.seasonId));
+    if (it.episodeNumber != null) params.set("focus", String(it.episodeNumber));
+  } else if (isScan) params.set("tab", "scans");
+  else if (isComment) params.set("tab", "commentaires");
+  const query = params.toString();
+  return `/anime/${it.slug}${query ? `?${query}` : ""}`;
+}
+
 export default function ActivityFeed({
   items,
   loading,
@@ -79,9 +91,7 @@ export default function ActivityFeed({
       isScan,
       isComment,
       isRating,
-      to: isWatch
-        ? `/watch/${it.slug}?season=${it.seasonId}&ep=${it.episodeNumber}`
-        : `/anime/${it.slug}${isScan ? "?tab=scans" : isComment ? "?tab=commentaires" : ""}`,
+      to: activityLink(it, isScan, isComment),
       name:
         it.title || (it.slug || "").replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
       detail: isWatch
@@ -231,9 +241,7 @@ export default function ActivityFeed({
             const isComment = it.kind === "comment";
             const isRating = it.kind === "rating";
             // Un scan renvoie à la fiche (section Scans) : `label` n'est pas la clé `oeuvre`.
-            const to = isWatch
-              ? `/watch/${it.slug}?season=${it.seasonId}&ep=${it.episodeNumber}`
-              : `/anime/${it.slug}${isScan ? "?tab=scans" : isComment ? "?tab=commentaires" : ""}`;
+            const to = activityLink(it, isScan, isComment);
             const name =
               it.title || (it.slug || "").replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
             const KindIcon = isWatch ? Play : isScan ? BookOpen : isComment ? MessageSquare : isRating ? Star : Heart;

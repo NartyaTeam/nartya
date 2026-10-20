@@ -1,4 +1,16 @@
-import { Ban, Check, CloudLightning, CloudRain, Crown, Leaf, Lock, Snowflake, Star } from "lucide-react";
+import {
+  Ban,
+  Check,
+  ChevronDown,
+  ChevronUp,
+  CloudLightning,
+  CloudRain,
+  Crown,
+  Leaf,
+  Lock,
+  Snowflake,
+  Star,
+} from "lucide-react";
 import { EMBLEMS } from "@/api/profile";
 
 const ACCENT_SWATCHES = ["#FF713E", "#F4648C", "#A855F7", "#3B82F6", "#14B8A6", "#EAB308", "#F97316", "#E5E7EB"];
@@ -247,6 +259,61 @@ export function PinnedFavoritesPicker({ favorites, pinned, maxPinsLabel, onToggl
           })}
         </div>
       )}
+    </div>
+  );
+}
+
+/** Ordre des favoris à la une : les cinq premiers forment le podium du profil. */
+export function PodiumOrderPicker({ favorites, order, onMove }) {
+  if (!favorites || order.length < 2) return null;
+  const bySlug = new Map(favorites.map((f) => [f.anime_slug, f]));
+  return (
+    <div>
+      <label className="text-[0.7rem] font-semibold uppercase tracking-kana text-muted">
+        Ordre du podium
+      </label>
+      <p className="mt-1 text-xs text-muted">Les cinq premiers montent sur le podium de ton profil.</p>
+      <ol className="mt-2 space-y-1.5">
+        {order.map((slug, i) => {
+          const f = bySlug.get(slug);
+          return (
+            <li
+              key={slug}
+              className={`flex items-center gap-2.5 rounded-md px-2 py-1.5 ring-1 ${
+                i < 5 ? "bg-primary/[0.06] ring-primary/25" : "bg-bg/40 ring-border"
+              }`}
+            >
+              <span className="w-5 shrink-0 text-center font-display text-sm font-bold tabular-nums text-muted">
+                {i + 1}
+              </span>
+              {f?.anime_cover ? (
+                <img src={f.anime_cover} alt="" className="h-10 w-7 shrink-0 rounded object-cover" />
+              ) : (
+                <div className="h-10 w-7 shrink-0 rounded bg-surface-2" />
+              )}
+              <span className="min-w-0 flex-1 truncate text-sm">{f?.anime_title || slug}</span>
+              <button
+                type="button"
+                onClick={() => onMove(slug, -1)}
+                disabled={i === 0}
+                aria-label="Monter"
+                className="rounded p-1 text-muted transition-colors hover:text-text disabled:opacity-25"
+              >
+                <ChevronUp size={16} />
+              </button>
+              <button
+                type="button"
+                onClick={() => onMove(slug, 1)}
+                disabled={i === order.length - 1}
+                aria-label="Descendre"
+                className="rounded p-1 text-muted transition-colors hover:text-text disabled:opacity-25"
+              >
+                <ChevronDown size={16} />
+              </button>
+            </li>
+          );
+        })}
+      </ol>
     </div>
   );
 }

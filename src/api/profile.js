@@ -238,6 +238,19 @@ export async function getPublicFavorites(userId) {
   }));
 }
 
+/**
+ * Chapitres de scans lus, mêmes règles de visibilité que le profil public.
+ * `null` si la fonction n'existe pas encore (migration 20261020120000) : la case reste masquée.
+ */
+export async function getReadingStats(userId) {
+  if (!userId) return null;
+  const { data, error } = await supabase.rpc("get_reading_stats", { p_id: userId });
+  if (error) return null;
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row) return null;
+  return { totalChapters: Number(row.total_chapters || 0), totalWorks: Number(row.total_works || 0) };
+}
+
 export async function getProfileExtraStats() {
   const { data, error } = await supabase.rpc("get_profile_extra_stats");
   if (error) {

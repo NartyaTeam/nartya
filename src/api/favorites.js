@@ -88,6 +88,26 @@ export async function pinFavorite(slug) {
   invalidateFavoriteProfileData();
 }
 
+/**
+ * Ordre des favoris à la une (et donc du podium), porté par `pinned_at` : le premier de la
+ * liste reçoit la date la plus ancienne. Toutes les dates restent dans le passé.
+ */
+export async function setPinnedOrder(slugs) {
+  if (isGuestSession() || !slugs?.length) return;
+  const base = Date.now() - (slugs.length + 1) * 1000;
+  const results = await Promise.all(
+    slugs.map((slug, i) =>
+      supabase
+        .from("favorites")
+        .update({ pinned_at: new Date(base + i * 1000).toISOString() })
+        .eq("anime_slug", slug)
+    )
+  );
+  const failed = results.find((r) => r.error);
+  if (failed) throw failed.error;
+  invalidateFavoriteProfileData();
+}
+
 export async function unpinFavorite(slug) {
   if (isGuestSession()) return;
   const { error } = await supabase

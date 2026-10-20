@@ -1,6 +1,7 @@
 import { Avatar } from "@/components/ui/Avatar";
 import { Link } from "react-router-dom";
-import { resolveAvatar } from "@/api/profile";
+import { getReadingStats, resolveAvatar } from "@/api/profile";
+import { useCachedResource } from "@/hooks/useCachedResource";
 import { formatWatchTime } from "./StatsRow";
 import RoleBadge from "./RoleBadge";
 import RankBadge from "./RankBadge";
@@ -10,6 +11,12 @@ import { avatarShapeClass } from "@/lib/cosmetics";
 
 /** `extra` peut être `null` tant que la requête n'est pas revenue : ses blocs sont masqués. */
 export default function IdentityCard({ profile, stats, extra, friends, ornament, isSelf, onAvatarError }) {
+  // Masqué tant qu'il n'y a rien à montrer (aucun scan lu, ou fonction pas encore déployée).
+  const { data: reading } = useCachedResource(
+    profile?.id ? `profile:reading:${profile.id}` : null,
+    () => getReadingStats(profile.id),
+    5 * 60 * 1000
+  );
   if (!profile) return null;
   const avatar = resolveAvatar(profile);
   const days = stats ? Math.floor((stats.totalWatchSeconds || 0) / 86400) : 0;
@@ -117,6 +124,17 @@ export default function IdentityCard({ profile, stats, extra, friends, ornament,
             </div>
             <div className="mt-[5px] text-[0.6rem] uppercase tracking-[0.28em] text-muted">Vues du profil</div>
           </div>
+          {reading?.totalChapters > 0 && (
+            <div className="col-span-2 bg-surface px-3.5 py-3">
+              <div className="font-impact text-2xl font-normal leading-none tabular-nums">
+                {reading.totalChapters.toLocaleString("fr-FR")}
+              </div>
+              <div className="mt-[5px] text-[0.6rem] uppercase tracking-[0.28em] text-muted">
+                {reading.totalChapters > 1 ? "Chapitres lus" : "Chapitre lu"}
+                {reading.totalWorks > 1 ? ` · ${reading.totalWorks} œuvres commencées` : ""}
+              </div>
+            </div>
+          )}
         </div>
 
         {(profile.bio || isSelf) && (

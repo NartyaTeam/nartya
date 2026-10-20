@@ -22,7 +22,7 @@ import AvatarFrame from "@/components/ambient/AvatarFrame";
 import BannerDecor from "@/components/ambient/BannerDecor";
 import ThemeAmbience from "@/components/ambient/ThemeAmbience";
 import { profileArt } from "@/lib/profileArt";
-import { listFavorites, pinFavorite, unpinFavorite } from "@/api/favorites";
+import { listFavorites, pinFavorite, setPinnedOrder, unpinFavorite } from "@/api/favorites";
 import AvatarCropModal from "./AvatarCropModal";
 import BannerCropModal from "./BannerCropModal";
 import { SITE_HOST } from "@/config/instance";
@@ -32,6 +32,7 @@ import {
   AmbiencePicker,
   EmblemPicker,
   PinnedFavoritesPicker,
+  PodiumOrderPicker,
   PrivacySettings,
 } from "./ProfileEditFields";
 
@@ -86,6 +87,8 @@ export default function ProfileEditModal({ onClose }) {
 
   const [favorites, setFavorites] = useState(null);
   const [pinned, setPinned] = useState(() => new Set());
+  // Slugs épinglés dans l'ordre d'épinglage, qui est aussi celui du podium.
+  const [pinOrder, setPinOrder] = useState([]);
 
   const avatarInput = useRef(null);
   const bannerInput = useRef(null);
@@ -101,7 +104,11 @@ export default function ProfileEditModal({ onClose }) {
     listFavorites()
       .then((rows) => {
         setFavorites(rows);
-        setPinned(new Set(rows.filter((r) => r.pinned_at).map((r) => r.anime_slug)));
+        const pinnedRows = rows
+          .filter((r) => r.pinned_at)
+          .sort((a, b) => new Date(a.pinned_at) - new Date(b.pinned_at));
+        setPinned(new Set(pinnedRows.map((r) => r.anime_slug)));
+        setPinOrder(pinnedRows.map((r) => r.anime_slug));
       })
       .catch(() => setFavorites([]));
   }, []);
@@ -193,11 +200,14 @@ export default function ProfileEditModal({ onClose }) {
           ? `Maximum ${maxPinsLabel} favoris mis en avant.`
           : `Maximum ${maxPinsLabel} favoris mis en avant — passe à une offre supérieure pour en épingler plus.`
       );
+    const previousOrder = pinOrder;
     setPinned((prev) => {
       const next = new Set(prev);
       isPinned ? next.delete(slug) : next.add(slug);
       return next;
     });
+    // Un nouvel épinglé arrive en fin de liste, comme sa date d'épinglage.
+    setPinOrder((prev) => (isPinned ? prev.filter((s) => s !== slug) : [...prev, slug]));
     try {
       isPinned ? await unpinFavorite(slug) : await pinFavorite(slug);
     } catch (e) {
@@ -206,11 +216,29 @@ export default function ProfileEditModal({ onClose }) {
         isPinned ? next.add(slug) : next.delete(slug);
         return next;
       });
+      setPinOrder(previousOrder);
       toast.error(
         (e?.message || "").includes("pin_limit")
           ? `Limite de favoris mis en avant atteinte (${maxPinsLabel}).`
           : "Action impossible."
       );
+    }
+  };
+
+  // Monte ou descend un favori à la une : les cinq premiers forment le podium.
+  const movePin = async (slug, step) => {
+    const from = pinOrder.indexOf(slug);
+    const to = from + step;
+    if (from < 0 || to < 0 || to >= pinOrder.length) return;
+    const previousOrder = pinOrder;
+    const next = [...pinOrder];
+    [next[from], next[to]] = [next[to], next[from]];
+    setPinOrder(next);
+    try {
+      await setPinnedOrder(next);
+    } catch {
+      setPinOrder(previousOrder);
+      toast.error("Impossible de changer l'ordre.");
     }
   };
 
@@ -546,6 +574,8 @@ export default function ProfileEditModal({ onClose }) {
             maxPinsLabel={maxPinsLabel}
             onToggle={togglePin}
           />
+
+          <PodiumOrderPicker favorites={favorites} order={pinOrder} onMove={movePin} />
 
           <PrivacySettings
             isPublic={isPublic}
