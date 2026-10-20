@@ -6,6 +6,10 @@ export const useAchievementUnlockStore = create((set) => ({
   queue: [],
   // Taille de la salve en cours, pour afficher « 2 / 3 ».
   batch: 0,
+  // Un épisode est en cours de lecture : la cérémonie suit alors le réglage « Succès pendant la lecture ».
+  inPlayback: false,
+
+  setInPlayback: (inPlayback) => set({ inPlayback }),
 
   enqueue: (ids) =>
     set((state) => {

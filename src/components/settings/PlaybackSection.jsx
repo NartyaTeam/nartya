@@ -9,6 +9,7 @@ import {
   SkipForward,
   SlidersHorizontal,
   Sparkles,
+  Trophy,
   Zap,
 } from "lucide-react";
 import { useSettingsStore } from "@/stores/useSettingsStore";
@@ -30,6 +31,12 @@ const PLAYBACK_QUALITY_OPTIONS = [
   { value: "360", label: "360p" },
 ];
 
+const ACHIEVEMENT_PLAYBACK_OPTIONS = [
+  { value: "compact", label: "En petit" },
+  { value: "after", label: "À la fin de l'épisode" },
+  { value: "full", label: "En grand" },
+];
+
 const ANIME4K_QUALITY_OPTIONS = [
   { value: "max", label: "Maximale disponible" },
   { value: "1080", label: "1080p" },
@@ -47,6 +54,7 @@ export default function PlaybackSection({ number }) {
   const skipButtonEnabled = useSettingsStore((s) => s.skipButtonEnabled);
   const autoSkipOpEd = useSettingsStore((s) => s.autoSkipOpEd);
   const nartyaIntro = useSettingsStore((s) => s.nartyaIntro);
+  const achievementsInPlayback = useSettingsStore((s) => s.achievementsInPlayback);
   const resumeLimit = useSettingsStore((s) => s.resumeLimit);
   const liteMode = useSettingsStore((s) => s.liteMode);
   const advancedPlayerControls = useSettingsStore((s) => s.advancedPlayerControls);
@@ -188,6 +196,22 @@ export default function PlaybackSection({ number }) {
           label="Autoskip intro / ending"
           checked={autoSkipOpEd}
           onChange={(v) => setSetting("autoSkipOpEd", v)}
+        />
+      </SettingRow>
+
+      <SettingRow
+        icon={Trophy}
+        label="Succès pendant la lecture"
+        description="Comment un succès débloqué pendant un épisode s'affiche."
+        details="« En petit » affiche une carte discrète en haut à droite sans cacher l'image. « À la fin de l'épisode » garde le succès de côté jusqu'à la fin de l'épisode ou jusqu'à ce que tu quittes le lecteur. « En grand » joue l'animation complète tout de suite."
+      >
+        <Select
+          title="Succès pendant la lecture"
+          value={achievementsInPlayback}
+          onValueChange={(v) => setSetting("achievementsInPlayback", v)}
+          align="end"
+          className="min-w-[11rem]"
+          options={ACHIEVEMENT_PLAYBACK_OPTIONS}
         />
       </SettingRow>
 

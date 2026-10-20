@@ -63,6 +63,25 @@ export const useListsStore = create((set, get) => ({
     }
   },
 
+  /**
+   * Dernier épisode d'un anime fini : passe en « Terminé » sauf s'il a été abandonné.
+   * Vérifie en base, comme `ensureTracking`. Renvoie `true` si le statut a changé.
+   */
+  async completeAnime(slug, meta = {}) {
+    if (!slug || !useAuthStore.getState().session || isGuestSession()) return false;
+    try {
+      const current = get().statuses.get(slug) ?? (await getAnimeStatus(slug));
+      if (current === "completed" || current === "dropped") return false;
+      await setAnimeStatus({ slug, status: "completed", title: meta.title, cover: meta.cover });
+      const m = new Map(get().statuses);
+      m.set(slug, "completed");
+      set({ statuses: m });
+      return true;
+    } catch {
+      return false; // best-effort, comme le suivi auto
+    }
+  },
+
   /** `true` si l'écriture a réussi, pour que l'appelant puisse défaire son retrait local. */
   async remove(slug) {
     const prev = get().statuses.get(slug) || null;

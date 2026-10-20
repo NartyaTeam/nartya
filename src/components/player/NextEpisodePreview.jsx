@@ -1,6 +1,6 @@
 import { Play, ImageOff } from "lucide-react";
 
-export function NextEpisodePreview({ episode, animeCover, onPlay }) {
+export function NextEpisodePreview({ episode, animeCover, onPlay, heading = "Ép. suivant" }) {
   if (!episode) return null;
   const num = episode.episode ?? episode.number;
   const img = episode.image || episode.thumbnail || animeCover || null;
@@ -22,7 +22,7 @@ export function NextEpisodePreview({ episode, animeCover, onPlay }) {
         style={{ animation: "epSelSlide 0.2s ease" }}
       >
         <div className="border-b border-white/10 px-5 py-3.5">
-          <span className="text-lg font-bold text-white">Ép. suivant</span>
+          <span className="text-lg font-bold text-white">{heading}</span>
         </div>
 
         <div className="flex items-start gap-3.5 p-3.5">

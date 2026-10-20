@@ -13,7 +13,7 @@ import {
   sourceOptionLabel,
 } from "@/utils/videoSourceUtils";
 import { getEpisodeProgress, getAnimeProgressMap, episodeKey, heartbeatWatch, watchTick, COMPLETION_THRESHOLD } from "@/api/progress";
-import { celebrateAchievements } from "@/stores/useAchievementUnlockStore";
+import { celebrateAchievements, useAchievementUnlockStore } from "@/stores/useAchievementUnlockStore";
 import { useCachedResource } from "@/hooks/useCachedResource";
 import { useDiscordPresence } from "@/hooks/useDiscordPresence";
 import { useAuthStore } from "@/stores/useAuthStore";
@@ -22,6 +22,7 @@ import { useSettingsStore } from "@/stores/useSettingsStore";
 import { useListsStore } from "@/stores/useListsStore";
 import { downloadId, getLocalPlaybackUrl } from "@/api/downloads";
 import { logClientEvent } from "@/api/clientLogs";
+import { toast } from "@/lib/toast";
 import VideoPlayer from "@/components/player/VideoPlayer";
 import { EpisodeSelector } from "@/components/player/EpisodeSelector";
 import { NextEpisodePreview } from "@/components/player/NextEpisodePreview";
@@ -32,6 +33,7 @@ import { useProgressSaver } from "@/hooks/useProgressSaver";
 import { useContentWarning } from "@/hooks/useContentWarning";
 import { useSkipSegments } from "@/hooks/useSkipSegments";
 import { useCastFallback } from "@/hooks/useCastFallback";
+import { sortSeasonsForDisplay } from "@/utils/seasonSort";
 import {
   AutoSkipBadge,
   ContentWarning,
@@ -53,6 +55,9 @@ const WATCH_STARTED_MIN_SECONDS = 120;
 // Avant la fin, résolution de la source de l'épisode suivant.
 const PREFETCH_LEAD_S = 45;
 
+// Saisons « numérotées » (`saison2`, `saga3`) : les seules vers lesquelles on enchaîne.
+const REGULAR_SEASON = /^(saisons?|sagas?)\d+/i;
+
 // Le serveur ne crédite que le temps réel écoulé.
 const HEARTBEAT_INTERVAL_MS = 60_000;
 
@@ -67,6 +72,7 @@ export default function WatchPage() {
   const autoSkipOpEd = useSettingsStore((s) => s.autoSkipOpEd);
   const liteMode = useSettingsStore((s) => s.liteMode);
   const ensureTracking = useListsStore((s) => s.ensureTracking);
+  const completeAnime = useListsStore((s) => s.completeAnime);
 
   // Le lecteur suit le sens du téléphone ; la navigation reste en portrait.
   useEffect(() => {
@@ -119,6 +125,38 @@ export default function WatchPage() {
 
   const seasons = useMemo(() => animeData?.seasons || [], [animeData]);
   const countryOfOrigin = animeData?.anilist?.countryOfOrigin || null;
+
+  // Dernier épisode d'une saison : la suivante (saison ou saga, jamais un film ni un OAV)
+  // prend le relais des boutons « suivant ».
+  const nextSeason = useMemo(() => {
+    if (hasNext || currentIndex < 0 || !REGULAR_SEASON.test(String(seasonId))) return null;
+    const ordered = sortSeasonsForDisplay(seasons);
+    const index = ordered.findIndex((s) => String(s.id) === String(seasonId));
+    const candidate = index >= 0 ? ordered[index + 1] : null;
+    return candidate && REGULAR_SEASON.test(String(candidate.id)) ? candidate : null;
+  }, [hasNext, currentIndex, seasons, seasonId]);
+  const { data: nextSeasonData } = useCachedResource(
+    nextSeason ? episodesCacheKey(slug, nextSeason.id, liteMode) : null,
+    () => getSeasonEpisodes(slug, nextSeason.id, { lite: liteMode }),
+    EPISODES_TTL_MS
+  );
+  const nextSeasonFirst = nextSeason ? nextSeasonData?.episodes?.[0] || null : null;
+  const goesToNextSeason = !hasNext && !!nextSeasonFirst;
+  // Dernier épisode de la dernière saison d'un anime qui ne diffuse plus : terminé. Un film
+  // ou un OAV ne compte pas, on peut le voir sans avoir suivi la série.
+  const catalogStatus = animeData?.anime?.status || null;
+  const airing = catalogStatus
+    ? /en\s*cours/i.test(catalogStatus)
+    : animeData?.anilist?.status === "RELEASING";
+  const isFinale =
+    !!animeData &&
+    currentIndex >= 0 &&
+    !hasNext &&
+    !nextSeason &&
+    !airing &&
+    REGULAR_SEASON.test(String(seasonId));
+  const canAdvance = hasNext || goesToNextSeason;
+  const nextLabel = goesToNextSeason ? "Saison suivante" : "Épisode suivant";
 
   const languages = useMemo(() => {
     if (!currentEpisode?.lecteurs) return [];
@@ -216,6 +254,8 @@ export default function WatchPage() {
   const playerApiRef = useRef(null);
   // Une fois par anime.
   const trackedRef = useRef(null);
+  // Une fois par épisode final.
+  const finaleMarkedRef = useRef(null);
   // Une coupure (réseau, suspension iOS, proxy local relancé) ne condamne pas la source : elle
   // est relancée une fois à la même position avant d'être disqualifiée.
   const retriedSourcesRef = useRef(new Set());
@@ -261,7 +301,7 @@ export default function WatchPage() {
     currentEpisode,
     autoSkip,
     autoSkipOpEd,
-    hasNext,
+    hasNext: canAdvance,
     playerApiRef,
     advanceFnRef,
   });
@@ -401,6 +441,13 @@ export default function WatchPage() {
     if (videoUrl) setPlayerMounted(true);
   }, [videoUrl]);
 
+  // Les succès suivent le réglage « Succès pendant la lecture » tant qu'un épisode tourne.
+  const setAchievementsInPlayback = useAchievementUnlockStore((s) => s.setInPlayback);
+  useEffect(() => {
+    if (videoUrl) setAchievementsInPlayback(true);
+  }, [videoUrl, setAchievementsInPlayback]);
+  useEffect(() => () => setAchievementsInPlayback(false), [setAchievementsInPlayback]);
+
   const handleTimeUpdate = useCallback(
     (time, duration) => {
       positionRef.current = { time, duration };
@@ -414,6 +461,18 @@ export default function WatchPage() {
       ) {
         trackedRef.current = slug;
         ensureTracking(slug, { title: animeTitle, cover: animeCover });
+      }
+      if (
+        userId &&
+        isFinale &&
+        duration > 0 &&
+        (time / duration) * 100 >= COMPLETION_THRESHOLD &&
+        finaleMarkedRef.current !== `${slug}:${seasonId}:${epNumber}`
+      ) {
+        finaleMarkedRef.current = `${slug}:${seasonId}:${epNumber}`;
+        completeAnime(slug, { title: animeTitle, cover: animeCover }).then((changed) => {
+          if (changed) toast.success(`${animeTitle} est rangé dans tes animes terminés.`);
+        });
       }
       // Cadencé à l'horloge murale.
       if (userId && Date.now() - lastBeatRef.current >= HEARTBEAT_INTERVAL_MS) {
@@ -446,7 +505,7 @@ export default function WatchPage() {
 
       // À la fin du décompte, on enchaîne.
       const inWindow =
-        autoSkip && hasNext && duration > 0 && !skipDismissedRef.current && remaining <= AUTOSKIP_WINDOW;
+        autoSkip && canAdvance && duration > 0 && !skipDismissedRef.current && remaining <= AUTOSKIP_WINDOW;
       if (inWindow && remaining > 0.3) {
         setSkipRemaining(remaining);
       } else {
@@ -457,6 +516,7 @@ export default function WatchPage() {
     // Sa longueur est le total de saison envoyé au battement.
     [
       hasNext,
+      canAdvance,
       prefetchNext,
       updateSkipSegments,
       autoSkip,
@@ -469,6 +529,8 @@ export default function WatchPage() {
       animeTitle,
       animeCover,
       ensureTracking,
+      completeAnime,
+      isFinale,
       lastSaveRef,
     ]
   );
@@ -594,12 +656,31 @@ export default function WatchPage() {
     [params, setParams, seasonId, flushBeforeNav]
   );
 
+  // Épisode suivant, ou premier épisode de la saison suivante en fin de saison.
+  const goNext = useCallback(() => {
+    // Changement d'épisode = fin de celui-ci, pour les succès mis de côté.
+    setAchievementsInPlayback(false);
+    if (hasNext) goToEpisode(currentIndex + 1);
+    else if (goesToNextSeason) {
+      selectFromSelector(nextSeason.id, nextSeasonFirst.episode ?? nextSeasonFirst.number);
+    }
+  }, [
+    hasNext,
+    currentIndex,
+    goToEpisode,
+    goesToNextSeason,
+    nextSeason,
+    nextSeasonFirst,
+    selectFromSelector,
+    setAchievementsInPlayback,
+  ]);
+
   // Une seule fois, jamais après un « annuler ».
   const advanceNext = useCallback(() => {
-    if (advancedRef.current || skipDismissedRef.current || !hasNext) return;
+    if (advancedRef.current || skipDismissedRef.current || !canAdvance) return;
     advancedRef.current = true;
-    goToEpisode(currentIndex + 1);
-  }, [hasNext, currentIndex, goToEpisode]);
+    goNext();
+  }, [canAdvance, goNext]);
   advanceFnRef.current = advanceNext;
 
   const dismissSkip = useCallback(() => {
@@ -609,8 +690,10 @@ export default function WatchPage() {
 
   // Seulement si la lecture auto est activée.
   const handleEnded = useCallback(() => {
+    // Fin d'épisode : les succès mis de côté peuvent s'afficher.
+    setAchievementsInPlayback(false);
     if (autoSkip) advanceNext();
-  }, [advanceNext, autoSkip]);
+  }, [advanceNext, autoSkip, setAchievementsInPlayback]);
 
   // Repli sur la fiche si le lecteur a été ouvert en lien direct.
   const goBack = useCallback(() => {
@@ -673,7 +756,7 @@ export default function WatchPage() {
           poster=""
           resumeAt={resumeAt}
           hasPrev={hasPrev}
-          hasNext={hasNext}
+          hasNext={canAdvance}
           episodeLabel={episodeLabel}
           languages={languages}
           language={lang}
@@ -683,7 +766,7 @@ export default function WatchPage() {
           provider={usedSourceKey}
           onSourceChange={changeSource}
           onPrev={() => goToEpisode(currentIndex - 1)}
-          onNext={() => goToEpisode(currentIndex + 1)}
+          onNext={goNext}
           onTimeUpdate={handleTimeUpdate}
           onPause={handlePause}
           onPlaybackStart={contentWarning.onPlay}
@@ -749,11 +832,12 @@ export default function WatchPage() {
             )}
 
             {/* Desktop seulement. */}
-            {showNextPreview && !showSelector && hasNext && (
+            {showNextPreview && !showSelector && canAdvance && (
               <NextEpisodePreview
-                episode={episodes[currentIndex + 1]}
+                episode={hasNext ? episodes[currentIndex + 1] : nextSeasonFirst}
+                heading={goesToNextSeason ? `Saison suivante · ${nextSeason.name}` : undefined}
                 animeCover={animeCover}
-                onPlay={() => goToEpisode(currentIndex + 1)}
+                onPlay={goNext}
               />
             )}
 
@@ -773,7 +857,8 @@ export default function WatchPage() {
                   : skip.outroManualFallback)) && (
                 <SkipSegmentButton
                   segment={skip.skipSeg}
-                  hasNext={hasNext}
+                  hasNext={canAdvance}
+                  nextLabel={nextLabel}
                   onSkip={skip.skipSegment}
                   onNext={advanceNext}
                 />
@@ -785,6 +870,7 @@ export default function WatchPage() {
               <NextEpisodeCountdown
                 remaining={skipRemaining}
                 windowSeconds={AUTOSKIP_WINDOW}
+                label={nextLabel}
                 onNext={advanceNext}
                 onDismiss={dismissSkip}
               />

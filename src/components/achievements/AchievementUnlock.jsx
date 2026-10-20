@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ACHIEVEMENT_TIERS_BY_ID, ACHIEVEMENT_TIER_LOOKS } from "@/data/achievements";
 import { useAchievementUnlockStore } from "@/stores/useAchievementUnlockStore";
+import { useSettingsStore } from "@/stores/useSettingsStore";
 
 /**
  * Montée une fois pour toute l'app. Elle tombe pendant la lecture : la scène est
@@ -41,11 +42,16 @@ function useDocumentVisible() {
 
 /** En ms. */
 const CHAIN_GAP_MS = 280;
+// La carte compacte, pendant un épisode, ne reste pas aussi longtemps que la cérémonie.
+const COMPACT_LIFE_MS = 4500;
 
 export default function AchievementUnlock() {
   const queue = useAchievementUnlockStore((state) => state.queue);
   const batch = useAchievementUnlockStore((state) => state.batch);
   const dismiss = useAchievementUnlockStore((state) => state.dismiss);
+  const inPlayback = useAchievementUnlockStore((state) => state.inPlayback);
+  const playbackMode = useSettingsStore((state) => state.achievementsInPlayback);
+  const releasedRef = useRef(null);
   const host = useCeremonyHost();
   const visible = useDocumentVisible();
   // Battement de noir entre deux paliers, sinon l'enchaînement se lit comme un clignotement.
@@ -64,6 +70,24 @@ export default function AchievementUnlock() {
 
   const currentId = queue[0] || null;
   if (!currentId || pausing || !visible) return null;
+  // « À la fin de l'épisode » : la file attend la sortie du lecteur ou la fin de l'épisode.
+  // Une cérémonie déjà lancée va au bout, même si l'épisode suivant démarre entre-temps.
+  const holding = inPlayback && playbackMode === "after";
+  if (!holding) releasedRef.current = currentId;
+  if (holding && releasedRef.current !== currentId) return null;
+
+  if (inPlayback && playbackMode === "compact") {
+    return (
+      <CompactCeremony
+        key={`${currentId}:${host === document.body ? "page" : "fs"}`}
+        id={currentId}
+        host={host}
+        position={batch > 1 ? batch - queue.length + 1 : 0}
+        total={batch}
+        onDone={handleDone}
+      />
+    );
+  }
 
   return (
     // `key` remonte la scène d'un palier à l'autre, pour rejouer les animations CSS.
@@ -231,6 +255,42 @@ function Ceremony({ id, host, position, total, onDone }) {
               {position} / {total}
             </span>
           )}
+        </div>
+      </div>
+    </div>,
+    host
+  );
+}
+
+/** Pendant un épisode : une carte discrète en haut à droite, qui ne cache pas l'image. */
+function CompactCeremony({ id, host, position, total, onDone }) {
+  const { family, tier } = ACHIEVEMENT_TIERS_BY_ID[id];
+  const look = ACHIEVEMENT_TIER_LOOKS[tier.level] || ACHIEVEMENT_TIER_LOOKS[1];
+  const life = Math.min(look.life, COMPACT_LIFE_MS);
+
+  useEffect(() => {
+    const timer = setTimeout(onDone, life);
+    return () => clearTimeout(timer);
+  }, [life, onDone]);
+
+  return createPortal(
+    <div
+      className="pointer-events-none fixed right-4 top-20 z-[200] flex w-[min(320px,calc(100vw-2rem))] items-center gap-3 rounded-lg border bg-black/80 p-3 shadow-2xl backdrop-blur-md animate-slide-in-right"
+      style={{ borderColor: look.halo }}
+      role="status"
+      aria-live="polite"
+    >
+      <img src={tier.badge} alt="" className="h-14 w-14 shrink-0 object-contain" />
+      <div className="min-w-0 flex-1">
+        <p className="text-[0.58rem] font-bold uppercase tracking-kana" style={{ color: look.halo }}>
+          Succès débloqué{position > 0 ? ` · ${position} / ${total}` : ""}
+        </p>
+        <p className="mt-0.5 truncate font-display text-base font-extrabold text-white">{tier.name}</p>
+        <p className="truncate text-xs text-white/60">
+          {family.name} · {look.numeral}
+        </p>
+        <div className="mt-2 h-[2px] w-full overflow-hidden rounded-full bg-white/10">
+          <div className="ach-timer h-full w-full" style={{ "--life": `${life}ms` }} />
         </div>
       </div>
     </div>,

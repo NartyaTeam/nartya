@@ -29,6 +29,9 @@ const DEFAULTS = {
   playerUpdateNoticeSeen: false,
   spoilerMode: false, // floute les vignettes des épisodes non vus
   nartyaIntro: true,
+  planningLanguage: "all", // filtre du calendrier : "all" | "vf" | "vostfr"
+  achievementsInPlayback: "compact", // succès pendant un épisode : "compact" | "after" | "full"
+  titleLanguage: "default", // titres des animes : "default" (catalogue) | "romaji" | "english"
 };
 
 /** Une valeur persistée sous l'ancienne forme (nom d'hébergeur) est remise sur « auto ». */

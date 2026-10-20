@@ -79,7 +79,7 @@ export function PostCreditNotice() {
 }
 
 /** Sur un ending sans rien après, propose l'épisode suivant. */
-export function SkipSegmentButton({ segment, hasNext, onSkip, onNext }) {
+export function SkipSegmentButton({ segment, hasNext, nextLabel = "Épisode suivant", onSkip, onNext }) {
   const goesNext = segment.type === "outro" && !segment.hasContentAfter && hasNext;
   return (
     <button
@@ -87,7 +87,7 @@ export function SkipSegmentButton({ segment, hasNext, onSkip, onNext }) {
       onClick={goesNext ? onNext : onSkip}
       className="nartya-touch-ui pointer-events-auto absolute bottom-24 right-6 z-[56] flex items-center gap-2 rounded-lg bg-white px-5 py-2.5 font-sans text-sm font-semibold text-black shadow-lg transition-transform hover:scale-[1.03] animate-fade-in"
     >
-      {segment.type === "intro" ? "Passer l'intro" : goesNext ? "Épisode suivant" : "Passer l'ending"}
+      {segment.type === "intro" ? "Passer l'intro" : goesNext ? nextLabel : "Passer l'ending"}
       <svg
         width="15"
         height="15"
@@ -116,7 +116,7 @@ export function AutoSkipBadge({ kind }) {
 }
 
 /** Le remplissage suit le décompte. */
-export function NextEpisodeCountdown({ remaining, windowSeconds, onNext, onDismiss }) {
+export function NextEpisodeCountdown({ remaining, windowSeconds, label = "Épisode suivant", onNext, onDismiss }) {
   const progress = Math.min(1, Math.max(0, (windowSeconds - remaining) / windowSeconds));
   const countdown = Math.max(1, Math.ceil(remaining));
   return (
@@ -132,7 +132,7 @@ export function NextEpisodeCountdown({ remaining, windowSeconds, onNext, onDismi
           style={{ width: `${progress * 100}%`, transition: "width .25s linear" }}
         />
         <span className="relative z-10 flex items-center gap-2">
-          Épisode suivant
+          {label}
           {/* Largeur fixe : le compteur ne doit pas faire bouger le bouton. */}
           <span className="inline-block w-10 text-left tabular-nums text-black/55">· {countdown}s</span>
         </span>
