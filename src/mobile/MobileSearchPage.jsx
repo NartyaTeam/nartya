@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, ChevronRight, History, Loader2, Search, X } from "lucide-react";
 import { getAnimesByGenre, getGenreCards, searchAnimes } from "@/api/animeApi";
 import { getOrFetch } from "@/hooks/useCachedResource";
+import { useDisplayTitle } from "@/stores/useTitlesStore";
 
 const RECENTS_KEY = "nartya:mobile-recent-searches";
 
@@ -16,6 +17,7 @@ function readRecents() {
 }
 
 function AnimeRow({ anime, onOpen }) {
+  const displayTitle = useDisplayTitle();
   return (
     <button
       onClick={() => onOpen(anime)}
@@ -26,13 +28,14 @@ function AnimeRow({ anime, onOpen }) {
       ) : (
         <div className="h-16 w-12 shrink-0 rounded-sm bg-surface-2" />
       )}
-      <span className="min-w-0 flex-1 truncate text-sm font-semibold">{anime.title}</span>
+      <span className="min-w-0 flex-1 truncate text-sm font-semibold">{displayTitle(anime.slug, anime.title)}</span>
       <ChevronRight size={16} className="shrink-0 text-muted" />
     </button>
   );
 }
 
 function PosterCard({ anime, onOpen }) {
+  const displayTitle = useDisplayTitle();
   return (
     <button onClick={() => onOpen(anime)} className="min-w-0 text-left active:scale-[0.98]">
       {anime.image ? (
@@ -40,7 +43,7 @@ function PosterCard({ anime, onOpen }) {
       ) : (
         <div className="aspect-[2/3] w-full rounded-sm bg-surface-2" />
       )}
-      <p className="mt-1.5 line-clamp-2 text-xs font-medium leading-snug">{anime.title}</p>
+      <p className="mt-1.5 line-clamp-2 text-xs font-medium leading-snug">{displayTitle(anime.slug, anime.title)}</p>
     </button>
   );
 }
@@ -49,6 +52,9 @@ export default function MobileSearchPage() {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const genre = params.get("genre") || "";
+  // Les mangas sans anime ne sont trouvables que par ici sur mobile.
+  const media = params.get("media") === "manga" ? "manga" : "anime";
+  const isManga = media === "manga";
   const [term, setTerm] = useState("");
   const [results, setResults] = useState([]);
   const [searching, setSearching] = useState(false);
@@ -96,7 +102,7 @@ export default function MobileSearchPage() {
     let active = true;
     setSearching(true);
     const timer = setTimeout(() => {
-      getOrFetch(`mobile-search:${query.toLowerCase()}`, () => searchAnimes(query, 30), 5 * 60 * 1000)
+      getOrFetch(`mobile-search:${media}:${query.toLowerCase()}`, () => searchAnimes(query, 30, media), 5 * 60 * 1000)
         .then((items) => active && setResults(items || []))
         .catch(() => active && setResults([]))
         .finally(() => active && setSearching(false));
@@ -105,7 +111,7 @@ export default function MobileSearchPage() {
       active = false;
       clearTimeout(timer);
     };
-  }, [term]);
+  }, [term, media]);
 
   const saveRecent = useCallback((value) => {
     const query = value.trim();
@@ -117,7 +123,13 @@ export default function MobileSearchPage() {
 
   const openAnime = (anime) => {
     saveRecent(term);
-    navigate(`/anime/${anime.slug}`);
+    navigate(`/anime/${anime.slug}${isManga ? "?tab=scans" : ""}`);
+  };
+
+  const selectMedia = (next) => {
+    if (next === media) return;
+    setResults([]);
+    setParams(next === "manga" ? { media: "manga" } : {}, { replace: true });
   };
 
   const clearRecents = () => {
@@ -144,7 +156,7 @@ export default function MobileSearchPage() {
             ref={inputRef}
             value={term}
             onChange={(event) => setTerm(event.target.value)}
-            placeholder="Rechercher un anime…"
+            placeholder={isManga ? "Rechercher un manga…" : "Rechercher un anime…"}
             className="w-full bg-transparent text-sm outline-none placeholder:text-muted"
           />
           {searching ? <Loader2 size={16} className="animate-spin text-muted" /> : null}
@@ -155,6 +167,27 @@ export default function MobileSearchPage() {
           ) : null}
         </div>
       </div>
+
+      {!genre && (
+        <div className="flex gap-2 px-4 pt-3" role="tablist" aria-label="Type de recherche">
+          {[
+            { id: "anime", label: "Animes" },
+            { id: "manga", label: "Mangas" },
+          ].map((option) => (
+            <button
+              key={option.id}
+              role="tab"
+              aria-selected={media === option.id}
+              onClick={() => selectMedia(option.id)}
+              className={`flex-1 rounded-md py-2 text-sm font-bold transition-colors ${
+                media === option.id ? "bg-primary text-primary-fg" : "bg-surface text-muted ring-1 ring-border"
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className="px-4 pt-4">
         {showSearch ? (
@@ -194,6 +227,12 @@ export default function MobileSearchPage() {
                 ))}
               </section>
             ) : null}
+            {isManga ? (
+              <p className="py-10 text-center text-sm text-muted">
+                Tape le titre d'un manga, d'un webtoon ou d'un manhwa, même s'il n'a pas d'anime.
+              </p>
+            ) : (
+            <>
             <h1 className="section-title mb-3 !text-xl">Parcourir par genre</h1>
             {genresLoading ? (
               <div className="grid grid-cols-2 gap-3">
@@ -213,6 +252,8 @@ export default function MobileSearchPage() {
                   </button>
                 ))}
               </div>
+            )}
+            </>
             )}
           </>
         )}

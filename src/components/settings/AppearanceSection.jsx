@@ -1,7 +1,14 @@
-import { Check, Gauge, Sparkles } from "lucide-react";
+import { Check, Gauge, Languages, Sparkles } from "lucide-react";
 import { useSettingsStore } from "@/stores/useSettingsStore";
 import { THEME_PRESETS, tripletToCss } from "@/utils/theme";
+import { Select } from "@/components/ui/Select";
 import { Section, SettingRow, Toggle } from "./SettingsLayout";
+
+const TITLE_LANGUAGE_OPTIONS = [
+  { value: "default", label: "D'origine" },
+  { value: "romaji", label: "Romaji" },
+  { value: "english", label: "Anglais" },
+];
 
 function ThemeChoice({ id, palette, selected, onSelect }) {
   return (
@@ -38,6 +45,7 @@ export default function AppearanceSection({ number }) {
   const themePreset = useSettingsStore((s) => s.themePreset);
   const customColor = useSettingsStore((s) => s.customColor);
   const reduceMotion = useSettingsStore((s) => s.reduceMotion);
+  const titleLanguage = useSettingsStore((s) => s.titleLanguage);
   const setSetting = useSettingsStore((s) => s.setSetting);
 
   return (
@@ -112,6 +120,22 @@ export default function AppearanceSection({ number }) {
           label="Mode performance"
           checked={reduceMotion}
           onChange={(v) => setSetting("reduceMotion", v)}
+        />
+      </SettingRow>
+
+      <SettingRow
+        icon={Languages}
+        label="Langue des titres"
+        description="Titre affiché sur les cartes d'animes."
+        details="« D'origine » garde le titre du catalogue. Romaji et anglais viennent d'AniList : quand un anime n'en a pas, son titre d'origine est conservé."
+      >
+        <Select
+          title="Langue des titres"
+          value={titleLanguage}
+          onValueChange={(v) => setSetting("titleLanguage", v)}
+          align="end"
+          className="min-w-[9rem]"
+          options={TITLE_LANGUAGE_OPTIONS}
         />
       </SettingRow>
     </Section>

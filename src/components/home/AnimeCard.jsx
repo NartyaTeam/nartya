@@ -2,6 +2,7 @@ import { memo, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BookOpen, Play, Star, Heart } from "lucide-react";
 import { useFavoritesStore } from "@/stores/useFavoritesStore";
+import { useDisplayTitle } from "@/stores/useTitlesStore";
 import AnimeContextMenu from "@/components/anime/AnimeContextMenu";
 import { platform } from "@/platform";
 
@@ -19,6 +20,7 @@ function AnimeCard({
 }) {
   const navigate = useNavigate();
   const isFav = useFavoritesStore((s) => s.slugs.has(anime.slug));
+  const title = useDisplayTitle()(anime.slug, anime.title);
 
   // `complete` couvre l'image déjà en cache, pour laquelle onLoad ne se déclenche pas.
   const imgRef = useRef(null);
@@ -114,7 +116,7 @@ function AnimeCard({
             <img
               ref={imgRef}
               src={anime.cover}
-              alt={anime.title}
+              alt={title}
               loading="lazy"
               decoding="async"
               draggable={false}
@@ -164,7 +166,7 @@ function AnimeCard({
           titleLines === 2 ? "min-h-10 line-clamp-2 leading-5" : "line-clamp-1"
         }`}
       >
-        {anime.title}
+        {title}
       </h3>
       <p className="mt-0.5 line-clamp-1 text-xs text-muted">
         {displayedGenres.join(" · ")}

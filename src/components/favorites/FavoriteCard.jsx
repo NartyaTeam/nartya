@@ -3,6 +3,7 @@ import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import { GripVertical } from "lucide-react";
 import AnimeCard from "@/components/home/AnimeCard";
+import { useDisplayTitle } from "@/stores/useTitlesStore";
 
 // Avant de basculer l'infobulle à gauche.
 const TOOLTIP_SPACE = 320;
@@ -41,6 +42,7 @@ const IconFilm = () => (
 
 export default function FavoriteCard({ anime, summary, sortable = false }) {
   const wrapRef = useRef(null);
+  const displayTitle = useDisplayTitle();
   const [side, setSide] = useState("right");
   const lastSeen = summary?.lastUpdatedAt
     ? formatDistanceToNow(new Date(summary.lastUpdatedAt), { addSuffix: true, locale: fr })
@@ -105,7 +107,7 @@ export default function FavoriteCard({ anime, summary, sortable = false }) {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-surface-2 via-surface-2/40 to-transparent" />
                 <p className="absolute bottom-2.5 left-4 right-4 line-clamp-1 text-[0.95rem] font-bold text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.9)]">
-                  {anime.title}
+                  {displayTitle(anime.slug, anime.title)}
                 </p>
               </div>
             )}

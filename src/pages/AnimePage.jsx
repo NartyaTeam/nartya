@@ -13,6 +13,7 @@ import { useFavorite } from "@/hooks/useFavorite";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useListsStore } from "@/stores/useListsStore";
 import { useSettingsStore } from "@/stores/useSettingsStore";
+import { useDisplayTitle } from "@/stores/useTitlesStore";
 import { SeasonsSection } from "@/components/AnimePage/SeasonsSection";
 import { ScansSection } from "@/components/AnimePage/ScansSection";
 import { RecommendationsSection } from "@/components/AnimePage/RecommendationsSection";
@@ -111,6 +112,13 @@ export default function AnimePage() {
     anilist?.descriptionLang === "en";
   const genres = anilist?.genres || [];
   const altTitle = anime?.alternativeTitles?.[0] || anilist?.titleNative;
+  // Réglage « Langue des titres » : la fiche a déjà ses titres AniList, la table sert de repli.
+  const titleLanguage = useSettingsStore((s) => s.titleLanguage);
+  const displayTitle = useDisplayTitle();
+  const shownTitle =
+    (titleLanguage === "english" && (anilist?.titleEnglish || anilist?.titleRomaji)) ||
+    (titleLanguage === "romaji" && anilist?.titleRomaji) ||
+    displayTitle(streamingSlug || slug, title);
   const countryOfOrigin = anilist?.countryOfOrigin || null;
   const ratingSlug = data ? streamingSlug || slug : null;
   const [ratingSummary, setRatingSummary] = useState(null);
@@ -503,11 +511,16 @@ export default function AnimePage() {
                 imageClassName="origin-left object-left"
               />
             ) : (
-              <h1 className={`block max-w-full break-words leading-[1.05] t-impact [filter:drop-shadow(0_2px_14px_rgb(0_0_0/0.75))] ${titleSizeClass(title, "page")}`}>
-                {clipTitle(title, 90)}
+              <h1 className={`block max-w-full break-words leading-[1.05] t-impact [filter:drop-shadow(0_2px_14px_rgb(0_0_0/0.75))] ${titleSizeClass(shownTitle, "page")}`}>
+                {clipTitle(shownTitle, 90)}
               </h1>
             )}
-            {altTitle && altTitle !== title && <p className="mt-1.5 text-muted">{altTitle}</p>}
+            {/* Titre affiché dans une autre langue : l'original passe en sous-titre. */}
+            {shownTitle !== title ? (
+              <p className="mt-1.5 text-muted">{title}</p>
+            ) : (
+              altTitle && altTitle !== title && <p className="mt-1.5 text-muted">{altTitle}</p>
+            )}
 
             <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted">
               {anilist?.score != null && (

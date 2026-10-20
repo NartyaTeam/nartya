@@ -110,10 +110,12 @@ export async function searchCatalog({
   epMin = null,
   epMax = null,
   lang = "",
+  scoreMin = null,
   verifiedOnly = false,
   page = 1,
 } = {}) {
   const params = new URLSearchParams();
+  if (scoreMin) params.set("scoreMin", String(scoreMin));
   if (search) params.set("search", search);
   if (genres.length) params.set("genre", genres.join(","));
   if (type) params.set("type", type);
@@ -123,6 +125,11 @@ export async function searchCatalog({
   if (verifiedOnly) params.set("verified", "true");
   params.set("page", String(page));
   return (await get(`/v1/${media === "manga" ? "manga" : "anime"}/catalog?${params.toString()}`)).data;
+}
+
+/** `{ slug: [romaji, anglais] }` pour le réglage « langue des titres ». */
+export async function getCatalogTitles() {
+  return (await get("/v1/anime/titles")).data || {};
 }
 
 /** [{ title, url, slug, image }] */

@@ -24,6 +24,14 @@ const LANG_OPTIONS = [
   { value: "vostfr", label: "VOSTFR" },
 ];
 
+// Note AniList minimale, sur 10.
+const SCORE_OPTIONS = [
+  { value: "", label: "Peu importe" },
+  { value: "6", label: "6+" },
+  { value: "7", label: "7+" },
+  { value: "8", label: "8+" },
+];
+
 const MEDIA_OPTIONS = [
   { value: "anime", label: "Anime" },
   { value: "manga", label: "Manga" },
@@ -65,6 +73,9 @@ export default function SearchHubPage() {
   const committedEps = params.get("eps") || "";
   const committedRange = episodeRangeFor(committedEps);
   const committedLang = params.get("lang") || "";
+  const committedScore = SCORE_OPTIONS.some((o) => o.value === params.get("score"))
+    ? params.get("score")
+    : "";
 
   const [searchInput, setSearchInput] = useState(committedSearch);
   const [media, setMedia] = useState(committedMedia);
@@ -74,6 +85,7 @@ export default function SearchHubPage() {
     () => episodeRangeFor(committedEps) || EPISODE_RANGES[0]
   );
   const [lang, setLang] = useState(committedLang);
+  const [scoreMin, setScoreMin] = useState(committedScore);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   // La navbar peut naviguer vers cette page déjà montée : l'URL reste la source de vérité.
@@ -84,7 +96,8 @@ export default function SearchHubPage() {
     setType(committedType);
     setDuration(committedRange || EPISODE_RANGES[0]);
     setLang(committedLang);
-  }, [committedSearch, committedMedia, committedGenres, committedType, committedRange, committedLang]);
+    setScoreMin(committedScore);
+  }, [committedSearch, committedMedia, committedGenres, committedType, committedRange, committedLang, committedScore]);
 
   const isManga = committedMedia === "manga";
 
@@ -98,10 +111,11 @@ export default function SearchHubPage() {
         lang: isManga ? "" : committedLang,
         epMin: isManga || committedType === "Film" ? null : committedRange?.min ?? null,
         epMax: isManga || committedType === "Film" ? null : committedRange?.max ?? null,
+        scoreMin: isManga ? null : committedScore || null,
         verifiedOnly: !isManga,
         page,
       }),
-    [committedSearch, committedMedia, isManga, committedGenres, committedType, committedLang, committedRange]
+    [committedSearch, committedMedia, isManga, committedGenres, committedType, committedLang, committedRange, committedScore]
   );
 
   const activeCriteria = useMemo(() => {
@@ -112,8 +126,9 @@ export default function SearchHubPage() {
       items.push(`${committedRange.label} épisodes`);
     }
     if (committedLang) items.push(committedLang === "vf" ? "VF" : "VOSTFR");
+    if (committedScore) items.push(`Note ${committedScore}+`);
     return items;
-  }, [isManga, committedGenres, committedType, committedRange, committedLang]);
+  }, [isManga, committedGenres, committedType, committedRange, committedLang, committedScore]);
 
   function toggleGenre(genre) {
     setGenres((current) =>
@@ -135,6 +150,7 @@ export default function SearchHubPage() {
       setType("");
       setDuration(EPISODE_RANGES[0]);
       setLang("");
+      setScoreMin("");
     }
   }
 
@@ -150,6 +166,7 @@ export default function SearchHubPage() {
       if (type) next.set("type", type);
       if (type !== "Film" && duration.value) next.set("eps", duration.value);
       if (lang) next.set("lang", lang);
+      if (scoreMin) next.set("score", scoreMin);
     }
     setParams(next);
     setFiltersOpen(false);
@@ -168,16 +185,18 @@ export default function SearchHubPage() {
     setType("");
     setDuration(EPISODE_RANGES[0]);
     setLang("");
+    setScoreMin("");
     const next = new URLSearchParams(params);
     next.delete("genre");
     next.delete("type");
     next.delete("eps");
     next.delete("lang");
+    next.delete("score");
     setParams(next);
   }
 
   const draftFiltersCount =
-    genres.length + (type ? 1 : 0) + (duration.value ? 1 : 0) + (lang ? 1 : 0);
+    genres.length + (type ? 1 : 0) + (duration.value ? 1 : 0) + (lang ? 1 : 0) + (scoreMin ? 1 : 0);
   const resultTitle = committedSearch
     ? `Résultats pour « ${committedSearch} »`
     : activeCriteria.length
@@ -332,6 +351,23 @@ export default function SearchHubPage() {
                       ))}
                     </div>
                   </div>
+
+                  <div>
+                    <p className="mb-2.5 text-[0.65rem] font-bold uppercase tracking-[0.16em] text-muted/70">
+                      Note AniList
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {SCORE_OPTIONS.map((option) => (
+                        <Choice
+                          key={option.value || "any"}
+                          active={scoreMin === option.value}
+                          onClick={() => setScoreMin(option.value)}
+                        >
+                          {option.label}
+                        </Choice>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -394,7 +430,7 @@ export default function SearchHubPage() {
           <h2 className="t-impact mb-7 mt-2 block text-center text-3xl text-text">{resultTitle}</h2>
           <CatalogResults
             fetchPage={fetchPage}
-            resetKey={`${committedMedia}|${committedSearch}|${committedGenresString}|${committedType}|${committedEps}|${committedLang}`}
+            resetKey={`${committedMedia}|${committedSearch}|${committedGenresString}|${committedType}|${committedEps}|${committedLang}|${committedScore}`}
             emptyLabel={isManga ? "Aucun manga ne correspond à ces critères." : "Aucun anime ne correspond à ces critères."}
             openScans={isManga}
             cardProps={{ highlightedGenres: committedGenres }}

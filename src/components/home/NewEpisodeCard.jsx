@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Play } from "lucide-react";
 import { Flag, getLanguageLabel } from "@/components/ui/Flag";
 import { useSettingsStore } from "@/stores/useSettingsStore";
+import { useDisplayTitle } from "@/stores/useTitlesStore";
 
 /**
  * La carte ouvre la fiche sur l'épisode sorti ; le Play ouvre l'épisode, seulement si le flux
@@ -9,6 +10,7 @@ import { useSettingsStore } from "@/stores/useSettingsStore";
  */
 export default function NewEpisodeCard({ anime }) {
   const navigate = useNavigate();
+  const displayTitle = useDisplayTitle();
   const defaultLanguage = useSettingsStore((s) => s.defaultLanguage);
   const langs = Array.from(new Set(anime.langs || []));
 
@@ -100,7 +102,7 @@ export default function NewEpisodeCard({ anime }) {
 
       <button onClick={openSheet} className="block w-full text-left">
         <h3 className="mt-2 line-clamp-1 text-sm font-semibold text-text transition-colors group-hover:text-primary">
-          {anime.title}
+          {displayTitle(anime.slug, anime.title)}
         </h3>
         <p className="mt-0.5 line-clamp-1 text-xs text-muted">
           {langs.length ? langs.map(getLanguageLabel).join(" / ") : anime.seasonLabel}

@@ -3,6 +3,7 @@ import { platform } from "@/platform";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Search, X, Loader2, ArrowLeft, SlidersHorizontal } from "lucide-react";
 import { searchAnimes } from "@/api/animeApi";
+import { useDisplayTitle } from "@/stores/useTitlesStore";
 import { CATALOG_GENRES } from "@/utils/genres";
 import { EPISODE_RANGES } from "@/utils/episodeRanges";
 
@@ -19,6 +20,7 @@ const SHORTCUT_ROUTES = { j: "/downloads", m: "/my-lists", k: "/mangas" };
 
 export default function TopBar({ scrolled }) {
   const navigate = useNavigate();
+  const displayTitle = useDisplayTitle();
   const { pathname, search } = useLocation();
   const isMangaSearch =
     pathname === "/mangas" ||
@@ -39,6 +41,7 @@ export default function TopBar({ scrolled }) {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
   const boxRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -92,6 +95,7 @@ export default function TopBar({ scrolled }) {
       try {
         const r = await searchAnimes(term, 8, isMangaSearch ? "manga" : "anime");
         setResults(r);
+        setActiveIndex(-1);
         setOpen(true);
       } finally {
         setLoading(false);
@@ -113,6 +117,7 @@ export default function TopBar({ scrolled }) {
 
   const go = (slug) => {
     setOpen(false);
+    setActiveIndex(-1);
     setTerm("");
     navigate(`/anime/${slug}${isMangaSearch ? "?tab=scans" : ""}`);
   };
@@ -173,7 +178,26 @@ export default function TopBar({ scrolled }) {
             onChange={(e) => setTerm(e.target.value)}
             onFocus={() => results.length && setOpen(true)}
             onKeyDown={(e) => {
-              if (e.key === "Enter") runSearch();
+              // Flèches haut/bas : on parcourt les suggestions, Entrée ouvre celle qui est surlignée.
+              const listed = open && !showFilters && results.length > 0;
+              if (listed && (e.key === "ArrowDown" || e.key === "ArrowUp")) {
+                e.preventDefault();
+                // -1 = rien de surligné (on reste dans le champ) ; la liste boucle.
+                const last = results.length - 1;
+                setActiveIndex((i) =>
+                  e.key === "ArrowDown" ? (i >= last ? -1 : i + 1) : i <= -1 ? last : i - 1
+                );
+                return;
+              }
+              if (e.key === "Escape") {
+                setOpen(false);
+                setActiveIndex(-1);
+                return;
+              }
+              if (e.key === "Enter") {
+                if (listed && activeIndex >= 0 && results[activeIndex]) go(results[activeIndex].slug);
+                else runSearch();
+              }
             }}
             placeholder={`Rechercher un ${isMangaSearch ? "manga" : "anime"}…${platform.isMobile ? "" : " (Ctrl+F)"}`}
             className="w-full bg-transparent text-sm text-text outline-none placeholder:text-muted"
@@ -286,18 +310,21 @@ export default function TopBar({ scrolled }) {
         {/* Masqués quand le panneau de filtres est ouvert. */}
         {open && !showFilters && results.length > 0 && (
           <div className="absolute mt-2 w-full overflow-hidden rounded-lg bg-surface/95 shadow-card ring-1 ring-white/10 backdrop-blur-xl animate-slide-up">
-            {results.map((a) => (
+            {results.map((a, i) => (
               <button
                 key={a.slug}
                 onClick={() => go(a.slug)}
-                className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-surface-2"
+                onMouseEnter={() => setActiveIndex(i)}
+                className={`flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-surface-2 ${
+                  i === activeIndex ? "bg-surface-2" : ""
+                }`}
               >
                 {a.image ? (
                   <img src={a.image} alt="" className="h-12 w-9 shrink-0 rounded object-cover" />
                 ) : (
                   <div className="h-12 w-9 shrink-0 rounded bg-surface-2" />
                 )}
-                <p className="min-w-0 truncate text-sm font-semibold">{a.title}</p>
+                <p className="min-w-0 truncate text-sm font-semibold">{displayTitle(a.slug, a.title)}</p>
               </button>
             ))}
           </div>

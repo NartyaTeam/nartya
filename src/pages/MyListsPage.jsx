@@ -5,6 +5,7 @@ import { listMyAnimeLists, reorderAnimeList } from "@/api/lists";
 import { searchAnimes } from "@/api/animeApi";
 import { getFavoritesProgress } from "@/api/progress";
 import { useListsStore } from "@/stores/useListsStore";
+import { useDisplayTitle } from "@/stores/useTitlesStore";
 import { LIST_STATUSES, LIST_STATUS_LABEL } from "@/utils/lists";
 import ListDetailDrawer from "@/components/lists/ListDetailDrawer";
 import SortableGrid from "@/components/lists/SortableGrid";
@@ -33,6 +34,7 @@ function dedupeLists(rows) {
 }
 
 function ListCard({ row, summary, onOpen, onRemove }) {
+  const displayTitle = useDisplayTitle();
   const watched = summary?.watchedCount || 0;
 
   return (
@@ -58,7 +60,7 @@ function ListCard({ row, summary, onOpen, onRemove }) {
           )}
         </div>
         <h3 className="mt-2 line-clamp-2 text-sm font-semibold leading-5 text-text transition-colors md:group-hover:text-primary">
-          {row.anime_title || row.anime_slug}
+          {displayTitle(row.anime_slug, row.anime_title || row.anime_slug)}
         </h3>
         <p className="mt-0.5 text-[0.68rem] text-muted">
           {row.status === "planned" && !watched ? "Prêt à commencer" : LIST_STATUS_LABEL[row.status]}
@@ -86,6 +88,7 @@ function ListCard({ row, summary, onOpen, onRemove }) {
 }
 
 function AddAnimeSheet({ rows, onAdd, onClose }) {
+  const displayTitle = useDisplayTitle();
   const [term, setTerm] = useState("");
   const [results, setResults] = useState([]);
   const [searching, setSearching] = useState(false);
@@ -183,7 +186,9 @@ function AddAnimeSheet({ rows, onAdd, onClose }) {
                       <div className="h-[4.5rem] w-12 shrink-0 rounded-md bg-surface-2" />
                     )}
                     <div className="min-w-0 flex-1">
-                      <p className="line-clamp-2 text-sm font-semibold leading-snug text-text">{anime.title}</p>
+                      <p className="line-clamp-2 text-sm font-semibold leading-snug text-text">
+                        {displayTitle(anime.slug, anime.title)}
+                      </p>
                       <p className="mt-1 text-xs text-muted">{status ? LIST_STATUS_LABEL[status] : "Ajouter à À voir"}</p>
                     </div>
                     <button
