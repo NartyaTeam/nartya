@@ -6,10 +6,27 @@ import { usePlanningStore } from "@/stores/usePlanningStore";
 import { parseReleaseDate } from "@/utils/planning";
 import { Flag, getLanguageLabel } from "@/components/ui/Flag";
 import NotifyBell from "@/components/NotifyBell";
+import { useSettingsStore } from "@/stores/useSettingsStore";
+import { useDisplayTitle } from "@/stores/useTitlesStore";
 
 // getDay() : 0 = dimanche. Planning : 0 = lundi.
 function todayIndex() {
   return (new Date().getDay() + 6) % 7;
+}
+
+const LANGUAGE_FILTERS = [
+  { value: "all", label: "Tout" },
+  { value: "vf", label: "VF" },
+  { value: "vostfr", label: "VOSTFR" },
+];
+
+// « vf1 », « vf2 » et la VF québécoise comptent comme VF.
+function matchesLanguage(item, filter) {
+  if (filter === "all") return true;
+  return (item.langs || []).some((lang) => {
+    const base = (lang || "").toLowerCase().replace(/\d+$/, "");
+    return filter === "vf" ? base === "vf" || base === "vqc" : base === filter;
+  });
 }
 
 // Pas un champ : il est dans le libellé (« Saison 1 Episode 9 »).
@@ -19,8 +36,9 @@ function parseEpisode(seasonLabel) {
 }
 
 /** Vers la fiche, sur la bonne saison et langue. */
-function ReleaseCard({ item, dayDate, now }) {
+function ReleaseCard({ item, dayDate, now, languageFilter }) {
   const navigate = useNavigate();
+  const displayTitle = useDisplayTitle();
   const [loaded, setLoaded] = useState(false);
 
   const at = parseReleaseDate(dayDate, item.time, new Date(now));
@@ -30,7 +48,9 @@ function ReleaseCard({ item, dayDate, now }) {
   const go = () => {
     const params = new URLSearchParams();
     if (item.season) params.set("season", item.season);
-    if (item.langs?.[0]) params.set("lang", item.langs[0]);
+    // La fiche s'ouvre dans la langue filtrée.
+    const lang = item.langs?.find((l) => matchesLanguage({ langs: [l] }, languageFilter)) || item.langs?.[0];
+    if (lang) params.set("lang", lang);
     navigate(`/anime/${item.slug}?${params.toString()}`);
   };
 
@@ -104,7 +124,7 @@ function ReleaseCard({ item, dayDate, now }) {
       </div>
 
       <h3 className="mt-2 line-clamp-1 text-sm font-semibold text-text transition-colors group-hover:text-primary">
-        {item.title}
+        {displayTitle(item.slug, item.title)}
       </h3>
       <p className="mt-0.5 line-clamp-1 text-xs text-muted">
         {item.seasonLabel || "Nouvel épisode"}
@@ -113,7 +133,7 @@ function ReleaseCard({ item, dayDate, now }) {
   );
 }
 
-function DaySection({ day, now, innerRef }) {
+function DaySection({ day, now, innerRef, languageFilter }) {
   const isToday = day.index === todayIndex();
   const count = day.items.length;
 
@@ -137,7 +157,13 @@ function DaySection({ day, now, innerRef }) {
       {count > 0 ? (
         <div className="grid grid-cols-3 gap-4 sm:grid-cols-4 lg:grid-cols-6">
           {day.items.map((item) => (
-            <ReleaseCard key={`${item.slug}:${item.season}`} item={item} dayDate={day.date} now={now} />
+            <ReleaseCard
+              key={`${item.slug}:${item.season}`}
+              item={item}
+              dayDate={day.date}
+              now={now}
+              languageFilter={languageFilter}
+            />
           ))}
         </div>
       ) : (
@@ -163,7 +189,16 @@ export default function PlanningPage() {
     markSeen();
   }, [load, markSeen]);
 
-  const days = useMemo(() => planning.days || [], [planning.days]);
+  const languageFilter = useSettingsStore((s) => s.planningLanguage);
+  const setSetting = useSettingsStore((s) => s.setSetting);
+  const days = useMemo(
+    () =>
+      (planning.days || []).map((day) => ({
+        ...day,
+        items: (day.items || []).filter((item) => matchesLanguage(item, languageFilter)),
+      })),
+    [planning.days, languageFilter]
+  );
   const isEmpty = !loading && days.length === 0;
   const total = useMemo(() => days.reduce((n, d) => n + (d.items?.length || 0), 0), [days]);
 
@@ -183,11 +218,29 @@ export default function PlanningPage() {
             </p>
           </div>
         </div>
-        {total > 0 && (
-          <span className="text-sm font-medium text-muted">
-            {total} sortie{total > 1 ? "s" : ""} cette semaine
-          </span>
-        )}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex gap-1 rounded-md bg-surface p-1 ring-1 ring-border" role="group" aria-label="Langue des sorties">
+            {LANGUAGE_FILTERS.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => setSetting("planningLanguage", option.value)}
+                aria-pressed={languageFilter === option.value}
+                className={`rounded px-3 py-1.5 text-xs font-bold transition-colors ${
+                  languageFilter === option.value
+                    ? "bg-primary text-primary-fg"
+                    : "text-muted hover:text-text"
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+          {total > 0 && (
+            <span className="text-sm font-medium text-muted">
+              {total} sortie{total > 1 ? "s" : ""} cette semaine
+            </span>
+          )}
+        </div>
       </div>
 
       {loading && days.length === 0 ? (
@@ -234,6 +287,7 @@ export default function PlanningPage() {
                 key={day.index}
                 day={day}
                 now={now}
+                languageFilter={languageFilter}
                 innerRef={(el) => (sectionRefs.current[day.index] = el)}
               />
             ))}

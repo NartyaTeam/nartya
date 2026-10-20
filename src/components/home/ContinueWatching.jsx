@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useEmblaCarousel from "embla-carousel-react";
 import { BookOpen, ChevronLeft, ChevronRight, Clapperboard, Play, X } from "lucide-react";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useSettingsStore } from "@/stores/useSettingsStore";
+import { useListsStore } from "@/stores/useListsStore";
+import { useDisplayTitle } from "@/stores/useTitlesStore";
 import { getContinueWatching, hideAnimeFromResume } from "@/api/progress";
 import {
   enrichHistoryItems,
@@ -14,6 +16,7 @@ import {
 import { getContinueReadingScans, hideScanFromResume } from "@/api/scanProgress";
 import { platform } from "@/platform";
 import { prewarmEpisode } from "@/utils/episodeVideoUtils";
+import ConfirmModal from "@/components/ui/ConfirmModal";
 
 const HOVER_PREWARM_DELAY_MS = 250;
 
@@ -36,6 +39,7 @@ function remainingLabel(item) {
 }
 
 function ResumeCard({ item, onRemove }) {
+  const displayTitle = useDisplayTitle();
   const navigate = useNavigate();
   const img = item.episodeImage || item.cover;
   const remaining = remainingLabel(item);
@@ -124,7 +128,7 @@ function ResumeCard({ item, onRemove }) {
         className="mt-2 block w-full text-left"
       >
         <h3 className="line-clamp-1 text-sm font-semibold text-text transition-colors hover:text-primary">
-          {item.title || item.slug}
+          {displayTitle(item.slug, item.title || item.slug)}
         </h3>
       </button>
       <p className="mt-0.5 line-clamp-1 text-xs text-muted">
@@ -201,12 +205,23 @@ export default function ContinueWatching({ defaultTab = null, onlyScans = false 
   const session = useAuthStore((s) => s.session);
   const canResume = !!session && !session.user?.is_anonymous;
   const resumeLimit = useSettingsStore((s) => s.resumeLimit);
-  const [items, setItems] = useState(cachedItems);
+  const [allItems, setItems] = useState(cachedItems);
   const [scanItems, setScanItems] = useState(cachedScanItems);
   const [activeTab, setActiveTab] = useState(
     defaultTab || (cachedItems.length ? "anime" : "scans")
   );
   const reqId = useRef(0);
+
+  // Un anime rangé dans « Terminé » ne revient ici que pour un épisode sorti depuis.
+  const ensureListsLoaded = useListsStore((s) => s.ensureLoaded);
+  const listStatuses = useListsStore((s) => s.statuses);
+  useEffect(() => {
+    if (canResume) ensureListsLoaded();
+  }, [canResume, ensureListsLoaded]);
+  const items = useMemo(
+    () => allItems.filter((i) => i.newEpisode || listStatuses.get(i.slug) !== "completed"),
+    [allItems, listStatuses]
+  );
   const visibleItems = onlyScans || activeTab === "scans" ? scanItems : items;
 
   const [emblaRef, embla] = useEmblaCarousel({
@@ -258,6 +273,16 @@ export default function ContinueWatching({ defaultTab = null, onlyScans = false 
     [items.length, onlyScans, scanItems.length]
   );
 
+  // Le retrait passe par une confirmation : un clic sur la croix est vite arrivé.
+  const [pendingRemoval, setPendingRemoval] = useState(null);
+  const confirmRemoval = useCallback(() => {
+    if (!pendingRemoval) return;
+    const { item, scan } = pendingRemoval;
+    setPendingRemoval(null);
+    if (scan) handleScanRemove(item);
+    else handleRemove(item);
+  }, [pendingRemoval, handleRemove, handleScanRemove]);
+
   useEffect(() => {
     if (!canResume) {
       cachedItems = [];
@@ -299,7 +324,7 @@ export default function ContinueWatching({ defaultTab = null, onlyScans = false 
   return (
     <section className="carousel-section relative pt-6">
       <div className={`flex items-center justify-between px-4 sm:px-8 ${scanItems.length && !onlyScans ? "" : "mb-3"}`}>
-        <h2 className="section-title">
+        <h2 className="section-title">
           {onlyScans ? "Continuer à lire" : "Reprendre"}
         </h2>
         <div className="hidden gap-1 md:flex">
@@ -361,14 +386,29 @@ export default function ContinueWatching({ defaultTab = null, onlyScans = false 
               data-carousel-card
             >
               {onlyScans || activeTab === "scans" ? (
-                <ScanResumeCard item={item} onRemove={handleScanRemove} />
+                <ScanResumeCard item={item} onRemove={(it) => setPendingRemoval({ item: it, scan: true })} />
               ) : (
-                <ResumeCard item={item} onRemove={handleRemove} />
+                <ResumeCard item={item} onRemove={(it) => setPendingRemoval({ item: it, scan: false })} />
               )}
             </div>
           ))}
         </div>
       </div>
+
+      {pendingRemoval && (
+        <ConfirmModal
+          eyebrow={pendingRemoval.scan ? "Continuer à lire" : "Reprendre"}
+          title="Retirer de la liste ?"
+          confirmLabel="Retirer"
+          onClose={() => setPendingRemoval(null)}
+          onConfirm={confirmRemoval}
+        >
+          <strong className="font-semibold">{pendingRemoval.item.title || pendingRemoval.item.slug}</strong>{" "}
+          {pendingRemoval.scan
+            ? "ne sera plus proposé ici. Ta progression de lecture est conservée."
+            : "ne sera plus proposé ici. Ta progression et tes épisodes vus sont conservés."}
+        </ConfirmModal>
+      )}
     </section>
   );
 }
