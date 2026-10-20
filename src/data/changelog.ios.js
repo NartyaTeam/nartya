@@ -5,6 +5,56 @@
  */
 export const IOS_CHANGELOG = [
   {
+    version: "1.3.0",
+    date: "20 octobre 2026",
+    items: [
+      {
+        type: "new",
+        text: "La recherche a un onglet Mangas, qui trouve aussi les mangas et webtoons sans anime.",
+      },
+      {
+        type: "new",
+        text: "Choisis la langue des titres dans Paramètres → Apparence : d’origine, romaji ou anglais.",
+      },
+      {
+        type: "new",
+        text: "Au dernier épisode d’une saison, le bouton suivant et le compte à rebours enchaînent directement sur la saison d’après.",
+      },
+      {
+        type: "new",
+        text: "Filtre Tout / VF / VOSTFR dans le calendrier : ton choix est gardé.",
+      },
+      {
+        type: "new",
+        text: "Ton profil affiche le nombre de chapitres de scans que tu as lus.",
+      },
+      {
+        type: "new",
+        text: "Tu choisis l’ordre de ton podium dans « Éditer » sur ton profil.",
+      },
+      {
+        type: "new",
+        text: "Nouveau réglage « Succès pendant la lecture » dans Paramètres → Lecture : une petite carte dans le coin, à la fin de l’épisode, ou l’animation en grand.",
+      },
+      {
+        type: "improved",
+        text: "Une confirmation s’affiche avant de retirer un anime ou un scan de « Reprendre ».",
+      },
+      {
+        type: "improved",
+        text: "Quand tu finis le dernier épisode d’un anime terminé, il se range tout seul dans tes animes terminés.",
+      },
+      {
+        type: "improved",
+        text: "Dans l’activité de ton profil, un épisode ouvre la fiche de l’anime au lieu de lancer la lecture.",
+      },
+      {
+        type: "fixed",
+        text: "Un anime rangé dans « Terminé » ne revient plus dans « Reprendre » quand tu marques des épisodes vus, sauf si un nouvel épisode sort.",
+      },
+    ],
+  },
+  {
     version: "1.2.1",
     date: "10 octobre 2026",
     items: [
