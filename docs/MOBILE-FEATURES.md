@@ -63,7 +63,7 @@ Une entrée à `null` ou `noop` dans `capacitor.js` = fonction absente sur Andro
 | Scans (dans la fiche) | — | 🟡 | Aperçu léger au lieu de charger toutes les pages dans la fiche |
 | Lecteur de scans | `/scan/:slug` | 🟡 | Zoom au pincement |
 | Accueil Mangas | `/mangas` | ✅ | Via le menu « Plus » |
-| Recherche | `/search` | 🟡 | Écran mobile dédié : texte, historique, parcours par genre, et onglet Mangas (mangas et webtoons sans anime compris) ⏳ |
+| Recherche | `/search` | 🟡 | Écran mobile dédié : texte, historique, parcours par genre, et onglet Mangas (mangas et webtoons sans anime compris) |
 | Recherche avancée (filtres, onglet manga, filtre de langue) | `/recherche` | 🔗 | Aucun bouton n'y mène sur Android. Les filtres et le filtre de langue ne sont donc pas accessibles ; la recherche manga passe par l'onglet Mangas de `/search` |
 | Genre | `/genre/:genre` | ✅ | |
 | Calendrier | `/planning` | ✅ | Onglet principal |
