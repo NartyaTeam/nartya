@@ -6,7 +6,7 @@ export async function listMyAnimeLists() {
   const { data, error } = await supabase
     .from("anime_lists")
     .select(
-      "anime_slug, status, anime_title, anime_cover, started_at, completed_at, updated_at, sort_order"
+      "anime_slug, status, anime_title, anime_cover, started_at, completed_at, updated_at, sort_order, media_type"
     )
     .order("sort_order", { ascending: true, nullsFirst: false })
     .order("updated_at", { ascending: false });
@@ -34,8 +34,11 @@ export async function getAnimeStatus(slug) {
   return data?.status || null;
 }
 
-/** La RPC gère `started_at` et `completed_at` atomiquement. */
-export async function setAnimeStatus({ slug, status, title, cover }) {
+/**
+ * La RPC gère `started_at` et `completed_at` atomiquement. Elle ne connaît pas `media_type` :
+ * un manga est marqué juste après, sinon il resterait dans l'onglet Animes.
+ */
+export async function setAnimeStatus({ slug, status, title, cover, mediaType }) {
   if (isGuestSession()) return;
   const { error } = await supabase.rpc("set_anime_status", {
     p_slug: slug,
@@ -44,6 +47,13 @@ export async function setAnimeStatus({ slug, status, title, cover }) {
     p_cover: cover || null,
   });
   if (error) throw error;
+  if (mediaType) {
+    const { error: typeError } = await supabase
+      .from("anime_lists")
+      .update({ media_type: mediaType })
+      .eq("anime_slug", slug);
+    if (typeError) throw typeError;
+  }
 }
 
 /** "YYYY-MM-DD", ou null pour effacer. */

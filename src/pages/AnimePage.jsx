@@ -36,6 +36,8 @@ import { GUEST_FEATURE_MSG } from "@/lib/guest";
 import { platform } from "@/platform";
 import { getAnimeRatingSummary } from "@/api/ratings";
 
+const MANGA_FORMATS = new Set(["MANGA", "NOVEL", "ONE_SHOT"]);
+
 /** Anime absent du catalogue : fiche AniList seule, sans épisodes. */
 async function loadAnime(slug, { lite = false } = {}) {
   const isAnilistId = /^\d+$/.test(slug);
@@ -148,6 +150,10 @@ export default function AnimePage() {
   const scans = scansData || [];
   const hasScans = scans.length > 0;
   const hasEpisodes = (data?.seasons?.length || 0) > 0;
+  // Range favori et liste dans l'onglet Mangas. Fiche AniList de manga, ou rien que des scans.
+  const isManga =
+    MANGA_FORMATS.has(anilist?.format) || (!!data && !hasEpisodes && hasScans);
+  const mediaType = isManga ? "manga" : undefined;
   // Œuvre diffusée ailleurs : l'onglet existe pour renvoyer vers le diffuseur officiel.
   const externalWatch = anime?.externalWatch || [];
   const showEpisodesTab = hasEpisodes || externalWatch.length > 0;
@@ -198,7 +204,12 @@ export default function AnimePage() {
     setSearchParams(next, { replace: true });
   };
 
-  const { fav, toggle } = useFavorite(streamingSlug || slug, { title, cover, genre: genres[0] });
+  const { fav, toggle } = useFavorite(streamingSlug || slug, {
+    title,
+    cover,
+    genre: genres[0],
+    mediaType,
+  });
 
   const listSlug = streamingSlug || slug;
   const session = useAuthStore((s) => s.session);
@@ -233,7 +244,7 @@ export default function AnimePage() {
       return;
     }
     if (value === "__remove__") removeListStatus(listSlug);
-    else setListStatus(listSlug, value, { title, cover });
+    else setListStatus(listSlug, value, { title, cover, mediaType });
   };
 
   useDiscordPresence(

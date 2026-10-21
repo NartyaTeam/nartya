@@ -3,6 +3,7 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import MobileNavigation from "@/components/layout/MobileNavigation";
 import { useScrollRestoration } from "@/hooks/useScrollRestoration";
+import FeatureBanner from "@/components/layout/FeatureBanner";
 
 const PRIMARY_ROUTES = new Set(["/", "/search", "/planning", "/downloads", "/profile", "/login"]);
 
@@ -42,6 +43,10 @@ export default function MobileLayout() {
         ref={mainRef}
         className="relative z-10 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain pb-[calc(4rem+env(safe-area-inset-bottom))]"
       >
+        {/* Sous la barre système ; décalé pour laisser la place au bouton retour. */}
+        <FeatureBanner
+          className={`mx-3 mt-[calc(env(safe-area-inset-top)+0.75rem)] rounded-lg py-2 ${isPrimaryTab ? "" : "ml-16"}`}
+        />
         <Outlet />
       </main>
       {/* Pas de Sidebar dans cette coque : la barre reste visible sur tablette. */}

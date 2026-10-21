@@ -1,25 +1,42 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import MobileNavigation from "./MobileNavigation";
 import TopBar from "./TopBar";
 import ScrollToTopButton from "./ScrollToTopButton";
 import ReleaseNotifier from "@/components/ReleaseNotifier";
+import FeatureBanner from "./FeatureBanner";
 import { useScrollRestoration } from "@/hooks/useScrollRestoration";
+import { useSettingsStore } from "@/stores/useSettingsStore";
+import { TIME_PHASES, phaseForHour } from "@/utils/timeAmbiance";
+
+const DEFAULT_GLOW = "radial-gradient(80% 50% at 80% -10%, rgb(var(--primary) / 0.14), transparent 60%)";
+
+/** Phase de la journée, relue chaque minute tant que le réglage est actif. */
+function useTimePhase(enabled) {
+  const [phase, setPhase] = useState(() => phaseForHour(new Date().getHours()));
+  useEffect(() => {
+    if (!enabled) return undefined;
+    const tick = () => setPhase(phaseForHour(new Date().getHours()));
+    tick();
+    const timer = setInterval(tick, 60_000);
+    return () => clearInterval(timer);
+  }, [enabled]);
+  return phase;
+}
 
 export default function AppLayout() {
   const [scrolled, setScrolled] = useState(false);
   const mainRef = useRef(null);
   useScrollRestoration(mainRef);
+  const timeAmbiance = useSettingsStore((s) => s.timeAmbiance);
+  const phase = useTimePhase(timeAmbiance);
 
   return (
     <div className="flex h-full w-full overflow-hidden bg-bg">
       <div
-        className="pointer-events-none fixed inset-0 z-0"
-        style={{
-          background:
-            "radial-gradient(80% 50% at 80% -10%, rgb(var(--primary) / 0.14), transparent 60%)",
-        }}
+        className="pointer-events-none fixed inset-0 z-0 transition-[background] duration-1000"
+        style={{ background: timeAmbiance ? TIME_PHASES[phase] : DEFAULT_GLOW }}
       />
       <Sidebar />
       <MobileNavigation />
@@ -29,6 +46,7 @@ export default function AppLayout() {
         onScroll={(e) => setScrolled(e.currentTarget.scrollTop > 40)}
         className="relative z-10 flex-1 overflow-x-hidden overflow-y-auto pb-[calc(3.5rem+env(safe-area-inset-bottom))] md:pb-0"
       >
+        <FeatureBanner />
         <TopBar scrolled={scrolled} />
         {/* Remonte sous la TopBar transparente. */}
         <div className="-mt-16">

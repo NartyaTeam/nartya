@@ -551,3 +551,44 @@ export function setupPictureInPicture(art) {
 
   return () => disposers.forEach((dispose) => dispose());
 }
+
+const LOCK_ICON =
+  '<svg viewBox="0 0 24 24" style="fill:none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
+const UNLOCK_ICON =
+  '<svg viewBox="0 0 24 24" style="fill:none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.9-1"/></svg>';
+
+/**
+ * Android : bouton cadenas qui fige l'écran dans son sens actuel. Le lecteur suit sinon le
+ * capteur, et allongé sur le côté le téléphone se croit en portrait. En quittant le lecteur,
+ * WatchPage remet le portrait ; un lecteur recréé sur la même page repart déverrouillé.
+ */
+let orientationLocked = false;
+
+export function setupOrientationLock(art) {
+  if (platform.os !== "android" || !art?.controls) return () => {};
+  if (orientationLocked) platform.setOrientation("player");
+  orientationLocked = false;
+  let locked = false;
+  try {
+    art.controls.add({
+      name: "orientation-lock",
+      position: "right",
+      index: 39,
+      html: UNLOCK_ICON,
+      tooltip: "Verrouiller la rotation",
+      click: (_, event) => {
+        locked = !locked;
+        orientationLocked = locked;
+        platform.setOrientation(locked ? "locked" : "player");
+        const button = event?.currentTarget || art.controls["orientation-lock"];
+        if (button) button.innerHTML = locked ? LOCK_ICON : UNLOCK_ICON;
+        try {
+          art.notice.show = locked ? "Rotation verrouillée" : "Rotation libre";
+        } catch (_) {}
+      },
+    });
+  } catch (_) {
+    return () => {};
+  }
+  return () => {};
+}

@@ -41,6 +41,10 @@ const WatchPage = lazy(() => import("@/pages/WatchPage"));
 const ScanReaderPage = lazy(() => import("@/pages/ScanReaderPage"));
 const FavoritesPage = lazy(() => import("@/pages/FavoritesPage"));
 const MyListsPage = lazy(() => import("@/pages/MyListsPage"));
+const HistoryPage = lazy(() => import("@/pages/HistoryPage"));
+const TierListsPage = lazy(() => import("@/pages/tierlists/TierListsPage"));
+const TierListPage = lazy(() => import("@/pages/tierlists/TierListPage"));
+const TierListEditorPage = lazy(() => import("@/pages/tierlists/TierListEditorPage"));
 const ProfilePage = lazy(() => import("@/pages/ProfilePage"));
 const AchievementsPage = lazy(() => import("@/pages/AchievementsPage"));
 const PublicProfilePage = lazy(() => import("@/pages/PublicProfilePage"));
@@ -297,6 +301,24 @@ export default function App() {
         <Route path="/recherche" element={<SearchHubPage />} />
         <Route path="/conseiller" element={<Navigate to="/recherche" replace />} />
         <Route path="/leaderboard" element={<LeaderboardPage />} />
+        <Route path="/tierlists" element={<TierListsPage />} />
+        <Route
+          path="/tierlists/new"
+          element={
+            <ProtectedRoute requireAccount feature="tierlists">
+              <TierListEditorPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/tierlists/:id/edit"
+          element={
+            <ProtectedRoute requireAccount feature="tierlists">
+              <TierListEditorPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/tierlists/:id" element={<TierListPage />} />
         <Route path="/nouveautes" element={<MobileChangelogPage />} />
         {/* Un invité voit l'écran GuestGate. */}
         <Route
@@ -328,6 +350,14 @@ export default function App() {
           element={
             <ProtectedRoute requireAccount feature="lists">
               <MyListsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/history"
+          element={
+            <ProtectedRoute requireAccount feature="history">
+              <HistoryPage />
             </ProtectedRoute>
           }
         />

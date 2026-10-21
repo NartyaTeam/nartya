@@ -28,6 +28,10 @@ public class ScreenPlugin extends Plugin {
                 // Le lecteur suit le sens du téléphone, portrait compris.
                 mode = ActivityInfo.SCREEN_ORIENTATION_SENSOR;
                 break;
+            case "locked":
+                // Cadenas du lecteur : figé dans le sens actuel, même allongé sur le côté.
+                mode = ActivityInfo.SCREEN_ORIENTATION_LOCKED;
+                break;
             default:
                 // Rend la main au système.
                 mode = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
@@ -35,7 +39,7 @@ public class ScreenPlugin extends Plugin {
         }
         // Garde le masquage des barres de MainActivity synchrone avec l'orientation.
         MainActivity.immersiveRequested =
-            "landscape".equals(orientation) || "player".equals(orientation);
+            "landscape".equals(orientation) || "player".equals(orientation) || "locked".equals(orientation);
         getActivity().runOnUiThread(() -> getActivity().setRequestedOrientation(mode));
         call.resolve();
     }

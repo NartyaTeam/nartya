@@ -40,7 +40,13 @@ export function useFavorite(slug, meta = {}) {
     else store.unmarkFavorite(slug);
     try {
       if (next) {
-        await addFavorite({ slug, title: meta.title, cover: meta.cover, genre: meta.genre });
+        await addFavorite({
+          slug,
+          title: meta.title,
+          cover: meta.cover,
+          genre: meta.genre,
+          mediaType: meta.mediaType,
+        });
         toast.success("Ajouté aux favoris");
       } else {
         await removeFavorite(slug);

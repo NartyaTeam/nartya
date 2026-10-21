@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Search, X, Loader2, ArrowLeft, SlidersHorizontal } from "lucide-react";
 import { searchAnimes } from "@/api/animeApi";
 import { useDisplayTitle } from "@/stores/useTitlesStore";
-import { CATALOG_GENRES } from "@/utils/genres";
+import { MAIN_GENRES, SECONDARY_GENRES } from "@/utils/genres";
 import { EPISODE_RANGES } from "@/utils/episodeRanges";
 
 // Valeurs exactes attendues par le catalogue.
@@ -12,6 +12,7 @@ const TYPE_OPTIONS = [
   { value: "", label: "Tous" },
   { value: "Anime", label: "Anime" },
   { value: "Film", label: "Film" },
+  { value: "Autres", label: "Autres séries" },
 ];
 
 /** Transparente au-dessus du hero, voilée au scroll. */
@@ -271,22 +272,27 @@ export default function TopBar({ scrolled }) {
             </div>
 
             <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted">Genres</p>
-            <div className="max-h-44 overflow-y-auto">
-              <div className="flex flex-wrap gap-1.5">
-                {CATALOG_GENRES.map((g) => (
-                  <button
-                    key={g}
-                    onClick={() => toggleGenre(g)}
-                    className={`rounded px-2 py-1 text-xs transition-colors ${
-                      selGenres.has(g)
-                        ? "bg-primary text-primary-fg"
-                        : "bg-white/[0.06] text-text hover:bg-white/[0.1]"
-                    }`}
-                  >
-                    {g}
-                  </button>
-                ))}
-              </div>
+            <div className="max-h-56 space-y-3 overflow-y-auto">
+              {[MAIN_GENRES, SECONDARY_GENRES].map((level, index) => (
+                <div key={index} className="flex flex-wrap gap-1.5">
+                  {index === 1 && (
+                    <p className="w-full text-[0.65rem] font-semibold uppercase tracking-wider text-muted/70">Thèmes</p>
+                  )}
+                  {level.map((g) => (
+                    <button
+                      key={g}
+                      onClick={() => toggleGenre(g)}
+                      className={`rounded px-2 py-1 text-xs transition-colors ${
+                        selGenres.has(g)
+                          ? "bg-primary text-primary-fg"
+                          : "bg-white/[0.06] text-text hover:bg-white/[0.1]"
+                      }`}
+                    >
+                      {g}
+                    </button>
+                  ))}
+                </div>
+              ))}
             </div>
 
             <div className="mt-4 flex items-center justify-between">

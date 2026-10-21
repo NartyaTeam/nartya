@@ -32,7 +32,7 @@ function advancedItem(item, seasonId, number, image, seasonName, nouveau = false
 }
 
 /** « saison1hs » → « Saison 1 HS » */
-function formatSeasonId(seasonId) {
+export function formatSeasonId(seasonId) {
   if (!seasonId) return null;
   const m = String(seasonId).match(/^saison(\d+)(.*)$/i);
   if (m) return `Saison ${m[1]}${m[2] ? ` ${m[2].toUpperCase()}` : ""}`;

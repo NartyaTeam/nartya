@@ -37,8 +37,11 @@ export async function isFavorite(slug) {
   return !!data;
 }
 
-/** Sans genre fourni, il est résolu en arrière-plan. */
-export async function addFavorite({ slug, title, cover, genre }) {
+/**
+ * Sans genre fourni, il est résolu en arrière-plan. `mediaType` "manga" range le favori dans
+ * l'onglet Mangas ; omis, la colonne garde sa valeur (« anime » par défaut).
+ */
+export async function addFavorite({ slug, title, cover, genre, mediaType }) {
   if (isGuestSession()) return;
   const { data: auth } = await supabase.auth.getUser();
   const userId = auth?.user?.id;
@@ -50,6 +53,7 @@ export async function addFavorite({ slug, title, cover, genre }) {
       anime_title: title || null,
       anime_cover: cover || null,
       genre: genre || null,
+      ...(mediaType && { media_type: mediaType }),
     },
     { onConflict: "user_id,anime_slug" }
   );
@@ -106,6 +110,24 @@ export async function setPinnedOrder(slugs) {
   const failed = results.find((r) => r.error);
   if (failed) throw failed.error;
   invalidateFavoriteProfileData();
+}
+
+/**
+ * Affiche choisie par le membre parmi les visuels de la galerie. Le marqueur, ignoré par le
+ * navigateur, dit au podium de la garder au lieu de chercher l'affiche AniList.
+ */
+const CUSTOM_COVER_MARK = "#affiche-choisie";
+
+export const isCustomCover = (url) => typeof url === "string" && url.endsWith(CUSTOM_COVER_MARK);
+
+/** `url` null : retour à l'affiche d'origine (`fallbackCover`). Renvoie la valeur enregistrée. */
+export async function setFavoriteCover(slug, url, fallbackCover = null) {
+  if (isGuestSession()) return null;
+  const cover = url ? `${url}${CUSTOM_COVER_MARK}` : fallbackCover;
+  const { error } = await supabase.from("favorites").update({ anime_cover: cover }).eq("anime_slug", slug);
+  if (error) throw error;
+  invalidateFavoriteProfileData();
+  return cover;
 }
 
 export async function unpinFavorite(slug) {

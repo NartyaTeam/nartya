@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { getCoversByTitle } from "@/api/anilist";
+import { isCustomCover } from "@/api/favorites";
 import { formatWatchTime } from "./StatsRow";
 
 // Rang 1 → 5, en pixels. Sur téléphone, réduits et en rangée défilante (voir `ROW`).
@@ -46,6 +47,8 @@ export default function PodiumSection({ items, username, isSelf = true }) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [titlesKey]);
+  // L'affiche choisie dans « Éditer » passe avant celle d'AniList.
+  const posterOf = (it) => (isCustomCover(it.cover) ? it.cover : hiRes[it.slug] || it.cover);
 
   return (
     <section>
@@ -80,9 +83,9 @@ export default function PodiumSection({ items, username, isSelf = true }) {
                 boxShadow: i === 0 ? "0 18px 40px rgb(0 0 0 / 0.55)" : "0 14px 32px rgb(0 0 0 / 0.5)",
               }}
             >
-              {(hiRes[it.slug] || it.cover) && (
+              {posterOf(it) && (
                 <img
-                  src={hiRes[it.slug] || it.cover}
+                  src={posterOf(it)}
                   alt=""
                   loading="lazy"
                   decoding="async"

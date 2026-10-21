@@ -5,6 +5,7 @@ import {
   Search, Tv, Users, Settings2, UserPlus,
 } from "lucide-react";
 import { getSeasonEpisodes } from "@/api/animeApi";
+import { watchTick } from "@/api/progress";
 import { hasPlayableSources } from "@/utils/videoSourceUtils";
 import { partyCapacityForTier } from "@/lib/premium";
 import { toast } from "@/lib/toast";
@@ -28,6 +29,8 @@ import {
 } from "@/components/party/PartyRoomPanels";
 
 const HEARTBEAT_MS = 1500;
+// Même cadence que le lecteur seul : temps de visionnage, épisodes vus et « Reprendre ».
+const STATS_BEAT_MS = 60_000;
 // Sans `timeupdate`, un participant qui se reconnecte ne pourrait pas se réaligner.
 const PAUSED_BEAT_MS = 4000;
 // Avant d'extraire en autonomie.
@@ -62,6 +65,7 @@ export default function PartyRoomPage() {
   const playerApiRef = useRef(null);
   const isPlayingRef = useRef(false);
   const lastBeatRef = useRef(0);
+  const statsBeatRef = useRef(0);
   const prevWaitingRef = useRef(false);
   const remoteRef = useRef(null);
   const rateRef = useRef(1);
@@ -237,9 +241,31 @@ export default function PartyRoomPage() {
 
   // Hôte : émission de l'état de lecture
   const handleTimeUpdate = useCallback(
-    (time) => {
+    (time, duration) => {
       // Fait repartir un participant promu hôte.
       party.reportLocalPlayback({ currentTime: time, isPlaying: !playerApiRef.current?.isPaused?.() });
+      // Chaque membre du salon, hôte ou non, voit l'épisode compter dans son profil.
+      if (
+        userId &&
+        current?.slug &&
+        duration > 0 &&
+        time > 1 &&
+        Date.now() - statsBeatRef.current >= STATS_BEAT_MS
+      ) {
+        statsBeatRef.current = Date.now();
+        watchTick({
+          slug: current.slug,
+          seasonId: current.season,
+          episodeNumber: Number(current.ep),
+          language: current.lang,
+          positionSeconds: time,
+          duration,
+          title: current.title,
+          cover: current.cover,
+          seasonTotal: episodes.length,
+          userId,
+        });
+      }
       if (!isHost || !isPlayingRef.current) return;
       party.updateHostState({ currentTime: time, isPlaying: true });
       const now = Date.now();
@@ -248,7 +274,7 @@ export default function PartyRoomPage() {
         party.emitPlayback({ currentTime: time, isPlaying: true, force: true });
       }
     },
-    [isHost, party]
+    [isHost, party, userId, current, episodes.length]
   );
   const handlePlay = useCallback(
     (t) => {

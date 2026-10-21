@@ -14,7 +14,8 @@ import { platform } from "@/platform";
 const MENU_W = 210;
 
 /** Positionné au curseur ; fermé au clic extérieur, à Échap ou après une action. */
-export default function AnimeContextMenu({ anime, x, y, onClose }) {
+/** `mediaType` "manga" pour une carte de manga : favori et liste vont dans l'onglet Mangas. */
+export default function AnimeContextMenu({ anime, x, y, onClose, mediaType }) {
   const navigate = useNavigate();
   const ref = useRef(null);
   const [pos, setPos] = useState({ x, y });
@@ -66,7 +67,7 @@ export default function AnimeContextMenu({ anime, x, y, onClose }) {
       removeFavorite(anime.slug).catch(() => store.markFavorite(anime.slug));
     } else {
       store.markFavorite(anime.slug);
-      addFavorite({ slug: anime.slug, title: anime.title, cover: anime.cover }).catch(() =>
+      addFavorite({ slug: anime.slug, title: anime.title, cover: anime.cover, mediaType }).catch(() =>
         store.unmarkFavorite(anime.slug)
       );
     }
@@ -79,7 +80,7 @@ export default function AnimeContextMenu({ anime, x, y, onClose }) {
     else
       useListsStore
         .getState()
-        .setStatus(anime.slug, status, { title: anime.title, cover: anime.cover });
+        .setStatus(anime.slug, status, { title: anime.title, cover: anime.cover, mediaType });
     onClose();
   };
 

@@ -30,7 +30,13 @@ export const useListsStore = create((set, get) => ({
     next.set(slug, status);
     set({ statuses: next });
     try {
-      await setAnimeStatus({ slug, status, title: meta.title, cover: meta.cover });
+      await setAnimeStatus({
+        slug,
+        status,
+        title: meta.title,
+        cover: meta.cover,
+        mediaType: meta.mediaType,
+      });
       return true;
     } catch {
       const rb = new Map(get().statuses);

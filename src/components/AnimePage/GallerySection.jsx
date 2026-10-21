@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, Download, ImageOff, Loader2, X } from "lucid
 import { useCachedResource } from "@/hooks/useCachedResource";
 import { getAnimeGallery } from "@/api/animeApi";
 import { toast } from "@/lib/toast";
+import { saveImage } from "@/lib/saveImage";
 
 const GRID_CLASS =
   "grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4";
@@ -16,15 +17,7 @@ function fileNameFor(title, index) {
 async function downloadImage(url, filename) {
   const res = await fetch(url);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const blob = await res.blob();
-  const objectUrl = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = objectUrl;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(objectUrl);
+  return saveImage(await res.blob(), filename);
 }
 
 /** Navigation précédent/suivant (flèches, clavier, boucle) et téléchargement. */
@@ -55,7 +48,8 @@ function GalleryLightbox({ images, index, animeTitle, onClose, onNavigate }) {
     if (downloading) return;
     setDownloading(true);
     try {
-      await downloadImage(image.full, fileNameFor(animeTitle, index));
+      const saved = await downloadImage(image.full, fileNameFor(animeTitle, index));
+      if (saved === "gallery") toast.success("Image enregistrée dans Images › Nartya");
     } catch {
       toast.error("Téléchargement de l'image impossible");
     } finally {

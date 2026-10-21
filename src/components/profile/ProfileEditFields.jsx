@@ -6,6 +6,7 @@ import {
   CloudLightning,
   CloudRain,
   Crown,
+  ImageIcon,
   Leaf,
   Lock,
   Snowflake,
@@ -263,16 +264,21 @@ export function PinnedFavoritesPicker({ favorites, pinned, maxPinsLabel, onToggl
   );
 }
 
-/** Ordre des favoris à la une : les cinq premiers forment le podium du profil. */
-export function PodiumOrderPicker({ favorites, order, onMove }) {
-  if (!favorites || order.length < 2) return null;
+/**
+ * Ordre des favoris à la une (les cinq premiers forment le podium du profil), et l'affiche de
+ * chacun, à choisir parmi celles de sa galerie.
+ */
+export function PodiumOrderPicker({ favorites, order, onMove, onPickCover }) {
+  if (!favorites || order.length < 1) return null;
   const bySlug = new Map(favorites.map((f) => [f.anime_slug, f]));
   return (
     <div>
       <label className="text-[0.7rem] font-semibold uppercase tracking-kana text-muted">
-        Ordre du podium
+        Podium
       </label>
-      <p className="mt-1 text-xs text-muted">Les cinq premiers montent sur le podium de ton profil.</p>
+      <p className="mt-1 text-xs text-muted">
+        Les cinq premiers montent sur le podium de ton profil. Change l'affiche de chacun avec l'icône image.
+      </p>
       <ol className="mt-2 space-y-1.5">
         {order.map((slug, i) => {
           const f = bySlug.get(slug);
@@ -292,6 +298,17 @@ export function PodiumOrderPicker({ favorites, order, onMove }) {
                 <div className="h-10 w-7 shrink-0 rounded bg-surface-2" />
               )}
               <span className="min-w-0 flex-1 truncate text-sm">{f?.anime_title || slug}</span>
+              {f && onPickCover && (
+                <button
+                  type="button"
+                  onClick={() => onPickCover(f)}
+                  aria-label={`Changer l'affiche de ${f.anime_title || slug}`}
+                  title="Changer l'affiche"
+                  className="rounded p-1 text-muted transition-colors hover:text-primary"
+                >
+                  <ImageIcon size={16} />
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => onMove(slug, -1)}

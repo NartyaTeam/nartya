@@ -5,6 +5,8 @@ import {
   Download,
   Clapperboard,
   ListChecks,
+  History,
+  LayoutList,
   User,
   Settings,
   Headphones,
@@ -40,6 +42,20 @@ const FEATURES = {
     pitch:
       "Organise tes animes en listes — En cours, À voir, Terminé — et suis ta progression saison après saison.",
     perks: ["Statuts personnalisés", "Suivi automatique du visionnage", "Historique conservé"],
+  },
+  history: {
+    icon: History,
+    title: "Historique",
+    pitch:
+      "Retrouve tout ce que tu as regardé ou lu, même ce que tu as retiré de « Reprendre », et reprends-le en un clic.",
+    perks: ["Animes et mangas séparés", "Classé jour par jour", "Reprise à l'épisode ou au chapitre"],
+  },
+  tierlists: {
+    icon: LayoutList,
+    title: "Tier lists",
+    pitch:
+      "Classe tes animes dans ta propre tier list, publie-la et vois ce qu'en pense la communauté.",
+    perks: ["Rangées et couleurs à ton goût", "Votes et chat", "Export en image"],
   },
   profile: {
     icon: User,

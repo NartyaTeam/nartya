@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { Heart, LayoutGrid, ListOrdered, Search, X } from "lucide-react";
+import { BookOpen, Heart, LayoutGrid, ListOrdered, Play, Search, X } from "lucide-react";
 import { listFavorites, reorderFavorites } from "@/api/favorites";
 import { getFavoritesProgress } from "@/api/progress";
 import { toast } from "@/lib/toast";
 import FavoriteCard from "@/components/favorites/FavoriteCard";
 import SortableGrid from "@/components/lists/SortableGrid";
+import MediaTabs, { mediaOf } from "@/components/lists/MediaTabs";
 
 // Les cartes gardent une largeur de 170 à 210 px.
 const GRID_CLASS =
@@ -16,6 +17,8 @@ export default function FavoritesPage() {
   const [query, setQuery] = useState("");
   // "manual" = liste plate réordonnable. Une recherche active force le groupement par genre.
   const [sortMode, setSortMode] = useState("genre");
+  // Les mangas mis de côté ont leur onglet, au lieu d'être noyés parmi les animes.
+  const [media, setMedia] = useState("anime");
 
   useEffect(() => {
     let alive = true;
@@ -37,14 +40,23 @@ export default function FavoritesPage() {
     };
   }, []);
 
+  const counts = useMemo(() => {
+    const out = { anime: 0, manga: 0 };
+    for (const f of favorites || []) out[mediaOf(f)]++;
+    return out;
+  }, [favorites]);
+  // Sans manga, pas d'onglets : la page reste celle des animes.
+  const activeMedia = counts.manga > 0 ? media : "anime";
+
   const filtered = useMemo(() => {
     if (!favorites) return null;
     const q = query.trim().toLowerCase();
-    if (!q) return favorites;
-    return favorites.filter((f) =>
-      (f.anime_title || f.anime_slug || "").toLowerCase().includes(q)
+    return favorites.filter(
+      (f) =>
+        mediaOf(f) === activeMedia &&
+        (!q || (f.anime_title || f.anime_slug || "").toLowerCase().includes(q))
     );
-  }, [favorites, query]);
+  }, [favorites, query, activeMedia]);
 
   // Du plus fourni au moins fourni ; « Non classé » en dernier.
   const groups = useMemo(() => {
@@ -70,7 +82,12 @@ export default function FavoritesPage() {
     setFavorites((current) => {
       if (!current) return current;
       const bySlug = new Map(current.map((f) => [f.anime_slug, f]));
-      return slugOrder.map((slug) => bySlug.get(slug)).filter(Boolean);
+      const moved = new Set(slugOrder);
+      // L'onglet affiché seul est réordonné ; l'autre garde sa place.
+      return [
+        ...slugOrder.map((slug) => bySlug.get(slug)).filter(Boolean),
+        ...current.filter((f) => !moved.has(f.anime_slug)),
+      ];
     });
     reorderFavorites(slugOrder).catch(() => {
       toast.error("Impossible d'enregistrer le nouvel ordre");
@@ -108,6 +125,14 @@ export default function FavoritesPage() {
             />
           )}
         </div>
+        {counts.manga > 0 && (
+          <MediaTabs
+            className="mt-5"
+            value={activeMedia}
+            onChange={setMedia}
+            counts={counts}
+          />
+        )}
         {hasFavorites && (
           <div className="mt-5 flex flex-col gap-2.5 sm:flex-row sm:items-center">
             <div className="flex h-11 flex-1 items-center gap-2.5 rounded-md bg-surface px-3.5 ring-2 ring-border transition-colors focus-within:ring-primary/70 md:h-10 md:max-w-xs">
@@ -180,10 +205,25 @@ export default function FavoritesPage() {
         </div>
       ) : filtered.length === 0 ? (
         <div className="flex min-h-56 flex-col items-center justify-center rounded-md border-2 border-dashed border-border px-6 text-center">
-          <Search size={26} className="text-muted" />
-          <p className="mt-3 text-sm text-muted">
-            Aucun favori ne correspond à «&nbsp;{query.trim()}&nbsp;».
-          </p>
+          {query.trim() ? (
+            <>
+              <Search size={26} className="text-muted" />
+              <p className="mt-3 text-sm text-muted">
+                Aucun favori ne correspond à «&nbsp;{query.trim()}&nbsp;».
+              </p>
+            </>
+          ) : (
+            <>
+              {activeMedia === "manga" ? (
+                <BookOpen size={26} className="text-muted" />
+              ) : (
+                <Play size={26} className="text-muted" />
+              )}
+              <p className="mt-3 text-sm text-muted">
+                {activeMedia === "manga" ? "Aucun manga dans tes favoris." : "Aucun anime dans tes favoris."}
+              </p>
+            </>
+          )}
         </div>
       ) : flatMode ? (
         <SortableGrid

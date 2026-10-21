@@ -1,5 +1,5 @@
 /**
- * Client Discord fermé : on retente plus tard. L'application doit avoir un asset `nartya_logo` ;
+ * Client Discord fermé : on retente plus tard. Le logo est une image hébergée sur nartya.app ;
  * son ID vient du renderer (`VITE_DISCORD_RPC_CLIENT_ID`), sans lui le service reste inactif.
  * Discord n'accepte que des URL http(s) sur les boutons : une page du site ouvre le deep-link.
  */
@@ -77,10 +77,14 @@ function openAnimeButton(slug) {
  * @param {{type:'home'|'anime'|'watching', animeTitle?:string, animeSlug?:string,
  *   episodeNumber?:number|string, seasonNumber?:number|string, episodeTitle?:string}} params
  */
+const RPC_LOGO_URL = "https://nartya.app/assets/discord-rpc.png";
+
 function buildActivity(params) {
   const now = Math.floor(Date.now() / 1000);
   const base = {
-    largeImageKey: "nartya_logo",
+    // Image par URL plutôt que l'asset `nartya_logo` du portail Discord : changer de logo ne
+    // demande plus de repasser par le portail (l'asset gardait l'ancienne mascotte).
+    largeImageKey: RPC_LOGO_URL,
     largeImageText: "Nartya — Streaming Anime",
     instance: false,
     timestamps: { start: now },

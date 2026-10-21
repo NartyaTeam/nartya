@@ -1,4 +1,4 @@
-import { Check, Gauge, Languages, Sparkles } from "lucide-react";
+import { Check, Gauge, Languages, Sparkles, Sunset } from "lucide-react";
 import { useSettingsStore } from "@/stores/useSettingsStore";
 import { THEME_PRESETS, tripletToCss } from "@/utils/theme";
 import { Select } from "@/components/ui/Select";
@@ -46,6 +46,7 @@ export default function AppearanceSection({ number }) {
   const customColor = useSettingsStore((s) => s.customColor);
   const reduceMotion = useSettingsStore((s) => s.reduceMotion);
   const titleLanguage = useSettingsStore((s) => s.titleLanguage);
+  const timeAmbiance = useSettingsStore((s) => s.timeAmbiance);
   const setSetting = useSettingsStore((s) => s.setSetting);
 
   return (
@@ -124,10 +125,24 @@ export default function AppearanceSection({ number }) {
       </SettingRow>
 
       <SettingRow
+        icon={Sunset}
+        label="Ambiance selon l'heure"
+        description="La lumière du fond suit la journée : aube, jour, coucher de soleil, nuit."
+        details="Remplace la lueur aux couleurs du thème par une lumière qui change avec l'heure de ton appareil."
+        inlineControl
+      >
+        <Toggle
+          label="Ambiance selon l'heure"
+          checked={timeAmbiance}
+          onChange={(v) => setSetting("timeAmbiance", v)}
+        />
+      </SettingRow>
+
+      <SettingRow
         icon={Languages}
         label="Langue des titres"
-        description="Titre affiché sur les cartes d'animes."
-        details="« D'origine » garde le titre du catalogue. Romaji et anglais viennent d'AniList : quand un anime n'en a pas, son titre d'origine est conservé."
+        description="Titre affiché sur les cartes d'animes et de mangas."
+        details="« D'origine » garde le titre du catalogue. Romaji et anglais viennent d'AniList : quand une œuvre n'en a pas, son titre d'origine est conservé."
       >
         <Select
           title="Langue des titres"

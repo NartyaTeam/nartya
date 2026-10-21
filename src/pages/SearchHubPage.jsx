@@ -10,12 +10,13 @@ import {
 import { searchCatalog } from "@/api/animeApi";
 import CatalogResults from "@/components/catalog/CatalogResults";
 import { EPISODE_RANGES, episodeRangeFor } from "@/utils/episodeRanges";
-import { CATALOG_GENRES } from "@/utils/genres";
+import { MAIN_GENRES, SECONDARY_GENRES } from "@/utils/genres";
 
 const TYPE_OPTIONS = [
   { value: "", label: "Peu importe" },
   { value: "Anime", label: "Série" },
   { value: "Film", label: "Film" },
+  { value: "Autres", label: "Autres séries" },
 ];
 
 const LANG_OPTIONS = [
@@ -375,9 +376,23 @@ export default function SearchHubPage() {
                 <p className="mb-2.5 text-[0.65rem] font-bold uppercase tracking-[0.16em] text-muted/70">
                   Genres
                 </p>
-                <div className="max-h-52 overflow-y-auto pr-2">
+                <div className="flex flex-wrap gap-2">
+                  {MAIN_GENRES.map((genre) => (
+                    <Choice
+                      key={genre}
+                      active={genres.includes(genre)}
+                      onClick={() => toggleGenre(genre)}
+                    >
+                      {genre}
+                    </Choice>
+                  ))}
+                </div>
+                <p className="mb-2.5 mt-4 text-[0.65rem] font-bold uppercase tracking-[0.16em] text-muted/70">
+                  Thèmes
+                </p>
+                <div className="max-h-40 overflow-y-auto pr-2">
                   <div className="flex flex-wrap gap-2">
-                    {CATALOG_GENRES.map((genre) => (
+                    {SECONDARY_GENRES.map((genre) => (
                       <Choice
                         key={genre}
                         active={genres.includes(genre)}

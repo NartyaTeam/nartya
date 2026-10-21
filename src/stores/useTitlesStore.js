@@ -43,8 +43,9 @@ export const useTitlesStore = create((set, get) => ({
 }));
 
 /**
- * `displayTitle(slug, titreParDéfaut)` selon le réglage : romaji ou anglais quand on les
- * connaît, sinon le titre d'origine du catalogue.
+ * `displayTitle(slug, titreParDéfaut, item?)` selon le réglage : romaji ou anglais quand on
+ * les connaît, sinon le titre d'origine du catalogue. `item` apporte ses propres variantes
+ * (`titleRomaji`, `titleEnglish`) : c'est le cas des mangas, absents de la table des titres.
  */
 export function useDisplayTitle() {
   const language = useSettingsStore((s) => s.titleLanguage);
@@ -53,9 +54,11 @@ export function useDisplayTitle() {
     if (language !== "default" && !map) useTitlesStore.getState().ensureLoaded();
   }, [language, map]);
   return useCallback(
-    (slug, fallback) => {
-      if (language === "default" || !map || !slug) return fallback;
-      const [romaji, english] = map[slug] || [];
+    (slug, fallback, item = null) => {
+      if (language === "default" || !slug) return fallback;
+      const [romaji, english] = item?.titleRomaji || item?.titleEnglish
+        ? [item.titleRomaji, item.titleEnglish]
+        : map?.[slug] || [];
       const preferred = language === "english" ? english || romaji : romaji;
       return preferred || fallback;
     },

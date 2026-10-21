@@ -47,7 +47,7 @@ Une entrée à `null` ou `noop` dans `capacitor.js` = fonction absente sur Andro
 | Élément | Desktop | Android | Notes |
 | ------- | ------- | ------- | ----- |
 | Navigation principale | Sidebar à gauche + TopBar | 🟡 Barre d'onglets en bas | Onglets : Accueil, Recherche, Calendrier, Hors ligne, « Plus » |
-| Menu « Plus » | — | 📱 | Feuille avec : Mangas, À venir, Classement, Favoris, Mes listes, Profil, Succès, Paramètres, Nouveautés, Amis, Signalements, Aide |
+| Menu « Plus » | — | 📱 | Feuille avec : Mangas, À venir, Tier lists, Classement, Favoris, Mes listes, Historique, Profil, Succès, Paramètres, Nouveautés, Amis, Signalements, Aide |
 | Bouton retour | Historique du navigateur | 🟡 Bouton flottant + bouton retour Android | |
 | Barre de recherche dans la TopBar | 🖥️ | ❌ | Sur Android, la recherche est un onglet |
 | Bouton « remonter en haut » | 🖥️ | ❌ | |
@@ -61,7 +61,7 @@ Une entrée à `null` ou `noop` dans `capacitor.js` = fonction absente sur Andro
 | Fiche anime | `/anime/:slug` | 🟡 | Même contenu. Liste d'épisodes chargée par paquets, appui long sur un épisode → actions, vibrations. Mode « no beauty » |
 | Lecteur | `/watch/:slug` | 🟡 | Voir [Lecteur](#lecteur) |
 | Scans (dans la fiche) | — | 🟡 | Aperçu léger au lieu de charger toutes les pages dans la fiche |
-| Lecteur de scans | `/scan/:slug` | 🟡 | Zoom au pincement |
+| Lecteur de scans | `/scan/:slug` | 🟡 | Zoom au pincement. Sens de lecture droite → gauche en pages horizontales, comme sur desktop |
 | Accueil Mangas | `/mangas` | ✅ | Via le menu « Plus » |
 | Recherche | `/search` | 🟡 | Écran mobile dédié : texte, historique, parcours par genre, et onglet Mangas (mangas et webtoons sans anime compris) |
 | Recherche avancée (filtres, onglet manga, filtre de langue) | `/recherche` | 🔗 | Aucun bouton n'y mène sur Android. Les filtres et le filtre de langue ne sont donc pas accessibles ; la recherche manga passe par l'onglet Mangas de `/search` |
@@ -70,9 +70,11 @@ Une entrée à `null` ou `noop` dans `capacitor.js` = fonction absente sur Andro
 | À venir | `/prochainement` | ✅ | Via « Plus » |
 | Classement | `/leaderboard` | ✅ | Via « Plus » |
 | Téléchargements | `/downloads` | 🟡 | Onglet « Hors ligne ». Stockage privé de l'app (pas de choix de dossier), reprise auto des téléchargements interrompus au retour du réseau. Pas de repli automatique sur une autre source quand l'hébergeur lâche en route (desktop seulement) |
-| Favoris | `/favorites` | ✅ | Via « Plus » |
-| Mes listes | `/my-lists` | ✅ | Via « Plus » |
-| Profil | `/profile` | ✅ | Refonte cosmétiques / parures / ambiances |
+| Favoris | `/favorites` | ✅ | Via « Plus ». Onglets Animes / Mangas dès qu'un manga est en favori |
+| Mes listes | `/my-lists` | ✅ | Via « Plus ». Onglets Animes / Mangas dès qu'un manga est dans une liste |
+| Historique | `/history` | ✅ | Via « Plus ». Onglets Animes / Mangas, classé par jour |
+| Tier lists | `/tierlists` | ✅ | Via « Plus ». Création (glisser-déposer ou appui sur une affiche pour choisir la rangée), votes, chat (bouton flottant), export en image dans Images › Nartya |
+| Profil | `/profile` | 🟡 | Refonte cosmétiques / parures / ambiances. La carte Nartya, comme les visuels de l'onglet Galerie, s'enregistre dans Images › Nartya (partage sur Android 9 et avant) |
 | Profil public | `/u/:handle` | ✅ | Nouveau design |
 | Succès | `/profile/achievements` | ✅ | Via « Plus » |
 | Amis | `/communaute` | ✅ | Via « Plus » |
@@ -91,7 +93,7 @@ Une entrée à `null` ou `noop` dans `capacitor.js` = fonction absente sur Andro
 | Élément | Desktop | Android | Notes |
 | ------- | ------- | ------- | ----- |
 | Lecture HLS / MP4 | ✅ | ✅ | Proxy natif (Java) au lieu du proxy Electron. Proxy à jeton |
-| Orientation | — | 📱 | En lecture, suit le sens du téléphone (portrait compris) ; portrait ailleurs |
+| Orientation | — | 📱 | En lecture, suit le sens du téléphone (portrait compris) ; portrait ailleurs. Bouton cadenas dans le lecteur pour figer le sens actuel (allongé sur le côté) |
 | Bouton plein écran | 🖥️ | ❌ | Le lecteur occupe déjà tout l'écran |
 | Picture-in-Picture | Bouton du lecteur | 🟡 | PiP natif : bouton du lecteur, et automatique en quittant l'app pendant la lecture. Fermer la fenêtre met en pause |
 | Gestes | Clavier, souris, double-clic = plein écran | 📱 | Luminosité à gauche, volume à droite, double tap ±5 s, boutons ±5 s au centre |
@@ -116,7 +118,7 @@ Une entrée à `null` ou `noop` dans `capacitor.js` = fonction absente sur Andro
 | Lecture | ✅ | 🟡 | Sans « Qualité source Anime4K » |
 | Notifications | ✅ | ✅ | |
 | Téléchargements | ✅ | 🟡 | Dossier fixe (stockage privé) |
-| Apparence | ✅ | ✅ | |
+| Apparence | ✅ | ✅ | Dont « Ambiance selon l'heure » et la langue des titres, appliquée aussi aux mangas |
 | Confidentialité (présence Discord) | 🖥️ | ❌ | |
 | Sauvegarde | ✅ | ✅ | |
 | Clés d'API | ✅ | ✅ | Comptes uniquement (pas les invités) |

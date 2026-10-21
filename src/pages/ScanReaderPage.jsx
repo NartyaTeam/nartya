@@ -12,6 +12,7 @@ import {
   Minimize,
   GalleryVertical,
   GalleryHorizontal,
+  ArrowLeftRight,
 } from "lucide-react";
 import { getAnimePage, getAnimeScans, getScanChapters, scanPageUrl } from "@/api/animeApi";
 import { getScanProgress, saveScanProgress } from "@/api/scanProgress";
@@ -27,6 +28,7 @@ import { GUEST_FEATURE_MSG } from "@/lib/guest";
 
 const SAVE_DEBOUNCE_MS = 1500;
 const MODE_KEY = "nartya_scan_mode";
+const RTL_KEY = "nartya_scan_rtl";
 
 const ZOOM_MIN = 1;
 const ZOOM_MAX = 4;
@@ -39,6 +41,15 @@ function loadMode() {
     return localStorage.getItem(MODE_KEY) === "horizontal" ? "horizontal" : "vertical";
   } catch {
     return "vertical";
+  }
+}
+
+/** Sens manga (droite → gauche), en lecture horizontale. */
+function loadRtl() {
+  try {
+    return localStorage.getItem(RTL_KEY) === "1";
+  } catch {
+    return false;
   }
 }
 
@@ -69,6 +80,9 @@ export default function ScanReaderPage() {
   const removeDownloadAction = useDownloadsStore((s) => s.remove);
 
   const [mode, setMode] = useState(loadMode);
+  const [rtlPref, setRtlPref] = useState(loadRtl);
+  // Le sens ne concerne que les pages horizontales : en vertical, on lit de haut en bas.
+  const rtl = mode === "horizontal" && rtlPref;
   const [currentPage, setCurrentPage] = useState(0); // à partir de 0
   const [controls, setControls] = useState(true);
   const [isFs, setIsFs] = useState(false);
@@ -304,6 +318,15 @@ export default function ScanReaderPage() {
     });
   };
 
+  const toggleRtl = () => {
+    setRtlPref((value) => {
+      try {
+        localStorage.setItem(RTL_KEY, value ? "0" : "1");
+      } catch {}
+      return !value;
+    });
+  };
+
   // Navigation page / chapitre
   const goChapter = useCallback(
     (chap, pos = "start") => {
@@ -414,7 +437,9 @@ export default function ScanReaderPage() {
     if (mode !== "horizontal") return; // vertical : scroll natif
     // Résistance élastique aux extrémités du chapitre.
     let sx = dx;
-    if ((pageRef.current === 0 && sx > 0) || (pageRef.current === pages - 1 && sx < 0)) sx /= 3;
+    // En droite → gauche, la page suivante arrive par la gauche : les bords s'inversent.
+    const versSuivante = rtl ? sx > 0 : sx < 0;
+    if ((pageRef.current === 0 && !versSuivante) || (pageRef.current === pages - 1 && versSuivante)) sx /= 3;
     setDragX(sx);
   };
 
@@ -456,13 +481,15 @@ export default function ScanReaderPage() {
     const dx = e.clientX - d.startX;
     setDragX(0);
     const threshold = Math.min(120, window.innerWidth * 0.15);
-    if (dx <= -threshold) return nextPage();
-    if (dx >= threshold) return prevPage();
-    // Zones gauche/droite = page, centre = contrôles.
+    const forward = rtl ? nextPage : prevPage;
+    const backward = rtl ? prevPage : nextPage;
+    if (dx <= -threshold) return backward();
+    if (dx >= threshold) return forward();
+    // Zones gauche/droite = page (selon le sens), centre = contrôles.
     if (!d.moved) {
       const r = e.clientX / window.innerWidth;
-      if (r < 0.4) prevPage();
-      else if (r > 0.6) nextPage();
+      if (r < 0.4) forward();
+      else if (r > 0.6) backward();
       else setControls((v) => !v);
     }
   };
@@ -479,13 +506,23 @@ export default function ScanReaderPage() {
       const dropFocus = () => active instanceof HTMLElement && active.blur();
       switch (e.key) {
         case "ArrowRight":
+          e.preventDefault();
+          dropFocus();
+          if (rtl) prevPage();
+          else nextPage();
+          break;
+        case "ArrowLeft":
+          e.preventDefault();
+          dropFocus();
+          if (rtl) nextPage();
+          else prevPage();
+          break;
         case "ArrowDown":
         case " ":
           e.preventDefault();
           dropFocus();
           nextPage();
           break;
-        case "ArrowLeft":
         case "ArrowUp":
           e.preventDefault();
           dropFocus();
@@ -510,7 +547,7 @@ export default function ScanReaderPage() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nextPage, prevPage, nextChapter, prevChapter]);
+  }, [nextPage, prevPage, nextChapter, prevChapter, rtl]);
 
   const backToAnime = () => {
     if (document.fullscreenElement) document.exitFullscreen?.();
@@ -591,6 +628,19 @@ export default function ScanReaderPage() {
               onRemove={() => removeDownloadAction(dlId)}
             />
           </div>
+        )}
+        {mode === "horizontal" && (
+          <button
+            onClick={toggleRtl}
+            title={rtlPref ? "Sens de lecture : droite → gauche (manga)" : "Sens de lecture : gauche → droite"}
+            aria-pressed={rtlPref}
+            className={`flex h-9 shrink-0 items-center gap-1 rounded-md px-2 text-xs font-semibold transition-colors hover:bg-white/10 ${
+              rtlPref ? "text-primary" : "text-white/80 hover:text-white"
+            }`}
+          >
+            <ArrowLeftRight size={16} />
+            <span className="hidden sm:inline">{rtlPref ? "Manga" : "Occidental"}</span>
+          </button>
         )}
         <button
           onClick={toggleMode}
@@ -714,9 +764,10 @@ export default function ScanReaderPage() {
           onPointerCancel={onGestureCancel}
         >
           <div
-            className="flex h-full"
+            className={`flex h-full ${rtl ? "flex-row-reverse" : ""}`}
             style={{
-              transform: `translate3d(${-currentPage * vw + dragX}px, 0, 0)`,
+              // En droite → gauche, la page 1 est à droite et les suivantes s'alignent à gauche.
+              transform: `translate3d(${(rtl ? currentPage : -currentPage) * vw + dragX}px, 0, 0)`,
               transition: dragRef.current ? "none" : "transform 0.28s ease",
             }}
           >
@@ -771,13 +822,21 @@ export default function ScanReaderPage() {
           <div className={`pointer-events-none absolute inset-x-0 bottom-0 z-30 transition-opacity duration-200 ${fade}`}>
             <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/60 to-transparent" />
             <div className="pointer-events-auto absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-4 text-white [text-shadow:0_1px_3px_rgba(0,0,0,.9)]">
-              <button onClick={prevPage} title="Page précédente" className="text-white/70 transition-colors hover:text-white">
+              <button
+                onClick={rtl ? nextPage : prevPage}
+                title={rtl ? "Page suivante" : "Page précédente"}
+                className="text-white/70 transition-colors hover:text-white"
+              >
                 <ChevronLeft size={24} />
               </button>
               <span className="text-sm font-semibold tabular-nums text-white/90">
                 {currentPage + 1} / {pages}
               </span>
-              <button onClick={nextPage} title="Page suivante" className="text-white/70 transition-colors hover:text-white">
+              <button
+                onClick={rtl ? prevPage : nextPage}
+                title={rtl ? "Page précédente" : "Page suivante"}
+                className="text-white/70 transition-colors hover:text-white"
+              >
                 <ChevronRight size={24} />
               </button>
             </div>

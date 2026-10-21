@@ -136,3 +136,8 @@ export const CATALOG_GENRES = [
   "Yokai",
   "Yuri",
 ];
+
+// Deux niveaux dans les filtres : les grands genres d'abord, puis les thèmes plus précis.
+const LAST_MAIN_GENRE = CATALOG_GENRES.indexOf("Psychologique") + 1;
+export const MAIN_GENRES = CATALOG_GENRES.slice(0, LAST_MAIN_GENRE);
+export const SECONDARY_GENRES = CATALOG_GENRES.slice(LAST_MAIN_GENRE);

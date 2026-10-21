@@ -31,7 +31,8 @@ const DEFAULTS = {
   nartyaIntro: true,
   planningLanguage: "all", // filtre du calendrier : "all" | "vf" | "vostfr"
   achievementsInPlayback: "compact", // succès pendant un épisode : "compact" | "after" | "full"
-  titleLanguage: "default", // titres des animes : "default" (catalogue) | "romaji" | "english"
+  titleLanguage: "default", // titres des animes et mangas : "default" (catalogue) | "romaji" | "english"
+  timeAmbiance: false, // la lueur de fond suit l'heure (aube, jour, coucher, nuit)
 };
 
 /** Une valeur persistée sous l'ancienne forme (nom d'hébergeur) est remise sur « auto ». */

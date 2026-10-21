@@ -18,6 +18,7 @@ import {
   acquireWakeLock,
   releaseWakeLock,
   setupMobilePlayerControls,
+  setupOrientationLock,
   setupPictureInPicture,
 } from "@/utils/mobilePlayer";
 import Anime4kWarningModal from "@/components/player/Anime4kWarningModal";
@@ -316,6 +317,7 @@ export default function VideoPlayer({
     if (platform.isMobile) {
       art._mobileControlsDispose = setupMobilePlayerControls(art);
       art._pipDispose = setupPictureInPicture(art);
+      art._orientationDispose = setupOrientationLock(art);
     }
 
     // Jamais au-delà de (durée − 1 s).
@@ -384,7 +386,14 @@ export default function VideoPlayer({
         getDuration: () => art.duration || 0,
         isPaused: () => !art.playing,
         // Sur la <video> : `art.playbackRate` passe par la liste de vitesses, sans 0.95 ni 1.05.
-        setRate: (r) => { try { if (art.video) art.video.playbackRate = r; } catch (_) {} },
+        setRate: (r) => {
+          try {
+            if (!art.video) return;
+            // Rattrapage de la watch party : ce n'est pas la vitesse choisie par le membre.
+            art._syncRate = r;
+            art.video.playbackRate = r;
+          } catch (_) {}
+        },
         notice: (message) => { try { art.notice.show = message; } catch (_) {} },
       });
       cb.current.onReady?.();
@@ -393,9 +402,21 @@ export default function VideoPlayer({
       if (!isCurrentMedia()) return;
       cb.current.onTimeUpdate?.(art.currentTime || 0, art.duration || 0);
     });
+    // Charger une vidéo remet sa vitesse à `defaultPlaybackRate` : sans ce report, le x2
+    // retombait à x1 à l'épisode suivant ou après une reconnexion, le menu affichant
+    // toujours x2.
+    art.on("video:ratechange", () => {
+      const rate = art.video?.playbackRate;
+      if (!rate || art._switchingSource || rate === art._syncRate) return;
+      art._chosenRate = rate;
+      art.video.defaultPlaybackRate = rate;
+    });
     art.on("video:playing", () => {
       if (art._loadedMediaKey !== cb.current.mediaKey) return;
       art._switchingSource = false;
+      if (art._chosenRate && art._syncRate == null && art.video.playbackRate !== art._chosenRate) {
+        art.video.playbackRate = art._chosenRate;
+      }
       art._suppressPause = false;
       cb.current.onStallEnd?.();
       // Signal fiable qu'une image est à l'écran, autoplay compris.
@@ -504,6 +525,8 @@ export default function VideoPlayer({
           art._mobileControlsDispose = null;
           art._pipDispose?.();
           art._pipDispose = null;
+          art._orientationDispose?.();
+          art._orientationDispose = null;
         }
         teardownAudioBoost(art);
         art._pauseHideDispose?.();

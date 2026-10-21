@@ -113,6 +113,7 @@ export const capacitorLazyPlatform = {
       : null,
   haptic: voidCall("haptic"),
   share: asyncCall("share"),
+  saveImage: asyncCall("saveImage"),
   canOpenNewWindow: false,
   openNewWindow: () => {},
   quit: () => {},

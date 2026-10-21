@@ -138,7 +138,7 @@ function DaySection({ day, now, innerRef, languageFilter }) {
   const count = day.items.length;
 
   return (
-    <section ref={innerRef} className="scroll-mt-28">
+    <section ref={innerRef} data-day={day.index} className="scroll-mt-28">
       <div className="mb-4 flex items-center gap-3 border-b-2 border-border pb-3">
         <h2 className="section-title !text-2xl">
           {day.name}
@@ -183,6 +183,11 @@ export default function PlanningPage() {
   const now = Date.now();
 
   const sectionRefs = useRef({});
+  const tabRefs = useRef({});
+  // Jour souligné : celui qu'on a cliqué, puis celui qu'on fait défiler sous la barre.
+  const [activeDay, setActiveDay] = useState(todayIndex);
+  // Pendant le défilement animé d'un clic, les jours traversés ne doivent pas prendre la main.
+  const lockUntilRef = useRef(0);
 
   useEffect(() => {
     load();
@@ -203,8 +208,37 @@ export default function PlanningPage() {
   const total = useMemo(() => days.reduce((n, d) => n + (d.items?.length || 0), 0), [days]);
 
   const jumpTo = (index) => {
+    setActiveDay(index);
+    lockUntilRef.current = Date.now() + 900;
     sectionRefs.current[index]?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
+
+  useEffect(() => {
+    if (!days.length) return undefined;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (Date.now() < lockUntilRef.current) return;
+        const hit = entries.find((e) => e.isIntersecting);
+        if (hit) setActiveDay(Number(hit.target.dataset.day));
+      },
+      // Bande fine juste sous la barre des jours : le jour qui la traverse est le jour lu.
+      { rootMargin: "-25% 0px -70% 0px" }
+    );
+    Object.values(sectionRefs.current).forEach((el) => el && observer.observe(el));
+    return () => observer.disconnect();
+  }, [days]);
+
+  // Sur mobile, l'onglet actif reste visible dans la barre qui défile horizontalement. Pas de
+  // scrollIntoView : il interromprait le défilement de la page vers le jour cliqué.
+  useEffect(() => {
+    const tab = tabRefs.current[activeDay];
+    const bar = tab?.parentElement;
+    if (!tab || !bar || bar.scrollWidth <= bar.clientWidth) return;
+    const left = tab.getBoundingClientRect().left - bar.getBoundingClientRect().left + bar.scrollLeft;
+    if (left < bar.scrollLeft || left + tab.offsetWidth > bar.scrollLeft + bar.clientWidth) {
+      bar.scrollTo({ left: left - (bar.clientWidth - tab.offsetWidth) / 2, behavior: "smooth" });
+    }
+  }, [activeDay]);
 
   return (
     <div className="animate-fade-in mx-auto max-w-[1600px] px-4 pb-16 pt-[calc(env(safe-area-inset-top)+1.5rem)] sm:px-6 sm:pt-24 md:px-10">
@@ -255,21 +289,26 @@ export default function PlanningPage() {
             <div className="no-scrollbar -mb-px flex gap-1 overflow-x-auto">
               {days.map((day) => {
                 const isToday = day.index === todayIndex();
+                const isActive = day.index === activeDay;
                 return (
                   <button
                     key={day.index}
+                    ref={(el) => (tabRefs.current[day.index] = el)}
                     onClick={() => jumpTo(day.index)}
-                    className={`group flex shrink-0 items-center gap-2 border-b-4 px-3.5 py-2.5 text-sm font-bold uppercase tracking-wider transition-colors ${
-                      isToday
+                    aria-current={isActive ? "true" : undefined}
+                    title={isToday ? "Aujourd'hui" : undefined}
+                    className={`group relative flex shrink-0 items-center gap-2 border-b-4 px-3.5 py-2.5 text-sm font-bold uppercase tracking-wider transition-colors ${
+                      isActive
                         ? "border-primary text-text"
                         : "border-transparent text-muted hover:text-text"
                     }`}
                   >
+                    {isToday && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" aria-hidden="true" />}
                     {day.name}
                     {day.items.length > 0 && (
                       <span
                         className={`text-[0.7rem] font-bold tabular-nums transition-colors ${
-                          isToday ? "text-primary" : "text-muted/70 group-hover:text-text/70"
+                          isActive ? "text-primary" : "text-muted/70 group-hover:text-text/70"
                         }`}
                       >
                         {day.items.length}

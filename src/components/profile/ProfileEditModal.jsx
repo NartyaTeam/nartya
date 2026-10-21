@@ -35,6 +35,7 @@ import {
   PodiumOrderPicker,
   PrivacySettings,
 } from "./ProfileEditFields";
+import PosterPickerModal from "./PosterPickerModal";
 
 const MAX_FILE_MB = 5;
 const MAX_BIO = 300;
@@ -86,6 +87,8 @@ export default function ProfileEditModal({ onClose }) {
   const [bannerDims, setBannerDims] = useState(null);
 
   const [favorites, setFavorites] = useState(null);
+  // Favori dont on choisit l'affiche (sélecteur ouvert), ou null.
+  const [coverFavorite, setCoverFavorite] = useState(null);
   const [pinned, setPinned] = useState(() => new Set());
   // Slugs épinglés dans l'ordre d'épinglage, qui est aussi celui du podium.
   const [pinOrder, setPinOrder] = useState([]);
@@ -575,7 +578,23 @@ export default function ProfileEditModal({ onClose }) {
             onToggle={togglePin}
           />
 
-          <PodiumOrderPicker favorites={favorites} order={pinOrder} onMove={movePin} />
+          <PodiumOrderPicker
+            favorites={favorites}
+            order={pinOrder}
+            onMove={movePin}
+            onPickCover={setCoverFavorite}
+          />
+          {coverFavorite && (
+            <PosterPickerModal
+              favorite={coverFavorite}
+              onClose={() => setCoverFavorite(null)}
+              onSaved={(slug, cover) =>
+                setFavorites((rows) =>
+                  (rows || []).map((row) => (row.anime_slug === slug ? { ...row, anime_cover: cover } : row))
+                )
+              }
+            />
+          )}
 
           <PrivacySettings
             isPublic={isPublic}

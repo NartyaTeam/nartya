@@ -3,7 +3,7 @@ import { asset } from "@/lib/asset";
 
 // Une <img> du profil a pu mettre en cache une réponse sans en-têtes CORS : on recharge en
 // mode CORS, sinon le canvas devient inexploitable.
-async function loadImage(src) {
+export async function loadImage(src) {
   if (!src) return null;
   let objectUrl;
   const controller = new AbortController();

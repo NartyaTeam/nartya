@@ -20,7 +20,7 @@ function AnimeCard({
 }) {
   const navigate = useNavigate();
   const isFav = useFavoritesStore((s) => s.slugs.has(anime.slug));
-  const title = useDisplayTitle()(anime.slug, anime.title);
+  const title = useDisplayTitle()(anime.slug, anime.title, anime);
 
   // `complete` couvre l'image déjà en cache, pour laquelle onLoad ne se déclenche pas.
   const imgRef = useRef(null);
@@ -175,6 +175,7 @@ function AnimeCard({
     {menu && (
       <AnimeContextMenu
         anime={anime}
+        mediaType={openScans ? "manga" : undefined}
         x={menu.x}
         y={menu.y}
         onClose={() => {

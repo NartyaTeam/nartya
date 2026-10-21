@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Download } from "lucide-react";
 import { toast } from "@/lib/toast";
+import { saveImage } from "@/lib/saveImage";
 import { resolveAvatar } from "@/api/profile";
 import { ITEMS } from "@/lib/cosmetics";
 import { renderShareCard } from "@/lib/renderShareCard";
@@ -42,14 +43,8 @@ export default function ShareCard({ profile, stats, extra, kanji, posters, banne
       const blob = await new Promise((resolve, reject) => {
         canvasRef.current.toBlob((value) => value ? resolve(value) : reject(new Error("PNG vide")), "image/png");
       });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `nartya-${(profile?.handle || "profil").replace(/[^a-z0-9_-]/gi, "-")}.png`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      const saved = await saveImage(blob, `nartya-${(profile?.handle || "profil").replace(/[^a-z0-9_-]/gi, "-")}.png`);
+      if (saved === "gallery") toast.success("Carte enregistrée dans Images › Nartya");
     } catch {
       toast.error("Impossible de télécharger la carte. Réessaie dans un instant.");
     } finally {

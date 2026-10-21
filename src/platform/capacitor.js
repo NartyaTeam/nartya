@@ -589,7 +589,7 @@ export const capacitorPlatform = {
   },
   setOrientation(orientation) {
     void NartyaScreen.setOrientation({ orientation }).catch(() => {});
-    if (orientation === "landscape" || orientation === "player") {
+    if (orientation === "landscape" || orientation === "player" || orientation === "locked") {
       void SystemBars.hide().catch(() => {});
     } else {
       void SystemBars.show()
@@ -651,6 +651,8 @@ export const capacitorPlatform = {
       return false;
     }
   },
+  /** `{ data }` en base64. Android : `{ saved }`, false quand le partage a pris le relais. */
+  saveImage: (options) => NartyaShare.saveImage(options),
   canOpenNewWindow: false,
   openNewWindow: noop,
   quit: noop,

@@ -9,6 +9,7 @@ import { useDisplayTitle } from "@/stores/useTitlesStore";
 import { LIST_STATUSES, LIST_STATUS_LABEL } from "@/utils/lists";
 import ListDetailDrawer from "@/components/lists/ListDetailDrawer";
 import SortableGrid from "@/components/lists/SortableGrid";
+import MediaTabs, { mediaOf } from "@/components/lists/MediaTabs";
 import { toast } from "@/lib/toast";
 
 const GRID_CLASS =
@@ -217,6 +218,7 @@ export default function MyListsPage() {
   const [rows, setRows] = useState(null);
   const [progress, setProgress] = useState({});
   const [active, setActive] = useState("planned");
+  const [media, setMedia] = useState("anime");
   const [selected, setSelected] = useState(null);
   const [addOpen, setAddOpen] = useState(false);
   const removeStatus = useListsStore((state) => state.remove);
@@ -232,6 +234,16 @@ export default function MyListsPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  const mediaCounts = useMemo(() => {
+    const value = { anime: 0, manga: 0 };
+    (rows || []).forEach((row) => {
+      value[mediaOf(row)]++;
+    });
+    return value;
+  }, [rows]);
+  // Sans manga dans les listes, pas d'onglets : la page reste celle des animes.
+  const activeMedia = mediaCounts.manga > 0 ? media : "anime";
 
   const removeRow = useCallback(async (slug) => {
     const snapshot = rows;
@@ -261,14 +273,16 @@ export default function MyListsPage() {
         const bySlug = new Map(current.map((row) => [row.anime_slug, row]));
         const reordered = slugOrder.map((slug) => bySlug.get(slug)).filter(Boolean);
         let cursor = 0;
-        return current.map((row) => (row.status === active ? reordered[cursor++] : row));
+        return current.map((row) =>
+          row.status === active && mediaOf(row) === activeMedia ? reordered[cursor++] : row
+        );
       });
       reorderAnimeList(active, slugOrder).catch(() => {
         toast.error("Impossible d'enregistrer le nouvel ordre");
         setRows(snapshot);
       });
     },
-    [rows, active]
+    [rows, active, activeMedia]
   );
 
   const addAnime = useCallback(async (anime) => {
@@ -286,20 +300,22 @@ export default function MyListsPage() {
       return false;
     }
     setActive("planned");
+    setMedia("anime");
     return true;
   }, [setStatus]);
 
   const counts = useMemo(() => {
     const value = {};
     (rows || []).forEach((row) => {
+      if (mediaOf(row) !== activeMedia) return;
       value[row.status] = (value[row.status] || 0) + 1;
     });
     return value;
-  }, [rows]);
+  }, [rows, activeMedia]);
 
   const items = useMemo(
-    () => (rows || []).filter((row) => row.status === active),
-    [rows, active]
+    () => (rows || []).filter((row) => row.status === active && mediaOf(row) === activeMedia),
+    [rows, active, activeMedia]
   );
   const [sectionTitle, sectionCopy] = STATUS_COPY[active];
   const total = rows?.length || 0;
@@ -318,14 +334,19 @@ export default function MyListsPage() {
               {rows !== null && <span className="text-sm tabular-nums text-muted">{total}</span>}
             </div>
           </div>
-          <button
-            onClick={() => setAddOpen(true)}
-            className="flex h-10 items-center gap-1.5 rounded-md bg-primary px-3.5 text-sm font-semibold text-primary-fg transition-transform hover:scale-[1.03] active:scale-95"
-          >
-            <Plus size={17} />
-            Ajouter
-          </button>
+          {activeMedia === "anime" && (
+            <button
+              onClick={() => setAddOpen(true)}
+              className="flex h-10 items-center gap-1.5 rounded-md bg-primary px-3.5 text-sm font-semibold text-primary-fg transition-transform hover:scale-[1.03] active:scale-95"
+            >
+              <Plus size={17} />
+              Ajouter
+            </button>
+          )}
         </div>
+        {mediaCounts.manga > 0 && (
+          <MediaTabs className="mt-5" value={activeMedia} onChange={setMedia} counts={mediaCounts} />
+        )}
       </header>
 
       <div className="-mx-4 mb-7 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:px-0">
@@ -384,11 +405,13 @@ export default function MyListsPage() {
           </span>
           <p className="mt-4 font-display text-lg font-bold text-text">Rien ici pour le moment</p>
           <p className="mt-1.5 max-w-xs text-sm leading-relaxed text-muted">
-            {active === "planned"
-              ? "Garde ici les animes qui te tentent pour ne plus jamais les oublier."
-              : `Les animes marqués « ${LIST_STATUS_LABEL[active]} » apparaîtront ici.`}
+            {activeMedia === "manga"
+              ? `Ajoute un manga à « ${LIST_STATUS_LABEL[active]} » depuis sa carte : clic droit, ou appui long sur téléphone.`
+              : active === "planned"
+                ? "Garde ici les animes qui te tentent pour ne plus jamais les oublier."
+                : `Les animes marqués « ${LIST_STATUS_LABEL[active]} » apparaîtront ici.`}
           </p>
-          {active === "planned" && (
+          {active === "planned" && activeMedia === "anime" && (
             <button onClick={() => setAddOpen(true)} className="mt-5 rounded-md bg-primary px-5 py-2.5 text-sm font-bold text-primary-fg active:scale-95">
               Ajouter mon premier anime
             </button>
