@@ -5,6 +5,56 @@
  */
 export const MOBILE_CHANGELOG = [
   {
+    version: "1.4.0",
+    date: "21 octobre 2026",
+    items: [
+      {
+        type: "new",
+        text: "Grosse nouveauté : les Tier lists ! Classe tes animes dans tes propres rangées (texte, couleurs et nombre au choix), publie ta tier list, et la communauté peut voter 👍/👎 et en discuter dans son chat. Tu peux aussi refaire la tier list d’un autre à ta sauce, ou la télécharger en image.",
+      },
+      {
+        type: "new",
+        text: "Nouvelle page Historique, dans le menu « Plus » : tout ce que tu as regardé ou lu, classé par jour, avec un bouton pour reprendre.",
+      },
+      {
+        type: "new",
+        text: "Favoris et Mes listes ont maintenant un onglet Animes et un onglet Mangas.",
+      },
+      {
+        type: "new",
+        text: "Nouveau réglage « Ambiance selon l’heure » dans Paramètres → Apparence : la lueur de fond suit l’aube, le jour, le coucher de soleil et la nuit.",
+      },
+      {
+        type: "new",
+        text: "Le lecteur de scans se lit aussi dans le sens manga, de droite à gauche, en pages horizontales.",
+      },
+      {
+        type: "new",
+        text: "Dans « Éditer » sur ton profil, choisis l’affiche de chaque anime de ton podium parmi les visuels de sa galerie.",
+      },
+      {
+        type: "new",
+        text: "Un bouton cadenas dans le lecteur fige l’écran dans le sens actuel, même allongé sur le côté.",
+      },
+      {
+        type: "fixed",
+        text: "La carte de profil et les visuels de la Galerie s’enregistrent maintenant dans Images › Nartya.",
+      },
+      {
+        type: "improved",
+        text: "Les titres des mangas sont plus faciles à reconnaître, et « Langue des titres » s’applique aussi aux mangas.",
+      },
+      {
+        type: "fixed",
+        text: "La vitesse de lecture choisie (x2 par exemple) reste appliquée à l’épisode suivant.",
+      },
+      {
+        type: "fixed",
+        text: "Calendrier : le jour souligné suit maintenant le jour choisi, et celui que tu fais défiler. Un point indique aujourd’hui.",
+      },
+    ],
+  },
+  {
     version: "1.3.0",
     date: "20 octobre 2026",
     items: [
