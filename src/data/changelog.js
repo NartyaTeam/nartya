@@ -5,6 +5,16 @@
  */
 export const CHANGELOG = [
   {
+    version: "1.36.0",
+    date: "22 octobre 2026",
+    items: [
+      {
+        type: "improved",
+        text: "Si ton compte Discord était déjà lié, Nartya te demande une seule fois de te reconnecter avec Discord.",
+      },
+    ],
+  },
+  {
     version: "1.35.0",
     date: "22 octobre 2026",
     items: [

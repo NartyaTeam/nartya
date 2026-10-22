@@ -5,6 +5,20 @@
  */
 export const MOBILE_CHANGELOG = [
   {
+    version: "1.6.0",
+    date: "22 octobre 2026",
+    items: [
+      {
+        type: "improved",
+        text: "Si ton compte Discord était déjà lié, Nartya te demande une seule fois de te reconnecter avec Discord.",
+      },
+      {
+        type: "fixed",
+        text: "La mise à jour depuis l’app ne bloque plus sur « Signature APK absente » sur certains téléphones.",
+      },
+    ],
+  },
+  {
     version: "1.5.0",
     date: "22 octobre 2026",
     items: [
