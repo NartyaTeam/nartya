@@ -5,6 +5,40 @@
  */
 export const IOS_CHANGELOG = [
   {
+    version: "1.5.0",
+    date: "22 octobre 2026",
+    items: [
+      {
+        type: "new",
+        text: "Lie tes comptes AniList et MyAnimeList dans les Paramètres : les épisodes que tu regardes, tes statuts, tes notes et tes chapitres lus y sont reportés tout seuls. Tu peux aussi importer ta liste AniList ou MyAnimeList dans Nartya, ou envoyer ta liste Nartya là-bas.",
+      },
+      {
+        type: "new",
+        text: "Nouveau bouton « Recommander » sur la fiche des animes : les animes les plus recommandés du mois forment la rangée « Recommandé par la communauté » sur l’accueil.",
+      },
+      {
+        type: "new",
+        text: "Classement : nouvel onglet « Chapitres lus », et des classements du jour, du mois et de l’année en plus de la semaine.",
+      },
+      {
+        type: "new",
+        text: "Tier lists : tu peux répondre à un message du chat, les réponses se rangent en fil sous le message.",
+      },
+      {
+        type: "new",
+        text: "Paramètres → Apparence → « Ambiance du profil partout » : l’ambiance de ton profil (pluie, neige, pétales…) s’affiche en fond de toute l’app.",
+      },
+      {
+        type: "improved",
+        text: "L’ambiance selon l’heure est plus marquée : matin clair, après-midi d’automne, coucher de soleil, puis lanternes la nuit.",
+      },
+      {
+        type: "improved",
+        text: "En créant une tier list, le titre et la description sont deux champs bien distincts : plus de risque de taper le titre au mauvais endroit.",
+      },
+    ],
+  },
+  {
     version: "1.4.0",
     date: "21 octobre 2026",
     items: [
