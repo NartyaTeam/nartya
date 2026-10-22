@@ -58,6 +58,12 @@ function readableOAuthError(value) {
   return decoded;
 }
 
+/** `guilds.join` : le bot ajoute le compte au serveur communautaire au retour de Discord. */
+const DISCORD_SCOPES = "identify guilds.join";
+
+/** Session d'avant la reconnexion Discord, rétablie si un autre compte Discord revient. */
+let reauthPrevious = null;
+
 /** OAuth Discord : l'URL s'ouvre dans le navigateur système, le retour arrive par deep-link. */
 let profileRequest = null;
 
@@ -73,6 +79,10 @@ export const useAuthStore = create((set, get) => ({
   discordSyncOffer: null,
   discordLinkFeedback: null,
   discordLinkError: null,
+  /** `unknown` | `none` (pas de Discord lié) | `member` | `missing` (reconnexion à demander) */
+  discordGuild: "unknown",
+  discordReauthError: null,
+  discordReauthPending: false,
 
   init: async () => {
     // Le profil n'est pas chargé ici : sans jeton encore, la requête partirait non authentifiée.
@@ -90,6 +100,11 @@ export const useAuthStore = create((set, get) => ({
       if (!newSession && event === "INITIAL_SESSION" && get().session) {
         get().confirmInitialSignedOut();
         return;
+      }
+      // Changement de compte (souvent via le Hub, sans passer par `signOut`) : le statut
+      // serveur Discord était celui du compte précédent.
+      if (newSession?.user?.id !== get().session?.user?.id) {
+        set({ discordGuild: "unknown", discordReauthError: null, discordReauthPending: false });
       }
       set({ session: newSession, _avatarRefreshTried: false });
       if (newSession) get().loadProfile({ dedupe: true });
@@ -219,7 +234,7 @@ export const useAuthStore = create((set, get) => ({
       options: {
         redirectTo,
         skipBrowserRedirect: true,
-        scopes: "identify",
+        scopes: DISCORD_SCOPES,
       },
     });
     if (error) {
@@ -258,7 +273,7 @@ export const useAuthStore = create((set, get) => ({
       options: {
         redirectTo,
         skipBrowserRedirect: true,
-        scopes: "identify",
+        scopes: DISCORD_SCOPES,
       },
     });
     if (error) {
@@ -327,6 +342,58 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
+  /** Une erreur réseau laisse `unknown` : on ne demande pas de reconnexion sur un doute. */
+  checkDiscordGuild: async () => {
+    const user = get().session?.user;
+    if (!user || user.is_anonymous || !user.identities?.some((i) => i.provider === "discord")) {
+      set({ discordGuild: "none" });
+      return;
+    }
+    if (user.app_metadata?.discord_guild_joined === true) {
+      set({ discordGuild: "member" });
+      return;
+    }
+    try {
+      const { data, error } = await postFn("/v1/me/discord/guild");
+      if (error || !data) return;
+      set({ discordGuild: !data.linked ? "none" : data.member ? "member" : "missing" });
+    } catch (_) {}
+  },
+
+  joinDiscordGuild: async (providerToken) => {
+    try {
+      const { data, error } = await postFn("/v1/me/discord/guild", { providerToken });
+      if (error || !data?.member) {
+        if (error) console.warn("[auth] serveur Discord:", error.message);
+        return { error: "Impossible de rejoindre le serveur Discord pour le moment. Réessaie plus tard." };
+      }
+      set({ discordGuild: "member", discordReauthError: null });
+      return { error: null };
+    } catch (e) {
+      return { error: e?.message || "Impossible de rejoindre le serveur Discord." };
+    }
+  },
+
+  /** Comptes liés avant `guilds.join` : nouvelle autorisation Discord, même compte Nartya. */
+  reauthorizeDiscord: async () => {
+    const session = get().session;
+    if (!session?.user) return { error: "Aucune session." };
+    set({ discordReauthError: null, discordReauthPending: true });
+    reauthPrevious = {
+      userId: session.user.id,
+      access_token: session.access_token,
+      refresh_token: session.refresh_token,
+    };
+    sessionStorage.setItem("nartya-discord-reauth-pending", "1");
+    const result = await get().signInWithDiscord();
+    if (result?.error) {
+      sessionStorage.removeItem("nartya-discord-reauth-pending");
+      reauthPrevious = null;
+      set({ discordReauthError: result.error, discordReauthPending: false });
+    }
+    return result;
+  },
+
   dismissDiscordSyncOffer: () => set({ discordSyncOffer: null }),
   clearDiscordLinkFeedback: () => set({ discordLinkFeedback: null }),
 
@@ -380,6 +447,8 @@ export const useAuthStore = create((set, get) => ({
   isGuest: () => classifySession(get().session) === "guest",
 
   handleAuthCallback: async (callbackUrl) => {
+    const completingReauth = sessionStorage.getItem("nartya-discord-reauth-pending") === "1";
+    sessionStorage.removeItem("nartya-discord-reauth-pending");
     try {
       const url = new URL(callbackUrl);
       const completingDiscordLink =
@@ -389,6 +458,7 @@ export const useAuthStore = create((set, get) => ({
         url.searchParams.get("error_code") ||
         url.searchParams.get("error");
       if (oauthError) {
+        if (completingReauth) set({ discordReauthError: readableOAuthError(oauthError) });
         if (completingDiscordLink) {
           sessionStorage.removeItem("nartya-discord-link-pending");
           const message = readableOAuthError(oauthError);
@@ -401,9 +471,10 @@ export const useAuthStore = create((set, get) => ({
       }
       const code = url.searchParams.get("code");
       if (!code) return;
-      const { error } = await supabase.auth.exchangeCodeForSession(code);
+      const { data: exchanged, error } = await supabase.auth.exchangeCodeForSession(code);
       if (error) {
         console.error("[auth] exchangeCodeForSession:", error.message);
+        if (completingReauth) set({ discordReauthError: readableOAuthError(error.message) });
         if (completingDiscordLink) {
           sessionStorage.removeItem("nartya-discord-link-pending");
           const message = readableOAuthError(error.message);
@@ -413,6 +484,31 @@ export const useAuthStore = create((set, get) => ({
           });
         }
         return;
+      }
+
+      // Un autre compte Discord choisi sur l'écran d'autorisation ouvrirait un autre compte Nartya.
+      const previous = completingReauth ? reauthPrevious : null;
+      reauthPrevious = null;
+      if (previous && exchanged?.session?.user?.id !== previous.userId) {
+        await supabase.auth.setSession({
+          access_token: previous.access_token,
+          refresh_token: previous.refresh_token,
+        });
+        set({
+          discordReauthError:
+            "Ce compte Discord n'est pas celui lié à ton compte Nartya. Reconnecte-toi avec le bon compte.",
+        });
+        return;
+      }
+
+      // Connexion, liaison ou reconnexion : le jeton Discord n'existe qu'à ce moment-là.
+      const providerToken = exchanged?.session?.provider_token;
+      if (providerToken) {
+        const joining = get().joinDiscordGuild(providerToken);
+        if (completingReauth) {
+          const joined = await joining;
+          if (joined.error) set({ discordReauthError: joined.error });
+        }
       }
 
       if (completingDiscordLink) {
@@ -442,6 +538,8 @@ export const useAuthStore = create((set, get) => ({
           discordLinkError: "Le retour de Discord n'a pas pu être traité. Réessayez depuis les paramètres.",
         });
       }
+    } finally {
+      if (completingReauth) set({ discordReauthPending: false });
     }
   },
 
@@ -458,6 +556,8 @@ export const useAuthStore = create((set, get) => ({
       discordLinkError: null,
       discordLinkFeedback: null,
       discordSyncOffer: null,
+      discordGuild: "unknown",
+      discordReauthError: null,
     });
   },
 

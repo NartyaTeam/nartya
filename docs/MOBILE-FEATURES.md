@@ -114,6 +114,7 @@ Une entrée à `null` ou `noop` dans `capacitor.js` = fonction absente sur Andro
 | Section | Desktop | Android | Notes |
 | ------- | ------- | ------- | ----- |
 | Compte | ✅ | 🟡 | Android : bloc « Comptes liés » (liaison Discord propre à l'app). Desktop : délégué au Hub |
+| Reconnexion Discord | ✅ | ✅ | Modale obligatoire une fois pour les comptes Discord liés avant l'ajout automatique au serveur communautaire |
 | AniList & MyAnimeList | ✅ | ✅ | Comptes uniquement. Liaison dans le navigateur, puis synchro faite par le serveur : même comportement partout |
 | Déconnexion | Déconnecte aussi le Hub et ferme l'app | 🟡 | Déconnecte seulement cet appareil |
 | Lecture | ✅ | 🟡 | Sans « Qualité source Anime4K » |

@@ -27,6 +27,7 @@ import { useSignOutModalStore } from "@/stores/useSignOutModalStore";
 
 // Chargées à l'ouverture de leur route : Artplayer et hls.js restent hors du démarrage.
 const LoginPage = lazy(() => import("@/pages/LoginPage"));
+const DiscordReauthModal = lazy(() => import("@/components/DiscordReauthModal"));
 const HomePage = lazy(() => import("@/pages/HomePage"));
 const MangaHomePage = lazy(() => import("@/pages/MangaHomePage"));
 const AnimePage = lazy(() => import("@/pages/AnimePage"));
@@ -253,6 +254,9 @@ export default function App() {
       <OfflineBanner />
       {/* Hors des routes : `signOut()` démonte la route courante, la modale doit y survivre. */}
       {signOutModalOpen && <SignOutModal onClose={hideSignOutModal} />}
+      <Suspense fallback={null}>
+        <DiscordReauthModal />
+      </Suspense>
       <Suspense fallback={<RouteFallback />}>
       <Routes>
       <Route path="/login" element={<LoginPage />} />
