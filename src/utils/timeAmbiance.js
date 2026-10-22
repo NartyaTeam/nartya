@@ -1,21 +1,26 @@
 /**
- * Ambiance selon l'heure (Paramètres → Apparence) : la lueur de fond de l'app suit la
- * journée. L'encre du fond ne change pas, seule la lumière qui l'éclaire.
+ * Ambiance selon l'heure (Paramètres → Apparence) : le fond de l'app suit la journée, de la
+ * lumière claire du matin aux lanternes de la nuit (cf. TimeAmbience). L'encre du fond ne
+ * change pas, seule la lumière qui l'éclaire et ce qui flotte devant.
  */
 export const TIME_PHASES = {
-  // 6 h – 9 h : aube rosée, à gauche comme le soleil qui se lève.
-  dawn: "radial-gradient(85% 55% at 10% -10%, rgb(255 168 150 / 0.24), transparent 60%), radial-gradient(60% 40% at 90% 0%, rgb(255 210 170 / 0.08), transparent 65%)",
-  // 9 h – 17 h : ciel clair en haut.
-  day: "radial-gradient(90% 55% at 50% -15%, rgb(150 200 255 / 0.22), transparent 60%), radial-gradient(50% 35% at 85% -5%, rgb(255 236 190 / 0.14), transparent 60%)",
-  // 17 h – 21 h : coucher de soleil, orange vers magenta.
-  sunset: "radial-gradient(85% 55% at 90% -10%, rgb(255 128 64 / 0.28), transparent 60%), radial-gradient(70% 45% at 20% -10%, rgb(214 80 140 / 0.14), transparent 65%)",
-  // 21 h – 6 h : nuit bleutée.
-  night: "radial-gradient(85% 55% at 70% -10%, rgb(90 110 220 / 0.24), transparent 60%), radial-gradient(55% 40% at 10% 0%, rgb(140 90 200 / 0.10), transparent 65%)",
+  // 6 h – 11 h : matin clair, le soleil se lève à gauche.
+  morning:
+    "radial-gradient(90% 60% at 8% -12%, rgb(255 214 170 / 0.34), transparent 62%), radial-gradient(70% 45% at 80% -5%, rgb(255 244 222 / 0.14), transparent 62%), linear-gradient(180deg, rgb(255 236 214 / 0.07), transparent 55%)",
+  // 11 h – 17 h : après-midi d'automne, lumière ambrée.
+  afternoon:
+    "radial-gradient(85% 55% at 88% -12%, rgb(255 152 62 / 0.30), transparent 60%), radial-gradient(70% 50% at 0% 105%, rgb(190 82 34 / 0.18), transparent 62%), linear-gradient(180deg, rgb(255 190 120 / 0.05), transparent 50%)",
+  // 17 h – 21 h : coucher de soleil, orange vers magenta, horizon encore allumé.
+  evening:
+    "radial-gradient(85% 55% at 92% -12%, rgb(255 112 58 / 0.36), transparent 60%), radial-gradient(70% 45% at 15% -10%, rgb(206 64 134 / 0.22), transparent 65%), radial-gradient(120% 40% at 50% 115%, rgb(255 120 80 / 0.12), transparent 60%)",
+  // 21 h – 6 h : nuit bleutée, éclairée par les lanternes.
+  night:
+    "radial-gradient(85% 55% at 70% -12%, rgb(70 92 214 / 0.30), transparent 60%), radial-gradient(60% 45% at 8% 0%, rgb(132 84 204 / 0.16), transparent 65%), radial-gradient(90% 35% at 50% -5%, rgb(255 150 70 / 0.08), transparent 60%)",
 };
 
 export function phaseForHour(hour) {
-  if (hour >= 6 && hour < 9) return "dawn";
-  if (hour >= 9 && hour < 17) return "day";
-  if (hour >= 17 && hour < 21) return "sunset";
+  if (hour >= 6 && hour < 11) return "morning";
+  if (hour >= 11 && hour < 17) return "afternoon";
+  if (hour >= 17 && hour < 21) return "evening";
   return "night";
 }

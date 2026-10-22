@@ -1,5 +1,7 @@
-import { Check, Gauge, Languages, Sparkles, Sunset } from "lucide-react";
+import { CloudRain, Check, Gauge, Languages, Sparkles, Sunset } from "lucide-react";
 import { useSettingsStore } from "@/stores/useSettingsStore";
+import { useAuthStore } from "@/stores/useAuthStore";
+import { isPremiumActive } from "@/lib/premium";
 import { THEME_PRESETS, tripletToCss } from "@/utils/theme";
 import { Select } from "@/components/ui/Select";
 import { Section, SettingRow, Toggle } from "./SettingsLayout";
@@ -47,6 +49,9 @@ export default function AppearanceSection({ number }) {
   const reduceMotion = useSettingsStore((s) => s.reduceMotion);
   const titleLanguage = useSettingsStore((s) => s.titleLanguage);
   const timeAmbiance = useSettingsStore((s) => s.timeAmbiance);
+  const profileAmbienceEverywhere = useSettingsStore((s) => s.profileAmbienceEverywhere);
+  // Le réglage n'a de sens que pour qui a choisi une ambiance de profil.
+  const hasProfileAmbience = useAuthStore((s) => !!s.user?.ambient_theme && isPremiumActive(s.user));
   const setSetting = useSettingsStore((s) => s.setSetting);
 
   return (
@@ -127,8 +132,8 @@ export default function AppearanceSection({ number }) {
       <SettingRow
         icon={Sunset}
         label="Ambiance selon l'heure"
-        description="La lumière du fond suit la journée : aube, jour, coucher de soleil, nuit."
-        details="Remplace la lueur aux couleurs du thème par une lumière qui change avec l'heure de ton appareil."
+        description="Le fond suit la journée : matin clair, après-midi d'automne, coucher de soleil, puis lanternes la nuit."
+        details="Remplace la lueur aux couleurs du thème par une ambiance qui change avec l'heure de ton appareil. Les animations s'arrêtent en mode performance ou si tu réduis les animations."
         inlineControl
       >
         <Toggle
@@ -137,6 +142,22 @@ export default function AppearanceSection({ number }) {
           onChange={(v) => setSetting("timeAmbiance", v)}
         />
       </SettingRow>
+
+      {hasProfileAmbience && (
+        <SettingRow
+          icon={CloudRain}
+          label="Ambiance du profil partout"
+          description="L'ambiance de ton profil (pluie, neige, pétales…) en fond de toute l'app."
+          details="Elle n'apparaît ni pendant un épisode, ni pendant la lecture d'un scan, ni sur les pages de profil, qui ont déjà la leur. Désactivée en mode performance."
+          inlineControl
+        >
+          <Toggle
+            label="Ambiance du profil partout"
+            checked={profileAmbienceEverywhere}
+            onChange={(v) => setSetting("profileAmbienceEverywhere", v)}
+          />
+        </SettingRow>
+      )}
 
       <SettingRow
         icon={Languages}

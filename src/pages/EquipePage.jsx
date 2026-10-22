@@ -32,12 +32,12 @@ const TEAM_META = {
     blurb:
       "Gère le Discord, les réseaux et l'image de Nartya — le visage public d'un projet mené par deux développeurs qui préfèrent rester dans leur terminal.",
   },
-  uhq: {
+  end: {
     order: 3,
     title: "Responsable de la modération",
     kanji: "影",
     rgb: "168 85 247",
-    blurb: "Responsable de la modération. Rien ne lui échappe sur les commentaires — le pseudo n'est pas un hasard.",
+    blurb: "Responsable de la modération. Rien ne lui échappe sur les commentaires.",
   },
 };
 

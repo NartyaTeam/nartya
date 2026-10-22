@@ -57,8 +57,8 @@ Une entrée à `null` ou `noop` dans `capacitor.js` = fonction absente sur Andro
 
 | Page | Route | Android | Notes |
 | ---- | ----- | ------- | ----- |
-| Accueil | `/` | 🟡 | Même contenu. Rangées chargées au fil du scroll, carrousels en scroll natif (pas de glisser Embla) |
-| Fiche anime | `/anime/:slug` | 🟡 | Même contenu. Liste d'épisodes chargée par paquets, appui long sur un épisode → actions, vibrations. Mode « no beauty » |
+| Accueil | `/` | 🟡 | Même contenu, rangée « Recommandé par la communauté » comprise. Rangées chargées au fil du scroll, carrousels en scroll natif (pas de glisser Embla) |
+| Fiche anime | `/anime/:slug` | 🟡 | Même contenu. Liste d'épisodes chargée par paquets, appui long sur un épisode → actions, vibrations. Bouton « Recommander » (pouce) à côté du favori. Mode « no beauty » |
 | Lecteur | `/watch/:slug` | 🟡 | Voir [Lecteur](#lecteur) |
 | Scans (dans la fiche) | — | 🟡 | Aperçu léger au lieu de charger toutes les pages dans la fiche |
 | Lecteur de scans | `/scan/:slug` | 🟡 | Zoom au pincement. Sens de lecture droite → gauche en pages horizontales, comme sur desktop |
@@ -68,12 +68,12 @@ Une entrée à `null` ou `noop` dans `capacitor.js` = fonction absente sur Andro
 | Genre | `/genre/:genre` | ✅ | |
 | Calendrier | `/planning` | ✅ | Onglet principal |
 | À venir | `/prochainement` | ✅ | Via « Plus » |
-| Classement | `/leaderboard` | ✅ | Via « Plus » |
+| Classement | `/leaderboard` | ✅ | Via « Plus ». Périodes jour, semaine, mois, année, depuis toujours ; métrique « Chapitres lus » |
 | Téléchargements | `/downloads` | 🟡 | Onglet « Hors ligne ». Stockage privé de l'app (pas de choix de dossier), reprise auto des téléchargements interrompus au retour du réseau. Pas de repli automatique sur une autre source quand l'hébergeur lâche en route (desktop seulement) |
 | Favoris | `/favorites` | ✅ | Via « Plus ». Onglets Animes / Mangas dès qu'un manga est en favori |
 | Mes listes | `/my-lists` | ✅ | Via « Plus ». Onglets Animes / Mangas dès qu'un manga est dans une liste |
 | Historique | `/history` | ✅ | Via « Plus ». Onglets Animes / Mangas, classé par jour |
-| Tier lists | `/tierlists` | ✅ | Via « Plus ». Création (glisser-déposer ou appui sur une affiche pour choisir la rangée), votes, chat (bouton flottant), export en image dans Images › Nartya |
+| Tier lists | `/tierlists` | ✅ | Via « Plus ». Création (glisser-déposer ou appui sur une affiche pour choisir la rangée), votes, chat (bouton flottant, au-dessus de la barre du bas) avec réponses en fils, export en image dans Images › Nartya |
 | Profil | `/profile` | 🟡 | Refonte cosmétiques / parures / ambiances. La carte Nartya, comme les visuels de l'onglet Galerie, s'enregistre dans Images › Nartya (partage sur Android 9 et avant) |
 | Profil public | `/u/:handle` | ✅ | Nouveau design |
 | Succès | `/profile/achievements` | ✅ | Via « Plus » |
@@ -84,7 +84,7 @@ Une entrée à `null` ou `noop` dans `capacitor.js` = fonction absente sur Andro
 | Aide / FAQ | `/faq` | ✅ | Via « Plus » |
 | État du service | `/uptime` | 🔗 | Accessible seulement depuis un lien de la FAQ |
 | Équipe | `/equipe` | 🔗 | Aucun bouton n'y mène |
-| Watch Party (accueil) | `/party` | 🔗 | Retirée de la navigation mobile |
+| Watch Party (accueil) | `/party` | 🔗 | Retirée de la navigation mobile. Les salons publics ne sont donc listés que sur desktop |
 | Salon Watch Party | `/party/:code` | 🔗 | Ouvrable via un lien d'invitation `nartya://party/<code>`. Écran desktop non adapté au tactile, **à vérifier** |
 | Connexion | `/login` | 🟡 | Connexion Discord dans le navigateur du téléphone, retour par `nartya://` |
 
@@ -114,11 +114,12 @@ Une entrée à `null` ou `noop` dans `capacitor.js` = fonction absente sur Andro
 | Section | Desktop | Android | Notes |
 | ------- | ------- | ------- | ----- |
 | Compte | ✅ | 🟡 | Android : bloc « Comptes liés » (liaison Discord propre à l'app). Desktop : délégué au Hub |
+| AniList & MyAnimeList | ✅ | ✅ | Comptes uniquement. Liaison dans le navigateur, puis synchro faite par le serveur : même comportement partout |
 | Déconnexion | Déconnecte aussi le Hub et ferme l'app | 🟡 | Déconnecte seulement cet appareil |
 | Lecture | ✅ | 🟡 | Sans « Qualité source Anime4K » |
 | Notifications | ✅ | ✅ | |
 | Téléchargements | ✅ | 🟡 | Dossier fixe (stockage privé) |
-| Apparence | ✅ | ✅ | Dont « Ambiance selon l'heure » et la langue des titres, appliquée aussi aux mangas |
+| Apparence | ✅ | ✅ | Dont « Ambiance selon l'heure » (fond commun aux deux layouts depuis la #0070), « Ambiance du profil partout » et la langue des titres, appliquée aussi aux mangas |
 | Confidentialité (présence Discord) | 🖥️ | ❌ | |
 | Sauvegarde | ✅ | ✅ | |
 | Clés d'API | ✅ | ✅ | Comptes uniquement (pas les invités) |

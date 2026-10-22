@@ -10,6 +10,7 @@ import {
   BellRing,
   UserRound,
   KeyRound,
+  ListChecks,
 } from "lucide-react";
 import { useSettingsStore } from "@/stores/useSettingsStore";
 import { useAuthStore } from "@/stores/useAuthStore";
@@ -26,6 +27,7 @@ import DownloadsSection from "@/components/settings/DownloadsSection";
 import AppearanceSection from "@/components/settings/AppearanceSection";
 import BackupSection from "@/components/settings/BackupSection";
 import ApiKeysSection from "@/components/settings/ApiKeysSection";
+import TrackersSection from "@/components/settings/TrackersSection";
 import { useHasAccount } from "@/lib/guest";
 
 export default function SettingsPage() {
@@ -49,6 +51,7 @@ export default function SettingsPage() {
   );
   const navigationItems = [
     session && { id: "account", label: "Compte", icon: UserRound },
+    hasAccount && { id: "trackers", label: "AniList & MAL", icon: ListChecks },
     { id: "playback", label: "Lecture", icon: Play },
     { id: "notifications", label: "Notifications", icon: Bell },
     canDownload && { id: "downloads", label: "Téléchargements", icon: Download },
@@ -174,6 +177,8 @@ export default function SettingsPage() {
 
         <main className="min-w-0 space-y-8 md:space-y-16">
         {session && <AccountSection number={sectionNumber("account")} />}
+
+        {hasAccount && <TrackersSection number={sectionNumber("trackers")} />}
 
         <PlaybackSection number={sectionNumber("playback")} />
 

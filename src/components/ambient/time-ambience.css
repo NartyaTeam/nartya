@@ -1,0 +1,120 @@
+.time-ambience {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.time-ambience__wash,
+.time-ambience__field { position: absolute; inset: 0; }
+.time-ambience__wash { transition: background 1.5s ease; }
+
+/* Matin : poussières de lumière qui montent. */
+.time-ambience__mote {
+  position: absolute;
+  bottom: -10px;
+  width: var(--size);
+  height: var(--size);
+  border-radius: 50%;
+  background: rgb(255 236 200 / 0.75);
+  box-shadow: 0 0 8px 2px rgb(255 214 160 / 0.35);
+  animation: time-mote var(--duration) var(--delay) linear infinite;
+}
+@keyframes time-mote {
+  0% { transform: translate(0, 0); opacity: 0; }
+  12% { opacity: 0.8; }
+  85% { opacity: 0.5; }
+  100% { transform: translate(40px, -105vh); opacity: 0; }
+}
+
+/* Après-midi : feuilles d'automne. */
+.time-ambience__leaf {
+  position: absolute;
+  top: -24px;
+  width: var(--size);
+  height: calc(var(--size) * 0.7);
+  border-radius: 0 85% 0 85%;
+  background: hsl(var(--hue) 80% 50% / 0.7);
+  box-shadow: inset -2px -2px 0 hsl(var(--hue) 70% 30% / 0.35);
+  animation: time-leaf var(--duration) var(--delay) linear infinite;
+}
+@keyframes time-leaf {
+  0% { transform: translate(0, 0) rotate(0deg); opacity: 0; }
+  10% { opacity: 0.9; }
+  50% { transform: translate(var(--drift), 52vh) rotate(260deg); }
+  90% { opacity: 0.7; }
+  100% { transform: translate(calc(var(--drift) * -0.4), 108vh) rotate(520deg); opacity: 0; }
+}
+
+/* Nuit : étoiles et lanternes. */
+.time-ambience__star {
+  position: absolute;
+  width: var(--size);
+  height: var(--size);
+  border-radius: 50%;
+  background: #f4f1ff;
+  opacity: 0.5;
+  animation: time-star 4s var(--delay) ease-in-out infinite alternate;
+}
+@keyframes time-star {
+  from { opacity: 0.15; }
+  to { opacity: 0.75; }
+}
+.time-ambience__string {
+  position: absolute;
+  top: 0.25rem;
+  left: 0;
+  width: 100%;
+  height: 4rem;
+  fill: none;
+  stroke: rgb(255 214 170 / 0.18);
+  stroke-width: 0.15;
+  vector-effect: non-scaling-stroke;
+}
+.time-ambience__lantern {
+  position: absolute;
+  width: 1.35rem;
+  transform-origin: 50% 0;
+  translate: -50% 0;
+  animation: time-lantern-sway 5s var(--delay) ease-in-out infinite alternate;
+}
+.time-ambience__lantern::before {
+  /* Attache au fil. */
+  content: "";
+  display: block;
+  width: 1px;
+  height: 0.55rem;
+  margin: 0 auto;
+  background: rgb(255 214 170 / 0.3);
+}
+.time-ambience__lantern b {
+  display: block;
+  height: 1.9rem;
+  border-radius: 45% / 35%;
+  border-top: 2px solid rgb(40 20 16 / 0.85);
+  border-bottom: 2px solid rgb(40 20 16 / 0.85);
+  background:
+    repeating-linear-gradient(180deg, transparent 0 4px, rgb(120 30 10 / 0.25) 4px 5px),
+    radial-gradient(circle at 50% 45%, rgb(255 214 140), rgb(232 84 42) 62%, rgb(150 32 22));
+  box-shadow: 0 0 18px 5px rgb(255 120 50 / 0.42), 0 0 46px 14px rgb(255 120 50 / 0.12);
+  opacity: 0.88;
+  animation: time-lantern-flicker var(--flicker) ease-in-out infinite alternate;
+}
+@keyframes time-lantern-sway {
+  from { rotate: -3deg; }
+  to { rotate: 3deg; }
+}
+@keyframes time-lantern-flicker {
+  0%, 100% { opacity: 0.88; }
+  40% { opacity: 0.74; }
+  70% { opacity: 0.95; }
+}
+@media (max-width: 767px) {
+  .time-ambience__lantern { width: 0.85rem; }
+  .time-ambience__lantern b { height: 1.2rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .time-ambience__field * { animation: none !important; }
+}
+.reduce-motion .time-ambience__field * { animation: none !important; }

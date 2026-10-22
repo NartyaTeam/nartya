@@ -7,6 +7,7 @@ import AnimeRow, { AnimeRowSkeleton } from "@/components/home/AnimeRow";
 import TopTenRow from "@/components/home/TopTenRow";
 import ContinueWatching from "@/components/home/ContinueWatching";
 import ForYouRow from "@/components/home/ForYouRow";
+import CommunityPicksRow from "@/components/home/CommunityPicksRow";
 import GenresRow from "@/components/home/GenresRow";
 import CommunityBanner from "@/components/home/CommunityBanner";
 import { platform } from "@/platform";
@@ -122,6 +123,7 @@ export default function HomePage() {
       <div className="relative z-10 mt-1 space-y-8 md:mt-0 md:pt-6 md:space-y-12">
         <GenresRow />
         <ContinueWatching />
+        <CommunityPicksRow />
         <DeferredHomeSection height={300}>
           <ForYouRow />
         </DeferredHomeSection>

@@ -1,7 +1,18 @@
 import { useEffect, useState } from "react";
 import { Fox } from "@/components/brand/NartyaMark";
 import { useNavigate } from "react-router-dom";
-import { Clock, Film, Layers, Trophy, Crown, CalendarDays, Infinity as InfinityIcon } from "lucide-react";
+import {
+  BookOpen,
+  CalendarDays,
+  CalendarRange,
+  Clock,
+  Crown,
+  Film,
+  Infinity as InfinityIcon,
+  Layers,
+  Sun,
+  Trophy,
+} from "lucide-react";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { getLeaderboard, getMyLeaderboardRank } from "@/api/leaderboard";
 import { resolveAvatar, getProfileExtraStats } from "@/api/profile";
@@ -18,12 +29,16 @@ const METRICS = [
   { key: "watch_time", label: "Temps de visionnage", shortLabel: "Temps", kana: "視聴時間", icon: Clock, value: (r) => formatWatchTime(r.totalWatchSeconds), unit: "de visionnage" },
   { key: "episodes", label: "Épisodes vus", shortLabel: "Épisodes", kana: "エピソード", icon: Film, value: (r) => nf.format(r.totalEpisodes), unit: "épisodes vus" },
   { key: "animes", label: "Animes suivis", shortLabel: "Animés", kana: "アニメ", icon: Layers, value: (r) => nf.format(r.totalAnimes), unit: "animes suivis" },
+  { key: "chapters", label: "Chapitres lus", shortLabel: "Chapitres", kana: "漫画", icon: BookOpen, value: (r) => nf.format(r.totalChapters), unit: "chapitres lus" },
 ];
 
-/** `week` = semaine calendaire en cours. */
+/** Périodes calendaires en cours, à l'heure de Paris. `empty` : texte quand personne n'y figure. */
 const PERIODS = [
-  { key: "week", label: "Cette semaine", icon: CalendarDays },
-  { key: "all", label: "Depuis toujours", icon: InfinityIcon },
+  { key: "day", label: "Aujourd'hui", shortLabel: "Jour", icon: Sun, empty: "Personne n'a encore été actif aujourd'hui." },
+  { key: "week", label: "Cette semaine", shortLabel: "Semaine", icon: CalendarDays, empty: "Personne n'a encore été actif cette semaine." },
+  { key: "month", label: "Ce mois-ci", shortLabel: "Mois", icon: CalendarRange, empty: "Personne n'a encore été actif ce mois-ci." },
+  { key: "year", label: "Cette année", shortLabel: "Année", icon: CalendarRange, empty: "Personne n'a encore été actif cette année." },
+  { key: "all", label: "Depuis toujours", shortLabel: "Toujours", icon: InfinityIcon, empty: "Aucun membre au classement pour l'instant." },
 ];
 
 // Indépendantes de l'accent.
@@ -177,13 +192,17 @@ const RAW = {
   watch_time: (r) => r.totalWatchSeconds,
   episodes: (r) => r.totalEpisodes,
   animes: (r) => r.totalAnimes,
+  chapters: (r) => r.totalChapters,
 };
 
 /** Écart lisible avec le membre au-dessus, dans l'unité de la métrique. */
 function gapLabel(metricKey, gap) {
   if (metricKey === "watch_time") return formatWatchTime(gap);
   const n = nf.format(gap);
-  return metricKey === "episodes" ? `${n} épisode${gap > 1 ? "s" : ""}` : `${n} anime${gap > 1 ? "s" : ""}`;
+  const plural = gap > 1 ? "s" : "";
+  if (metricKey === "episodes") return `${n} épisode${plural}`;
+  if (metricKey === "chapters") return `${n} chapitre${plural}`;
+  return `${n} anime${plural}`;
 }
 
 /**
@@ -317,7 +336,7 @@ export default function LeaderboardPage() {
       </div>
 
       <div className="relative mt-7">
-        <div className="mx-auto grid max-w-xl grid-cols-3 border-b border-white/[0.1]">
+        <div className="mx-auto grid max-w-2xl grid-cols-4 border-b border-white/[0.1]">
           {METRICS.map((m) => {
             const on = m.key === metricKey;
             const Icon = m.icon;
@@ -340,7 +359,7 @@ export default function LeaderboardPage() {
       </div>
 
       <div className="relative mt-4 flex justify-center">
-        <div className="grid w-full max-w-sm grid-cols-2 rounded-md border-2 border-border bg-surface/40 p-1 text-xs">
+        <div className="grid w-full max-w-2xl grid-cols-5 rounded-md border-2 border-border bg-surface/40 p-1 text-xs">
           {PERIODS.map((p) => {
             const on = p.key === periodKey;
             const Icon = p.icon;
@@ -348,12 +367,13 @@ export default function LeaderboardPage() {
               <button
                 key={p.key}
                 onClick={() => setPeriodKey(p.key)}
-                className={`flex items-center justify-center gap-1.5 rounded px-2 py-2 font-bold transition-colors ${
+                className={`flex min-w-0 items-center justify-center gap-1.5 rounded px-1 py-2 font-bold transition-colors ${
                   on ? "bg-white/10 text-text" : "text-muted hover:text-text"
                 }`}
               >
-                <Icon size={13} />
-                {p.label}
+                <Icon size={13} className="hidden shrink-0 sm:block" />
+                <span className="truncate sm:hidden">{p.shortLabel}</span>
+                <span className="hidden truncate sm:inline">{p.label}</span>
               </button>
             );
           })}
@@ -383,9 +403,7 @@ export default function LeaderboardPage() {
           </div>
         ) : rows.length === 0 ? (
           <p className="rounded-md border-2 border-dashed border-border bg-surface/40 py-16 text-center text-sm text-muted">
-            {periodKey === "week"
-              ? "Personne n'a encore été actif cette semaine."
-              : "Aucun membre au classement pour l'instant."}
+            {PERIODS.find((p) => p.key === periodKey)?.empty}
           </p>
         ) : (
           <>

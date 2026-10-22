@@ -3,7 +3,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { premiumTier, partyCapacityForTier } from "@/lib/premium";
 import { generatePartyCode, normalizePartyCode, isValidPartyCode } from "@/utils/partyCode";
-import { savePartyRoomState, getPartyRoomState, closePartyRoom } from "@/api/partyRoom";
+import { savePartyRoomState, getPartyRoomState, closePartyRoom, publishPartyRoom } from "@/api/partyRoom";
 import { resolveAvatar } from "@/api/profile";
 
 /**
@@ -27,8 +27,11 @@ const WAIT_SOURCES_TIMEOUT_MS = 30000;
 const BUFFER_WAIT_COOLDOWN_MS = 20000;
 // Avant de conclure qu'un code ne correspond à aucun salon.
 const JOIN_PROBE_MS = 2500;
+// Un salon public muet depuis 75 s sort de la liste (cf. `party_list_public_rooms`).
+const PUBLIC_BEAT_MS = 30000;
 
 export const DEFAULT_OPTIONS = {
+  isPublic: false, // listé sur la page Watch Party, rejoignable sans code
   waitOnSourceLoad: true, // attendre que tous aient chargé l'épisode
   waitOnJoin: true, // attendre un participant qui rejoint en cours de séance
   waitOnBuffer: true, // attendre un participant dont le flux décroche
@@ -78,6 +81,8 @@ export function useWatchParty() {
   const waitingForSourcesRef = useRef(false);
   const teardownRef = useRef(null); // syncPresence peut évincer avant la définition de teardown
   const lastPersistAtRef = useRef(0);
+  // Dernière sauvegarde partie : le battement public l'attend, la ligne doit exister en base.
+  const lastSaveRef = useRef(Promise.resolve());
   const clockOffsetRef = useRef(null);
   const clockPingTimerRef = useRef(null);
   const roomCodeRef = useRef(null);
@@ -168,7 +173,7 @@ export function useWatchParty() {
     const now = Date.now();
     if (!force && now - lastPersistAtRef.current < PERSIST_THROTTLE_MS) return;
     lastPersistAtRef.current = now;
-    savePartyRoomState(code, {
+    lastSaveRef.current = savePartyRoomState(code, {
       hostClientId: meRef.current.clientId,
       current: currentRef.current,
       queue: queueRef.current,
@@ -181,7 +186,13 @@ export function useWatchParty() {
     const code = roomCodeRef.current;
     if (!code) return;
     const state = await getPartyRoomState(code);
-    if (!state || !isHostRef.current || channelRef.current !== channel) return; // périmé entre-temps
+    if (!isHostRef.current || channelRef.current !== channel) return; // périmé entre-temps
+    // Rien en base : c'est à nous de créer la ligne (relève sans état, ou création dont la
+    // sauvegarde initiale a été sautée, cf. `syncPresence`).
+    if (!state) {
+      persistState(true);
+      return;
+    }
     currentRef.current = state.current;
     queueRef.current = state.queue;
     // Notre lecteur est plus frais que l'état persisté.
@@ -206,13 +217,16 @@ export function useWatchParty() {
       event: "playback",
       payload: { ...playbackRef.current, sentAt: Date.now() },
     });
-  }, []);
+  }, [persistState]);
 
   const syncPresence = useCallback(() => {
     const channel = channelRef.current;
     if (!channel) return;
     const state = channel.presenceState();
     const list = Object.values(state).map((metas) => metas[0]).filter(Boolean);
+    // Synchro reçue avant notre propre inscription : sans personne, on ne déciderait rien
+    // de juste, et un hôte qui vient de créer le salon se retrouverait rétrogradé.
+    if (!list.length) return;
 
     const claimers = list.filter((p) => p.isHostClaim).sort((a, b) => a.joinedAt - b.joinedAt);
     const ordered = [...list].sort((a, b) => a.joinedAt - b.joinedAt);
@@ -552,7 +566,7 @@ export function useWatchParty() {
   );
 
   const createRoom = useCallback(
-    async ({ seed = null } = {}) => {
+    async ({ seed = null, isPublic = false } = {}) => {
       if (!userId) return { success: false, error: "Connexion requise." };
       setError(null);
       setRoomFull(false);
@@ -563,8 +577,10 @@ export function useWatchParty() {
       currentRef.current = seed;
       queueRef.current = initialQueue;
       playbackRef.current = { currentTime: 0, isPlaying: false };
+      optionsRef.current = { ...DEFAULT_OPTIONS, isPublic: !!isPublic };
       applyCurrent(seed);
       applyQueue(initialQueue);
+      applyOptions(optionsRef.current);
       const res = await openChannel(roomCode, true);
       setConnecting(false);
       if (!res.success) {
@@ -742,6 +758,34 @@ export function useWatchParty() {
     },
     [emitReactionToListeners]
   );
+
+  // L'hôte d'un salon public signale qu'il vit et combien ils sont. Un hôte élu en relève
+  // reprend le battement, puisque `isPublic` voyage dans les options.
+  const isPublic = !!options.isPublic;
+  const participantCount = participants.length;
+  const publishedRef = useRef(false);
+  useEffect(() => {
+    if (!inRoom || !isHost || !code) {
+      publishedRef.current = false;
+      return;
+    }
+    if (!isPublic) {
+      // Seulement s'il était listé : un salon privé n'a rien à retirer.
+      if (publishedRef.current) publishPartyRoom(code, false, participantCount);
+      publishedRef.current = false;
+      return;
+    }
+    const beat = () => {
+      publishedRef.current = true;
+      lastSaveRef.current.then(() => publishPartyRoom(code, true, Math.max(1, participantCount)));
+    };
+    const first = setTimeout(beat, 0);
+    const timer = setInterval(beat, PUBLIC_BEAT_MS);
+    return () => {
+      clearTimeout(first);
+      clearInterval(timer);
+    };
+  }, [inRoom, isHost, code, isPublic, participantCount]);
 
   useEffect(() => () => teardown(), [teardown]);
 

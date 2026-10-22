@@ -32,7 +32,8 @@ const DEFAULTS = {
   planningLanguage: "all", // filtre du calendrier : "all" | "vf" | "vostfr"
   achievementsInPlayback: "compact", // succès pendant un épisode : "compact" | "after" | "full"
   titleLanguage: "default", // titres des animes et mangas : "default" (catalogue) | "romaji" | "english"
-  timeAmbiance: false, // la lueur de fond suit l'heure (aube, jour, coucher, nuit)
+  timeAmbiance: false, // le fond suit l'heure (matin, après-midi, soirée, nuit)
+  profileAmbienceEverywhere: true, // l'ambiance du profil (pluie, neige…) sur toute l'app
 };
 
 /** Une valeur persistée sous l'ancienne forme (nom d'hébergeur) est remise sur « auto ». */

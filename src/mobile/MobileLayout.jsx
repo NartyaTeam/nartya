@@ -4,6 +4,9 @@ import { ArrowLeft } from "lucide-react";
 import MobileNavigation from "@/components/layout/MobileNavigation";
 import { useScrollRestoration } from "@/hooks/useScrollRestoration";
 import FeatureBanner from "@/components/layout/FeatureBanner";
+import AppBackdrop from "@/components/layout/AppBackdrop";
+
+const DEFAULT_GLOW = "radial-gradient(100% 55% at 85% -10%, rgb(var(--primary) / 0.16), transparent 62%)";
 
 const PRIMARY_ROUTES = new Set(["/", "/search", "/planning", "/downloads", "/profile", "/login"]);
 
@@ -20,13 +23,7 @@ export default function MobileLayout() {
 
   return (
     <div className="mobile-shell flex h-full w-full overflow-hidden bg-bg">
-      <div
-        className="pointer-events-none fixed inset-0 z-0"
-        style={{
-          background:
-            "radial-gradient(100% 55% at 85% -10%, rgb(var(--primary) / 0.16), transparent 62%)",
-        }}
-      />
+      <AppBackdrop defaultGlow={DEFAULT_GLOW} />
       {/* Lisibilité de la barre système quand les cartes défilent dessous. */}
       <div className="pointer-events-none fixed inset-x-0 top-0 z-20 h-[calc(env(safe-area-inset-top)+1rem)] bg-gradient-to-b from-bg via-bg/85 to-transparent" />
       {!isPrimaryTab ? (

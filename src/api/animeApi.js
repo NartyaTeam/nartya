@@ -59,7 +59,7 @@ async function postFn(path, body) {
   return { data: json.data ?? null, error: null };
 }
 
-export { postFn };
+export { get as getApi, postFn };
 
 export async function getHomeSections() {
   // La home affiche déjà un snapshot local : inutile d'empiler de longues attentes.

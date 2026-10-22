@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Loader2, AlertTriangle, LogOut, Copy, Check, ListVideo,
-  Search, Tv, Users, Settings2, UserPlus,
+  Search, Tv, Users, Settings2, UserPlus, Globe,
 } from "lucide-react";
 import { getSeasonEpisodes } from "@/api/animeApi";
 import { watchTick } from "@/api/progress";
@@ -90,7 +90,15 @@ export default function PartyRoomPage() {
     if (codeParam) party.joinRoom(codeParam);
   }, [userId, inRoom, connecting, roomFull, roomNotFound, codeParam, party]);
 
-  useEffect(() => () => party.leaveRoom(), []); // eslint-disable-line react-hooks/exhaustive-deps
+  // Différé : en StrictMode (dev), React démonte puis remonte aussitôt la page, et quitter
+  // tout de suite effacerait le salon qu'on vient de créer.
+  const leaveTimerRef = useRef(null);
+  useEffect(() => {
+    clearTimeout(leaveTimerRef.current);
+    return () => {
+      leaveTimerRef.current = setTimeout(() => party.leaveRoom(), 0);
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!current?.slug || current?.season == null) {
@@ -545,6 +553,14 @@ export default function PartyRoomPage() {
             {roomCode}
             {copied ? <Check size={13} className="text-accent" /> : <Copy size={13} />}
           </button>
+          {options.isPublic && (
+            <span
+              title="Salon public : visible sur la page Watch Party"
+              className="ml-2 mr-auto flex items-center gap-1 text-[11px] font-semibold text-accent"
+            >
+              <Globe size={12} /> Public
+            </span>
+          )}
           <div className="flex items-center gap-2">
             <button
               type="button"

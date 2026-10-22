@@ -108,6 +108,12 @@ export function OptionsPanel({ options, setOptions }) {
       <p className="text-xs font-bold uppercase tracking-wider text-muted">Options du salon</p>
 
       <OptionToggle
+        label="Salon public"
+        description="Visible sur la page Watch Party : n'importe quel membre peut le rejoindre sans code"
+        checked={!!options.isPublic}
+        onChange={(v) => setOptions({ isPublic: v })}
+      />
+      <OptionToggle
         label="Attendre le chargement de l'épisode"
         description="Pause automatique jusqu'à ce que tout le monde ait sa source vidéo"
         checked={options.waitOnSourceLoad}

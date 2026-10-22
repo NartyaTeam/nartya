@@ -38,3 +38,33 @@ export async function closePartyRoom(code) {
     await supabase.rpc("party_room_close", { p_code: code });
   } catch (_) {}
 }
+
+/** Hôte d'un salon public : rappelé régulièrement, sinon le salon sort de la liste. */
+export async function publishPartyRoom(code, isPublic, participants) {
+  try {
+    await supabase.rpc("party_room_publish", {
+      p_code: code,
+      p_public: !!isPublic,
+      p_participants: participants,
+    });
+  } catch (_) {}
+}
+
+export async function listPublicPartyRooms() {
+  const { data, error } = await supabase.rpc("party_list_public_rooms");
+  if (error) throw error;
+  return (data || []).map((r) => ({
+    code: r.code,
+    current: r.current || null,
+    participants: r.participants || 1,
+    createdAt: r.created_at,
+    host: {
+      id: r.host_id,
+      username: r.host_username,
+      avatar: r.host_avatar,
+      avatar_custom: r.host_avatar_custom,
+      premium_tier: r.host_premium_tier,
+      premium_until: r.host_premium_until,
+    },
+  }));
+}

@@ -21,7 +21,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Eye, EyeOff, GripVertical, Inbox, Loader2, Palette, Plus, Save, Trash2, X } from "lucide-react";
+import { Eye, EyeOff, GripVertical, Inbox, Loader2, Palette, Pencil, Plus, Save, Trash2, X } from "lucide-react";
 import { toast } from "@/lib/toast";
 import { getTierList, saveTierList, tierListErrorMessage } from "@/api/tierLists";
 import {
@@ -504,23 +504,34 @@ export default function TierListEditorPage() {
             {id ? "Modifier la tier list" : "Nouvelle tier list"}
           </p>
         </div>
-        <input
-          value={title}
-          maxLength={80}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Titre de ta tier list"
-          aria-label="Titre"
-          className="t-impact w-full bg-transparent text-3xl outline-none placeholder:text-muted/60 md:text-4xl"
-        />
-        <textarea
-          value={description}
-          maxLength={500}
-          rows={2}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Une description, si tu veux (facultatif)"
-          aria-label="Description"
-          className="mt-2 w-full max-w-2xl resize-none rounded-md bg-surface px-3 py-2 text-sm outline-none ring-2 ring-border focus:ring-primary/70"
-        />
+        {/* Deux vrais champs, chacun avec son libellé : un titre sans cadre se lisait comme un
+            titre déjà écrit, et l'on tapait le titre dans la description. */}
+        <label className="block max-w-2xl">
+          <span className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-muted">Titre</span>
+          <span className="flex items-center gap-3 rounded-md bg-surface px-3 ring-2 ring-border transition-shadow focus-within:ring-primary/70">
+            <input
+              value={title}
+              maxLength={80}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Ex. : Mes animes de 2026"
+              className="t-impact min-w-0 flex-1 bg-transparent py-2 text-2xl outline-none placeholder:text-muted/40 md:text-3xl"
+            />
+            <Pencil size={16} className="shrink-0 text-muted" />
+          </span>
+        </label>
+        <label className="mt-3 block max-w-2xl">
+          <span className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-muted">
+            Description <span className="font-medium normal-case tracking-normal text-muted/60">(facultatif)</span>
+          </span>
+          <textarea
+            value={description}
+            maxLength={500}
+            rows={2}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Explique ton classement en quelques mots"
+            className="w-full resize-none rounded-md bg-surface px-3 py-2 text-sm outline-none ring-2 ring-border focus:ring-primary/70"
+          />
+        </label>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <div className="flex h-10 items-center gap-1 rounded-md bg-surface p-1 ring-2 ring-border">
             {[

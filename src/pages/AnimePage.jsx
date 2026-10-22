@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate, useSearchParams, Link } from "react-router-dom";
-import { ArrowLeft, Heart, Star, ChevronDown, ExternalLink, Megaphone, Play, Languages, Zap } from "lucide-react";
+import { ArrowLeft, Heart, Star, ChevronDown, ExternalLink, Megaphone, Play, Languages, Zap, ThumbsUp } from "lucide-react";
 import { toast } from "@/lib/toast";
 import { clipTitle, titleSizeClass } from "@/utils/displayTitle";
 import { getAnimePage, resolveAnilistToSlug, getAnimeScans } from "@/api/animeApi";
@@ -10,6 +10,7 @@ import { getLastWatched } from "@/api/progress";
 import { useCachedResource } from "@/hooks/useCachedResource";
 import { useDiscordPresence } from "@/hooks/useDiscordPresence";
 import { useFavorite } from "@/hooks/useFavorite";
+import { useAnimeBump } from "@/hooks/useAnimeBump";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useListsStore } from "@/stores/useListsStore";
 import { useSettingsStore } from "@/stores/useSettingsStore";
@@ -210,6 +211,10 @@ export default function AnimePage() {
     genre: genres[0],
     mediaType,
   });
+  // Rangée « Recommandé par la communauté » : animes regardables sur Nartya seulement.
+  const canBump = !!streamingSlug && !isManga;
+  const bump = useAnimeBump(canBump ? streamingSlug : null, { title, cover });
+  const bumpLabel = bump.bumped ? "Retirer ma recommandation" : "Recommander à la communauté";
 
   const listSlug = streamingSlug || slug;
   const session = useAuthStore((s) => s.session);
@@ -441,6 +446,22 @@ export default function AnimePage() {
           >
             <Heart size={24} className={fav ? "fill-current" : ""} />
           </button>
+          {canBump && (
+            <button
+              onClick={() => {
+                platform.haptic?.("light");
+                bump.toggle();
+              }}
+              aria-label={bumpLabel}
+              title={bumpLabel}
+              className={`flex items-center gap-1 text-sm font-semibold tabular-nums transition-all duration-200 active:scale-90 ${
+                bump.bumped ? "text-primary" : "text-muted"
+              }`}
+            >
+              <ThumbsUp size={22} className={bump.bumped ? "fill-current" : ""} />
+              {bump.bumps > 0 && bump.bumps}
+            </button>
+          )}
           {airing && (
             <NotifyBell
               slug={streamingSlug || slug}
@@ -494,6 +515,22 @@ export default function AnimePage() {
               <Heart size={16} className={fav ? "fill-current" : ""} />
               {fav ? "Dans mes favoris" : "Ajouter aux favoris"}
             </button>
+
+            {canBump && (
+              <button
+                onClick={bump.toggle}
+                title={bumpLabel}
+                className={`mt-2 flex w-44 items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-bold transition-colors md:w-52 ${
+                  bump.bumped
+                    ? "bg-primary/15 text-primary ring-2 ring-primary/40"
+                    : "bg-surface text-text ring-2 ring-border hover:bg-surface-2"
+                }`}
+              >
+                <ThumbsUp size={15} className={bump.bumped ? "fill-current" : ""} />
+                {bump.bumped ? "Recommandé" : "Recommander"}
+                {bump.bumps > 0 && <span className="font-normal tabular-nums opacity-70">· {bump.bumps}</span>}
+              </button>
+            )}
 
             {airing && (
               <NotifyBell slug={streamingSlug || slug} title={title} variant="button" className="mt-2" />

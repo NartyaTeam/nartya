@@ -947,6 +947,75 @@ paths:
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
 
+  /me/trackers:
+    get:
+      tags: [Compte]
+      operationId: trackerAvailability
+      summary: Services de suivi disponibles
+      description: |
+        Indique si la liaison AniList et MyAnimeList est ouverte sur ce serveur. Les comptes
+        liés eux-mêmes se lisent côté base (`my_tracker_accounts`) : leurs jetons ne quittent
+        jamais le serveur.
+      responses:
+        "200":
+          description: Disponibilité par service.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      anilist: { type: boolean }
+                      mal: { type: boolean }
+
+  /me/trackers/{provider}/link:
+    post:
+      tags: [Compte]
+      operationId: linkTracker
+      security:
+        - SessionApp: []
+      summary: Lier un compte AniList ou MyAnimeList
+      description: |
+        Renvoie l'URL d'autorisation à ouvrir dans le navigateur. Le service redirige ensuite
+        vers `/trackers/{provider}/callback`, qui enregistre le compte.
+
+        **Accès** : session de l'application uniquement.
+      parameters:
+        - { name: provider, in: path, required: true, schema: { type: string, enum: [anilist, mal] } }
+      responses:
+        "200":
+          description: URL d'autorisation.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: object, properties: { url: { type: string, format: uri } } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "503": { description: Liaison pas encore disponible sur ce serveur. }
+
+  /me/trackers/{provider}/import:
+    post:
+      tags: [Compte]
+      operationId: importTrackerList
+      security:
+        - SessionApp: []
+      summary: Importer une liste AniList ou MyAnimeList
+      description: |
+        Ajoute au compte Nartya les œuvres, épisodes vus, chapitres lus et notes qui n'y sont
+        pas encore, en tâche de fond. Rien d'existant n'est remplacé.
+
+        **Accès** : session de l'application uniquement.
+      parameters:
+        - { name: provider, in: path, required: true, schema: { type: string, enum: [anilist, mal] } }
+      responses:
+        "200": { description: Import lancé (ou déjà en cours). }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "409": { description: Aucun compte lié pour ce service. }
+        "503": { description: Liaison pas encore disponible sur ce serveur. }
+
   /episode-thumbs:
     post:
       tags: [Compte]

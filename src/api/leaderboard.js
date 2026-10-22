@@ -1,6 +1,9 @@
 import { supabase } from "@/lib/supabase";
 
-/** `metric` : 'watch_time' | 'episodes' | 'animes'. `period` : 'all' | 'week'. Profils publics seulement. */
+/**
+ * `metric` : 'watch_time' | 'episodes' | 'animes' | 'chapters'.
+ * `period` : 'day' | 'week' | 'month' | 'year' | 'all'. Profils publics seulement.
+ */
 export async function getLeaderboard(metric = "watch_time", limit = 50, period = "all") {
   const { data, error } = await supabase.rpc("get_leaderboard", { p_metric: metric, lim: limit, p_period: period });
   if (error) throw error;
@@ -18,6 +21,7 @@ export async function getLeaderboard(metric = "watch_time", limit = 50, period =
     totalWatchSeconds: Math.round(r.total_watch_seconds || 0),
     totalEpisodes: Number(r.total_episodes || 0),
     totalAnimes: Number(r.total_animes || 0),
+    totalChapters: Number(r.total_chapters || 0),
   }));
 }
 
@@ -39,6 +43,7 @@ export async function getMyLeaderboardRank(metric = "watch_time", period = "all"
     totalWatchSeconds: Math.round(row.my_secs || 0),
     totalEpisodes: Number(row.my_eps || 0),
     totalAnimes: Number(row.my_animes || 0),
+    totalChapters: Number(row.my_chapters || 0),
     aboveValue: row.above_value == null ? null : Number(row.above_value),
   };
 }

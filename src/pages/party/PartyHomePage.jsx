@@ -1,14 +1,18 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Users, Plus, LogIn, Loader2, Play, Sparkles, MonitorUp, X } from "lucide-react";
+import { Users, Plus, LogIn, Loader2, Play, Sparkles, MonitorUp, X, Globe, Lock } from "lucide-react";
 import { useParty } from "@/contexts/WatchPartyProvider";
 import { getHomeSections, getAnimePage } from "@/api/animeApi";
 import { getContinueWatching, hideAnimeFromResume } from "@/api/progress";
 import { enrichHistoryItems, applyCachedEnrichment, advanceCompletedItems } from "@/utils/watchHistory";
 import { normalizePartyCode } from "@/utils/partyCode";
+import { listPublicPartyRooms } from "@/api/partyRoom";
+import { resolveAvatar } from "@/api/profile";
+import { partyCapacityForTier, premiumTier } from "@/lib/premium";
 import { platform } from "@/platform";
 
 const canOpenWindow = platform.canOpenNewWindow;
+const PUBLIC_REFRESH_MS = 20000;
 
 /** « 12:34 », ou null si inconnu. */
 function remainingLabel(item) {
@@ -28,6 +32,22 @@ export default function PartyHomePage() {
   const [error, setError] = useState(null);
   const [resume, setResume] = useState([]);
   const [recos, setRecos] = useState([]);
+  const [isPublic, setIsPublic] = useState(false);
+  const [publicRooms, setPublicRooms] = useState(null);
+
+  useEffect(() => {
+    let alive = true;
+    const load = () =>
+      listPublicPartyRooms()
+        .then((rooms) => alive && setPublicRooms(rooms))
+        .catch(() => alive && setPublicRooms((prev) => prev ?? []));
+    load();
+    const timer = setInterval(load, PUBLIC_REFRESH_MS);
+    return () => {
+      alive = false;
+      clearInterval(timer);
+    };
+  }, []);
 
   useEffect(() => {
     getContinueWatching(12).then((base) => {
@@ -45,7 +65,7 @@ export default function PartyHomePage() {
   const goCreate = async (seed = null) => {
     setError(null);
     setBusy(true);
-    const res = await party.createRoom({ seed });
+    const res = await party.createRoom({ seed, isPublic });
     setBusy(false);
     if (res.success) navigate(`/party/${res.code}`);
     else setError(res.error || "Impossible de créer le salon.");
@@ -120,10 +140,18 @@ export default function PartyHomePage() {
           <p className="text-sm text-muted">
             Lance un salon vide et choisis quoi regarder une fois dedans, ou pars d'une suggestion ci-dessous.
           </p>
-          <button onClick={() => goCreate(null)} disabled={busy} className="btn-shu mt-1 disabled:opacity-60">
-            {busy ? <Loader2 size={18} className="animate-spin" /> : <Plus size={18} />}
-            Créer un salon
-          </button>
+          <div className="mt-1 flex flex-wrap items-center gap-3">
+            <button onClick={() => goCreate(null)} disabled={busy} className="btn-shu disabled:opacity-60">
+              {busy ? <Loader2 size={18} className="animate-spin" /> : <Plus size={18} />}
+              Créer un salon
+            </button>
+            <VisibilitySwitch isPublic={isPublic} onChange={setIsPublic} />
+          </div>
+          <p className="text-xs text-muted">
+            {isPublic
+              ? "Public : ton salon apparaît ci-dessous, n'importe quel membre peut le rejoindre."
+              : "Privé : seuls ceux qui ont le code peuvent entrer."}
+          </p>
         </div>
 
         <form
@@ -150,6 +178,31 @@ export default function PartyHomePage() {
       </div>
 
       {error && <p className="mb-6 text-sm text-primary">{error}</p>}
+
+      <section className="mb-10">
+        <div className="mb-4 flex items-center gap-2">
+          <Globe size={18} className="text-primary" />
+          <h2 className="section-title !text-xl">Salons publics</h2>
+          {publicRooms?.length > 0 && <span className="text-sm text-muted">{publicRooms.length}</span>}
+        </div>
+        {publicRooms === null ? (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="h-24 rounded-md skeleton" />
+            ))}
+          </div>
+        ) : publicRooms.length === 0 ? (
+          <p className="rounded-md border-2 border-dashed border-border px-5 py-6 text-sm text-muted">
+            Aucun salon public pour l'instant. Crée le tien en mode Public pour que d'autres membres te rejoignent.
+          </p>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {publicRooms.map((room) => (
+              <PublicRoomCard key={room.code} room={room} onJoin={() => navigate(`/party/${room.code}`)} />
+            ))}
+          </div>
+        )}
+      </section>
 
       {resume.length > 0 && (
         <section className="mb-10">
@@ -277,6 +330,80 @@ function PosterCard({ cover, title, subtitle, onClick }) {
         {title}
       </h3>
       {subtitle && <p className="mt-0.5 line-clamp-1 text-xs text-muted">{subtitle}</p>}
+    </button>
+  );
+}
+
+function VisibilitySwitch({ isPublic, onChange }) {
+  const opt = (value, Icon, label) => (
+    <button
+      type="button"
+      onClick={() => onChange(value)}
+      aria-pressed={isPublic === value}
+      className={`flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-bold transition-colors ${
+        isPublic === value ? "bg-primary text-primary-fg" : "text-muted hover:text-text"
+      }`}
+    >
+      <Icon size={13} /> {label}
+    </button>
+  );
+  return (
+    <div className="flex rounded-md border border-border bg-bg p-0.5">
+      {opt(false, Lock, "Privé")}
+      {opt(true, Globe, "Public")}
+    </div>
+  );
+}
+
+function PublicRoomCard({ room, onJoin }) {
+  const { current, host } = room;
+  const capacity = partyCapacityForTier(premiumTier(host));
+  const full = room.participants >= capacity;
+  const avatar = resolveAvatar(host);
+  const what = current
+    ? [current.seasonName, current.ep ? `Épisode ${current.ep}` : null, current.lang ? String(current.lang).toUpperCase() : null]
+        .filter(Boolean)
+        .join(" · ")
+    : "Choisit quoi regarder";
+
+  return (
+    <button
+      type="button"
+      onClick={onJoin}
+      disabled={full}
+      title={full ? "Salon complet" : "Rejoindre le salon"}
+      className="group flex w-full items-center gap-3 rounded-md border-2 border-border bg-surface p-3 text-left transition-colors hover:border-primary/50 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-border"
+    >
+      <div className="relative h-20 w-14 shrink-0 overflow-hidden rounded bg-surface-2">
+        {current?.cover ? (
+          <img src={current.cover} alt="" loading="lazy" className="h-full w-full object-cover" />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-white/20">
+            <Users size={20} />
+          </div>
+        )}
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="line-clamp-1 text-sm font-semibold text-text transition-colors group-hover:text-primary">
+          {current?.title || "Salon sans épisode"}
+        </p>
+        <p className="mt-0.5 line-clamp-1 text-xs text-muted">{what}</p>
+        <div className="mt-2 flex items-center gap-2 text-xs text-muted">
+          {avatar ? (
+            <img src={avatar} alt="" className="h-4 w-4 shrink-0 rounded-full object-cover" />
+          ) : (
+            <span className="h-4 w-4 shrink-0 rounded-full bg-white/10" />
+          )}
+          <span className="line-clamp-1 min-w-0">{host.username || "Membre"}</span>
+          <span className="ml-auto flex shrink-0 items-center gap-1 font-semibold tabular-nums text-text/80">
+            <Users size={12} />
+            {room.participants}/{capacity === Infinity ? "∞" : capacity}
+          </span>
+        </div>
+      </div>
+      <span className="shrink-0 rounded-md bg-primary/15 px-2.5 py-1.5 text-xs font-bold text-primary transition-colors group-hover:bg-primary group-hover:text-primary-fg">
+        {full ? "Complet" : "Rejoindre"}
+      </span>
     </button>
   );
 }
