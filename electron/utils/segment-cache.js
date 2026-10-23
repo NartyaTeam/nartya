@@ -63,13 +63,29 @@ export async function streamAndCacheSegment(req, res, response, url, contentType
   let recus = 0;
   let cacheable = true;
 
+  // hls.js coupe souvent un segment en route. Sans ça, l'attente de `drain` ne se terminait
+  // jamais et la connexion à l'hébergeur restait prise : après 32 segments coupés (maxSockets),
+  // plus rien ne passait vers lui jusqu'au redémarrage de l'app (cf. read-ahead.js).
+  let clientGone = false;
+  res.once("close", () => {
+    if (res.writableFinished) return;
+    clientGone = true;
+    try { response.body?.destroy?.(); } catch (_) {}
+  });
+
   try {
     for await (const chunk of response.body) {
+      if (clientGone) break;
       const buf = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
       recus += buf.length;
-      // Backpressure.
+      // Backpressure, sans rester bloqué si le client coupe.
       if (!res.write(buf)) {
-        await new Promise((resolve) => res.once("drain", resolve));
+        await new Promise((resolve) => {
+          const onDrain = () => { res.removeListener("close", onClose); resolve(); };
+          const onClose = () => { res.removeListener("drain", onDrain); resolve(); };
+          res.once("drain", onDrain);
+          res.once("close", onClose);
+        });
       }
       if (cacheable) {
         totalSize += buf.length;

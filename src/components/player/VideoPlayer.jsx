@@ -681,15 +681,40 @@ export default function VideoPlayer({
         });
       });
 
+      // `startLoad()` coupe le segment en cours : relancé à chaque panne de tampon, il ne
+      // laissait jamais arriver celui qui l'aurait résorbée. Et un flux abîmé (audio AAC
+      // illisible chez l'hébergeur) faisait boucler `recoverMediaError()` sans fin, sans
+      // jamais basculer d'hébergeur : deux récupérations (la seconde avec l'échange de codec
+      // audio conseillé par hls.js), puis on rend la main.
+      const STALL_RESTART_MS = 5000;
+      const MEDIA_RECOVERY_WINDOW_MS = 30_000;
+      let lastStallRestart = 0;
+      let mediaRecoveries = 0;
+      let lastMediaRecovery = 0;
       hls.on(Hls.Events.ERROR, (_, data) => {
         if (!data.fatal) {
-          if (data.details === "bufferStalledError") {
+          if (data.details === "bufferStalledError" && Date.now() - lastStallRestart > STALL_RESTART_MS) {
+            lastStallRestart = Date.now();
             try { hls.startLoad(); } catch (_) {}
           }
           return;
         }
         if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
-          try { hls.recoverMediaError(); return; } catch (_) {}
+          const now = Date.now();
+          if (now - lastMediaRecovery > MEDIA_RECOVERY_WINDOW_MS) mediaRecoveries = 0;
+          lastMediaRecovery = now;
+          mediaRecoveries += 1;
+          try {
+            if (mediaRecoveries === 1) {
+              hls.recoverMediaError();
+              return;
+            }
+            if (mediaRecoveries === 2) {
+              hls.swapAudioCodec();
+              hls.recoverMediaError();
+              return;
+            }
+          } catch (_) {}
         }
         cb.current.onError?.(data);
       });
