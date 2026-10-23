@@ -5,6 +5,20 @@
  */
 export const CHANGELOG = [
   {
+    version: "1.36.1",
+    date: "24 octobre 2026",
+    items: [
+      {
+        type: "fixed",
+        text: "Le lecteur ne reste plus bloqué sur un écran noir qui se recharge sans fin quand un passage de l’épisode est abîmé chez l’hébergeur : la lecture reprend juste après, ou passe sur une autre source.",
+      },
+      {
+        type: "fixed",
+        text: "Après un épisode qui avait planté, les autres épisodes du même lecteur se lancent de nouveau sans avoir à redémarrer Nartya.",
+      },
+    ],
+  },
+  {
     version: "1.36.0",
     date: "22 octobre 2026",
     items: [
