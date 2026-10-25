@@ -5,6 +5,24 @@
  */
 export const CHANGELOG = [
   {
+    version: "1.37.0",
+    date: "25 octobre 2026",
+    items: [
+      {
+        type: "improved",
+        text: "Beaucoup plus d’épisodes se lancent du premier coup : Nartya va chercher les vidéos chez de nouveaux hébergeurs, souvent en 1080p, et passe tout seul au suivant si le premier ne répond pas.",
+      },
+      {
+        type: "improved",
+        text: "Les sources qui ne marchaient plus ont disparu de la liste : il ne reste que celles qui se lancent vraiment.",
+      },
+      {
+        type: "improved",
+        text: "Les sources sont maintenant nommées dans l’ordre où Nartya les essaie (Source A, B, C…). Ta source prioritaire est conservée, seule sa lettre a pu changer ; si elle faisait partie des sources retirées, elle repasse sur « Automatique ».",
+      },
+    ],
+  },
+  {
     version: "1.36.1",
     date: "24 octobre 2026",
     items: [
