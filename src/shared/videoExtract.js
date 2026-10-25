@@ -81,6 +81,39 @@ function parseHlsJson(html) {
   return { success: false, error: "Flux HLS non trouvé (incompatible/privé)" };
 }
 
+/**
+ * Lien recollé par le lecteur : `…innerHTML = "/stream" + ''+ ('xcdbideo?id=…').substring(1).substring(2);`.
+ * `ideoolink` est un leurre (jeton faux) ; `robotlink` est le bon, `botlink` le double et
+ * sert de secours (vérifié sur 8 pages au 2026-10-25). Évalué à la main, littéraux et `.substring(n)` seulement —
+ * jamais le JavaScript distant.
+ */
+function parseSplitLink(html) {
+  const last = (re) => [...html.matchAll(re)].at(-1)?.[1];
+  const expr =
+    last(/getElementById\(\s*['"]robotlink['"]\s*\)\.innerHTML\s*=\s*([^;\n]+);/g) ||
+    last(/getElementById\(\s*['"]botlink['"]\s*\)\.innerHTML\s*=\s*([^;\n]+);/g);
+  if (!expr) {
+    const removed = /video not found/i.test(html);
+    return { success: false, error: removed ? "Vidéo supprimée par l'hébergeur" : "Lien du lecteur introuvable" };
+  }
+
+  let link = "";
+  const parts = /\(\s*(['"])(.*?)\1\s*\)((?:\.substring\(\s*\d+\s*\))*)|(['"])(.*?)\4/g;
+  for (const m of expr.matchAll(parts)) {
+    if (m[4]) {
+      link += m[5];
+      continue;
+    }
+    let value = m[2];
+    for (const [, n] of m[3].matchAll(/\.substring\(\s*(\d+)\s*\)/g)) value = value.substring(Number(n));
+    link += value;
+  }
+
+  link = link.replace(/^\/+/, "");
+  if (!/\/get_video\?id=/.test(link)) return { success: false, error: "Lien du lecteur illisible" };
+  return { success: true, videoUrl: `https://${link}` };
+}
+
 /** P.A.C.K.E.R. de Dean Edwards, décompacté sans exécuter le JavaScript distant. */
 export function unpackDeanEdwards(source) {
   if (!source || typeof source !== "string" || source.length > 2_000_000) return null;
@@ -167,6 +200,8 @@ export function extractFromHtml(html, embedUrl, sourceKey) {
       return parseHlsJson(html);
     case "packed-jw":
       return parsePackedJwPlayer(html);
+    case "split-link":
+      return parseSplitLink(html);
     default:
       return { success: false, error: "Stratégie d'extraction inconnue" };
   }

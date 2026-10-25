@@ -28,6 +28,7 @@ import { EpisodeSelector } from "@/components/player/EpisodeSelector";
 import { NextEpisodePreview } from "@/components/player/NextEpisodePreview";
 import { EpisodeSelectorMobile } from "@/components/player/EpisodeSelectorMobile";
 import CastControls from "@/components/player/CastControls";
+import DevStatsOverlay from "@/components/player/DevStatsOverlay";
 import { platform } from "@/platform";
 import { useProgressSaver } from "@/hooks/useProgressSaver";
 import { useContentWarning } from "@/hooks/useContentWarning";
@@ -208,6 +209,8 @@ export default function WatchPage() {
   const [videoUrl, setVideoUrl] = useState(null);
   // Compartiment de la mémoire de débit du lecteur.
   const [usedSourceKey, setUsedSourceKey] = useState(null);
+  // Dev seulement : vrai hébergeur, site d'origine et temps de résolution de la source jouée.
+  const [devSource, setDevSource] = useState(null);
   // Plantées en cours de lecture sur cet épisode.
   const [failedSources, setFailedSources] = useState(() => new Set());
   const [resumeAt, setResumeAt] = useState(0);
@@ -252,6 +255,7 @@ export default function WatchPage() {
   const usedSourceRef = useRef(null);
   const fallbackLockRef = useRef(false);
   const playerApiRef = useRef(null);
+  const getPlayerMedia = useCallback(() => playerApiRef.current?.getMedia?.() || null, []);
   // Une fois par anime.
   const trackedRef = useRef(null);
   // Une fois par épisode final.
@@ -374,6 +378,7 @@ export default function WatchPage() {
     retryOnReturnRef.current = false;
     clearFailedSources();
     usedSourceRef.current = null;
+    setDevSource(null);
     advancedRef.current = false;
     skipDismissedRef.current = false;
     prefetchedRef.current = null;
@@ -423,6 +428,7 @@ export default function WatchPage() {
       if (result.success) {
         usedSourceRef.current = result.usedSource;
         setUsedSourceKey(result.usedSourceKey || null);
+        setDevSource(result.usedDev || null);
         setVideoUrl(result.videoUrl);
         // La bascule est réarmée.
         fallbackLockRef.current = false;
@@ -789,6 +795,16 @@ export default function WatchPage() {
         createPortal(
           <>
             <OverlayBackButton onClick={goBack} />
+
+            {import.meta.env.DEV && (
+              <DevStatsOverlay
+                getMedia={getPlayerMedia}
+                videoUrl={videoUrl}
+                source={devSource}
+                episodeLabel={episodeLabel}
+                language={lang}
+              />
+            )}
 
             <div className="art-back-btn absolute right-5 top-5 z-[55]">
               <CastControls

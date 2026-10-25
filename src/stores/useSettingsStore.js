@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { applyTheme, applyReduceMotion, DEFAULT_PRESET, DEFAULT_CUSTOM_COLOR } from "@/utils/theme";
+import { SELECTABLE_SOURCE_KEYS } from "@/utils/videoSourceUtils";
 
 /** Persisté par machine. Un nouveau réglage s'ajoute dans DEFAULTS, sans autre câblage. */
 
@@ -36,15 +37,18 @@ const DEFAULTS = {
   profileAmbienceEverywhere: true, // l'ambiance du profil (pluie, neige…) sur toute l'app
 };
 
-/** Une valeur persistée sous l'ancienne forme (nom d'hébergeur) est remise sur « auto ». */
-const isOpaqueSourceKey = (value) => /^s\d+$/.test(value);
+/**
+ * Remise sur « auto » : une valeur sous l'ancienne forme (nom d'hébergeur) ou une clé
+ * d'hébergeur retiré depuis.
+ */
+const isKnownSourceKey = (value) => SELECTABLE_SOURCE_KEYS.includes(value);
 
 function load() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return { ...DEFAULTS };
     const stored = { ...DEFAULTS, ...JSON.parse(raw) };
-    if (stored.prioritySource !== "auto" && !isOpaqueSourceKey(stored.prioritySource)) {
+    if (stored.prioritySource !== "auto" && !isKnownSourceKey(stored.prioritySource)) {
       stored.prioritySource = DEFAULTS.prioritySource;
     }
     return stored;

@@ -395,6 +395,8 @@ export default function VideoPlayer({
           } catch (_) {}
         },
         notice: (message) => { try { art.notice.show = message; } catch (_) {} },
+        // Overlay de debug (dev) : la <video> et l'instance hls.js du flux courant.
+        getMedia: () => ({ video: art.video || null, hls: art.hls || null }),
       });
       cb.current.onReady?.();
     });

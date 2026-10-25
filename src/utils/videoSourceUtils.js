@@ -4,19 +4,23 @@
  * { key: "eps1", id: "<jeton>", source: "s1", label: "Source A", rank: 10, recommended }
  */
 
-/** Gardés ici pour peupler les Paramètres sans requête. */
+/**
+ * Gardés ici pour peupler les Paramètres sans requête. Les clés ne se réattribuent jamais
+ * (le réglage les mémorise) ; les lettres suivent l'ordre d'essai côté API. s4, s5, s7 et
+ * s8 désignaient des hébergeurs retirés.
+ */
 const SOURCE_LABELS = {
   s1: "Source A",
-  s2: "Source B",
-  s3: "Source C",
-  s4: "Source D",
-  s5: "Source E",
-  s6: "Source F",
-  s7: "Source G",
-  s8: "Source H",
+  s12: "Source B",
+  s10: "Source C",
+  s11: "Source D",
+  s2: "Source E",
+  s3: "Source F",
+  s6: "Source G",
+  s9: "Source H",
 };
 
-export const SELECTABLE_SOURCE_KEYS = ["s1", "s2", "s3", "s4", "s5", "s6", "s7"];
+export const SELECTABLE_SOURCE_KEYS = Object.keys(SOURCE_LABELS);
 
 export function getSourceLabel(sourceKey) {
   return SOURCE_LABELS[sourceKey] || "Source";
@@ -37,6 +41,8 @@ function normalizeSources(sources) {
       label: value.label || getSourceLabel(value.key),
       rank: Number.isFinite(value.rank) ? value.rank : 999,
       recommended: value.recommended === true,
+      // API locale seulement : { host, origin } réels, pour les logs et l'overlay de debug.
+      dev: value.dev || null,
     }))
     .sort((a, b) => a.rank - b.rank);
 }

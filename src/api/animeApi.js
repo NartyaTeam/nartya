@@ -200,12 +200,16 @@ export async function getAllEpisodes(slug) {
  * @returns {Promise<{episodes: Array<{episode:number, lecteurs:Object}>, totalEpisodes:number,
  * seasonName:string}>}
  */
+// Stratégies d'extraction connues de cette version : l'API ne propose que les hébergeurs
+// qu'elle sait lire (cf. `requires` dans api/src/sources.js).
+const EXTRACTION_CAPS = "split-link";
+
 export async function getSeasonEpisodes(slug, seasonId, { lite = false } = {}) {
   const data = (
     await get(
       `/v1/anime/${encodeURIComponent(slug)}/seasons/${encodeURIComponent(
         seasonId
-      )}/episodes${lite ? "?lite=1" : ""}`
+      )}/episodes?caps=${EXTRACTION_CAPS}${lite ? "&lite=1" : ""}`
     )
   ).data;
 

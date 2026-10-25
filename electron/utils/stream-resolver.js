@@ -21,7 +21,22 @@ import {
 import { extractFromHtml, isExtractedVideoUrlConsistentWithEmbed } from "./video-extract.js";
 import { mintHandle } from "./stream-handles.js";
 import { friendlyErrorMessage } from "./friendly-error.js";
-import { API_BASE_URL } from "./api-base.js";
+import { API_BASE_URL, IS_DEV } from "./api-base.js";
+
+/** « s10 Source J [voembed] » : le nom réel n'existe que dans la recette d'une API locale. */
+function describeProvider(provider) {
+  const rules = provider ? getRecipeSource(provider) : null;
+  if (!rules) return provider || "?";
+  return `${provider} ${rules.label}${rules.devName ? ` [${rules.devName}]` : ""}`;
+}
+
+function hostOf(url) {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return "?";
+  }
+}
 
 /** Avec les règles de la recette pour son hébergeur. */
 async function fetchEmbedHtml(embedUrl, options = {}) {
@@ -120,10 +135,20 @@ async function resolveStreamToken(token, accessToken) {
   const tokenMs = Date.now() - startedAt;
 
   const html = await fetchEmbedHtml(embedUrl, { timeoutMs: STREAM_TIMEOUT_MS });
-  if (!html.success) return { success: false, error: html.error || "Hébergeur injoignable" };
+  if (!html.success) {
+    if (IS_DEV) {
+      console.warn(`[Stream] ✗ ${describeProvider(provider)} ${hostOf(embedUrl)} — ${html.error}`);
+    }
+    return { success: false, error: html.error || "Hébergeur injoignable" };
+  }
 
   const extracted = extractFromHtml(html.html, embedUrl, provider);
   if (!extracted.success || !extracted.videoUrl) {
+    if (IS_DEV) {
+      console.warn(
+        `[Stream] ✗ ${describeProvider(provider)} ${hostOf(embedUrl)} — extraction : ${extracted.error || "flux introuvable"}`
+      );
+    }
     return { success: false, error: extracted.error || "Flux introuvable" };
   }
   if (!isExtractedVideoUrlConsistentWithEmbed(embedUrl, extracted.videoUrl)) {
@@ -145,7 +170,10 @@ async function resolveStreamToken(token, accessToken) {
   if (_streamCache.size > 200) _streamCache.delete(_streamCache.keys().next().value);
 
   console.log(
-    `[Stream] ${provider || "?"} résolu en ${Date.now() - startedAt} ms (API ${tokenMs} ms)`
+    IS_DEV
+      ? `[Stream] ✓ ${describeProvider(provider)} ${hostOf(embedUrl)} → ${hostOf(extracted.videoUrl)} ` +
+          `(${isHls ? "HLS" : "MP4"}) en ${Date.now() - startedAt} ms (API ${tokenMs} ms)`
+      : `[Stream] ${provider || "?"} résolu en ${Date.now() - startedAt} ms (API ${tokenMs} ms)`
   );
   return { success: true, handle, isHls };
 }

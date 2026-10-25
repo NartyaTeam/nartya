@@ -10,7 +10,7 @@ import { useSettingsStore } from "@/stores/useSettingsStore";
 const DEFAULT_LANGUAGE = "vostfr";
 
 // Les sources HLS se téléchargent plus vite que les MP4 (segments en parallèle).
-const DOWNLOAD_PRIORITY = ["s4", "s3", "s1", "s8", "s2", "s6", "s5", "s7"];
+const DOWNLOAD_PRIORITY = ["s1", "s12", "s10", "s2", "s3", "s9", "s11", "s6"];
 
 /**
  * Chaque source tentée consomme un appel API, plafonné à 60/min par compte. 40 : la lecture

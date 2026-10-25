@@ -18,6 +18,15 @@ const DEFAULT_LANGUAGE = "vostfr";
 // URL jouable gagne.
 const HEDGE_STAGGER_MS = 1600;
 
+const DEV = import.meta.env.DEV;
+
+/** « Source J (voembed · voir-anime) » en dev, le libellé neutre sinon. */
+export function describeSource(src) {
+  if (!src) return "?";
+  const dev = src.dev;
+  return dev ? `${src.label} (${dev.host} · ${dev.origin})` : src.label;
+}
+
 // Les jetons de source vivent 6 h ; revalider au démarrage du lecteur changerait les jetons.
 export const EPISODES_TTL_MS = 60 * 60 * 1000;
 
@@ -48,8 +57,17 @@ async function resolveStreamToken(token, { forceRefresh = false } = {}) {
 }
 
 /** Échec décrit avec le libellé neutre de la source, jamais le nom de l'hébergeur. */
-async function _resolveOneSource({ key, id, label, source }, { forceRefresh = false } = {}) {
+async function _resolveOneSource(src, { forceRefresh = false } = {}) {
+  const { key, id, label, source } = src;
+  const startedAt = performance.now();
   const resolved = await resolveStreamToken(id, { forceRefresh });
+  const ms = Math.round(performance.now() - startedAt);
+  if (DEV) {
+    console.info(
+      `[sources] ${resolved.success ? "✓" : "✗"} ${describeSource(src)} lecteur ${key} — ${ms} ms` +
+        (resolved.success ? "" : ` — ${resolved.error}`)
+    );
+  }
   if (!resolved.success) {
     return { success: false, error: `${label}: ${resolved.error}` };
   }
@@ -60,6 +78,7 @@ async function _resolveOneSource({ key, id, label, source }, { forceRefresh = fa
     usedLabel: label,
     // Compartiment de la mémoire de débit du lecteur.
     usedSourceKey: source,
+    usedDev: { ...(src.dev || {}), label, lecteur: key, resolveMs: ms },
   };
 }
 
@@ -219,6 +238,13 @@ export async function getEpisodeVideoUrl(slug, seasonId, episodeIndex, language 
     return { success: false, error: "Toutes les sources de cet épisode ont échoué.", episode };
   }
 
+  if (DEV) {
+    console.info(
+      `[sources] ép.${episode.episode ?? episode.number ?? episodeIndex + 1} ${language} — ordre : ` +
+        prioritizedSources.map((s) => describeSource(s)).join(" → ") +
+        (excludeKeys.length ? ` (exclues : ${excludeKeys.join(", ")})` : "")
+    );
+  }
   const resolved = await _resolveSourcesHedged(prioritizedSources, { forceRefresh });
   if (!resolved.success) {
     // Seulement quand toutes les sources ont échoué.
@@ -247,5 +273,6 @@ export async function getEpisodeVideoUrl(slug, seasonId, episodeIndex, language 
     usedSource: resolved.usedSource,
     usedLabel: resolved.usedLabel,
     usedSourceKey: resolved.usedSourceKey,
+    usedDev: resolved.usedDev,
   };
 }
