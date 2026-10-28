@@ -5,6 +5,32 @@
  */
 export const IOS_CHANGELOG = [
   {
+    version: "1.8.0",
+    date: "28 octobre 2026",
+    items: [
+      {
+        type: "new",
+        text: "Donne ton avis sur Nartya : une note de 1 à 5 étoiles, et un commentaire si tu veux. On ne te le demande qu’une fois, pour toutes les apps Nartya.",
+      },
+      {
+        type: "new",
+        text: "Une barre « Rechercher un manga… » sur l’accueil Mangas, pour trouver un manga ou un webtoon directement.",
+      },
+      {
+        type: "improved",
+        text: "Un manga que tu commences à lire se range tout seul « En cours » dans l’onglet Mangas de tes listes.",
+      },
+      {
+        type: "fixed",
+        text: "Te déconnecter de Nartya ne te déconnecte plus de tes autres appareils ni des autres apps Nartya.",
+      },
+      {
+        type: "fixed",
+        text: "Un compte suspendu voit de nouveau l’écran qui explique le motif et la durée, au lieu d’une page vide.",
+      },
+    ],
+  },
+  {
     version: "1.7.0",
     date: "28 octobre 2026",
     items: [
