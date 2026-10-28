@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useLocation } from "react-router-dom";
 import { Loader2, Send, Star, X } from "lucide-react";
@@ -9,6 +9,10 @@ import { toast } from "@/lib/toast";
 
 // Au lancement, comme la reconnexion Discord : le temps que l'app s'affiche.
 const DELAY_MS = 4_000;
+// Vérification serveur en échec : nouvel essai une minute plus tard.
+const RETRY_MS = 60_000;
+// Au-delà, un statut Discord resté « unknown » (vérification en échec) ne bloque plus.
+const DISCORD_WAIT_MS = 20_000;
 const MAX_COMMENT = 1000;
 // Pas en plein épisode ou en pleine lecture de scans.
 const QUIET_ROUTES = ["/watch", "/scan", "/party"];
@@ -22,7 +26,8 @@ const LABELS = ["", "Décevant", "Moyen", "Correct", "Très bien", "Excellent"];
  *
  * La reconnexion Discord (DiscordReauthModal) passe avant : la demande attend que le statut
  * Discord soit tranché (« member » ou « none »). Tant qu'il est « missing », c'est la fenêtre
- * Discord qui est ouverte ; « unknown » (vérification en cours ou en échec) ne tranche rien.
+ * Discord qui est ouverte ; « unknown » (vérification en cours ou en échec) ne bloque que
+ * `DISCORD_WAIT_MS`.
  */
 export default function ReviewPrompt() {
   const userId = useAuthStore((s) => s.session?.user?.id ?? null);
@@ -30,31 +35,46 @@ export default function ReviewPrompt() {
   const discordSettled = useAuthStore(
     (s) => (s.discordGuild === "member" || s.discordGuild === "none") && !s.discordReauthPending
   );
+  const discordMissing = useAuthStore((s) => s.discordGuild === "missing");
   const online = useNetworkStore((s) => s.online);
   const { pathname } = useLocation();
   const [due, setDue] = useState(false);
   const [open, setOpen] = useState(false);
+  const [discordWaitOver, setDiscordWaitOver] = useState(false);
+  const userRef = useRef(userId);
+  const retryRef = useRef(null);
+  userRef.current = userId;
 
   useEffect(() => {
     setDue(false);
     setOpen(false);
+    setDiscordWaitOver(false);
     if (!userId || isGuest) return;
     const t = setTimeout(() => setDue(true), DELAY_MS);
-    return () => clearTimeout(t);
+    const w = setTimeout(() => setDiscordWaitOver(true), DISCORD_WAIT_MS);
+    return () => {
+      clearTimeout(t);
+      clearTimeout(w);
+      clearTimeout(retryRef.current);
+    };
   }, [userId, isGuest]);
 
   const quiet = QUIET_ROUTES.some((r) => pathname.startsWith(r));
+  // Discord tranché, ou vérification restée sans réponse : on ne bloque pas indéfiniment.
+  const discordReady = !discordMissing && (discordSettled || discordWaitOver);
   useEffect(() => {
-    if (!due || open || quiet || !online || !userId || !discordSettled) return;
-    let alive = true;
+    if (!due || open || quiet || !online || !userId || !discordReady) return;
+    // Pas de garde d'annulation liée à cet effet : `setDue(false)` le relance aussitôt, ce qui
+    // annulait chaque réponse (la fenêtre ne s'ouvrait jamais en 1.39.0). On compare le compte.
     setDue(false);
+    const asked = userId;
     isReviewPending()
-      .then((pending) => alive && pending && setOpen(true))
-      .catch(() => {});
-    return () => {
-      alive = false;
-    };
-  }, [due, open, quiet, online, userId, discordSettled]);
+      .then((pending) => pending && userRef.current === asked && setOpen(true))
+      .catch(() => {
+        // Jeton expiré au démarrage (le Hub le rafraîchit), réseau : on réessaie plus tard.
+        retryRef.current = setTimeout(() => setDue(true), RETRY_MS);
+      });
+  }, [due, open, quiet, online, userId, discordReady]);
 
   if (!open || !userId) return null;
   return (
