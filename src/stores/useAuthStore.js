@@ -549,7 +549,8 @@ export const useAuthStore = create((set, get) => ({
       const { releaseDeviceSlot } = await import("@/api/devices");
       await releaseDeviceSlot();
     } catch (_) {}
-    await supabase.auth.signOut();
+    // Scope local : le scope global par défaut révoquerait les sessions des autres appareils.
+    await supabase.auth.signOut({ scope: "local" });
     set({
       session: null,
       user: null,
