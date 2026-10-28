@@ -13,6 +13,7 @@ import {
   Star,
 } from "lucide-react";
 import { EMBLEMS } from "@/api/profile";
+import { Badge } from "@/components/ui/Badge";
 
 const ACCENT_SWATCHES = ["#FF713E", "#F4648C", "#A855F7", "#3B82F6", "#14B8A6", "#EAB308", "#F97316", "#E5E7EB"];
 export const AMBIENCES = [
@@ -50,16 +51,16 @@ function Toggle({ checked, onChange, label, hint }) {
 
 function SubscriberBadge() {
   return (
-    <span className="inline-flex items-center gap-1 rounded-[4px] border border-[#d6aa68]/35 bg-[#d6aa68]/10 px-1.5 py-0.5 text-[0.55rem] font-semibold uppercase tracking-kana text-[#d6aa68]">
-      <Crown size={9} /> Abonnés
-    </span>
+    <Badge tone="gold" icon={Crown}>
+      Abonnés
+    </Badge>
   );
 }
 
 export function AccentPicker({ accent, onChange }) {
   return (
     <div>
-      <label className="text-[0.7rem] font-semibold uppercase tracking-kana text-muted">
+      <label className="text-2xs font-semibold uppercase tracking-kana text-muted">
         Couleur d'accent
       </label>
       <div className="mt-2 flex flex-wrap items-center gap-2.5">
@@ -99,7 +100,7 @@ export function AmbiencePicker({ isPremium, ambient, onChange }) {
   return (
     <div>
       <div className="flex items-center gap-2">
-        <label className="text-[0.7rem] font-semibold uppercase tracking-kana text-muted">Ambiance de page</label>
+        <label className="text-2xs font-semibold uppercase tracking-kana text-muted">Ambiance de page</label>
         <SubscriberBadge />
       </div>
       <p className="mt-1 text-xs text-muted">Elle transforme tout le fond de ton profil ; elle ne dépend pas de ton cadre ou de ta bannière.</p>
@@ -117,7 +118,7 @@ export function AmbiencePicker({ isPremium, ambient, onChange }) {
               <Ban size={16} />
             </span>
             <span className="text-sm font-semibold text-text">Aucune</span>
-            <span className="text-[0.68rem] leading-snug text-muted">Le profil garde son fond sobre.</span>
+            <span className="text-2xs leading-snug text-muted">Le profil garde son fond sobre.</span>
             {!ambient && (
               <span className="absolute right-2 top-2 flex h-4 w-4 items-center justify-center rounded-full bg-white text-black">
                 <Check size={10} strokeWidth={3} />
@@ -144,7 +145,7 @@ export function AmbiencePicker({ isPremium, ambient, onChange }) {
                   <Icon size={17} />
                 </span>
                 <span className="text-sm font-semibold text-text">{item.label}</span>
-                <span className="text-[0.68rem] leading-snug text-muted">{item.desc}</span>
+                <span className="text-2xs leading-snug text-muted">{item.desc}</span>
                 {on && (
                   <span className="absolute right-2 top-2 flex h-4 w-4 items-center justify-center rounded-full bg-white text-black">
                     <Check size={10} strokeWidth={3} />
@@ -165,7 +166,7 @@ export function EmblemPicker({ isPremium, emblem, onChange }) {
   return (
     <div>
       <div className="flex items-center gap-2">
-        <label className="text-[0.7rem] font-semibold uppercase tracking-kana text-muted">
+        <label className="text-2xs font-semibold uppercase tracking-kana text-muted">
           Emblème kanji
         </label>
         <SubscriberBadge />
@@ -209,10 +210,10 @@ export function PinnedFavoritesPicker({ favorites, pinned, maxPinsLabel, onToggl
   return (
     <div>
       <div className="flex items-baseline justify-between">
-        <label className="text-[0.7rem] font-semibold uppercase tracking-kana text-muted">
+        <label className="text-2xs font-semibold uppercase tracking-kana text-muted">
           Favoris à la une
         </label>
-        <span className="text-[0.7rem] tabular-nums text-muted/60">
+        <span className="text-2xs tabular-nums text-muted/60">
           {pinned.size}/{maxPinsLabel}
         </span>
       </div>
@@ -273,7 +274,7 @@ export function PodiumOrderPicker({ favorites, order, onMove, onPickCover }) {
   const bySlug = new Map(favorites.map((f) => [f.anime_slug, f]));
   return (
     <div>
-      <label className="text-[0.7rem] font-semibold uppercase tracking-kana text-muted">
+      <label className="text-2xs font-semibold uppercase tracking-kana text-muted">
         Podium
       </label>
       <p className="mt-1 text-xs text-muted">
@@ -349,7 +350,7 @@ export function PrivacySettings({
 }) {
   return (
     <div>
-      <label className="text-[0.7rem] font-semibold uppercase tracking-kana text-muted">
+      <label className="text-2xs font-semibold uppercase tracking-kana text-muted">
         Confidentialité
       </label>
       <div className="mt-2 space-y-2">

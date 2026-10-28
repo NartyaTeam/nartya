@@ -29,12 +29,12 @@ export default function AchievementsList({ stats, isSelf }) {
           <button
             type="button"
             onClick={() => navigate("/profile/achievements")}
-            className="shrink-0 whitespace-nowrap text-[11px] text-muted transition-colors hover:text-primary"
+            className="shrink-0 whitespace-nowrap text-2xs text-muted transition-colors hover:text-primary"
           >
             {countLabel}
           </button>
         ) : (
-          <span className="shrink-0 whitespace-nowrap text-[11px] text-muted">{countLabel}</span>
+          <span className="shrink-0 whitespace-nowrap text-2xs text-muted">{countLabel}</span>
         )}
       </div>
       {pinned.length ? (
@@ -44,7 +44,7 @@ export default function AchievementsList({ stats, isSelf }) {
               <img src={tier.badge} alt="" className="h-[58px] w-[58px] shrink-0 object-contain" />
               <div className="min-w-0">
                 <p className="font-display text-sm font-bold text-text">{tier.name}</p>
-                <p className="mt-0.5 text-[11px] text-muted">
+                <p className="mt-0.5 text-2xs text-muted">
                   {family.name} · palier {ACHIEVEMENT_TIER_LOOKS[tier.level]?.numeral} ·{" "}
                   {formatAchievementValue(family, tier.threshold)} {SUFFIX[family.id]}
                 </p>

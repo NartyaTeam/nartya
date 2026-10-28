@@ -76,7 +76,7 @@ export default function PartyChat({
             return (
               <div key={`${m.ts}-${i}`} className="flex items-center gap-2 px-1 py-0.5">
                 <span className="h-px flex-1 bg-white/[0.06]" />
-                <span className="shrink-0 text-[10px] italic text-white/35">{m.text}</span>
+                <span className="shrink-0 text-3xs italic text-white/35">{m.text}</span>
                 <span className="h-px flex-1 bg-white/[0.06]" />
               </div>
             );
@@ -88,7 +88,7 @@ export default function PartyChat({
                 src={m.avatar}
                 name={m.username}
                 className="mt-0.5 h-5 w-5 shrink-0 rounded-full"
-                textClassName="text-[10px]"
+                textClassName="text-3xs"
               />
               <p className="min-w-0 break-words text-sm leading-snug text-white/90">
                 <span className={`font-semibold ${mine ? "text-accent" : "text-primary"}`}>
@@ -193,7 +193,7 @@ export default function PartyChat({
       >
         <MessageCircle size={20} />
         {chat.length > 0 && (
-          <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-fg">
+          <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-3xs font-bold text-primary-fg">
             {chat.length > 99 ? "99+" : chat.length}
           </span>
         )}

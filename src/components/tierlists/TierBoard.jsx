@@ -15,11 +15,11 @@ export const TierPoster = forwardRef(function TierPoster({ item, className = "",
       {item.cover ? (
         <img src={item.cover} alt="" loading="lazy" draggable={false} className="h-full w-full object-cover" />
       ) : (
-        <div className="flex h-full w-full items-center justify-center p-1 text-center text-[0.6rem] font-bold text-muted">
+        <div className="flex h-full w-full items-center justify-center p-1 text-center text-3xs font-bold text-muted">
           {item.title}
         </div>
       )}
-      <span className="absolute inset-x-0 bottom-0 line-clamp-2 bg-gradient-to-t from-black/90 via-black/60 to-transparent px-1 pb-0.5 pt-3 text-center text-[0.6rem] font-bold leading-tight text-white sm:text-[0.65rem]">
+      <span className="absolute inset-x-0 bottom-0 line-clamp-2 bg-gradient-to-t from-black/90 via-black/60 to-transparent px-1 pb-0.5 pt-3 text-center text-3xs font-bold leading-tight text-white sm:text-2xs">
         {item.title}
       </span>
     </div>

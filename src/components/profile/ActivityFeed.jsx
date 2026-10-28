@@ -122,7 +122,7 @@ export default function ActivityFeed({
             <button
               type="button"
               onClick={() => setExpanded((v) => !v)}
-              className="shrink-0 whitespace-nowrap text-[11px] font-bold text-primary transition-opacity hover:opacity-75"
+              className="shrink-0 whitespace-nowrap text-2xs font-bold text-primary transition-opacity hover:opacity-75"
             >
               {expanded ? "Réduire" : "Tout voir"}
             </button>
@@ -163,9 +163,9 @@ export default function ActivityFeed({
                           : isScan
                           ? "text-accent"
                           : isComment
-                          ? "text-sky-400"
+                          ? "text-info"
                           : isRating
-                          ? "text-amber-400"
+                          ? "text-warning"
                           : "text-sakura"
                       }`}
                     >
@@ -180,12 +180,12 @@ export default function ActivityFeed({
                       {isComment ? (
                         <span className="text-muted"> · « {detail} »</span>
                       ) : isRating ? (
-                        <span className="text-amber-400/90"> {detail}</span>
+                        <span className="text-warning/90"> {detail}</span>
                       ) : (
                         detail && <span className="text-muted"> {detail}</span>
                       )}
                     </p>
-                    <span className="shrink-0 text-[11px] tabular-nums text-muted/70">
+                    <span className="shrink-0 text-2xs tabular-nums text-muted/70">
                       {formatFrenchDate(it.ts)}
                     </span>
                   </Link>
@@ -200,7 +200,7 @@ export default function ActivityFeed({
                         />
                       )}
                       <div className="p-3">
-                        <p className="text-[0.62rem] font-bold uppercase tracking-[0.16em] text-primary">
+                        <p className="text-3xs font-bold uppercase tracking-[0.16em] text-primary">
                           {info.season || "Épisode"}
                           {it.episodeNumber != null ? ` · Ép. ${it.episodeNumber}` : ""}
                           {info.total ? ` / ${info.total}` : ""}
@@ -208,7 +208,7 @@ export default function ActivityFeed({
                         <p className="mt-1 font-display text-[13px] font-bold leading-snug text-text">
                           {info.title || name}
                         </p>
-                        {info.title && <p className="mt-0.5 text-[11px] text-muted">{name}</p>}
+                        {info.title && <p className="mt-0.5 text-2xs text-muted">{name}</p>}
                       </div>
                     </div>
                   )}
@@ -265,9 +265,9 @@ export default function ActivityFeed({
                         : isScan
                         ? "bg-accent/15 text-accent"
                         : isComment
-                        ? "bg-sky-400/15 text-sky-400"
+                        ? "bg-info/15 text-info"
                         : isRating
-                        ? "bg-amber-400/15 text-amber-400"
+                        ? "bg-warning/15 text-warning"
                         : "bg-sakura/15 text-sakura"
                     }`}
                   >
@@ -278,7 +278,7 @@ export default function ActivityFeed({
                     />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="text-[0.7rem] uppercase tracking-wide text-muted">
+                    <p className="text-2xs uppercase tracking-wide text-muted">
                       {isWatch
                         ? "Regardé"
                         : isScan
@@ -305,10 +305,10 @@ export default function ActivityFeed({
                       <p className="mt-0.5 line-clamp-1 text-xs italic text-muted">« {it.label} »</p>
                     )}
                     {isRating && it.label && (
-                      <p className="mt-0.5 text-xs text-amber-400/90">{stars(it.label)}</p>
+                      <p className="mt-0.5 text-xs text-warning/90">{stars(it.label)}</p>
                     )}
                   </div>
-                  <span className="hidden shrink-0 text-[0.7rem] tabular-nums text-muted/70 sm:block">
+                  <span className="hidden shrink-0 text-2xs tabular-nums text-muted/70 sm:block">
                     {formatFrenchDate(it.ts)}
                   </span>
                 </Link>

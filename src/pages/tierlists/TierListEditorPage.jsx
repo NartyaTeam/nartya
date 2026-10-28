@@ -500,7 +500,7 @@ export default function TierListEditorPage() {
       <header className="mb-5">
         <div className="mb-2 flex items-center gap-2">
           <span className="h-px w-6 bg-primary" />
-          <p className="text-[0.65rem] font-semibold uppercase tracking-[0.28em] text-primary/80">
+          <p className="text-2xs font-semibold uppercase tracking-[0.28em] text-primary/80">
             {id ? "Modifier la tier list" : "Nouvelle tier list"}
           </p>
         </div>

@@ -2,6 +2,7 @@ import { Check, Crown, Lock } from "lucide-react";
 import { ITEMS, SLOTS, SLOT_LABELS, canUseItem, avatarShapeClass } from "@/lib/cosmetics";
 import AvatarFrame from "@/components/ambient/AvatarFrame";
 import { Avatar } from "@/components/ui/Avatar";
+import { Badge } from "@/components/ui/Badge";
 
 /** `value` : { ornament, banner } tel que stocké (`null`, `"none"` ou un id d'item). */
 
@@ -37,7 +38,7 @@ function OrnamentTile({ id, item, on, locked, avatarUrl, username, onClick }) {
           </span>
         )}
         {locked && (
-          <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#d6aa68] text-black ring-2 ring-surface">
+          <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-gold text-black ring-2 ring-surface">
             <Crown size={9} />
           </span>
         )}
@@ -64,7 +65,7 @@ function Tile({ rgb, on, locked, title, label, sub, wide, onClick, children }) {
       {children}
       <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent px-2.5 pb-1.5 pt-4">
         <span className="block truncate text-xs font-semibold text-white">{label}</span>
-        {sub && <span className="block truncate text-[0.62rem] text-white/60">{sub}</span>}
+        {sub && <span className="block truncate text-3xs text-white/60">{sub}</span>}
       </span>
       {on && !locked && (
         <span className="absolute right-1.5 top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-white text-black">
@@ -74,9 +75,9 @@ function Tile({ rgb, on, locked, title, label, sub, wide, onClick, children }) {
       {locked && (
         <>
           <span className="absolute inset-0 bg-black/45" />
-          <span className="absolute right-1.5 top-1.5 inline-flex items-center gap-1 rounded-[4px] border border-[#d6aa68]/40 bg-[#d6aa68]/15 px-1.5 py-0.5 text-[0.55rem] font-semibold uppercase tracking-kana text-[#d6aa68]">
-            <Crown size={9} /> Ultimate
-          </span>
+          <Badge tone="gold" icon={Crown} className="absolute right-1.5 top-1.5">
+            Ultimate
+          </Badge>
         </>
       )}
     </button>
@@ -101,7 +102,7 @@ export default function CosmeticPicker({ isPremium, tier, value, onChange, avata
         const items = Object.entries(ITEMS[slot]);
         return (
           <div key={slot}>
-            <p className="text-[0.68rem] font-semibold uppercase tracking-kana text-muted/80">
+            <p className="text-2xs font-semibold uppercase tracking-kana text-muted/80">
               {SLOT_LABELS[slot].title}
             </p>
             <p className="mt-1 text-xs text-muted">{SLOT_LABELS[slot].desc}</p>

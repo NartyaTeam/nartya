@@ -218,7 +218,7 @@ function Ceremony({ id, host, position, total, onDone }) {
         <div className="ach-line mt-5 h-px w-[190px]" />
 
         <p
-          className="ach-text mt-4 text-[0.62rem] font-bold uppercase tracking-kana"
+          className="ach-text mt-4 text-3xs font-bold uppercase tracking-kana"
           style={{ color: look.halo, "--delay": "0.6s" }}
         >
           Succès débloqué
@@ -240,7 +240,7 @@ function Ceremony({ id, host, position, total, onDone }) {
           <span className="font-display text-xs font-black" style={{ color: look.halo }}>
             {look.numeral}
           </span>
-          <span className="text-[0.6rem] font-bold uppercase tracking-[0.18em] text-white/70">
+          <span className="text-3xs font-bold uppercase tracking-[0.18em] text-white/70">
             {look.label}
           </span>
         </div>
@@ -251,7 +251,7 @@ function Ceremony({ id, host, position, total, onDone }) {
           </div>
           {/* Combien il en reste dans la salve. */}
           {position > 0 && (
-            <span className="font-display text-[0.62rem] font-bold tabular-nums text-white/45">
+            <span className="font-display text-3xs font-bold tabular-nums text-white/45">
               {position} / {total}
             </span>
           )}
@@ -282,7 +282,7 @@ function CompactCeremony({ id, host, position, total, onDone }) {
     >
       <img src={tier.badge} alt="" className="h-14 w-14 shrink-0 object-contain" />
       <div className="min-w-0 flex-1">
-        <p className="text-[0.58rem] font-bold uppercase tracking-kana" style={{ color: look.halo }}>
+        <p className="text-3xs font-bold uppercase tracking-kana" style={{ color: look.halo }}>
           Succès débloqué{position > 0 ? ` · ${position} / ${total}` : ""}
         </p>
         <p className="mt-0.5 truncate font-display text-base font-extrabold text-white">{tier.name}</p>

@@ -110,7 +110,7 @@ export default function SettingsPage() {
           <div>
             <div className="hidden items-center gap-3 md:flex">
               <SettingsIcon size={15} className="text-primary" />
-              <span className="text-[0.62rem] font-bold uppercase tracking-[0.25em] text-primary">
+              <span className="text-3xs font-bold uppercase tracking-[0.25em] text-primary">
                 Réglages Nartya
               </span>
               <span className="h-px w-14 bg-primary/40" />
@@ -125,7 +125,7 @@ export default function SettingsPage() {
           </div>
 
           <div className="rounded-2xl border border-white/10 bg-bg/55 px-4 py-3.5 backdrop-blur-md md:rounded-none md:border-y md:border-x-0 md:border-l-2 md:border-l-primary/55 md:px-5 md:py-5">
-            <p className="text-[0.55rem] font-bold uppercase tracking-[0.18em] text-primary md:text-[0.58rem] md:tracking-[0.2em]">
+            <p className="text-3xs font-bold uppercase tracking-[0.18em] text-primary md:text-3xs md:tracking-[0.2em]">
               Configuration active
             </p>
             <div className="mt-2.5 grid grid-cols-3 gap-3 md:mt-4 md:gap-4">
@@ -133,17 +133,17 @@ export default function SettingsPage() {
                 <p className="font-display text-sm font-black text-white md:text-lg">
                   {playbackQuality === "auto" ? "AUTO" : `${playbackQuality}p`}
                 </p>
-                <p className="mt-1 text-[0.54rem] uppercase tracking-[0.14em] text-white/30">Image</p>
+                <p className="mt-1 text-3xs uppercase tracking-[0.14em] text-white/30">Image</p>
               </div>
               <div>
                 <p className="font-display text-sm font-black uppercase text-white md:text-lg">
                   {getLanguageLabel(defaultLanguage)}
                 </p>
-                <p className="mt-1 text-[0.54rem] uppercase tracking-[0.14em] text-white/30">Langue</p>
+                <p className="mt-1 text-3xs uppercase tracking-[0.14em] text-white/30">Langue</p>
               </div>
               <div>
                 <p className="truncate font-display text-sm font-black text-white md:text-lg">{accentLabel}</p>
-                <p className="mt-1 text-[0.54rem] uppercase tracking-[0.14em] text-white/30">Accent</p>
+                <p className="mt-1 text-3xs uppercase tracking-[0.14em] text-white/30">Accent</p>
               </div>
             </div>
           </div>
@@ -152,7 +152,7 @@ export default function SettingsPage() {
 
       <div className="mx-auto grid w-full min-w-0 max-w-6xl gap-7 px-4 pt-5 md:gap-12 md:px-8 md:pt-12 lg:grid-cols-[210px_minmax(0,1fr)] lg:px-10">
         <aside className="sticky top-[calc(env(safe-area-inset-top)+4rem)] z-20 -mx-4 min-w-0 overflow-hidden bg-bg/95 py-2 backdrop-blur-xl md:static md:mx-0 md:overflow-visible md:bg-transparent md:py-0 md:backdrop-blur-none lg:sticky lg:top-24 lg:self-start">
-          <p className="mb-4 hidden text-[0.56rem] font-bold uppercase tracking-[0.2em] text-muted md:block">
+          <p className="mb-4 hidden text-3xs font-bold uppercase tracking-[0.2em] text-muted md:block">
             Rubriques
           </p>
           <nav className="no-scrollbar flex gap-2 overflow-x-auto px-4 md:block md:border-y md:border-border/70 md:bg-white/[0.018] md:px-3 md:py-2">
@@ -163,17 +163,17 @@ export default function SettingsPage() {
                 onClick={() => scrollTo(id)}
                 className="group flex shrink-0 items-center gap-2 rounded-full border border-border/70 bg-surface/80 px-3 py-2 text-left active:scale-95 md:w-full md:gap-3 md:rounded-none md:border-x-0 md:border-t-0 md:border-b md:border-b-border/40 md:bg-transparent md:px-1 md:py-3 md:last:border-b-0"
               >
-                <span className="hidden w-5 text-[0.56rem] font-bold tabular-nums text-muted/60 md:block">
+                <span className="hidden w-5 text-3xs font-bold tabular-nums text-muted/60 md:block">
                   {String(index + 1).padStart(2, "0")}
                 </span>
                 <Icon size={14} className="text-muted transition-colors group-hover:text-primary" />
-                <span className="text-[0.7rem] font-semibold text-muted transition-colors group-hover:text-text md:text-xs">
+                <span className="text-2xs font-semibold text-muted transition-colors group-hover:text-text md:text-xs">
                   {label}
                 </span>
               </button>
             ))}
           </nav>
-          <p className="mt-5 hidden text-[0.62rem] leading-5 text-muted/70 md:block">
+          <p className="mt-5 hidden text-3xs leading-5 text-muted/70 md:block">
             Les préférences de lecture restent propres à cet appareil.
           </p>
         </aside>
@@ -251,7 +251,7 @@ export default function SettingsPage() {
         <div className="flex justify-stretch border-t border-border/60 pt-4 md:justify-end md:pt-5">
           <button
             onClick={reset}
-            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl px-3.5 text-xs font-medium text-muted transition-colors hover:bg-primary/[0.06] hover:text-primary md:h-auto md:w-auto md:rounded-[5px] md:py-2 md:text-sm"
+            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl px-3.5 text-xs font-medium text-muted transition-colors hover:bg-primary/[0.06] hover:text-primary md:h-auto md:w-auto md:rounded-md md:py-2 md:text-sm"
           >
             <RotateCcw size={15} />
             Réinitialiser les paramètres

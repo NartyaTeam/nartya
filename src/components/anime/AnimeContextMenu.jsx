@@ -119,8 +119,8 @@ export default function AnimeContextMenu({ anime, x, y, onClose, mediaType }) {
       <p
         className={
           isMobile
-            ? "px-3 pb-1 pt-2 text-[0.65rem] font-semibold uppercase tracking-kana text-muted"
-            : "px-3 pb-0.5 pt-1 text-[0.62rem] uppercase tracking-wider text-muted"
+            ? "px-3 pb-1 pt-2 text-2xs font-semibold uppercase tracking-kana text-muted"
+            : "px-3 pb-0.5 pt-1 text-3xs uppercase tracking-wider text-muted"
         }
       >
         Ma liste
@@ -148,7 +148,7 @@ export default function AnimeContextMenu({ anime, x, y, onClose, mediaType }) {
           <div className="pt-2.5">
             <div className="mx-auto mb-3 h-1 w-9 rounded-full bg-white/20" />
             <div className="border-b border-border/70 px-5 pb-4">
-              <p className="text-[0.68rem] font-semibold uppercase tracking-kana text-muted">
+              <p className="text-2xs font-semibold uppercase tracking-kana text-muted">
                 Actions
               </p>
               <p className="mt-1 line-clamp-1 text-base font-semibold text-text">

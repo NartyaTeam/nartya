@@ -16,11 +16,22 @@ export default {
         "primary-fg": "rgb(var(--primary-fg) / <alpha-value>)",
         accent: "rgb(var(--accent) / <alpha-value>)",
         sakura: "rgb(var(--sakura) / <alpha-value>)",
+        success: "rgb(var(--success) / <alpha-value>)",
+        warning: "rgb(var(--warning) / <alpha-value>)",
+        danger: "rgb(var(--danger) / <alpha-value>)",
+        info: "rgb(var(--info) / <alpha-value>)",
+        gold: "rgb(var(--gold) / <alpha-value>)",
+        discord: "rgb(var(--discord) / <alpha-value>)",
       },
       fontFamily: {
         display: ['"Zen Maru Gothic"', "sans-serif"],
         impact: ['"Anton"', "Impact", "sans-serif"],
         sans: ['"Zen Kaku Gothic Antique"', "system-ui", "sans-serif"],
+      },
+      // Deux tailles sous text-xs, pour les étiquettes et les métadonnées : jamais moins de 10px.
+      fontSize: {
+        "3xs": ["0.625rem", { lineHeight: "0.875rem" }],
+        "2xs": ["0.6875rem", { lineHeight: "1rem" }],
       },
       letterSpacing: {
         kana: "0.35em",

@@ -53,11 +53,11 @@ export default function DiscordReauthModal() {
         role="dialog"
         aria-modal="true"
         aria-labelledby="discord-reauth-title"
-        className="animate-slide-up relative w-full max-w-[28rem] overflow-hidden rounded-[6px] border border-border bg-surface shadow-[0_28px_90px_-24px_rgba(0,0,0,0.95)] ring-1 ring-white/10"
+        className="animate-slide-up relative w-full max-w-[28rem] overflow-hidden rounded-md border border-border bg-surface shadow-[0_28px_90px_-24px_rgba(0,0,0,0.95)] ring-1 ring-white/10"
       >
-        <div className="h-[2px] bg-[#5865F2]" />
+        <div className="h-[2px] bg-discord" />
         <header className="px-6 pb-5 pt-6">
-          <span className="grid h-11 w-11 place-items-center rounded-[5px] bg-[#5865F2]/12 text-[#8f99ff]">
+          <span className="grid h-11 w-11 place-items-center rounded-md bg-discord/12 text-[#8f99ff]">
             <DiscordIcon className="h-5 w-5" />
           </span>
           <h2 id="discord-reauth-title" className="mt-5 font-display text-2xl font-bold tracking-tight">
@@ -68,7 +68,7 @@ export default function DiscordReauthModal() {
             renouveler : tu restes sur ton compte, rien n'est perdu.
           </p>
           {reauthError && (
-            <p role="alert" className="mt-4 rounded-[5px] border border-primary/30 bg-primary/10 px-3 py-2 text-xs leading-relaxed text-text">
+            <p role="alert" className="mt-4 rounded-md border border-primary/30 bg-primary/10 px-3 py-2 text-xs leading-relaxed text-text">
               {reauthError}
             </p>
           )}
@@ -85,7 +85,7 @@ export default function DiscordReauthModal() {
           <button
             type="button"
             onClick={reauthorizeDiscord}
-            className="inline-flex h-9 items-center gap-2 rounded-[5px] bg-[#5865F2] px-4 text-xs font-semibold text-white transition-colors hover:bg-[#4752c4]"
+            className="inline-flex h-9 items-center gap-2 rounded-md bg-discord px-4 text-xs font-semibold text-white transition-colors hover:bg-[#4752c4]"
           >
             <RefreshCw size={14} />
             {waiting ? "Rouvrir la page Discord" : "Se reconnecter avec Discord"}

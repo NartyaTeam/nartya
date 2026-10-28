@@ -10,12 +10,12 @@ import { Section, SettingRow } from "./SettingsLayout";
 const MAX_KEYS = 5;
 
 const BUTTON =
-  "inline-flex shrink-0 items-center justify-center gap-2 rounded-[5px] border border-border bg-white/[0.035] px-3.5 py-2 text-sm font-medium leading-5 text-text transition-colors hover:border-white/20 hover:bg-surface-2 disabled:pointer-events-none disabled:opacity-50";
+  "inline-flex shrink-0 items-center justify-center gap-2 rounded-md border border-border bg-white/[0.035] px-3.5 py-2 text-sm font-medium leading-5 text-text transition-colors hover:border-white/20 hover:bg-surface-2 disabled:pointer-events-none disabled:opacity-50";
 const PRIMARY_BUTTON =
-  "inline-flex shrink-0 items-center justify-center gap-2 rounded-[5px] border border-primary bg-primary px-3.5 py-2 text-sm font-semibold leading-5 text-primary-fg transition-opacity hover:opacity-90 disabled:pointer-events-none disabled:opacity-50";
+  "inline-flex shrink-0 items-center justify-center gap-2 rounded-md border border-primary bg-primary px-3.5 py-2 text-sm font-semibold leading-5 text-primary-fg transition-opacity hover:opacity-90 disabled:pointer-events-none disabled:opacity-50";
 const FIELD =
-  "min-w-0 flex-1 rounded-[5px] border border-border bg-black/20 px-3 py-2 text-sm leading-5 text-text placeholder:text-muted/60 focus:border-white/25 focus:outline-none";
-const CODE = "rounded-[5px] border border-border/60 bg-black/30 px-3 py-2 font-mono text-xs leading-5 text-text";
+  "min-w-0 flex-1 rounded-md border border-border bg-black/20 px-3 py-2 text-sm leading-5 text-text placeholder:text-muted/60 focus:border-white/25 focus:outline-none";
+const CODE = "rounded-md border border-border/60 bg-black/30 px-3 py-2 font-mono text-xs leading-5 text-text";
 
 const formatDate = (iso) =>
   new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" });
@@ -117,7 +117,7 @@ function KeyRow({ apiKey, onRevoke }) {
   return (
     <div className="flex items-center justify-between gap-4 border-t border-border/45 py-4 md:py-5">
       <div className="flex min-w-0 gap-3 md:gap-4">
-        <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white/[0.045] text-muted md:rounded-[5px]">
+        <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white/[0.045] text-muted md:rounded-md">
           <KeyRound size={15} />
         </span>
         <div className="min-w-0">
@@ -134,7 +134,7 @@ function KeyRow({ apiKey, onRevoke }) {
         type="button"
         onClick={() => (confirming ? onRevoke(apiKey.id) : setConfirming(true))}
         onBlur={() => setConfirming(false)}
-        className={`${BUTTON} ${confirming ? "border-red-500/50 text-red-300 hover:border-red-500/70" : ""}`}
+        className={`${BUTTON} ${confirming ? "border-danger/50 text-danger hover:border-danger/70" : ""}`}
       >
         <Trash2 size={15} />
         {confirming ? "Confirmer" : "Révoquer"}

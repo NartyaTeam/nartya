@@ -51,7 +51,7 @@ function Message({ message, onLike, onDelete, onReply, thread, onToggleThread, i
         src={resolveAvatar(message.author)}
         name={name}
         className={`mt-0.5 shrink-0 rounded-full ${isReply ? "h-6 w-6" : "h-7 w-7"}`}
-        textClassName="text-[10px]"
+        textClassName="text-3xs"
       />
       <div className="min-w-0 flex-1">
         <p className="flex items-baseline gap-1.5 text-xs">
@@ -62,14 +62,14 @@ function Message({ message, onLike, onDelete, onReply, thread, onToggleThread, i
           ) : (
             <span className="truncate font-semibold text-primary">{name}</span>
           )}
-          <span className="shrink-0 text-[10px] text-white/35">{ago}</span>
+          <span className="shrink-0 text-3xs text-white/35">{ago}</span>
         </p>
         <p className="whitespace-pre-line break-words text-sm leading-snug text-white/90">{message.body}</p>
         <div className="mt-0.5 flex items-center gap-3">
           <button
             type="button"
             onClick={() => onReply(message)}
-            className="flex items-center gap-1 text-[11px] font-semibold text-white/35 transition-colors hover:text-white/80"
+            className="flex items-center gap-1 text-2xs font-semibold text-white/35 transition-colors hover:text-white/80"
           >
             <Reply size={11} />
             Répondre
@@ -78,7 +78,7 @@ function Message({ message, onLike, onDelete, onReply, thread, onToggleThread, i
             <button
               type="button"
               onClick={() => onToggleThread(message)}
-              className="flex items-center gap-1 text-[11px] font-semibold text-primary hover:opacity-80"
+              className="flex items-center gap-1 text-2xs font-semibold text-primary hover:opacity-80"
             >
               {thread?.loading ? (
                 <Loader2 size={11} className="animate-spin" />
@@ -109,7 +109,7 @@ function Message({ message, onLike, onDelete, onReply, thread, onToggleThread, i
           type="button"
           onClick={() => onLike(message)}
           aria-label="J'aime"
-          className={`flex items-center gap-0.5 rounded px-1 py-0.5 text-[10px] tabular-nums transition-colors ${
+          className={`flex items-center gap-0.5 rounded px-1 py-0.5 text-3xs tabular-nums transition-colors ${
             message.likedByMe ? "text-primary" : "text-white/30 hover:text-white/70"
           }`}
         >
@@ -453,7 +453,7 @@ export default function TierListChat({ target, docked = false }) {
       >
         <MessageCircle size={18} /> Chat
         {(unread > 0 || count > 0) && (
-          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-black/30 px-1.5 text-[11px] tabular-nums">
+          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-black/30 px-1.5 text-2xs tabular-nums">
             {unread > 0 ? `+${unread}` : count}
           </span>
         )}

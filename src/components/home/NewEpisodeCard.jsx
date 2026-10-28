@@ -80,7 +80,7 @@ export default function NewEpisodeCard({ anime }) {
         )}
 
         {badge && (
-          <span className="pointer-events-none absolute left-1.5 top-1.5 rounded bg-primary/90 px-1.5 py-0.5 text-[0.68rem] font-bold text-primary-fg backdrop-blur-sm">
+          <span className="pointer-events-none absolute left-1.5 top-1.5 rounded bg-primary/90 px-1.5 py-0.5 text-2xs font-bold text-primary-fg backdrop-blur-sm">
             {badge}
           </span>
         )}

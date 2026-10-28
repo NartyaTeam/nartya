@@ -16,7 +16,7 @@ export function MobileSelectSheet({ open, title, options = [], value, onChange, 
         <div className="sticky top-0 z-10 bg-surface pt-2.5">
           <div className="mx-auto mb-2 h-1 w-9 rounded-full bg-white/20" />
           {title && (
-            <p className="px-5 pb-2 font-display text-[0.7rem] uppercase tracking-kana text-muted">
+            <p className="px-5 pb-2 font-display text-2xs uppercase tracking-kana text-muted">
               {title}
             </p>
           )}

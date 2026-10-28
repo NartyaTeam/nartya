@@ -29,7 +29,7 @@ export default function WorkCard({ work, caption = null, current = false }) {
           <div className="h-full w-full skeleton" />
         )}
         {(caption || current) && (
-          <span className="absolute left-1.5 top-1.5 rounded bg-bg/90 px-1.5 py-0.5 text-[0.62rem] font-bold uppercase tracking-wide text-text ring-1 ring-border">
+          <span className="absolute left-1.5 top-1.5 rounded bg-bg/90 px-1.5 py-0.5 text-3xs font-bold uppercase tracking-wide text-text ring-1 ring-border">
             {current ? "Tu es ici" : caption}
           </span>
         )}

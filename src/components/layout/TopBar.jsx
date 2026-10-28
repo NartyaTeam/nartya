@@ -7,6 +7,7 @@ import { searchPeople } from "@/api/anilist";
 import { useDisplayTitle } from "@/stores/useTitlesStore";
 import { MAIN_GENRES, SECONDARY_GENRES } from "@/utils/genres";
 import { EPISODE_RANGES } from "@/utils/episodeRanges";
+import { Button } from "@/components/ui/Button";
 
 // Valeurs exactes attendues par le catalogue.
 const TYPE_OPTIONS = [
@@ -252,7 +253,7 @@ export default function TopBar({ scrolled }) {
           >
             <SlidersHorizontal size={16} />
             {filtersCount > 0 && (
-              <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[0.6rem] font-bold text-primary-fg">
+              <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-3xs font-bold text-primary-fg">
                 {filtersCount}
               </span>
             )}
@@ -302,7 +303,7 @@ export default function TopBar({ scrolled }) {
               {[MAIN_GENRES, SECONDARY_GENRES].map((level, index) => (
                 <div key={index} className="flex flex-wrap gap-1.5">
                   {index === 1 && (
-                    <p className="w-full text-[0.65rem] font-semibold uppercase tracking-wider text-muted/70">Thèmes</p>
+                    <p className="w-full text-2xs font-semibold uppercase tracking-wider text-muted/70">Thèmes</p>
                   )}
                   {level.map((g) => (
                     <button
@@ -329,12 +330,11 @@ export default function TopBar({ scrolled }) {
               >
                 Réinitialiser
               </button>
-              <button
+              <Button
                 onClick={runSearch}
-                className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-fg transition-transform hover:scale-[1.03]"
               >
                 Rechercher
-              </button>
+              </Button>
             </div>
           </div>
         )}
@@ -355,7 +355,7 @@ export default function TopBar({ scrolled }) {
               return (
               <div key={`${a.media}:${a.slug}`}>
                 {header && (
-                  <p className={`px-3 pb-1 pt-2.5 text-[0.65rem] font-semibold uppercase tracking-wider text-muted ${i > 0 ? "border-t border-white/10" : ""}`}>
+                  <p className={`px-3 pb-1 pt-2.5 text-2xs font-semibold uppercase tracking-wider text-muted ${i > 0 ? "border-t border-white/10" : ""}`}>
                     {header}
                   </p>
                 )}

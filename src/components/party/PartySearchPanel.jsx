@@ -166,7 +166,7 @@ export default function PartySearchPanel({ onPlay, onEnqueue, onDequeue, queue =
                         type="button"
                         onClick={() => onDequeue?.(buildDescriptor(ep))}
                         title="Retirer de la file"
-                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary/20 text-primary transition-colors hover:bg-red-500/20 hover:text-red-400"
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary/20 text-primary transition-colors hover:bg-danger/20 hover:text-danger"
                       >
                         <X size={15} />
                       </button>

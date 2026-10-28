@@ -130,7 +130,7 @@ export default function EpisodeMentionPicker({ seasons = [], resolver, onPick, o
                           <ImageOff size={12} />
                         </div>
                       )}
-                      <span className="absolute left-1 top-1 rounded bg-black/70 px-1 text-[0.6rem] font-bold text-white">
+                      <span className="absolute left-1 top-1 rounded bg-black/70 px-1 text-3xs font-bold text-white">
                         {e.number}
                       </span>
                     </div>
@@ -140,7 +140,7 @@ export default function EpisodeMentionPicker({ seasons = [], resolver, onPick, o
                   </button>
                 ))}
                 {filtered.length > MAX_ROWS && (
-                  <p className="px-1 py-2 text-center text-[0.7rem] text-muted">
+                  <p className="px-1 py-2 text-center text-2xs text-muted">
                     {filtered.length - MAX_ROWS} épisodes de plus — précise ta recherche.
                   </p>
                 )}

@@ -58,7 +58,7 @@ function LangBadge({ lang }) {
   return (
     <span className="inline-flex items-center gap-1.5 rounded bg-white/10 px-1.5 py-0.5">
       <Flag lang={lang} size={11} />
-      <span className="text-[10px] font-bold text-white/70">{getLanguageLabel(lang)}</span>
+      <span className="text-3xs font-bold text-white/70">{getLanguageLabel(lang)}</span>
     </span>
   );
 }
@@ -149,7 +149,7 @@ export function OptionsPanel({ options, setOptions }) {
           onChange={(e) => setOptions({ driftTolerance: Number(e.target.value) })}
           className="w-full accent-primary"
         />
-        <div className="flex justify-between text-[10px] text-white/30">
+        <div className="flex justify-between text-3xs text-white/30">
           <span>0.5 s (strict)</span>
           <span>5 s (tolérant)</span>
         </div>
@@ -180,7 +180,7 @@ function OptionToggle({ label, description, checked, disabled, onChange }) {
       </div>
       <div>
         <p className="text-xs font-semibold text-white/80">{label}</p>
-        {description && <p className="mt-0.5 text-[10px] text-white/40">{description}</p>}
+        {description && <p className="mt-0.5 text-3xs text-white/40">{description}</p>}
       </div>
     </label>
   );
@@ -221,11 +221,11 @@ export function QueueList({ queue, current, isHost, party }) {
               <p className="truncate text-xs text-white/40">{item.title}</p>
               <div className="mt-1 flex items-center gap-2">
                 <LangBadge lang={item.lang} />
-                <span className="text-[10px] text-white/30">Ép. {item.ep}</span>
+                <span className="text-3xs text-white/30">Ép. {item.ep}</span>
               </div>
             </div>
             {playing ? (
-              <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider text-primary">
+              <span className="shrink-0 text-3xs font-bold uppercase tracking-wider text-primary">
                 En cours
               </span>
             ) : (
@@ -278,17 +278,17 @@ export function PeopleList({ participants, sourceStatus }) {
               </span>
             )}
             {status === "loading" && (
-              <span title="Chargement…" className="flex items-center gap-1 text-[10px] text-white/40">
+              <span title="Chargement…" className="flex items-center gap-1 text-3xs text-white/40">
                 <Loader2 size={11} className="animate-spin" /> Source
               </span>
             )}
             {status === "buffering" && (
-              <span title="Mise en mémoire tampon" className="flex items-center gap-1 text-[10px] text-accent/70">
+              <span title="Mise en mémoire tampon" className="flex items-center gap-1 text-3xs text-accent/70">
                 <Loader2 size={11} className="animate-spin" /> Tampon
               </span>
             )}
             {status === "error" && (
-              <span title="Erreur source" className="text-[10px] text-primary/70">
+              <span title="Erreur source" className="text-3xs text-primary/70">
                 <AlertTriangle size={11} />
               </span>
             )}

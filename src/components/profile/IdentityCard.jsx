@@ -54,13 +54,13 @@ export default function IdentityCard({ profile, stats, extra, friends, ornament,
           </div>
           <div className="min-w-0 flex-1 pb-1">
             {extra?.rank > 0 && (
-              <p className="text-[0.6rem] font-bold uppercase tracking-kana text-primary">
+              <p className="text-3xs font-bold uppercase tracking-kana text-primary">
                 Rang {extra.rank.toLocaleString("fr-FR")} / {extra.totalMembers.toLocaleString("fr-FR")}
               </p>
             )}
             {/* Le rang du dessus est celui du jour ; celui-ci est le record. */}
             {extra?.bestRank > 0 && (
-              <p className="mt-0.5 text-[0.6rem] font-bold uppercase tracking-kana text-muted">
+              <p className="mt-0.5 text-3xs font-bold uppercase tracking-kana text-muted">
                 Position la plus haute #{extra.bestRank.toLocaleString("fr-FR")}
               </p>
             )}
@@ -77,7 +77,7 @@ export default function IdentityCard({ profile, stats, extra, friends, ornament,
         </div>
 
         <div className="relative z-10 mt-5 border-t border-border/70 pt-5">
-          <p className="text-[0.6rem] font-bold uppercase tracking-kana text-muted">Temps de visionnage</p>
+          <p className="text-3xs font-bold uppercase tracking-kana text-muted">Temps de visionnage</p>
           <div className="mt-1.5 flex items-baseline gap-1.5">
             <span
               className="font-impact text-[88px] font-normal leading-[0.9] tabular-nums text-white"
@@ -99,13 +99,13 @@ export default function IdentityCard({ profile, stats, extra, friends, ornament,
             <div className="font-impact text-2xl font-normal leading-none tabular-nums">
               {stats ? stats.totalEpisodes.toLocaleString("fr-FR") : "—"}
             </div>
-            <div className="mt-[5px] text-[0.6rem] uppercase tracking-[0.28em] text-muted">Épisodes</div>
+            <div className="mt-[5px] text-3xs uppercase tracking-[0.28em] text-muted">Épisodes</div>
           </div>
           <div className="bg-surface px-3.5 py-3">
             <div className="font-impact text-2xl font-normal leading-none tabular-nums">
               {stats ? stats.totalAnimes.toLocaleString("fr-FR") : "—"}
             </div>
-            <div className="mt-[5px] text-[0.6rem] uppercase tracking-[0.28em] text-muted">Animes</div>
+            <div className="mt-[5px] text-3xs uppercase tracking-[0.28em] text-muted">Animes</div>
           </div>
           {/* La série de jours n'est calculée que pour soi ; ailleurs, le nombre d'amis. */}
           <div className="bg-surface px-3.5 py-3">
@@ -114,7 +114,7 @@ export default function IdentityCard({ profile, stats, extra, friends, ornament,
                 ? extra ? extra.streakDays : "—"
                 : Number(profile.friendsCount ?? 0).toLocaleString("fr-FR")}
             </div>
-            <div className="mt-[5px] text-[0.6rem] uppercase tracking-[0.28em] text-muted">
+            <div className="mt-[5px] text-3xs uppercase tracking-[0.28em] text-muted">
               {isSelf ? "Jours d'affilée" : "Amis"}
             </div>
           </div>
@@ -122,14 +122,14 @@ export default function IdentityCard({ profile, stats, extra, friends, ornament,
             <div className="font-impact text-2xl font-normal leading-none tabular-nums">
               {Number(profile.viewsCount ?? profile.views_count ?? 0).toLocaleString("fr-FR")}
             </div>
-            <div className="mt-[5px] text-[0.6rem] uppercase tracking-[0.28em] text-muted">Vues du profil</div>
+            <div className="mt-[5px] text-3xs uppercase tracking-[0.28em] text-muted">Vues du profil</div>
           </div>
           {reading?.totalChapters > 0 && (
             <div className="col-span-2 bg-surface px-3.5 py-3">
               <div className="font-impact text-2xl font-normal leading-none tabular-nums">
                 {reading.totalChapters.toLocaleString("fr-FR")}
               </div>
-              <div className="mt-[5px] text-[0.6rem] uppercase tracking-[0.28em] text-muted">
+              <div className="mt-[5px] text-3xs uppercase tracking-[0.28em] text-muted">
                 {reading.totalChapters > 1 ? "Chapitres lus" : "Chapitre lu"}
                 {reading.totalWorks > 1 ? ` · ${reading.totalWorks} œuvres commencées` : ""}
               </div>
@@ -145,7 +145,7 @@ export default function IdentityCard({ profile, stats, extra, friends, ornament,
 
         {friendsShown.length > 0 && (
           <div className="mt-[18px] flex flex-wrap items-center gap-2.5">
-            <span className="text-[0.6rem] font-bold uppercase tracking-kana text-muted">
+            <span className="text-3xs font-bold uppercase tracking-kana text-muted">
               Amis · {friends.length}
             </span>
             <div className="flex">
@@ -167,7 +167,7 @@ export default function IdentityCard({ profile, stats, extra, friends, ornament,
               ))}
               {friendsOverflow > 0 && (
                 <span
-                  className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-2 text-[0.65rem] font-semibold text-muted ring-2 ring-surface"
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-2 text-2xs font-semibold text-muted ring-2 ring-surface"
                   style={{ marginLeft: "-8px" }}
                 >
                   +{friendsOverflow}

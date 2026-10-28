@@ -63,7 +63,7 @@ function Group({ icon: Icon, label, expanded, open, onToggle, badge = 0, childre
           )}
         </span>
         <span
-          className="flex-1 truncate whitespace-nowrap text-left text-[0.6rem] uppercase tracking-kana text-muted/70"
+          className="flex-1 truncate whitespace-nowrap text-left text-3xs uppercase tracking-kana text-muted/70"
           style={{ opacity: expanded ? 1 : 0, transition: `opacity ${TRANS}` }}
         >
           {label}
@@ -141,7 +141,7 @@ function Item({ to, icon: Icon, label, expanded, badge = 0, nested = false, end 
           </span>
           {badge > 0 && expanded && (
             <span
-              className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[0.65rem] font-bold text-primary-fg ring-2 ring-bg"
+              className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-2xs font-bold text-primary-fg ring-2 ring-bg"
               style={{ opacity: expanded ? 1 : 0, transition: `opacity ${TRANS}` }}
             >
               {badge > 9 ? "9+" : badge}
@@ -226,7 +226,7 @@ export default function Sidebar() {
             <Fox className="h-9 w-9 shrink-0 text-primary" />
           )}
           <div className="min-w-0 leading-none" style={fade}>
-            <p className="whitespace-nowrap text-[0.62rem] font-bold uppercase tracking-[0.42em] text-primary">Nartya</p>
+            <p className="whitespace-nowrap text-3xs font-bold uppercase tracking-[0.42em] text-primary">Nartya</p>
             <p className="t-impact mt-1.5 whitespace-nowrap text-xl">Anime</p>
           </div>
         </div>
@@ -371,7 +371,7 @@ export default function Sidebar() {
           title={!expanded ? "Rejoindre le Discord" : undefined}
           className="app-no-drag mx-2 mb-2 flex items-center gap-3 rounded-md px-[15px] py-2 text-sm font-medium text-muted transition-colors hover:bg-white/[0.04] hover:text-text"
         >
-          <DiscordIcon className="h-[18px] w-[18px] shrink-0 text-[#5865F2]" />
+          <DiscordIcon className="h-[18px] w-[18px] shrink-0 text-discord" />
           <span
             className="whitespace-nowrap"
             style={{ opacity: expanded ? 1 : 0, transition: `opacity ${TRANS}` }}
@@ -394,7 +394,7 @@ export default function Sidebar() {
                 </span>
                 <div className="min-w-0 flex-1 leading-none" style={fade}>
                   <p className="whitespace-nowrap text-sm font-semibold">Mode visiteur</p>
-                  <p className="mt-1 whitespace-nowrap text-[0.62rem] text-muted">Créer un compte</p>
+                  <p className="mt-1 whitespace-nowrap text-3xs text-muted">Créer un compte</p>
                 </div>
               </NavLink>
               <button

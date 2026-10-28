@@ -252,7 +252,7 @@ export default function MilestoneGift() {
                 </Dialog.Description>
 
                 <div className="mt-5 flex items-center justify-center gap-2 rounded-md bg-surface-2/70 px-4 py-3 ring-1 ring-border">
-                  <Crown size={16} className="shrink-0 text-[#d6aa68]" />
+                  <Crown size={16} className="shrink-0 text-gold" />
                   <span className="text-sm font-semibold text-text">
                     Ultimate — {statut.durationDays} jours offerts
                   </span>
@@ -270,7 +270,7 @@ export default function MilestoneGift() {
                 </button>
 
                 {statut.closesAt && (
-                  <p className="mt-3 text-[0.7rem] text-muted/70">
+                  <p className="mt-3 text-2xs text-muted/70">
                     À réclamer avant le{" "}
                     {new Date(statut.closesAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}
                   </p>
