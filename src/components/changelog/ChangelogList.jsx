@@ -16,7 +16,7 @@ const sortItems = (items) =>
 function Tag({ meta, premium }) {
   return (
     <span
-      className={`inline-flex w-[4.9rem] shrink-0 items-center justify-center gap-1 py-[3px] pl-2 pr-3 font-impact text-[0.7rem] uppercase leading-none tracking-wide [clip-path:polygon(0_0,100%_0,calc(100%_-_7px)_100%,0_100%)] ${meta.tag}`}
+      className={`inline-flex w-[4.9rem] shrink-0 items-center justify-center gap-1 py-[3px] pl-2 pr-3 font-impact text-2xs uppercase leading-none tracking-wide [clip-path:polygon(0_0,100%_0,calc(100%_-_7px)_100%,0_100%)] ${meta.tag}`}
     >
       {premium && <Crown size={11} strokeWidth={2.5} />}
       {meta.label}
@@ -42,11 +42,11 @@ export default function ChangelogList({ entries, card = false, showHeader = true
             >
               <h2 className="section-title !text-lg">v{entry.version}</h2>
               {card && entryIndex === 0 && (
-                <span className="rounded bg-primary px-1.5 py-0.5 text-[0.58rem] font-bold uppercase tracking-wider text-primary-fg">
+                <span className="rounded bg-primary px-1.5 py-0.5 text-3xs font-bold uppercase tracking-wider text-primary-fg">
                   Récent
                 </span>
               )}
-              {entry.date && <span className="ml-auto text-[0.7rem] font-medium text-muted">{entry.date}</span>}
+              {entry.date && <span className="ml-auto text-2xs font-medium text-muted">{entry.date}</span>}
             </div>
           )}
 

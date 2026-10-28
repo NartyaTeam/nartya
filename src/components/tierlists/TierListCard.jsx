@@ -19,7 +19,7 @@ function MiniBoard({ tierMeta, preview }) {
       {rows.map((tier, i) => (
         <div key={i} className="flex h-12 border-b border-black last:border-b-0">
           <span
-            className="flex w-14 shrink-0 items-center justify-center truncate px-1 text-[0.65rem] font-bold"
+            className="flex w-14 shrink-0 items-center justify-center truncate px-1 text-2xs font-bold"
             style={{ background: tier.color, color: readableTextColor(tier.color) }}
           >
             {tier.label}
@@ -50,10 +50,10 @@ export default function TierListCard({ list }) {
       <div className="flex flex-1 flex-col gap-2 p-3">
         <p className="line-clamp-2 text-sm font-bold text-text transition-colors group-hover:text-primary">{list.title}</p>
         <div className="mt-auto flex items-center gap-2 text-xs text-muted">
-          <Avatar src={resolveAvatar(list.author)} name={name} className="h-5 w-5" textClassName="text-[0.55rem]" />
+          <Avatar src={resolveAvatar(list.author)} name={name} className="h-5 w-5" textClassName="text-3xs" />
           <span className="min-w-0 flex-1 truncate">{name}</span>
           {!list.isPublic && (
-            <span className="flex items-center gap-1 rounded bg-white/10 px-1.5 py-0.5 text-[0.65rem] font-bold text-text">
+            <span className="flex items-center gap-1 rounded bg-white/10 px-1.5 py-0.5 text-2xs font-bold text-text">
               <EyeOff size={11} /> Brouillon
             </span>
           )}

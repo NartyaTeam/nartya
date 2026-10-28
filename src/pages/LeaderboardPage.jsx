@@ -56,7 +56,7 @@ function PodiumCard({ row, place, metric, onOpen }) {
     <button
       onClick={() => onOpen(row)}
       className={`group relative flex flex-1 flex-col items-center rounded-md border-2 bg-surface/70 px-3 pb-4 pt-8 text-center transition-transform duration-300 hover:-translate-y-1 ${
-        first ? "border-[#d6aa68]/40 shadow-glow sm:-translate-y-3" : "border-border/70"
+        first ? "border-gold/40 shadow-glow sm:-translate-y-3" : "border-border/70"
       }`}
     >
       <span
@@ -85,7 +85,7 @@ function PodiumCard({ row, place, metric, onOpen }) {
       <div className="mt-3 font-display text-xl font-extrabold tracking-tight tabular-nums text-primary">
         {metric.value(row)}
       </div>
-      <div className="text-[0.65rem] uppercase tracking-kana text-muted">{metric.unit}</div>
+      <div className="text-2xs uppercase tracking-kana text-muted">{metric.unit}</div>
     </button>
   );
 }
@@ -99,14 +99,14 @@ function MobilePodiumRow({ row, metric, onOpen }) {
       onClick={() => onOpen(row)}
       className={`relative flex w-full items-center gap-3 overflow-hidden rounded-md border-2 p-3 text-left active:scale-[0.99] ${
         first
-          ? "border-[#d6aa68]/40 bg-[#d6aa68]/[0.07]"
+          ? "border-gold/40 bg-gold/[0.07]"
           : "border-border/60 bg-surface/45"
       }`}
     >
       {first && (
         <span
           aria-hidden
-          className="pointer-events-none absolute -right-3 -top-8 font-display text-[7rem] leading-none text-[#d6aa68]/[0.06]"
+          className="pointer-events-none absolute -right-3 -top-8 font-display text-[7rem] leading-none text-gold/[0.06]"
         >
           王
         </span>
@@ -140,7 +140,7 @@ function MobilePodiumRow({ row, metric, onOpen }) {
         <div className="font-display text-base font-extrabold tabular-nums text-primary">
           {metric.value(row)}
         </div>
-        <div className="truncate text-[0.55rem] uppercase tracking-[0.1em] text-muted">
+        <div className="truncate text-3xs uppercase tracking-[0.1em] text-muted">
           {metric.unit}
         </div>
       </div>
@@ -173,7 +173,7 @@ function RankRow({ row, metric, onOpen, isSelf }) {
           <span className="hidden sm:inline-flex"><RoleBadge role={row.role} /></span>
           <SupporterBadge profile={row} />
           {isSelf && (
-            <span className="rounded bg-primary/15 px-1.5 py-0.5 text-[0.6rem] font-semibold text-primary">
+            <span className="rounded bg-primary/15 px-1.5 py-0.5 text-3xs font-semibold text-primary">
               Toi
             </span>
           )}
@@ -244,7 +244,7 @@ function MyRankCard({ me, rows, metric, periodKey, mine, extra, onOpen }) {
         />
 
         <div className="min-w-0 flex-1">
-          <p className="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-primary">Ton classement</p>
+          <p className="text-2xs font-bold uppercase tracking-[0.18em] text-primary">Ton classement</p>
           <p className="truncate text-sm font-bold text-text sm:text-base">{me.username || "Toi"}</p>
           <p className="mt-0.5 text-xs text-muted">
             {unranked ? (

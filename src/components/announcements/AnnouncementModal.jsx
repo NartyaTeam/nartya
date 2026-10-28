@@ -8,9 +8,9 @@ import AnnouncementMarkdown from "@/components/announcements/AnnouncementMarkdow
 import { platform } from "@/platform";
 
 const TYPE_META = {
-  info: { icon: Info, iconClass: "text-sky-400" },
-  success: { icon: CheckCircle2, iconClass: "text-emerald-400" },
-  warning: { icon: AlertTriangle, iconClass: "text-amber-400" },
+  info: { icon: Info, iconClass: "text-info" },
+  success: { icon: CheckCircle2, iconClass: "text-success" },
+  warning: { icon: AlertTriangle, iconClass: "text-warning" },
 };
 
 function openLink(url) {
@@ -47,7 +47,7 @@ export default function AnnouncementModal({ announcement, onClose }) {
                     src={a.authorAvatar}
                     name={a.authorName}
                     className="h-4 w-4 shrink-0 rounded-full"
-                    textClassName="text-[0.5rem]"
+                    textClassName="text-3xs"
                   />
                   <span className="truncate">{a.authorName || "Nartya"}</span>
                   <span aria-hidden>·</span>

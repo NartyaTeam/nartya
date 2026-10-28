@@ -26,13 +26,13 @@ function LinkedAccountButton({
       type="button"
       disabled={linked || pending || unavailable}
       onClick={onClick}
-      className={`flex w-full items-center gap-3 rounded-xl border px-3.5 py-3.5 text-left transition-colors md:gap-4 md:rounded-[5px] md:px-4 md:py-4 ${
+      className={`flex w-full items-center gap-3 rounded-xl border px-3.5 py-3.5 text-left transition-colors md:gap-4 md:rounded-md md:px-4 md:py-4 ${
         linked
-          ? "border-emerald-400/20 bg-emerald-400/[0.035]"
-          : "border-border/70 bg-bg/25 hover:border-[#5865F2]/45 hover:bg-[#5865F2]/[0.055]"
+          ? "border-success/20 bg-success/[0.035]"
+          : "border-border/70 bg-bg/25 hover:border-discord/45 hover:bg-discord/[0.055]"
       } disabled:cursor-default`}
     >
-      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[5px] bg-white/[0.05]">
+      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-white/[0.05]">
         <Icon className={`h-[18px] w-[18px] ${iconClassName}`} />
       </span>
       <div className="min-w-0">
@@ -40,10 +40,10 @@ function LinkedAccountButton({
         <p className="mt-0.5 text-xs text-muted">{description}</p>
       </div>
       <span
-        className={`ml-auto inline-flex shrink-0 items-center gap-1.5 rounded-[3px] border px-2 py-1 text-[0.62rem] font-bold uppercase tracking-[0.12em] ${
+        className={`ml-auto inline-flex shrink-0 items-center gap-1.5 rounded border px-2 py-1 text-3xs font-bold uppercase tracking-[0.12em] ${
           linked
-            ? "border-emerald-400/25 bg-emerald-400/[0.07] text-emerald-300"
-            : "border-[#5865F2]/30 bg-[#5865F2]/10 text-[#9ba4ff]"
+            ? "border-success/25 bg-success/[0.07] text-success"
+            : "border-discord/30 bg-discord/10 text-[#9ba4ff]"
         }`}
       >
         {pending ? (
@@ -82,7 +82,7 @@ function AccountSpace({
 
   return (
     <div className="py-4 md:py-6">
-      <div className="relative h-36 overflow-hidden rounded-xl border border-border/70 bg-surface sm:h-48 md:rounded-[6px]">
+      <div className="relative h-36 overflow-hidden rounded-xl border border-border/70 bg-surface sm:h-48 md:rounded-md">
         {banner ? (
           <img src={banner} alt="" className="h-full w-full object-cover" />
         ) : (
@@ -102,7 +102,7 @@ function AccountSpace({
             src={avatar}
             name={username}
             onError={onAvatarError}
-            className="h-14 w-14 shrink-0 rounded-xl border-2 border-primary/60 bg-surface-2 shadow-xl sm:h-20 sm:w-20 sm:rounded-[6px]"
+            className="h-14 w-14 shrink-0 rounded-xl border-2 border-primary/60 bg-surface-2 shadow-xl sm:h-20 sm:w-20 sm:rounded-md"
             textClassName="text-2xl"
           />
           <div className="min-w-0 flex-1 pb-0.5">
@@ -110,7 +110,7 @@ function AccountSpace({
               <h3 className="truncate font-display text-lg font-black text-white sm:text-2xl">
                 {username}
               </h3>
-              <span className="rounded-[3px] bg-primary/15 px-2 py-0.5 text-[0.56rem] font-bold uppercase tracking-[0.14em] text-primary">
+              <span className="rounded bg-primary/15 px-2 py-0.5 text-3xs font-bold uppercase tracking-[0.14em] text-primary">
                 Compte Nartya
               </span>
             </div>
@@ -120,7 +120,7 @@ function AccountSpace({
           </div>
           <Link
             to="/profile"
-            className="hidden h-9 items-center gap-2 rounded-[5px] border border-white/15 bg-black/35 px-3 text-xs font-semibold text-white/75 backdrop-blur-sm transition-colors hover:border-white/30 hover:text-white sm:inline-flex"
+            className="hidden h-9 items-center gap-2 rounded-md border border-white/15 bg-black/35 px-3 text-xs font-semibold text-white/75 backdrop-blur-sm transition-colors hover:border-white/30 hover:text-white sm:inline-flex"
           >
             Voir le profil
             <ExternalLink size={13} />
@@ -142,7 +142,7 @@ function AccountSpace({
           <div className="max-w-2xl">
             <LinkedAccountButton
               icon={DiscordIcon}
-              iconClassName="text-[#5865F2]"
+              iconClassName="text-discord"
               name="Discord"
               description={
                 discordLinked
@@ -161,7 +161,7 @@ function AccountSpace({
                 type="button"
                 onClick={onManageDiscord}
                 disabled={discordInspecting}
-                className="mt-2 inline-flex h-9 items-center gap-2 rounded-[5px] border border-[#5865F2]/30 bg-[#5865F2]/[0.06] px-3 text-xs font-semibold text-[#aeb5ff] transition-colors hover:border-[#5865F2]/50 hover:bg-[#5865F2]/10 disabled:opacity-55"
+                className="mt-2 inline-flex h-9 items-center gap-2 rounded-md border border-discord/30 bg-discord/[0.06] px-3 text-xs font-semibold text-[#aeb5ff] transition-colors hover:border-discord/50 hover:bg-discord/10 disabled:opacity-55"
               >
                 {discordInspecting ? (
                   <LoaderCircle size={14} className="animate-spin" />
@@ -174,12 +174,12 @@ function AccountSpace({
             {discordLinkError && (
               <div
                 role="alert"
-                className="mt-2 flex items-start gap-3 rounded-[5px] border border-red-400/30 bg-red-400/[0.07] px-4 py-3 text-red-200"
+                className="mt-2 flex items-start gap-3 rounded-md border border-danger/30 bg-danger/[0.07] px-4 py-3 text-danger"
               >
                 <AlertCircle size={17} className="mt-0.5 shrink-0" />
                 <div>
                   <p className="text-xs font-bold">Action Discord impossible</p>
-                  <p className="mt-1 text-xs leading-relaxed text-red-100/70">{discordLinkError}</p>
+                  <p className="mt-1 text-xs leading-relaxed text-danger/70">{discordLinkError}</p>
                 </div>
               </div>
             )}
@@ -199,7 +199,7 @@ function AccountSpace({
         <button
           type="button"
           onClick={onSignOut}
-          className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-primary/30 px-3 text-xs font-semibold text-primary transition-colors hover:bg-primary/10 sm:h-9 sm:rounded-[5px]"
+          className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-primary/30 px-3 text-xs font-semibold text-primary transition-colors hover:bg-primary/10 sm:h-9 sm:rounded-md"
         >
           <LogOut size={14} />
           Se déconnecter

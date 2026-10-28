@@ -87,7 +87,7 @@ function ResumeCard({ item, onRemove }) {
       >
         <div className="relative aspect-video overflow-hidden rounded-lg bg-surface-2 [transform:translateZ(0)]">
           {item.newEpisode && (
-            <span className="absolute left-2 top-2 z-10 rounded bg-primary px-1.5 py-0.5 text-[0.65rem] font-bold uppercase tracking-wide text-primary-fg shadow-sm">
+            <span className="absolute left-2 top-2 z-10 rounded bg-primary px-1.5 py-0.5 text-2xs font-bold uppercase tracking-wide text-primary-fg shadow-sm">
               Nouveau
             </span>
           )}
@@ -109,7 +109,7 @@ function ResumeCard({ item, onRemove }) {
           </div>
 
           {remaining && (
-            <span className="absolute bottom-2 right-2 rounded bg-black/75 px-1.5 py-0.5 text-[0.7rem] font-semibold tabular-nums backdrop-blur-sm">
+            <span className="absolute bottom-2 right-2 rounded bg-black/75 px-1.5 py-0.5 text-2xs font-semibold tabular-nums backdrop-blur-sm">
               {remaining}
             </span>
           )}
@@ -170,7 +170,7 @@ function ScanResumeCard({ item, onRemove }) {
               <BookOpen size={21} />
             </span>
           </div>
-          <span className="absolute bottom-2 right-2 rounded bg-black/75 px-1.5 py-0.5 text-[0.7rem] font-semibold tabular-nums backdrop-blur-sm">
+          <span className="absolute bottom-2 right-2 rounded bg-black/75 px-1.5 py-0.5 text-2xs font-semibold tabular-nums backdrop-blur-sm">
             Page {item.page + 1}
           </span>
           <div className="absolute inset-x-0 bottom-0 h-1 bg-black/40">
@@ -380,7 +380,7 @@ export default function ContinueWatching({ defaultTab = null, onlyScans = false 
                 <Icon size={16} />
                 {label}
                 {count > 0 && (
-                  <span className="rounded bg-primary px-1.5 py-px text-[0.65rem] font-bold tabular-nums text-primary-fg">
+                  <span className="rounded bg-primary px-1.5 py-px text-2xs font-bold tabular-nums text-primary-fg">
                     {count}
                   </span>
                 )}

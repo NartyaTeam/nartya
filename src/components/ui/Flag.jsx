@@ -99,7 +99,7 @@ export function Flag({ lang, countryOfOrigin, size = 14, className = "", title }
   return (
     <span
       title={title}
-      className={`inline-block shrink-0 overflow-hidden rounded-[3px] ring-1 ring-black/20 ${className}`}
+      className={`inline-block shrink-0 overflow-hidden rounded ring-1 ring-black/20 ${className}`}
       style={{ width: w, height: size, lineHeight: 0 }}
     >
       <svg

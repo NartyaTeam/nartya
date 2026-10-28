@@ -19,7 +19,7 @@ function Stat({ icon: Icon, value, label, mobileLabel }) {
         <div className="font-display text-base font-bold leading-none tracking-tight tabular-nums sm:text-xl">
           {value}
         </div>
-        <div className="mt-1 truncate text-[0.58rem] uppercase tracking-[0.12em] text-muted sm:text-[0.65rem] sm:tracking-kana">
+        <div className="mt-1 truncate text-3xs uppercase tracking-[0.12em] text-muted sm:text-2xs sm:tracking-kana">
           <span className="sm:hidden">{mobileLabel || label}</span>
           <span className="hidden sm:inline">{label}</span>
         </div>

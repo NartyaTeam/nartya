@@ -57,7 +57,7 @@ export default function PosterPickerModal({ favorite, onSaved, onClose }) {
       <section className="relative z-10 flex max-h-[85dvh] w-full flex-col overflow-hidden rounded-t-xl border-t-2 border-border bg-bg shadow-2xl animate-slide-up md:max-w-2xl md:rounded-md md:border-2">
         <div className="flex items-start justify-between gap-3 px-4 pb-3 pt-4 md:px-5">
           <div className="min-w-0">
-            <p className="text-[0.65rem] font-semibold uppercase tracking-[0.24em] text-primary/80">Podium</p>
+            <p className="text-2xs font-semibold uppercase tracking-[0.24em] text-primary/80">Podium</p>
             <h2 className="mt-1 truncate font-display text-xl font-bold">{favorite.anime_title || slug}</h2>
             <p className="mt-0.5 text-xs text-muted">Choisis l'affiche qui apparaîtra sur ton profil.</p>
           </div>

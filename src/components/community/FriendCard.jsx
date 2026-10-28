@@ -29,7 +29,7 @@ export default function FriendCard({ person, action = null }) {
           )}
           {/* En ligne (< 5 min) */}
           {presence?.online && (
-            <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-surface" />
+            <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-success ring-2 ring-surface" />
           )}
         </div>
         <div className="min-w-0 flex-1 leading-tight">
@@ -39,7 +39,7 @@ export default function FriendCard({ person, action = null }) {
             <RoleBadge role={person.role} />
             <SupporterBadge profile={person} />
             {presence && (
-              <span className={`text-[0.65rem] ${presence.online ? "text-emerald-400" : "text-muted/70"}`}>
+              <span className={`text-2xs ${presence.online ? "text-success" : "text-muted/70"}`}>
                 {presence.label}
               </span>
             )}

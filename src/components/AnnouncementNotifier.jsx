@@ -10,9 +10,9 @@ import AnnouncementMarkdown from "@/components/announcements/AnnouncementMarkdow
  */
 
 const TYPE_META = {
-  info: { icon: Info, cls: "text-sky-300" },
-  success: { icon: CheckCircle2, cls: "text-emerald-300" },
-  warning: { icon: AlertTriangle, cls: "text-amber-300" },
+  info: { icon: Info, cls: "text-info" },
+  success: { icon: CheckCircle2, cls: "text-success" },
+  warning: { icon: AlertTriangle, cls: "text-warning" },
 };
 
 const POLL_MS = 5 * 60 * 1000;

@@ -1,17 +1,21 @@
 import { useEffect, useMemo, useState } from "react";
-import { BookOpen, Heart, LayoutGrid, ListOrdered, Play, Search, X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { BookOpen, Compass, Heart, LayoutGrid, ListOrdered, Play, Search, X } from "lucide-react";
 import { listFavorites, reorderFavorites } from "@/api/favorites";
 import { getFavoritesProgress } from "@/api/progress";
 import { toast } from "@/lib/toast";
 import FavoriteCard from "@/components/favorites/FavoriteCard";
 import SortableGrid from "@/components/lists/SortableGrid";
 import MediaTabs, { mediaOf } from "@/components/lists/MediaTabs";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Button } from "@/components/ui/Button";
 
 // Les cartes gardent une largeur de 170 à 210 px.
 const GRID_CLASS =
   "grid grid-cols-2 gap-x-3 gap-y-7 sm:grid-cols-[repeat(auto-fill,minmax(170px,1fr))] sm:gap-x-5 sm:gap-y-8";
 
 export default function FavoritesPage() {
+  const navigate = useNavigate();
   const [favorites, setFavorites] = useState(null);
   const [progress, setProgress] = useState({});
   const [query, setQuery] = useState("");
@@ -102,7 +106,7 @@ export default function FavoritesPage() {
           <div>
             <div className="mb-2 flex items-center gap-2">
               <span className="h-px w-6 bg-primary" />
-              <p className="text-[0.65rem] font-semibold uppercase tracking-[0.28em] text-primary/80">
+              <p className="text-2xs font-semibold uppercase tracking-[0.28em] text-primary/80">
                 Ma collection
               </p>
             </div>
@@ -194,37 +198,28 @@ export default function FavoritesPage() {
           ))}
         </div>
       ) : favorites.length === 0 ? (
-        <div className="flex min-h-[45dvh] flex-col items-center justify-center rounded-md border-2 border-dashed border-border px-7 text-center">
-          <span className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
-            <Heart size={24} strokeWidth={1.8} />
-          </span>
-          <p className="mt-4 font-display text-lg font-bold text-text">Ta collection commence ici</p>
-          <p className="mt-1.5 max-w-xs text-sm leading-relaxed text-muted">
-            Ajoute tes animes préférés depuis leur fiche pour les retrouver ici.
-          </p>
-        </div>
+        <EmptyState
+          icon={Heart}
+          title="Ta collection commence ici"
+          description="Ajoute tes animes préférés depuis leur fiche pour les retrouver ici."
+          action={
+            <Button icon={Compass} onClick={() => navigate("/recherche")}>
+              Explorer le catalogue
+            </Button>
+          }
+        />
       ) : filtered.length === 0 ? (
-        <div className="flex min-h-56 flex-col items-center justify-center rounded-md border-2 border-dashed border-border px-6 text-center">
-          {query.trim() ? (
-            <>
-              <Search size={26} className="text-muted" />
-              <p className="mt-3 text-sm text-muted">
-                Aucun favori ne correspond à «&nbsp;{query.trim()}&nbsp;».
-              </p>
-            </>
-          ) : (
-            <>
-              {activeMedia === "manga" ? (
-                <BookOpen size={26} className="text-muted" />
-              ) : (
-                <Play size={26} className="text-muted" />
-              )}
-              <p className="mt-3 text-sm text-muted">
-                {activeMedia === "manga" ? "Aucun manga dans tes favoris." : "Aucun anime dans tes favoris."}
-              </p>
-            </>
-          )}
-        </div>
+        <EmptyState
+          compact
+          icon={query.trim() ? Search : activeMedia === "manga" ? BookOpen : Play}
+          description={
+            query.trim()
+              ? `Aucun favori ne correspond à « ${query.trim()} ».`
+              : activeMedia === "manga"
+                ? "Aucun manga dans tes favoris."
+                : "Aucun anime dans tes favoris."
+          }
+        />
       ) : flatMode ? (
         <SortableGrid
           items={filtered}

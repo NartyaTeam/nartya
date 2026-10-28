@@ -16,8 +16,12 @@ import {
   ListChecks,
   Eraser,
   BookOpen,
+  Compass,
+  MonitorDown,
 } from "lucide-react";
 import PageLoader from "@/components/ui/PageLoader";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Button } from "@/components/ui/Button";
 import { downloadsAvailable } from "@/api/downloads";
 import { useNetworkStore } from "@/stores/useNetworkStore";
 import { useDownloadsStore } from "@/stores/useDownloadsStore";
@@ -68,7 +72,7 @@ function EpisodeThumb({ item, fallbackCover }) {
           <ImageOff size={18} />
         </div>
       )}
-      <span className="absolute left-1 top-1 rounded bg-black/70 px-1.5 py-0.5 text-[0.65rem] font-bold backdrop-blur-sm">
+      <span className="absolute left-1 top-1 rounded bg-black/70 px-1.5 py-0.5 text-2xs font-bold backdrop-blur-sm">
         {item.ep}
       </span>
     </div>
@@ -419,19 +423,29 @@ export default function DownloadsPage() {
       </div>
 
       {!downloadsAvailable() ? (
-        <p className="rounded-md border-2 border-border bg-surface p-6 text-center text-sm text-muted">
-          Le téléchargement n'est disponible que dans l'application de bureau.
-        </p>
+        <EmptyState
+          compact
+          icon={MonitorDown}
+          title="Disponible sur l'application de bureau"
+          description="Le téléchargement d'épisodes pour les regarder hors ligne n'est disponible que dans l'application de bureau."
+        />
       ) : items.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-md border-2 border-dashed border-border py-20 text-center">
-          <Download size={32} className="text-muted" />
-          <p className="font-display text-lg">Aucun épisode téléchargé</p>
-          <p className="max-w-sm text-sm text-muted">
-            {online
-              ? "Ouvrez un anime et utilisez le bouton de téléchargement sur un épisode pour le regarder hors ligne."
-              : "Reconnectez-vous pour télécharger des épisodes, puis retrouvez-les ici hors ligne."}
-          </p>
-        </div>
+        <EmptyState
+          icon={Download}
+          title="Aucun épisode téléchargé"
+          description={
+            online
+              ? "Ouvre un anime et utilise le bouton de téléchargement d'un épisode pour le regarder hors ligne."
+              : "Reconnecte-toi pour télécharger des épisodes, puis retrouve-les ici hors ligne."
+          }
+          action={
+            online ? (
+              <Button icon={Compass} onClick={() => navigate("/recherche")}>
+                Trouver un anime
+              </Button>
+            ) : null
+          }
+        />
       ) : (
         <div className="overflow-hidden rounded-md ring-2 ring-border">
           {groups.map((g, gi) => {
@@ -507,7 +521,7 @@ export default function DownloadsPage() {
                       title={confirming ? "Cliquer à nouveau pour confirmer" : `Supprimer tous les ${label}s de cet anime`}
                       className={`flex h-8 items-center gap-1.5 rounded-md px-2 text-xs font-medium transition-colors ${
                         confirming
-                          ? "bg-red-500/20 text-red-400 ring-1 ring-red-500/40"
+                          ? "bg-danger/20 text-danger ring-1 ring-danger/40"
                           : "text-muted hover:bg-white/[0.06] hover:text-primary"
                       }`}
                     >

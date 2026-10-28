@@ -19,7 +19,7 @@ function ThemeChoice({ id, palette, selected, onSelect }) {
       role="radio"
       aria-checked={selected}
       onClick={() => onSelect(id)}
-      className={`relative min-h-[72px] overflow-hidden rounded-xl border p-2.5 text-left transition-colors md:min-h-[82px] md:rounded-[5px] md:p-3 ${
+      className={`relative min-h-[72px] overflow-hidden rounded-xl border p-2.5 text-left transition-colors md:min-h-[82px] md:rounded-md md:p-3 ${
         selected
           ? "border-primary/65 bg-surface-2/80"
           : "border-border/70 bg-bg/25 hover:border-border hover:bg-surface-2/55"
@@ -30,12 +30,12 @@ function ThemeChoice({ id, palette, selected, onSelect }) {
         style={{ backgroundColor: tripletToCss(palette.primary) }}
       />
       <span
-        className="mt-1 block h-6 w-6 rounded-full md:h-7 md:w-7 md:rounded-[4px]"
+        className="mt-1 block h-6 w-6 rounded-full md:h-7 md:w-7 md:rounded"
         style={{ backgroundColor: tripletToCss(palette.primary) }}
       />
-      <span className="mt-2 block truncate text-[0.68rem] font-bold text-text/80 md:mt-2.5 md:text-xs">{palette.label}</span>
+      <span className="mt-2 block truncate text-2xs font-bold text-text/80 md:mt-2.5 md:text-xs">{palette.label}</span>
       {selected && (
-        <span className="absolute right-2 top-2 grid h-5 w-5 place-items-center rounded-full bg-primary text-primary-fg md:right-3 md:top-3 md:rounded-[4px]">
+        <span className="absolute right-2 top-2 grid h-5 w-5 place-items-center rounded-full bg-primary text-primary-fg md:right-3 md:top-3 md:rounded">
           <Check size={12} strokeWidth={3} />
         </span>
       )}
@@ -86,7 +86,7 @@ export default function AppearanceSection({ number }) {
         <div className="flex items-center gap-3">
           <label
             title="Couleur personnalisée"
-            className={`relative flex h-10 w-14 cursor-pointer items-center justify-center rounded-[5px] border ${
+            className={`relative flex h-10 w-14 cursor-pointer items-center justify-center rounded-md border ${
               themePreset === "custom" ? "border-primary/60" : "border-border"
             }`}
             style={{ backgroundColor: customColor }}
@@ -104,7 +104,7 @@ export default function AppearanceSection({ number }) {
           <button
             type="button"
             onClick={() => setSetting("themePreset", "custom")}
-            className={`h-10 rounded-[5px] border px-3 font-mono text-xs uppercase ${
+            className={`h-10 rounded-md border px-3 font-mono text-xs uppercase ${
               themePreset === "custom"
                 ? "border-primary/45 text-primary"
                 : "border-border text-muted"

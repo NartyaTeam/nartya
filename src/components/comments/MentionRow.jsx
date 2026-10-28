@@ -41,7 +41,7 @@ function MentionCard({ resolver, season, episode }) {
       </div>
       <div className="min-w-0 flex-1">
         {info.seasonLabel && (
-          <p className="truncate text-[0.6rem] font-semibold uppercase tracking-kana text-primary/80">
+          <p className="truncate text-3xs font-semibold uppercase tracking-kana text-primary/80">
             {info.seasonLabel}
           </p>
         )}

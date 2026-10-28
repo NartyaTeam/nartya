@@ -145,7 +145,7 @@ function AnimeCard({
         )}
 
         {anime.score != null && (
-          <span className="absolute right-1.5 top-1.5 z-10 flex items-center gap-1 rounded bg-bg/90 px-1.5 py-0.5 text-[0.68rem] font-bold ring-1 ring-border">
+          <span className="absolute right-1.5 top-1.5 z-10 flex items-center gap-1 rounded bg-bg/90 px-1.5 py-0.5 text-2xs font-bold ring-1 ring-border">
             <Star size={10} className="fill-accent text-accent" />
             {anime.score.toFixed(1)}
           </span>

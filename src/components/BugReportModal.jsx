@@ -20,6 +20,7 @@ import { toast } from "@/lib/toast";
 import { createReport } from "@/api/reports";
 import { Select } from "@/components/ui/Select";
 import { BUG_CATEGORIES, BUG_CATEGORY_MAP } from "@/utils/bugCategories";
+import { Button } from "@/components/ui/Button";
 
 const MAX_FILE_MB = 5;
 const MAX_MSG = 4000;
@@ -180,7 +181,7 @@ export default function BugReportModal({ onClose, onSubmitted, context = null, d
               <Play size={15} className="shrink-0 text-primary" />
             )}
             <span className="min-w-0 flex-1 truncate">{ctxLabel}</span>
-            <span className="shrink-0 text-[0.7rem] font-medium uppercase tracking-kana text-muted">
+            <span className="shrink-0 text-2xs font-medium uppercase tracking-kana text-muted">
               joint
             </span>
           </div>
@@ -188,7 +189,7 @@ export default function BugReportModal({ onClose, onSubmitted, context = null, d
 
         <div className="flex flex-col gap-5 px-6 pb-2">
           <div>
-            <label className="text-[0.7rem] font-semibold uppercase tracking-kana text-muted">
+            <label className="text-2xs font-semibold uppercase tracking-kana text-muted">
               Catégorie
             </label>
             <Select
@@ -212,10 +213,10 @@ export default function BugReportModal({ onClose, onSubmitted, context = null, d
 
           <div>
             <div className="flex items-baseline justify-between">
-              <label className="text-[0.7rem] font-semibold uppercase tracking-kana text-muted">
+              <label className="text-2xs font-semibold uppercase tracking-kana text-muted">
                 Description
               </label>
-              <span className="text-[0.7rem] tabular-nums text-muted/60">
+              <span className="text-2xs tabular-nums text-muted/60">
                 {message.length}/{MAX_MSG}
               </span>
             </div>
@@ -270,14 +271,14 @@ export default function BugReportModal({ onClose, onSubmitted, context = null, d
           >
             Annuler
           </button>
-          <button
+          <Button
             onClick={submit}
             disabled={!canSubmit}
-            className="flex items-center gap-2 rounded-md bg-primary px-5 py-2.5 text-sm font-bold text-primary-fg transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
+            size="lg"
           >
             {busy ? <Loader2 size={16} className="animate-spin" /> : <Send size={15} />}
             Envoyer
-          </button>
+          </Button>
         </div>
       </div>
     </div>,

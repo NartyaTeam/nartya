@@ -120,7 +120,7 @@ export default function UpcomingPage() {
         <header className="mb-7 md:mb-8">
           <div className="flex items-center gap-3">
             <span className="h-px w-8 bg-primary/70" />
-            <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
+            <p className="text-2xs font-bold uppercase tracking-[0.2em] text-muted">
               Calendrier saisonnier
             </p>
           </div>
@@ -152,7 +152,7 @@ export default function UpcomingPage() {
                 {active && (
                   <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-primary" />
                 )}
-                <span className="block truncate text-[0.62rem] font-semibold uppercase tracking-[0.12em]">
+                <span className="block truncate text-3xs font-semibold uppercase tracking-[0.12em]">
                   {t.label}
                 </span>
                 <span className="mt-0.5 block truncate font-display text-sm font-bold sm:text-base">
@@ -166,7 +166,7 @@ export default function UpcomingPage() {
         <section className="mt-8 border-t border-white/[0.07] pt-6 md:mt-0 md:pt-7">
           <div className="mb-5 flex items-end justify-between gap-4">
             <div>
-              <p className="flex items-center gap-1.5 text-[0.65rem] font-bold uppercase tracking-[0.16em] text-primary">
+              <p className="flex items-center gap-1.5 text-2xs font-bold uppercase tracking-[0.16em] text-primary">
                 <CalendarDays size={13} /> Programme
               </p>
               <h2 className="section-title mt-1 !text-2xl">

@@ -80,7 +80,7 @@ export default function ProfileArtPreviewPage() {
 
         <div className="mb-7 mt-9 flex flex-wrap items-end justify-between gap-5">
           <div>
-            <p className="text-[10px] uppercase tracking-[0.35em] text-[#ef3037]">Nartya Atelier</p>
+            <p className="text-3xs uppercase tracking-[0.35em] text-[#ef3037]">Nartya Atelier</p>
             <h1 className="mt-3 font-display text-4xl font-medium tracking-tight sm:text-5xl">{theme.label} <span className="font-sans text-xl font-light text-[#9ca2ae] sm:text-2xl">/ {theme.subtitle}</span></h1>
           </div>
           <CircleDot size={28} strokeWidth={1} className="hidden text-[#ef3037] sm:block" />
@@ -107,7 +107,7 @@ export default function ProfileArtPreviewPage() {
           </label>
           {customBanner && <button type="button" onClick={() => { setCustomBanner(null); setImageError(""); }} className="px-2 text-xs text-[#ef555a] underline">Retirer mon image</button>}
         </div>
-        {imageError && <p role="alert" className="mb-4 text-sm text-amber-200">{imageError}</p>}
+        {imageError && <p role="alert" className="mb-4 text-sm text-warning">{imageError}</p>}
 
         <section className="overflow-hidden rounded-2xl border border-[#b8c6de]/15 bg-[#0f1723] shadow-[0_24px_80px_#0005]" aria-label="Profil de démonstration">
           <div className="relative h-[220px] overflow-hidden bg-[radial-gradient(ellipse_at_70%_20%,#25344c,#101a2a_70%)] sm:h-auto sm:aspect-[3/1]">
@@ -116,7 +116,7 @@ export default function ProfileArtPreviewPage() {
             <div className="absolute inset-0 bg-gradient-to-t from-[#0f1723] via-transparent to-transparent" />
             {decor && <BannerDecor token={theme.id} layer="front" />}
             {motes && theme.id === "kurotsuki" && <KurotsukiStreaks />}
-            <span className="absolute right-4 top-4 rounded-full border border-white/15 bg-black/65 px-3 py-1.5 text-[10px] uppercase tracking-[.18em] text-white/80 backdrop-blur-md sm:right-6 sm:top-6">{theme.subtitle}</span>
+            <span className="absolute right-4 top-4 rounded-full border border-white/15 bg-black/65 px-3 py-1.5 text-3xs uppercase tracking-[.18em] text-white/80 backdrop-blur-md sm:right-6 sm:top-6">{theme.subtitle}</span>
           </div>
           <div className="relative px-6 pb-8 sm:px-10">
             <div className="flex flex-wrap items-end justify-between gap-6 border-b border-white/10 pb-6">
@@ -126,7 +126,7 @@ export default function ProfileArtPreviewPage() {
                   {frame && <AvatarFrame token={theme.id} />}
                 </div>
                 <div className="pb-1">
-                  <p className="mb-2 text-[9px] uppercase tracking-[.22em] text-[#f0333a]">Collection {theme.label}</p>
+                  <p className="mb-2 text-3xs uppercase tracking-[.22em] text-[#f0333a]">Collection {theme.label}</p>
                   <h2 className="font-display text-2xl sm:text-3xl">Dernier épisode</h2>
                   <p className="mt-2 text-xs text-[#9298a3]">@{theme.id} · Profil de démonstration</p>
                 </div>
