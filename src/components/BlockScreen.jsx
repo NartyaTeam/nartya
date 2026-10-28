@@ -1,4 +1,6 @@
 
+import { Fox } from "@/components/brand/NartyaMark";
+
 /**
  * Coquille des écrans bloquants (ban, mise à jour requise). `actions` doit toujours mener
  * quelque part.
