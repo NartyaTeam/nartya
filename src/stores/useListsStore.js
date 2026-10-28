@@ -48,7 +48,10 @@ export const useListsStore = create((set, get) => ({
     }
   },
 
-  /** Ne remplace pas un statut déjà posé. Vérifie en base : le store peut ne pas être chargé. */
+  /**
+   * Ne remplace pas un statut déjà posé. Vérifie en base : le store peut ne pas être chargé.
+   * `meta.mediaType` "manga" range l'entrée créée dans l'onglet Mangas.
+   */
   async ensureTracking(slug, meta = {}) {
     if (!slug || !useAuthStore.getState().session || isGuestSession()) return;
     if (get().statuses.get(slug)) return;
@@ -60,7 +63,13 @@ export const useListsStore = create((set, get) => ({
         set({ statuses: m });
         return;
       }
-      await setAnimeStatus({ slug, status: "watching", title: meta.title, cover: meta.cover });
+      await setAnimeStatus({
+        slug,
+        status: "watching",
+        title: meta.title,
+        cover: meta.cover,
+        mediaType: meta.mediaType,
+      });
       const m = new Map(get().statuses);
       m.set(slug, "watching");
       set({ statuses: m });

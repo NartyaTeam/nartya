@@ -19,6 +19,7 @@ import { getScanProgress, saveScanProgress } from "@/api/scanProgress";
 import { useCachedResource } from "@/hooks/useCachedResource";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useDownloadsStore } from "@/stores/useDownloadsStore";
+import { useListsStore } from "@/stores/useListsStore";
 import { downloadsAvailable, getLocalPlaybackUrl, scanDownloadId } from "@/api/downloads";
 import { DownloadControl } from "@/components/AnimePage/EpisodeCard";
 import { ChapterPicker } from "@/components/ui/ChapterPicker";
@@ -181,10 +182,23 @@ export default function ScanReaderPage() {
   const nextChapter =
     chapterIndex >= 0 && chapterIndex < chapters.length - 1 ? chapters[chapterIndex + 1] : null;
 
+  // Passé trois pages (même seuil que « Continuer à lire »), l'œuvre entre « En cours » dans
+  // l'onglet Mangas des listes, comme un anime dès qu'on en regarde un épisode.
+  const ensureTracking = useListsStore((s) => s.ensureTracking);
+  const trackedRef = useRef(null);
+
   // Sauvegarde de progression
   const flushSave = useCallback(
     (pageIdx, completed) => {
       if (!userId || !oeuvre || !pages) return;
+      if (pageIdx >= 2 && trackedRef.current !== slug) {
+        trackedRef.current = slug;
+        ensureTracking(slug, {
+          title: metaRef.current.title,
+          cover: metaRef.current.cover,
+          mediaType: "manga",
+        });
+      }
       saveScanProgress({
         slug,
         oeuvre,
@@ -198,7 +212,7 @@ export default function ScanReaderPage() {
         userId,
       });
     },
-    [userId, oeuvre, slug, chapter, pages]
+    [userId, oeuvre, slug, chapter, pages, ensureTracking]
   );
 
   const setPage = useCallback(
