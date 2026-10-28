@@ -5,6 +5,16 @@
  */
 export const IOS_CHANGELOG = [
   {
+    version: "1.8.1",
+    date: "28 octobre 2026",
+    items: [
+      {
+        type: "fixed",
+        text: "La demande d’avis s’ouvre bien maintenant : elle ne s’affichait chez personne.",
+      },
+    ],
+  },
+  {
     version: "1.8.0",
     date: "28 octobre 2026",
     items: [
