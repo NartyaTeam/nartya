@@ -5,6 +5,40 @@
  */
 export const MOBILE_CHANGELOG = [
   {
+    version: "1.7.0",
+    date: "28 octobre 2026",
+    items: [
+      {
+        type: "new",
+        text: "Fiches auteur et studio : touche le studio ou l’auteur sur la fiche d’un anime pour voir toutes ses œuvres.",
+      },
+      {
+        type: "new",
+        text: "Nouvel onglet « Franchise » sur la fiche d’un anime : toutes ses saisons, films, spin-off et épisodes spéciaux dans l’ordre de sortie, avec les mangas liés.",
+      },
+      {
+        type: "new",
+        text: "Compte à rebours sur la fiche : le temps qu’il reste avant le prochain épisode, et le jour du prochain chapitre.",
+      },
+      {
+        type: "new",
+        text: "Le calendrier affiche aussi les sorties de scans de la semaine : choisis Animes, Scans ou Tout en haut de la page.",
+      },
+      {
+        type: "new",
+        text: "« Reprendre » a un onglet « Nouveaux épisodes » : les épisodes sortis depuis ton dernier visionnage ne se mélangent plus à ce que tu regardes déjà.",
+      },
+      {
+        type: "new",
+        text: "Choisis jusqu’à 8 thèmes préférés dans les Paramètres (« Mes thèmes ») : ils deviennent des rangées « Parce que tu aimes … » sur l’accueil des animes et des mangas.",
+      },
+      {
+        type: "fixed",
+        text: "Un épisode téléchargé reprend maintenant là où tu t’étais arrêté, même sans connexion.",
+      },
+    ],
+  },
+  {
     version: "1.6.0",
     date: "22 octobre 2026",
     items: [

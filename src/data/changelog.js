@@ -5,6 +5,48 @@
  */
 export const CHANGELOG = [
   {
+    version: "1.38.0",
+    date: "28 octobre 2026",
+    items: [
+      {
+        type: "new",
+        text: "Fiches auteur et studio : clique sur le studio ou l’auteur d’un anime pour voir toutes ses œuvres, ou tape son nom dans la barre de recherche.",
+      },
+      {
+        type: "new",
+        text: "Nouvel onglet « Franchise » sur la fiche d’un anime : toutes ses saisons, films, spin-off et épisodes spéciaux dans l’ordre de sortie, avec les mangas liés.",
+      },
+      {
+        type: "new",
+        text: "Compte à rebours sur la fiche : le temps qu’il reste avant le prochain épisode, et le jour du prochain chapitre.",
+      },
+      {
+        type: "new",
+        text: "Le calendrier affiche aussi les sorties de scans de la semaine : choisis Animes, Scans ou Tout en haut de la page.",
+      },
+      {
+        type: "new",
+        text: "« Reprendre » a un onglet « Nouveaux épisodes » : les épisodes sortis depuis ton dernier visionnage ne se mélangent plus à ce que tu regardes déjà.",
+      },
+      {
+        type: "new",
+        text: "Recherche : nouveaux formats (OAV, ONA, spécial, format court), origine des scans (manga ou manhwa / manhua) et plus de 50 thèmes précis (vengeance, boucle temporelle, anti-héros…). Les thèmes d’un anime sont aussi cliquables sur sa fiche.",
+      },
+      {
+        type: "new",
+        text: "Choisis jusqu’à 8 thèmes préférés dans les Paramètres (« Mes thèmes ») : ils deviennent des rangées « Parce que tu aimes … » sur l’accueil des animes et des mangas.",
+      },
+      {
+        type: "improved",
+        text: "La barre de recherche trouve aussi les mangas qui n’ont pas d’anime, dans une section « Scans ».",
+      },
+      {
+        type: "fixed",
+        text: "Un épisode téléchargé reprend maintenant là où tu t’étais arrêté, même sans connexion.",
+      },
+    ],
+  },
+  {
     version: "1.37.0",
     date: "25 octobre 2026",
     items: [
