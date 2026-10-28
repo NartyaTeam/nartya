@@ -9,16 +9,6 @@ export const IOS_CHANGELOG = [
     date: "28 octobre 2026",
     items: [
       {
-        type: "fixed",
-        text: "La demande d’avis s’ouvre bien maintenant : elle ne s’affichait chez personne.",
-      },
-    ],
-  },
-  {
-    version: "1.8.0",
-    date: "28 octobre 2026",
-    items: [
-      {
         type: "new",
         text: "Donne ton avis sur Nartya : une note de 1 à 5 étoiles, et un commentaire si tu veux. On ne te le demande qu’une fois, pour toutes les apps Nartya.",
       },
