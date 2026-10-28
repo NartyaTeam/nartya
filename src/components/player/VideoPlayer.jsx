@@ -31,6 +31,7 @@ import {
   sourceSettingOption,
   syncSetting,
 } from "@/components/player/playerMenus";
+import { attachMediaSession, setMediaMetadata } from "@/utils/mediaSession";
 
 // Saut natif neutralisé et refait à la main, clampé pour ne jamais atteindre la fin (sinon
 // `video:ended` et enchaînement).
@@ -46,6 +47,9 @@ export default function VideoPlayer({
   mediaKey = null,
   title = "",
   poster = "",
+  // Titre de l'anime et affiche, montrés par le système (centre de contrôle, AirPlay…).
+  mediaArtist = "",
+  mediaArtwork = "",
   resumeAt = 0,
   preferredAudio = null,
   hasPrev = false,
@@ -548,6 +552,13 @@ export default function VideoPlayer({
   useEffect(() => {
     if (artRef.current) setAudioBoost(artRef.current, volumeBoost);
   }, [volumeBoost]);
+
+  // Commandes du système : télécommande de l'Apple TV en AirPlay, centre de contrôle, touches
+  // multimédia (cf. utils/mediaSession).
+  useEffect(() => attachMediaSession(artRef.current, () => cb.current), []);
+  useEffect(() => {
+    setMediaMetadata({ title: episodeLabel || title, artist: mediaArtist, artwork: mediaArtwork || poster });
+  }, [episodeLabel, title, mediaArtist, mediaArtwork, poster]);
 
   // Sans recréer le lecteur.
   useEffect(() => {

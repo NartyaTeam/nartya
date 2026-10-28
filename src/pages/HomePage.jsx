@@ -7,6 +7,7 @@ import AnimeRow, { AnimeRowSkeleton } from "@/components/home/AnimeRow";
 import TopTenRow from "@/components/home/TopTenRow";
 import ContinueWatching from "@/components/home/ContinueWatching";
 import ForYouRow from "@/components/home/ForYouRow";
+import FavoriteGenresRows from "@/components/home/FavoriteGenresRows";
 import CommunityPicksRow from "@/components/home/CommunityPicksRow";
 import GenresRow from "@/components/home/GenresRow";
 import CommunityBanner from "@/components/home/CommunityBanner";
@@ -127,6 +128,8 @@ export default function HomePage() {
         <DeferredHomeSection height={300}>
           <ForYouRow />
         </DeferredHomeSection>
+        <FavoriteGenresRows />
+
         {sections.map((section) => {
           const height = section.key === "premium" || section.key === "community" ? 220 : 320;
           return (

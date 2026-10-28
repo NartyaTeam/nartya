@@ -33,13 +33,35 @@ export function collectFollowedReleases(planning, followedSet, now = new Date())
   const out = [];
   for (const day of planning?.days || []) {
     for (const it of day.items || []) {
-      if (!followedSet.has(it.slug)) continue;
+      // La cloche suit les épisodes : un chapitre ne déclenche ni pastille ni notification.
+      if (it.kind === "scan" || !followedSet.has(it.slug)) continue;
       const d = parseReleaseDate(day.date, it.time, now);
       out.push({ ...it, dayName: day.name, date: day.date, at: d ? d.getTime() : null });
     }
   }
   out.sort((a, b) => (a.at ?? Infinity) - (b.at ?? Infinity));
   return out;
+}
+
+/**
+ * Prochaine sortie à venir d'une œuvre dans le planning de la semaine.
+ * `kind` : "episode" | "scan". `{ at, hasTime, item }` ou null.
+ */
+export function nextPlannedRelease(planning, slug, kind, now = new Date()) {
+  let best = null;
+  for (const day of planning?.days || []) {
+    for (const it of day.items || []) {
+      if (it.slug !== slug || (it.kind === "scan") !== (kind === "scan")) continue;
+      const hasTime = /^\d{1,2}h\d{0,2}$/.test(it.time || "");
+      const d = parseReleaseDate(day.date, hasTime ? it.time : null, now);
+      if (!d) continue;
+      // Sans heure, le jour entier reste « à venir ».
+      const end = hasTime ? d.getTime() : d.getTime() + 24 * 60 * 60 * 1000;
+      if (end <= now.getTime()) continue;
+      if (!best || d.getTime() < best.at) best = { at: d.getTime(), hasTime, item: it };
+    }
+  }
+  return best;
 }
 
 /** Sortis depuis la dernière ouverture du calendrier. */

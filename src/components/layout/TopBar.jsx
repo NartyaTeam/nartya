@@ -3,6 +3,7 @@ import { platform } from "@/platform";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Search, X, Loader2, ArrowLeft, SlidersHorizontal } from "lucide-react";
 import { searchAnimes } from "@/api/animeApi";
+import { searchPeople } from "@/api/anilist";
 import { useDisplayTitle } from "@/stores/useTitlesStore";
 import { MAIN_GENRES, SECONDARY_GENRES } from "@/utils/genres";
 import { EPISODE_RANGES } from "@/utils/episodeRanges";
@@ -29,6 +30,8 @@ export default function TopBar({ scrolled }) {
   const showBack =
     pathname.startsWith("/anime/") ||
     pathname.startsWith("/genre/") ||
+    pathname.startsWith("/staff/") ||
+    pathname.startsWith("/studio/") ||
     pathname.startsWith("/search") ||
     pathname === "/recherche";
   // Elle chevaucherait l'en-tête des pages profil, Uptime et Équipe.
@@ -94,7 +97,29 @@ export default function TopBar({ scrolled }) {
     setLoading(true);
     const id = setTimeout(async () => {
       try {
-        const r = await searchAnimes(term, 8, isMangaSearch ? "manga" : "anime");
+        let r;
+        // Auteurs et studios (AniList), à partir de 3 lettres pour ménager son quota.
+        const peopleRequest =
+          term.trim().length >= 3 ? searchPeople(term, 3).catch(() => []) : Promise.resolve([]);
+        if (isMangaSearch) {
+          r = (await searchAnimes(term, 8, "manga")).map((m) => ({ ...m, media: "manga" }));
+        } else {
+          // Un manga sans anime n'existe qu'au catalogue des scans : on le cherche aussi.
+          const [animes, mangas] = await Promise.all([
+            searchAnimes(term, 8, "anime"),
+            searchAnimes(term, 8, "manga").catch(() => []),
+          ]);
+          const seen = new Set(animes.map((a) => a.slug));
+          r = [
+            ...animes.map((a) => ({ ...a, media: "anime" })),
+            ...mangas.filter((m) => !seen.has(m.slug)).slice(0, 4).map((m) => ({ ...m, media: "manga" })),
+          ];
+        }
+        const people = await peopleRequest;
+        r = [
+          ...r,
+          ...people.map((p) => ({ slug: `${p.kind}-${p.id}`, title: p.name, image: p.image, media: p.kind, id: p.id, detail: p.detail })),
+        ];
         setResults(r);
         setActiveIndex(-1);
         setOpen(true);
@@ -116,11 +141,12 @@ export default function TopBar({ scrolled }) {
     return () => document.removeEventListener("mousedown", onClick);
   }, []);
 
-  const go = (slug) => {
+  const go = (result) => {
     setOpen(false);
     setActiveIndex(-1);
     setTerm("");
-    navigate(`/anime/${slug}${isMangaSearch ? "?tab=scans" : ""}`);
+    if (result.media === "staff" || result.media === "studio") navigate(`/${result.media}/${result.id}`);
+    else navigate(`/anime/${result.slug}${result.media === "manga" ? "?tab=scans" : ""}`);
   };
 
   const toggleGenre = (g) => {
@@ -196,7 +222,7 @@ export default function TopBar({ scrolled }) {
                 return;
               }
               if (e.key === "Enter") {
-                if (listed && activeIndex >= 0 && results[activeIndex]) go(results[activeIndex].slug);
+                if (listed && activeIndex >= 0 && results[activeIndex]) go(results[activeIndex]);
                 else runSearch();
               }
             }}
@@ -316,23 +342,43 @@ export default function TopBar({ scrolled }) {
         {/* Masqués quand le panneau de filtres est ouvert. */}
         {open && !showFilters && results.length > 0 && (
           <div className="absolute mt-2 w-full overflow-hidden rounded-lg bg-surface/95 shadow-card ring-1 ring-white/10 backdrop-blur-xl animate-slide-up">
-            {results.map((a, i) => (
-              <button
-                key={a.slug}
-                onClick={() => go(a.slug)}
-                onMouseEnter={() => setActiveIndex(i)}
-                className={`flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-surface-2 ${
-                  i === activeIndex ? "bg-surface-2" : ""
-                }`}
-              >
-                {a.image ? (
-                  <img src={a.image} alt="" className="h-12 w-9 shrink-0 rounded object-cover" />
-                ) : (
-                  <div className="h-12 w-9 shrink-0 rounded bg-surface-2" />
+            {results.map((a, i) => {
+              const isPerson = a.media === "staff" || a.media === "studio";
+              const prev = results[i - 1];
+              const prevPerson = prev?.media === "staff" || prev?.media === "studio";
+              const header =
+                isPerson && !prevPerson
+                  ? "Auteurs et studios"
+                  : !isMangaSearch && a.media === "manga" && prev?.media !== "manga"
+                    ? "Scans"
+                    : null;
+              return (
+              <div key={`${a.media}:${a.slug}`}>
+                {header && (
+                  <p className={`px-3 pb-1 pt-2.5 text-[0.65rem] font-semibold uppercase tracking-wider text-muted ${i > 0 ? "border-t border-white/10" : ""}`}>
+                    {header}
+                  </p>
                 )}
-                <p className="min-w-0 truncate text-sm font-semibold">{displayTitle(a.slug, a.title)}</p>
-              </button>
-            ))}
+                <button
+                  onClick={() => go(a)}
+                  onMouseEnter={() => setActiveIndex(i)}
+                  className={`flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-surface-2 ${
+                    i === activeIndex ? "bg-surface-2" : ""
+                  }`}
+                >
+                  {a.image ? (
+                    <img src={a.image} alt="" className="h-12 w-9 shrink-0 rounded object-cover" />
+                  ) : (
+                    <div className="h-12 w-9 shrink-0 rounded bg-surface-2" />
+                  )}
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold">{isPerson ? a.title : displayTitle(a.slug, a.title)}</p>
+                    {isPerson && a.detail && <p className="truncate text-xs text-muted">{a.detail}</p>}
+                  </div>
+                </button>
+              </div>
+              );
+            })}
           </div>
         )}
       </div>

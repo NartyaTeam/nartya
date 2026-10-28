@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from "react";
-import { saveEpisodeProgress } from "@/api/progress";
+import { flushPendingProgress, saveProgressWithLocalCopy } from "@/utils/localProgress";
 
 // Filet : les sauvegardes normales suivent les événements (pause, changement d'épisode, démontage).
 const SAVE_INTERVAL_MS = 30_000;
@@ -20,7 +20,7 @@ export function useProgressSaver(
       const now = Date.now();
       if (!force && now - lastSaveRef.current < MIN_SAVE_GAP_MS) return;
       lastSaveRef.current = now; // réarme le filet périodique
-      saveEpisodeProgress({
+      saveProgressWithLocalCopy({
         slug,
         seasonId,
         episodeNumber: epNumber,
@@ -34,6 +34,11 @@ export function useProgressSaver(
     },
     [userId, slug, seasonId, epNumber, lang, animeTitle, animeCover]
   );
+
+  // Positions restées en attente d'une séance précédente sans réseau.
+  useEffect(() => {
+    flushPendingProgress();
+  }, []);
 
   useEffect(() => {
     return () => {

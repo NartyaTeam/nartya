@@ -137,7 +137,7 @@ export async function getEpisodeProgress(slug, seasonId, episodeNumber, language
   const key = episodeKey(slug, seasonId, episodeNumber, language);
   const { data, error } = await supabase
     .from("episode_progress")
-    .select("position_seconds, duration, progress_percent, completed")
+    .select("position_seconds, duration, progress_percent, completed, updated_at")
     .eq("user_id", userId)
     .eq("episode_key", key)
     .maybeSingle();
@@ -147,6 +147,7 @@ export async function getEpisodeProgress(slug, seasonId, episodeNumber, language
     duration: data.duration || 0,
     progressPercent: data.progress_percent || 0,
     completed: data.completed || false,
+    updatedAt: data.updated_at ? new Date(data.updated_at).getTime() : 0,
   };
 }
 
@@ -162,7 +163,8 @@ export async function saveEpisodeProgress({
   cover = null,
   userId,
 }) {
-  if (!userId || isGuestSession()) return;
+  // `true` = rien à renvoyer plus tard (enregistré, ou volontairement ignoré).
+  if (!userId || isGuestSession()) return true;
 
   const pct = duration > 0 ? Math.min((positionSeconds / duration) * 100, 100) : 0;
   const completed = pct >= COMPLETION_THRESHOLD;
@@ -186,11 +188,13 @@ export async function saveEpisodeProgress({
     },
     { onConflict: "user_id,episode_key" }
   );
-  if (error) console.warn("[progress] save échouée:", error.message);
-  else {
-    expireProfileProgress(userId);
-    invalidateResumeCache();
+  if (error) {
+    console.warn("[progress] save échouée:", error.message);
+    return false;
   }
+  expireProfileProgress(userId);
+  invalidateResumeCache();
+  return true;
 }
 
 /** Sans toucher à l'historique. */

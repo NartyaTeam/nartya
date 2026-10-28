@@ -23,6 +23,9 @@ import { GallerySection } from "@/components/AnimePage/GallerySection";
 import AnimeRatingButton from "@/components/AnimePage/AnimeRatingButton";
 import BugReportModal from "@/components/BugReportModal";
 import PlayerControlsNotice from "@/components/AnimePage/PlayerControlsNotice";
+import NextReleaseCountdown from "@/components/AnimePage/NextReleaseCountdown";
+import CreditsLine from "@/components/AnimePage/CreditsLine";
+import { FranchiseSection } from "@/components/AnimePage/FranchiseSection";
 import NotifyBell from "@/components/NotifyBell";
 import AnimeLogo, { isClearLogoUrl } from "@/components/anime/AnimeLogo";
 import CommentsSection from "@/components/comments/CommentsSection";
@@ -32,6 +35,7 @@ import { Select } from "@/components/ui/Select";
 import PageLoader from "@/components/ui/PageLoader";
 import { browseGenreFor } from "@/utils/genres";
 import { LIST_STATUSES } from "@/utils/lists";
+import { TROPE_LABEL } from "@/utils/anilistTags";
 import { asset } from "@/lib/asset";
 import { GUEST_FEATURE_MSG } from "@/lib/guest";
 import { platform } from "@/platform";
@@ -114,6 +118,8 @@ export default function AnimePage() {
     Boolean(anilist?.description) &&
     anilist?.descriptionLang === "en";
   const genres = anilist?.genres || [];
+  // Tags AniList parmi les thèmes précis de la recherche, avec leur libellé français.
+  const tropes = (anilist?.tags || []).filter((t) => TROPE_LABEL[t]).slice(0, 6).map((t) => [t, TROPE_LABEL[t]]);
   const altTitle = anime?.alternativeTitles?.[0] || anilist?.titleNative;
   // Réglage « Langue des titres » : la fiche a déjà ses titres AniList, la table sert de repli.
   const titleLanguage = useSettingsStore((s) => s.titleLanguage);
@@ -158,10 +164,14 @@ export default function AnimePage() {
   // Œuvre diffusée ailleurs : l'onglet existe pour renvoyer vers le diffuseur officiel.
   const externalWatch = anime?.externalWatch || [];
   const showEpisodesTab = hasEpisodes || externalWatch.length > 0;
+  const anilistId = Number(anilist?.id) || null;
+  // Relations connues seulement en fiche complète : le mode no beauty n'a pas l'onglet.
+  const hasFranchise = !!anilistId && (anilist?.relations || []).some((r) => r.format !== "MUSIC");
   // Recommandations et Musiques exigent un slug résolu côté serveur.
   const tabs = [
     ...(showEpisodesTab ? [{ id: "episodes", label: "Épisodes" }] : []),
     ...(hasScans ? [{ id: "scans", label: "Scans" }] : []),
+    ...(streamingSlug && hasFranchise ? [{ id: "franchise", label: "Franchise" }] : []),
     ...(streamingSlug
       ? [
           { id: "recommandations", label: "Recommandations" },
@@ -380,6 +390,12 @@ export default function AnimePage() {
           {anilist?.format && <span className="uppercase">{anilist.format}</span>}
           {anilist?.episodes && <span>{anilist.episodes} ép.</span>}
           {statusLabel && <span className={airing ? "font-medium text-primary" : ""}>{statusLabel}</span>}
+          <NextReleaseCountdown
+            slug={streamingSlug}
+            anilistNext={anilist?.nextEpisode}
+            airing={airing}
+            hasScans={hasScans}
+          />
         </div>
 
         {genres.length > 0 && (
@@ -401,6 +417,8 @@ export default function AnimePage() {
             })}
           </p>
         )}
+
+        <CreditsLine anilistId={anilistId} className="mt-2 justify-center text-xs" />
 
         {news && (
           <div className="mt-4 flex w-full max-w-2xl items-start gap-2.5 rounded-md bg-primary/[0.08] px-3.5 py-2.5 text-left text-sm text-text/90 ring-1 ring-primary/20">
@@ -607,6 +625,12 @@ export default function AnimePage() {
                   {statusLabel}
                 </span>
               )}
+              <NextReleaseCountdown
+                slug={streamingSlug}
+                anilistNext={anilist?.nextEpisode}
+                airing={airing}
+                hasScans={hasScans}
+              />
             </div>
 
             {news && (
@@ -640,6 +664,23 @@ export default function AnimePage() {
                 })}
               </div>
             )}
+
+            {tropes.length > 0 && (
+              <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
+                <span className="mr-1 text-muted">Thèmes</span>
+                {tropes.map(([tag, label]) => (
+                  <Link
+                    key={tag}
+                    to={`/recherche?tag=${encodeURIComponent(tag)}`}
+                    className="rounded border border-border px-2 py-0.5 font-medium text-muted transition-colors hover:border-primary hover:text-primary"
+                  >
+                    {label}
+                  </Link>
+                ))}
+              </div>
+            )}
+
+            <CreditsLine anilistId={anilistId} className="mt-3" />
 
             <div className="mt-4 flex flex-wrap items-center gap-2">
               {anime?.url && (
@@ -744,6 +785,8 @@ export default function AnimePage() {
                 animeCover={cover}
                 onReport={openReport}
               />
+            ) : contentTab === "franchise" && hasFranchise ? (
+              <FranchiseSection anilistId={anilistId} />
             ) : contentTab === "recommandations" ? (
               <RecommendationsSection slug={streamingSlug} />
             ) : contentTab === "musiques" ? (

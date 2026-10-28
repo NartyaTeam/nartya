@@ -11,6 +11,7 @@ import {
   UserRound,
   KeyRound,
   ListChecks,
+  Heart,
 } from "lucide-react";
 import { useSettingsStore } from "@/stores/useSettingsStore";
 import { useAuthStore } from "@/stores/useAuthStore";
@@ -25,6 +26,7 @@ import AccountSection from "@/components/settings/AccountSection";
 import PlaybackSection from "@/components/settings/PlaybackSection";
 import DownloadsSection from "@/components/settings/DownloadsSection";
 import AppearanceSection from "@/components/settings/AppearanceSection";
+import TastesSection from "@/components/settings/TastesSection";
 import BackupSection from "@/components/settings/BackupSection";
 import ApiKeysSection from "@/components/settings/ApiKeysSection";
 import TrackersSection from "@/components/settings/TrackersSection";
@@ -56,6 +58,7 @@ export default function SettingsPage() {
     { id: "notifications", label: "Notifications", icon: Bell },
     canDownload && { id: "downloads", label: "Téléchargements", icon: Download },
     { id: "appearance", label: "Apparence", icon: Palette },
+    { id: "tastes", label: "Mes thèmes", icon: Heart },
     isDesktop && { id: "privacy", label: "Confidentialité", icon: ShieldCheck },
     session && { id: "backup", label: "Sauvegarde", icon: DatabaseBackup },
     hasAccount && { id: "api-keys", label: "Clés d'API", icon: KeyRound },
@@ -213,6 +216,8 @@ export default function SettingsPage() {
         {canDownload && <DownloadsSection number={sectionNumber("downloads")} />}
 
         <AppearanceSection number={sectionNumber("appearance")} />
+
+        <TastesSection number={sectionNumber("tastes")} />
 
         {/* Bureau uniquement. */}
         {isDesktop && (

@@ -31,6 +31,8 @@ const DEFAULTS = {
   spoilerMode: false, // floute les vignettes des épisodes non vus
   nartyaIntro: true,
   planningLanguage: "all", // filtre du calendrier : "all" | "vf" | "vostfr"
+  planningContent: "anime", // contenu du calendrier : "anime" | "scans" | "all"
+  favoriteGenres: [], // thèmes préférés, mis en avant sur l'accueil (5 à 8)
   achievementsInPlayback: "compact", // succès pendant un épisode : "compact" | "after" | "full"
   titleLanguage: "default", // titres des animes et mangas : "default" (catalogue) | "romaji" | "english"
   timeAmbiance: false, // le fond suit l'heure (matin, après-midi, soirée, nuit)

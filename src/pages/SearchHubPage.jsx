@@ -8,6 +8,8 @@ import {
   X,
 } from "lucide-react";
 import { searchCatalog } from "@/api/animeApi";
+import { getAnimeIdsByTag } from "@/api/anilist";
+import { TROPE_GROUPS, TROPE_LABEL } from "@/utils/anilistTags";
 import CatalogResults from "@/components/catalog/CatalogResults";
 import { EPISODE_RANGES, episodeRangeFor } from "@/utils/episodeRanges";
 import { MAIN_GENRES, SECONDARY_GENRES } from "@/utils/genres";
@@ -16,7 +18,19 @@ const TYPE_OPTIONS = [
   { value: "", label: "Peu importe" },
   { value: "Anime", label: "Série" },
   { value: "Film", label: "Film" },
+  { value: "OVA", label: "OAV" },
+  { value: "ONA", label: "ONA" },
+  { value: "SPECIAL", label: "Spécial" },
+  { value: "TV_SHORT", label: "Format court" },
   { value: "Autres", label: "Autres séries" },
+];
+// Formats AniList : envoyés en `format`, les autres valeurs restent le `type` d'anime-sama.
+const ANILIST_FORMATS = new Set(["OVA", "ONA", "SPECIAL", "TV_SHORT"]);
+
+const ORIGIN_OPTIONS = [
+  { value: "", label: "Peu importe" },
+  { value: "manga", label: "Manga (Japon)" },
+  { value: "webtoon", label: "Manhwa / Manhua" },
 ];
 
 const LANG_OPTIONS = [
@@ -77,6 +91,10 @@ export default function SearchHubPage() {
   const committedScore = SCORE_OPTIONS.some((o) => o.value === params.get("score"))
     ? params.get("score")
     : "";
+  const committedOrigin = ORIGIN_OPTIONS.some((o) => o.value === params.get("origin"))
+    ? params.get("origin")
+    : "";
+  const committedTag = TROPE_LABEL[params.get("tag")] ? params.get("tag") : "";
 
   const [searchInput, setSearchInput] = useState(committedSearch);
   const [media, setMedia] = useState(committedMedia);
@@ -87,6 +105,11 @@ export default function SearchHubPage() {
   );
   const [lang, setLang] = useState(committedLang);
   const [scoreMin, setScoreMin] = useState(committedScore);
+  const [origin, setOrigin] = useState(committedOrigin);
+  const [tag, setTag] = useState(committedTag);
+  // Thème précis : AniList donne les œuvres par paquets de 150, dont on garde celles du catalogue.
+  // Un paquet sans aucune œuvre du catalogue est sauté, d'où ce curseur à part de la pagination.
+  const tagCursorRef = useRef({ key: "", next: 1, hasMore: true });
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   // La navbar peut naviguer vers cette page déjà montée : l'URL reste la source de vérité.
@@ -98,38 +121,68 @@ export default function SearchHubPage() {
     setDuration(committedRange || EPISODE_RANGES[0]);
     setLang(committedLang);
     setScoreMin(committedScore);
-  }, [committedSearch, committedMedia, committedGenres, committedType, committedRange, committedLang, committedScore]);
+    setOrigin(committedOrigin);
+    setTag(committedTag);
+  }, [committedSearch, committedMedia, committedGenres, committedType, committedRange, committedLang, committedScore, committedOrigin, committedTag]);
 
   const isManga = committedMedia === "manga";
+  const committedIsFormat = ANILIST_FORMATS.has(committedType);
+
+  const resetKey = `${committedMedia}|${committedSearch}|${committedGenresString}|${committedType}|${committedEps}|${committedLang}|${committedScore}|${committedOrigin}|${committedTag}`;
 
   const fetchPage = useCallback(
-    (page) =>
-      searchCatalog({
+    async (page) => {
+      const filters = {
         search: committedSearch,
         media: committedMedia,
         genres: committedGenres,
-        type: isManga ? "" : committedType,
+        type: isManga || committedIsFormat ? "" : committedType,
+        format: !isManga && committedIsFormat ? committedType : "",
+        origin: isManga ? committedOrigin : "",
         lang: isManga ? "" : committedLang,
         epMin: isManga || committedType === "Film" ? null : committedRange?.min ?? null,
         epMax: isManga || committedType === "Film" ? null : committedRange?.max ?? null,
         scoreMin: isManga ? null : committedScore || null,
         verifiedOnly: !isManga,
         page,
-      }),
-    [committedSearch, committedMedia, isManga, committedGenres, committedType, committedLang, committedRange, committedScore]
+      };
+      if (isManga || !committedTag) return searchCatalog(filters);
+
+      if (page === 1 || tagCursorRef.current.key !== resetKey) {
+        tagCursorRef.current = { key: resetKey, next: 1, hasMore: true };
+      }
+      const cursor = tagCursorRef.current;
+      for (let tries = 0; tries < 4 && cursor.hasMore; tries++) {
+        const { ids, hasMore } = await getAnimeIdsByTag(committedTag, cursor.next);
+        cursor.next += 1;
+        cursor.hasMore = hasMore && ids.length > 0;
+        if (!ids.length) break;
+        const items = await searchCatalog({ ...filters, anilistIds: ids, page: 1 });
+        if (!items?.length) continue;
+        // Ordre de popularité d'AniList, pas l'ordre alphabétique du catalogue.
+        const rank = new Map(ids.map((id, i) => [id, i]));
+        return [...items].sort((a, b) => (rank.get(a.anilistId) ?? 1e9) - (rank.get(b.anilistId) ?? 1e9));
+      }
+      return [];
+    },
+    [committedSearch, committedMedia, isManga, committedGenres, committedType, committedIsFormat, committedOrigin, committedTag, committedLang, committedRange, committedScore, resetKey]
   );
 
   const activeCriteria = useMemo(() => {
     const items = [...committedGenres];
-    if (isManga) return items;
-    if (committedType) items.unshift(committedType === "Anime" ? "Série" : committedType);
+    if (isManga) {
+      if (committedOrigin) items.unshift(ORIGIN_OPTIONS.find((o) => o.value === committedOrigin).label);
+      return items;
+    }
+    if (committedType) items.unshift(TYPE_OPTIONS.find((o) => o.value === committedType)?.label || committedType);
+    if (committedTag) items.push(TROPE_LABEL[committedTag]);
     if (committedRange && committedType !== "Film") {
       items.push(`${committedRange.label} épisodes`);
     }
     if (committedLang) items.push(committedLang === "vf" ? "VF" : "VOSTFR");
     if (committedScore) items.push(`Note ${committedScore}+`);
     return items;
-  }, [isManga, committedGenres, committedType, committedRange, committedLang, committedScore]);
+  }, [isManga, committedGenres, committedOrigin, committedTag, committedType, committedRange, committedLang, committedScore]);
 
   function toggleGenre(genre) {
     setGenres((current) =>
@@ -152,6 +205,9 @@ export default function SearchHubPage() {
       setDuration(EPISODE_RANGES[0]);
       setLang("");
       setScoreMin("");
+      setTag("");
+    } else {
+      setOrigin("");
     }
   }
 
@@ -163,11 +219,13 @@ export default function SearchHubPage() {
     if (genres.length) next.set("genre", genres.join(","));
     if (media === "manga") {
       next.set("media", "manga");
+      if (origin) next.set("origin", origin);
     } else {
       if (type) next.set("type", type);
       if (type !== "Film" && duration.value) next.set("eps", duration.value);
       if (lang) next.set("lang", lang);
       if (scoreMin) next.set("score", scoreMin);
+      if (tag) next.set("tag", tag);
     }
     setParams(next);
     setFiltersOpen(false);
@@ -187,7 +245,11 @@ export default function SearchHubPage() {
     setDuration(EPISODE_RANGES[0]);
     setLang("");
     setScoreMin("");
+    setOrigin("");
+    setTag("");
     const next = new URLSearchParams(params);
+    next.delete("origin");
+    next.delete("tag");
     next.delete("genre");
     next.delete("type");
     next.delete("eps");
@@ -197,7 +259,7 @@ export default function SearchHubPage() {
   }
 
   const draftFiltersCount =
-    genres.length + (type ? 1 : 0) + (duration.value ? 1 : 0) + (lang ? 1 : 0) + (scoreMin ? 1 : 0);
+    genres.length + (type ? 1 : 0) + (duration.value ? 1 : 0) + (lang ? 1 : 0) + (scoreMin ? 1 : 0) + (origin ? 1 : 0) + (tag ? 1 : 0);
   const resultTitle = committedSearch
     ? `Résultats pour « ${committedSearch} »`
     : activeCriteria.length
@@ -373,6 +435,24 @@ export default function SearchHubPage() {
               )}
 
               <div className={media === "manga" ? "" : "border-t border-white/[0.07] pt-5 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0"}>
+                {media === "manga" && (
+                  <div className="mb-5">
+                    <p className="mb-2.5 text-[0.65rem] font-bold uppercase tracking-[0.16em] text-muted/70">
+                      Origine
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {ORIGIN_OPTIONS.map((option) => (
+                        <Choice
+                          key={option.value || "any"}
+                          active={origin === option.value}
+                          onClick={() => setOrigin(option.value)}
+                        >
+                          {option.label}
+                        </Choice>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 <p className="mb-2.5 text-[0.65rem] font-bold uppercase tracking-[0.16em] text-muted/70">
                   Genres
                 </p>
@@ -405,6 +485,29 @@ export default function SearchHubPage() {
                 </div>
               </div>
             </div>
+
+            {media !== "manga" && (
+              <div className="mt-6 border-t border-white/[0.07] pt-5">
+                <p className="mb-1 text-[0.65rem] font-bold uppercase tracking-[0.16em] text-muted/70">
+                  Thèmes précis
+                </p>
+                <p className="mb-3 text-xs text-muted">Un thème à la fois, d'après les tags d'AniList.</p>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {TROPE_GROUPS.map((group) => (
+                    <div key={group.label}>
+                      <p className="mb-2 text-xs font-semibold text-text/70">{group.label}</p>
+                      <div className="flex flex-wrap gap-2">
+                        {group.tags.map(([value, label]) => (
+                          <Choice key={value} active={tag === value} onClick={() => setTag(tag === value ? "" : value)}>
+                            {label}
+                          </Choice>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.07] pt-5">
               <button
@@ -442,10 +545,21 @@ export default function SearchHubPage() {
 
         <section className="mt-10 border-t border-white/[0.07] pt-7">
           <p className="eyebrow text-center">Catalogue Nartya</p>
-          <h2 className="t-impact mb-7 mt-2 block text-center text-3xl text-text">{resultTitle}</h2>
+          <h2 className={`t-impact mt-2 block text-center text-3xl text-text ${committedSearch ? "mb-3" : "mb-7"}`}>{resultTitle}</h2>
+          {committedSearch && (
+            <p className="mb-7 text-center text-xs text-muted">
+              <button
+                type="button"
+                onClick={() => setParams(new URLSearchParams({ q: committedSearch, ...(isManga ? {} : { media: "manga" }) }))}
+                className="font-semibold text-primary hover:underline"
+              >
+                Chercher « {committedSearch} » dans les {isManga ? "animes" : "scans"}
+              </button>
+            </p>
+          )}
           <CatalogResults
             fetchPage={fetchPage}
-            resetKey={`${committedMedia}|${committedSearch}|${committedGenresString}|${committedType}|${committedEps}|${committedLang}|${committedScore}`}
+            resetKey={resetKey}
             emptyLabel={isManga ? "Aucun manga ne correspond à ces critères." : "Aucun anime ne correspond à ces critères."}
             openScans={isManga}
             cardProps={{ highlightedGenres: committedGenres }}

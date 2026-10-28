@@ -97,15 +97,24 @@ export async function getGenreCards() {
  * items:Array<{slug,season,lang,title,image,type,time}>}>}>}
  */
 export async function getPlanning() {
-  const res = await get("/v1/anime/planning");
+  // `scans=1` : sorties de chapitres incluses (`kind: "scan"`).
+  const res = await get("/v1/anime/planning?scans=1");
   return { fetchedAt: res.meta?.fetchedAt, days: res.data || [] };
 }
 
-/** `epMin`/`epMax` : bornes inclusives, null = sans borne. `lang` : "vf" | "vostfr" | "va". */
+/**
+ * `epMin`/`epMax` : bornes inclusives, null = sans borne. `lang` : "vf" | "vostfr" | "va".
+ * `format` : format AniList (OVA, ONA, SPECIAL, TV_SHORT). `origin` (scans) : "manga" | "webtoon".
+ * `anilistIds` : restreint à ces œuvres (150 max, sans pagination). `sort` : "title" | "score".
+ */
 export async function searchCatalog({
   search = "",
   genres = [],
   type = "",
+  format = "",
+  origin = "",
+  anilistIds = [],
+  sort = "",
   media = "anime",
   epMin = null,
   epMax = null,
@@ -119,6 +128,10 @@ export async function searchCatalog({
   if (search) params.set("search", search);
   if (genres.length) params.set("genre", genres.join(","));
   if (type) params.set("type", type);
+  if (format) params.set("format", format);
+  if (origin) params.set("origin", origin);
+  if (anilistIds.length) params.set("ids", anilistIds.join(","));
+  if (sort) params.set("sort", sort);
   if (epMin != null) params.set("epMin", String(epMin));
   if (epMax != null) params.set("epMax", String(epMax));
   if (lang) params.set("lang", lang);

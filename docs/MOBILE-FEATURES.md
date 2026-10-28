@@ -57,8 +57,9 @@ Une entrée à `null` ou `noop` dans `capacitor.js` = fonction absente sur Andro
 
 | Page | Route | Android | Notes |
 | ---- | ----- | ------- | ----- |
-| Accueil | `/` | 🟡 | Même contenu, rangée « Recommandé par la communauté » comprise. Rangées chargées au fil du scroll, carrousels en scroll natif (pas de glisser Embla) |
-| Fiche anime | `/anime/:slug` | 🟡 | Même contenu. Liste d'épisodes chargée par paquets, appui long sur un épisode → actions, vibrations. Bouton « Recommander » (pouce) à côté du favori. Mode « no beauty » |
+| Accueil | `/` | 🟡 | Même contenu, rangée « Recommandé par la communauté » comprise, rangées « Parce que tu aimes … » (thèmes préférés) et onglet « Nouveaux épisodes » de « Reprendre ». Rangées chargées au fil du scroll, carrousels en scroll natif (pas de glisser Embla) |
+| Fiche anime | `/anime/:slug` | 🟡 | Même contenu, dont studio / auteur cliquables, onglet « Franchise », compte à rebours du prochain épisode et du prochain chapitre, thèmes cliquables (ils mènent à `/recherche`). Liste d'épisodes chargée par paquets, appui long sur un épisode → actions, vibrations. Bouton « Recommander » (pouce) à côté du favori. Mode « no beauty » |
+| Fiche auteur / studio | `/staff/:id`, `/studio/:id` | ✅ | Ouverte depuis la fiche anime. Pas de recherche d'auteur ou de studio sur mobile (seulement dans la barre du haut desktop) |
 | Lecteur | `/watch/:slug` | 🟡 | Voir [Lecteur](#lecteur) |
 | Scans (dans la fiche) | — | 🟡 | Aperçu léger au lieu de charger toutes les pages dans la fiche |
 | Lecteur de scans | `/scan/:slug` | 🟡 | Zoom au pincement. Sens de lecture droite → gauche en pages horizontales, comme sur desktop |
@@ -66,7 +67,7 @@ Une entrée à `null` ou `noop` dans `capacitor.js` = fonction absente sur Andro
 | Recherche | `/search` | 🟡 | Écran mobile dédié : texte, historique, parcours par genre, et onglet Mangas (mangas et webtoons sans anime compris) |
 | Recherche avancée (filtres, onglet manga, filtre de langue) | `/recherche` | 🔗 | Aucun bouton n'y mène sur Android. Les filtres et le filtre de langue ne sont donc pas accessibles ; la recherche manga passe par l'onglet Mangas de `/search` |
 | Genre | `/genre/:genre` | ✅ | |
-| Calendrier | `/planning` | ✅ | Onglet principal |
+| Calendrier | `/planning` | ✅ | Onglet principal. Filtre Animes / Scans / Tout |
 | À venir | `/prochainement` | ✅ | Via « Plus » |
 | Classement | `/leaderboard` | ✅ | Via « Plus ». Périodes jour, semaine, mois, année, depuis toujours ; métrique « Chapitres lus » |
 | Téléchargements | `/downloads` | 🟡 | Onglet « Hors ligne ». Stockage privé de l'app (pas de choix de dossier), reprise auto des téléchargements interrompus au retour du réseau. Pas de repli automatique sur une autre source quand l'hébergeur lâche en route (desktop seulement) |
@@ -121,6 +122,7 @@ Une entrée à `null` ou `noop` dans `capacitor.js` = fonction absente sur Andro
 | Notifications | ✅ | ✅ | |
 | Téléchargements | ✅ | 🟡 | Dossier fixe (stockage privé) |
 | Apparence | ✅ | ✅ | Dont « Ambiance selon l'heure » (fond commun aux deux layouts depuis la #0070), « Ambiance du profil partout » et la langue des titres, appliquée aussi aux mangas |
+| Mes thèmes préférés | ✅ | ✅ | Code partagé : rangées « Parce que tu aimes … » sur les deux accueils |
 | Confidentialité (présence Discord) | 🖥️ | ❌ | |
 | Sauvegarde | ✅ | ✅ | |
 | Clés d'API | ✅ | ✅ | Comptes uniquement (pas les invités) |

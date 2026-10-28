@@ -13,6 +13,7 @@ import {
   sourceOptionLabel,
 } from "@/utils/videoSourceUtils";
 import { getEpisodeProgress, getAnimeProgressMap, episodeKey, heartbeatWatch, watchTick, COMPLETION_THRESHOLD } from "@/api/progress";
+import { getLocalProgress } from "@/utils/localProgress";
 import { celebrateAchievements, useAchievementUnlockStore } from "@/stores/useAchievementUnlockStore";
 import { useCachedResource } from "@/hooks/useCachedResource";
 import { useDiscordPresence } from "@/hooks/useDiscordPresence";
@@ -340,11 +341,18 @@ export default function WatchPage() {
         if (carryOverResumeRef.current != null) {
           resume = carryOverResumeRef.current;
           carryOverResumeRef.current = null;
-        } else if (userId) {
-          try {
-            const prog = await getEpisodeProgress(slug, seasonId, epNumber, lang, userId);
-            if (!cancelled && prog && !prog.completed) resume = prog.positionSeconds || 0;
-          } catch (_) {}
+        } else {
+          // Hors ligne, seule la copie locale répond ; sinon la position la plus récente gagne.
+          const local = getLocalProgress(slug, seasonId, epNumber, lang);
+          let server = null;
+          if (userId) {
+            try {
+              server = await getEpisodeProgress(slug, seasonId, epNumber, lang, userId);
+            } catch (_) {}
+          }
+          const best = server && (!local || (server.updatedAt || 0) >= local.at) ? server : local;
+          const done = best && (best.completed || (best.duration > 0 && (best.positionSeconds / best.duration) * 100 >= COMPLETION_THRESHOLD));
+          if (!cancelled && best && !done) resume = best.positionSeconds || 0;
         }
         if (cancelled) return;
         setResumeAt(resume);
@@ -759,6 +767,8 @@ export default function WatchPage() {
           videoUrl={videoUrl}
           mediaKey={playbackMediaKey}
           title={`${animeTitle} — ${epLabel}`}
+          mediaArtist={animeTitle}
+          mediaArtwork={animeCover}
           poster=""
           resumeAt={resumeAt}
           hasPrev={hasPrev}

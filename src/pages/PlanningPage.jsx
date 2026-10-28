@@ -14,6 +14,17 @@ function todayIndex() {
   return (new Date().getDay() + 6) % 7;
 }
 
+const CONTENT_FILTERS = [
+  { value: "anime", label: "Animes" },
+  { value: "scans", label: "Scans" },
+  { value: "all", label: "Tout" },
+];
+
+function matchesContent(item, filter) {
+  if (filter === "all") return true;
+  return (item.kind === "scan") === (filter === "scans");
+}
+
 const LANGUAGE_FILTERS = [
   { value: "all", label: "Tout" },
   { value: "vf", label: "VF" },
@@ -45,7 +56,13 @@ function ReleaseCard({ item, dayDate, now, languageFilter }) {
   const released = at && at.getTime() <= now;
   const ep = parseEpisode(item.seasonLabel);
 
+  const isScan = item.kind === "scan";
+
   const go = () => {
+    if (isScan) {
+      navigate(`/anime/${item.slug}?tab=scans`);
+      return;
+    }
     const params = new URLSearchParams();
     if (item.season) params.set("season", item.season);
     // La fiche s'ouvre dans la langue filtrée.
@@ -90,10 +107,12 @@ function ReleaseCard({ item, dayDate, now, languageFilter }) {
           </span>
         ) : null}
 
-        {/* Au survol, ou toujours si déjà suivi. */}
-        <span className="absolute right-1 top-1 opacity-0 transition-opacity group-hover:opacity-100 has-[.text-primary]:opacity-100">
-          <NotifyBell slug={item.slug} title={item.title} variant="icon" />
-        </span>
+        {/* Au survol, ou toujours si déjà suivi. La cloche suit les épisodes, pas les chapitres. */}
+        {!isScan && (
+          <span className="absolute right-1 top-1 opacity-0 transition-opacity group-hover:opacity-100 has-[.text-primary]:opacity-100">
+            <NotifyBell slug={item.slug} title={item.title} variant="icon" />
+          </span>
+        )}
 
         <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-1 bg-gradient-to-t from-black/80 via-black/30 to-transparent p-1.5 pt-6">
           {item.time ? (
@@ -127,7 +146,7 @@ function ReleaseCard({ item, dayDate, now, languageFilter }) {
         {displayTitle(item.slug, item.title)}
       </h3>
       <p className="mt-0.5 line-clamp-1 text-xs text-muted">
-        {item.seasonLabel || "Nouvel épisode"}
+        {item.seasonLabel || (isScan ? "Nouveau chapitre" : "Nouvel épisode")}
       </p>
     </button>
   );
@@ -195,14 +214,17 @@ export default function PlanningPage() {
   }, [load, markSeen]);
 
   const languageFilter = useSettingsStore((s) => s.planningLanguage);
+  const contentFilter = useSettingsStore((s) => s.planningContent);
   const setSetting = useSettingsStore((s) => s.setSetting);
   const days = useMemo(
     () =>
       (planning.days || []).map((day) => ({
         ...day,
-        items: (day.items || []).filter((item) => matchesLanguage(item, languageFilter)),
+        items: (day.items || []).filter(
+          (item) => matchesContent(item, contentFilter) && matchesLanguage(item, languageFilter)
+        ),
       })),
-    [planning.days, languageFilter]
+    [planning.days, languageFilter, contentFilter]
   );
   const isEmpty = !loading && days.length === 0;
   const total = useMemo(() => days.reduce((n, d) => n + (d.items?.length || 0), 0), [days]);
@@ -248,11 +270,27 @@ export default function PlanningPage() {
           <div>
             <h1 className="t-impact text-4xl sm:text-5xl">Calendrier</h1>
             <p className="mt-1 text-sm text-muted">
-              Les sorties de la semaine. Suis un anime (cloche) pour être notifié à sa sortie.
+              Les sorties de la semaine, épisodes et scans. Suis un anime (cloche) pour être notifié à sa sortie.
             </p>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
+          <div className="flex gap-1 rounded-md bg-surface p-1 ring-1 ring-border" role="group" aria-label="Type de sorties">
+            {CONTENT_FILTERS.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => setSetting("planningContent", option.value)}
+                aria-pressed={contentFilter === option.value}
+                className={`rounded px-3 py-1.5 text-xs font-bold transition-colors ${
+                  contentFilter === option.value
+                    ? "bg-primary text-primary-fg"
+                    : "text-muted hover:text-text"
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
           <div className="flex gap-1 rounded-md bg-surface p-1 ring-1 ring-border" role="group" aria-label="Langue des sorties">
             {LANGUAGE_FILTERS.map((option) => (
               <button

@@ -32,6 +32,7 @@ const HomePage = lazy(() => import("@/pages/HomePage"));
 const MangaHomePage = lazy(() => import("@/pages/MangaHomePage"));
 const AnimePage = lazy(() => import("@/pages/AnimePage"));
 const GenrePage = lazy(() => import("@/pages/GenrePage"));
+const CreditPage = lazy(() => import("@/pages/CreditPage"));
 const SearchPage = lazy(() => import("@/pages/SearchPage"));
 const MobileSearchPage = lazy(() => import("@/mobile/MobileSearchPage"));
 const MobileChangelogPage = lazy(() => import("@/mobile/MobileChangelogPage"));
@@ -299,6 +300,8 @@ export default function App() {
         <Route path="/mangas" element={<MangaHomePage />} />
         <Route path="/anime/:slug" element={<AnimePage />} />
         <Route path="/genre/:genre" element={<GenrePage />} />
+        <Route path="/staff/:id" element={<CreditPage key="staff" kind="staff" />} />
+        <Route path="/studio/:id" element={<CreditPage key="studio" kind="studio" />} />
         <Route path="/search" element={platform.isMobile ? <MobileSearchPage /> : <SearchPage />} />
         <Route path="/planning" element={<PlanningPage />} />
         <Route path="/prochainement" element={<UpcomingPage />} />

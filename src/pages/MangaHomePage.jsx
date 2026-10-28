@@ -5,6 +5,7 @@ import HeroCarousel from "@/components/home/HeroCarousel";
 import AnimeRow, { AnimeRowSkeleton } from "@/components/home/AnimeRow";
 import ContinueWatching from "@/components/home/ContinueWatching";
 import CommunityBanner from "@/components/home/CommunityBanner";
+import FavoriteGenresRows from "@/components/home/FavoriteGenresRows";
 
 export default function MangaHomePage() {
   const { data, loading, error } = useCachedResource(
@@ -48,6 +49,7 @@ export default function MangaHomePage() {
       <HeroCarousel items={data?.hero || []} contentType="manga" />
       <div className="relative z-10 mt-4 space-y-10 md:mt-0 md:pt-6 md:space-y-12">
         <ContinueWatching defaultTab="scans" onlyScans />
+        <FavoriteGenresRows media="manga" />
         {rows.map((row, index) => (
           <div key={row.key}>
             <AnimeRow

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useEmblaCarousel from "embla-carousel-react";
-import { BookOpen, ChevronLeft, ChevronRight, Clapperboard, Play, X } from "lucide-react";
+import { BookOpen, ChevronLeft, ChevronRight, Clapperboard, Play, Sparkles, X } from "lucide-react";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useSettingsStore } from "@/stores/useSettingsStore";
 import { useListsStore } from "@/stores/useListsStore";
@@ -222,7 +222,25 @@ export default function ContinueWatching({ defaultTab = null, onlyScans = false 
     () => allItems.filter((i) => i.newEpisode || listStatuses.get(i.slug) !== "completed"),
     [allItems, listStatuses]
   );
-  const visibleItems = onlyScans || activeTab === "scans" ? scanItems : items;
+  // Les épisodes sortis depuis le dernier visionnage ont leur propre onglet, pour ne pas
+  // pousser hors de « Reprendre » ce qu'on regardait déjà.
+  const freshItems = useMemo(() => items.filter((i) => i.newEpisode), [items]);
+  const resumeItems = useMemo(() => items.filter((i) => !i.newEpisode), [items]);
+  const tabs = [
+    ...(resumeItems.length ? [{ id: "anime", label: "Animés", Icon: Clapperboard }] : []),
+    ...(freshItems.length
+      ? [{ id: "new", label: "Nouveaux épisodes", Icon: Sparkles, count: freshItems.length }]
+      : []),
+    ...(scanItems.length ? [{ id: "scans", label: "Scans", Icon: BookOpen }] : []),
+  ];
+  // Un onglet vidé (dernier élément retiré, nouvel épisode regardé) bascule sur le suivant.
+  const shownTab = onlyScans
+    ? "scans"
+    : tabs.some((t) => t.id === activeTab)
+      ? activeTab
+      : tabs[0]?.id || "anime";
+  const visibleItems =
+    shownTab === "scans" ? scanItems : shownTab === "new" ? freshItems : resumeItems;
 
   const [emblaRef, embla] = useEmblaCarousel({
     active: !platform.isMobile,
@@ -252,7 +270,7 @@ export default function ContinueWatching({ defaultTab = null, onlyScans = false 
 
   useEffect(() => {
     embla?.reInit();
-  }, [embla, visibleItems, activeTab]);
+  }, [embla, visibleItems, shownTab]);
 
   // Retrait optimiste, masqué en base ensuite.
   const handleRemove = useCallback(async (item) => {
@@ -267,10 +285,9 @@ export default function ContinueWatching({ defaultTab = null, onlyScans = false 
       const keep = (arr) => arr.filter((i) => i.scanKey !== item.scanKey);
       setScanItems(keep);
       cachedScanItems = keep(cachedScanItems);
-      if (!onlyScans && scanItems.length === 1 && items.length) setActiveTab("anime");
       await hideScanFromResume(item.scanKey);
     },
-    [items.length, onlyScans, scanItems.length]
+    []
   );
 
   // Le retrait passe par une confirmation : un clic sur la croix est vite arrivé.
@@ -323,7 +340,7 @@ export default function ContinueWatching({ defaultTab = null, onlyScans = false 
 
   return (
     <section className="carousel-section relative pt-6">
-      <div className={`flex items-center justify-between px-4 sm:px-8 ${scanItems.length && !onlyScans ? "" : "mb-3"}`}>
+      <div className={`flex items-center justify-between px-4 sm:px-8 ${tabs.length > 1 && !onlyScans ? "" : "mb-3"}`}>
         <h2 className="section-title">
           {onlyScans ? "Continuer à lire" : "Reprendre"}
         </h2>
@@ -345,28 +362,28 @@ export default function ContinueWatching({ defaultTab = null, onlyScans = false 
         </div>
       </div>
 
-      {!onlyScans && scanItems.length > 0 && (
+      {!onlyScans && tabs.length > 1 && (
         <div className="mb-3 mt-2 border-b border-border px-4 sm:px-8">
-          <div className="flex gap-1" role="tablist" aria-label="Type de lecture">
-            {[
-              ...(items.length
-                ? [{ id: "anime", label: "Animés", Icon: Clapperboard }]
-                : []),
-              { id: "scans", label: "Scans", Icon: BookOpen },
-            ].map(({ id, label, Icon }) => (
+          <div className="no-scrollbar flex gap-1 overflow-x-auto" role="tablist" aria-label="Type de lecture">
+            {tabs.map(({ id, label, Icon, count }) => (
               <button
                 key={id}
                 role="tab"
-                aria-selected={activeTab === id}
+                aria-selected={shownTab === id}
                 onClick={() => setActiveTab(id)}
-                className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-semibold transition-colors ${
-                  activeTab === id
+                className={`flex shrink-0 items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-semibold transition-colors ${
+                  shownTab === id
                     ? "border-primary text-text"
                     : "border-transparent text-muted hover:text-text"
                 }`}
               >
                 <Icon size={16} />
                 {label}
+                {count > 0 && (
+                  <span className="rounded bg-primary px-1.5 py-px text-[0.65rem] font-bold tabular-nums text-primary-fg">
+                    {count}
+                  </span>
+                )}
               </button>
             ))}
           </div>
@@ -385,7 +402,7 @@ export default function ContinueWatching({ defaultTab = null, onlyScans = false 
               }`}
               data-carousel-card
             >
-              {onlyScans || activeTab === "scans" ? (
+              {shownTab === "scans" ? (
                 <ScanResumeCard item={item} onRemove={(it) => setPendingRemoval({ item: it, scan: true })} />
               ) : (
                 <ResumeCard item={item} onRemove={(it) => setPendingRemoval({ item: it, scan: false })} />
