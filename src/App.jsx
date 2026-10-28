@@ -4,6 +4,7 @@ import { Routes, Route, Navigate, useLocation, useNavigate } from "react-router-
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useBanStore } from "@/stores/useBanStore";
 import BanScreen from "@/components/BanScreen";
+import ReviewPrompt from "@/components/ReviewPrompt";
 import { useDeviceStore } from "@/stores/useDeviceStore";
 import UpdateRequiredScreen from "@/components/UpdateRequiredScreen";
 import { useFavoritesStore } from "@/stores/useFavoritesStore";
@@ -255,6 +256,7 @@ export default function App() {
       <OfflineBanner />
       {/* Hors des routes : `signOut()` démonte la route courante, la modale doit y survivre. */}
       {signOutModalOpen && <SignOutModal onClose={hideSignOutModal} />}
+      <ReviewPrompt />
       <Suspense fallback={null}>
         <DiscordReauthModal />
       </Suspense>

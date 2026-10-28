@@ -51,6 +51,7 @@ Une entrée à `null` ou `noop` dans `capacitor.js` = fonction absente sur Andro
 | Bouton retour | Historique du navigateur | 🟡 Bouton flottant + bouton retour Android | |
 | Barre de recherche dans la TopBar | 🖥️ | ❌ | Sur Android, la recherche est un onglet |
 | Bouton « remonter en haut » | 🖥️ | ❌ | |
+| Demande d'avis (1 à 5 étoiles, commentaire facultatif) | ✅ | ✅ | Au lancement, après la reconnexion Discord. Une seule réponse par compte pour toutes les apps ; « Plus tard » la repousse d'une semaine. Jamais pendant un épisode ou des scans |
 | Mode hors ligne | ✅ | ✅ | Bascule automatique sur les téléchargements. Sur Android, l'onglet Profil apparaît hors ligne |
 
 ## Pages
