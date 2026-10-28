@@ -78,6 +78,7 @@ public class Downloads {
                 .build();
         if (!root.exists()) root.mkdirs();
         loadIndex();
+        restoreOrphans();
         // Arrêt brutal : fichier final présent, seul l'index manquait ; sinon les fragments restent
         // pour la reprise.
         for (JSONObject it : index.values()) {
@@ -696,11 +697,100 @@ public class Downloads {
         File f = new File(root, "index.json");
         if (!f.exists()) return;
         try {
-            byte[] data = new byte[(int) f.length()];
-            try (java.io.FileInputStream in = new java.io.FileInputStream(f)) { in.read(data); }
-            JSONObject obj = new JSONObject(new String(data, "UTF-8"));
+            JSONObject obj = new JSONObject(new String(readFile(f), "UTF-8"));
             IterableKeys(obj);
         } catch (Exception ignored) {}
+    }
+
+    /**
+     * Dossiers sans entrée d'index : l'index a été perdu (écrit en place jusqu'à l'android 1.7.0,
+     * un arrêt de l'app pendant l'écriture le laissait tronqué → liste vide, fichiers conservés).
+     * L'entrée revient de sa copie `item.json`, sinon elle est reconstruite depuis l'id (encodé
+     * dans le nom du dossier) dès que le fichier final est complet.
+     */
+    private void restoreOrphans() {
+        File[] dirs = root.listFiles(File::isDirectory);
+        if (dirs == null) return;
+        boolean changed = false;
+        for (File dir : dirs) {
+            String id;
+            try {
+                id = new String(Base64.decode(dir.getName(), Base64.URL_SAFE | Base64.NO_PADDING | Base64.NO_WRAP), "UTF-8");
+            } catch (Exception e) {
+                continue;
+            }
+            if (id.isEmpty() || index.containsKey(id)) continue;
+            JSONObject item = null;
+            File copy = new File(dir, "item.json");
+            if (copy.exists()) {
+                try {
+                    item = new JSONObject(new String(readFile(copy), "UTF-8"));
+                } catch (Exception ignored) {}
+            }
+            if (item == null || !id.equals(item.optString("id"))) item = rebuildItem(id, dir);
+            if (item == null) continue;
+            index.put(id, item);
+            changed = true;
+        }
+        if (changed) saveIndex();
+    }
+
+    /** Entrée minimale, seulement pour un téléchargement terminé. `null` sinon. */
+    private static JSONObject rebuildItem(String id, File dir) {
+        try {
+            String[] parts = id.split("::", -1);
+            JSONObject item = new JSONObject();
+            item.put("id", id);
+            if (parts.length == 4 && "scan".equals(parts[0])) {
+                int pages = 0;
+                while (isCompleteFragment(new File(dir, "p" + String.format(Locale.ROOT, "%03d", pages + 1) + ".jpg"))) pages++;
+                if (pages == 0) return null;
+                item.put("type", "scan");
+                item.put("slug", parts[1]);
+                item.put("animeTitle", parts[1]);
+                item.put("oeuvre", parts[2]);
+                item.put("chapter", parseNumber(parts[3]));
+                item.put("folder", parseNumber(parts[3]));
+                item.put("pages", pages);
+            } else if (parts.length == 4) {
+                String file = completedFileName(dir);
+                if (file == null) return null;
+                item.put("slug", parts[0]);
+                item.put("animeTitle", parts[0]);
+                item.put("seasonId", parts[1]);
+                item.put("ep", parseNumber(parts[2]));
+                item.put("lang", parts[3]);
+                item.put("file", file);
+                if (new File(dir, "thumb.jpg").exists()) item.put("thumbFile", "thumb.jpg");
+            } else {
+                return null;
+            }
+            if (new File(dir, "cover.jpg").exists()) item.put("coverFile", "cover.jpg");
+            item.put("status", "done");
+            item.put("percent", 100);
+            item.put("sizeBytes", dirSize(dir));
+            item.put("finishedAt", dir.lastModified());
+            return item;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private static Object parseNumber(String s) {
+        try {
+            double d = Double.parseDouble(s);
+            if (d == Math.rint(d)) return (long) d;
+            return d;
+        } catch (Exception e) {
+            return s;
+        }
+    }
+
+    private static long dirSize(File dir) {
+        long total = 0;
+        File[] kids = dir.listFiles();
+        if (kids != null) for (File k : kids) total += k.isDirectory() ? dirSize(k) : k.length();
+        return total;
     }
 
     private void IterableKeys(JSONObject obj) {
@@ -716,7 +806,7 @@ public class Downloads {
         try {
             JSONObject obj = new JSONObject();
             for (Map.Entry<String, JSONObject> e : index.entrySet()) obj.put(e.getKey(), e.getValue());
-            writeFile(new File(root, "index.json"), obj.toString().getBytes("UTF-8"));
+            writeFileAtomic(new File(root, "index.json"), obj.toString().getBytes("UTF-8"));
             lastIndexSaveAt = System.currentTimeMillis();
         } catch (Exception ignored) {}
     }
@@ -739,6 +829,12 @@ public class Downloads {
         } catch (Exception ignored) {}
         if (progressUpdate) saveIndexThrottled();
         else saveIndex();
+        // Copie dans le dossier de l'entrée : de quoi la retrouver si l'index est perdu.
+        if ("done".equals(it.optString("status"))) {
+            try {
+                writeFileAtomic(new File(ProxyServer.itemDir(id), "item.json"), it.toString().getBytes("UTF-8"));
+            } catch (Exception ignored) {}
+        }
         emit(it);
     }
 
@@ -780,6 +876,26 @@ public class Downloads {
 
     private static void writeFile(File f, byte[] data) throws Exception {
         try (FileOutputStream out = new FileOutputStream(f)) { out.write(data); }
+    }
+
+    /** Fichier temporaire puis renommage : un arrêt en pleine écriture laisse l'ancienne version intacte. */
+    private static void writeFileAtomic(File f, byte[] data) throws Exception {
+        File tmp = new File(f.getParentFile(), f.getName() + ".tmp");
+        try (FileOutputStream out = new FileOutputStream(tmp)) {
+            out.write(data);
+            out.getFD().sync();
+        }
+        if (!tmp.renameTo(f)) throw new java.io.IOException("renommage de " + tmp + " impossible");
+    }
+
+    private static byte[] readFile(File f) throws Exception {
+        try (java.io.FileInputStream in = new java.io.FileInputStream(f)) {
+            java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+            byte[] buf = new byte[8192];
+            int n;
+            while ((n = in.read(buf)) > 0) out.write(buf, 0, n);
+            return out.toByteArray();
+        }
     }
 
     private static void deleteDir(File dir) {
