@@ -360,9 +360,13 @@ export const useAuthStore = create((set, get) => ({
     } catch (_) {}
   },
 
-  joinDiscordGuild: async (providerToken) => {
+  /** `providerRefreshToken` : gardé par l'API pour réajouter le compte au serveur plus tard. */
+  joinDiscordGuild: async (providerToken, providerRefreshToken = null) => {
     try {
-      const { data, error } = await postFn("/v1/me/discord/guild", { providerToken });
+      const { data, error } = await postFn("/v1/me/discord/guild", {
+        providerToken,
+        ...(providerRefreshToken ? { providerRefreshToken } : {}),
+      });
       if (error || !data?.member) {
         if (error) console.warn("[auth] serveur Discord:", error.message);
         return { error: "Impossible de rejoindre le serveur Discord pour le moment. Réessaie plus tard." };
@@ -504,7 +508,7 @@ export const useAuthStore = create((set, get) => ({
       // Connexion, liaison ou reconnexion : le jeton Discord n'existe qu'à ce moment-là.
       const providerToken = exchanged?.session?.provider_token;
       if (providerToken) {
-        const joining = get().joinDiscordGuild(providerToken);
+        const joining = get().joinDiscordGuild(providerToken, exchanged.session.provider_refresh_token);
         if (completingReauth) {
           const joined = await joining;
           if (joined.error) set({ discordReauthError: joined.error });
