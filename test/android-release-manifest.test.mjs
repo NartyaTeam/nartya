@@ -13,8 +13,8 @@ import {
 
 test("Android possède un versionnage produit indépendant du desktop", () => {
   assert.deepEqual(readAndroidVersion(), {
-    versionName: "1.8.1",
-    versionCode: 12815,
+    versionName: "1.9.0",
+    versionCode: 12816,
   });
 });
 

@@ -5,6 +5,32 @@
  */
 export const MOBILE_CHANGELOG = [
   {
+    version: "1.9.0",
+    date: "31 octobre 2026",
+    items: [
+      {
+        type: "new",
+        text: "Les profils arrivent : jusqu’à 3 par compte, 4 avec Nartya + et 5 avec Ultimate. Chacun a ses favoris, ses listes, sa progression et ses notes. Ton compte actuel devient ton premier profil : rien n’est perdu.",
+      },
+      {
+        type: "new",
+        text: "Personnalise chaque profil : son nom, son avatar (personnages d’anime et de manga, acteurs et actrices, artistes, mascottes Nartya) et un code à 4 chiffres pour le protéger.",
+      },
+      {
+        type: "new",
+        text: "« Qui est là ? » à l’ouverture de l’app. Pour changer de profil : Paramètres › Compte.",
+      },
+      {
+        type: "new",
+        text: "Code de profil oublié ? Reçois un code par e-mail pour en choisir un nouveau.",
+      },
+      {
+        type: "improved",
+        text: "L’app s’ouvre directement, sans animation au lancement.",
+      },
+    ],
+  },
+  {
     version: "1.8.1",
     date: "28 octobre 2026",
     items: [
