@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { dataOwnerId } from "@/lib/profileSession";
 import { isGuestSession } from "@/lib/guest";
 import { expireCache } from "@/hooks/useCachedResource";
 
@@ -13,7 +14,7 @@ export async function getScanProgress(slug, oeuvre, userId) {
   const { data, error } = await supabase
     .from("scan_progress")
     .select("chapter, page, total_pages, completed")
-    .eq("user_id", userId)
+    .eq("user_id", dataOwnerId(userId))
     .eq("scan_key", scanKey(slug, oeuvre))
     .maybeSingle();
   if (error || !data) return null;
@@ -31,7 +32,7 @@ export async function getAnimeScansProgress(slug, userId) {
   const { data, error } = await supabase
     .from("scan_progress")
     .select("oeuvre, chapter, page, completed")
-    .eq("user_id", userId)
+    .eq("user_id", dataOwnerId(userId))
     .eq("anime_slug", slug);
   if (error || !data) return {};
   const map = {};
@@ -113,7 +114,7 @@ export async function saveScanProgress({
   if (!userId || !oeuvre || isGuestSession()) return;
   const { error } = await supabase.from("scan_progress").upsert(
     {
-      user_id: userId,
+      user_id: dataOwnerId(userId),
       scan_key: scanKey(slug, oeuvre),
       anime_slug: slug,
       anime_title: title,

@@ -25,6 +25,9 @@ import { WatchPartyProvider } from "@/contexts/WatchPartyProvider";
 import { UpdatePolicyProvider } from "@/contexts/UpdatePolicyContext";
 import SignOutModal from "@/components/SignOutModal";
 import { useSignOutModalStore } from "@/stores/useSignOutModalStore";
+import { useProfilesStore } from "@/stores/useProfilesStore";
+
+const ProfileGate = lazy(() => import("@/components/profiles/ProfileGate"));
 
 // Chargées à l'ouverture de leur route : Artplayer et hls.js restent hors du démarrage.
 const LoginPage = lazy(() => import("@/pages/LoginPage"));
@@ -117,6 +120,9 @@ export default function App() {
   const signOutModalOpen = useSignOutModalStore((s) => s.open);
   const hideSignOutModal = useSignOutModalStore((s) => s.hide);
   const ensureFavoritesLoaded = useFavoritesStore((s) => s.ensureLoaded);
+  const profileStatus = useProfilesStore((s) => s.status);
+  const syncProfiles = useProfilesStore((s) => s.sync);
+  const isGuestSession = !!session?.user?.is_anonymous;
 
   useClientHeartbeat();
 
@@ -209,9 +215,18 @@ export default function App() {
     }
   }, [online, checked, loadProfile]);
 
+  // « Qui est là ? » à chaque lancement. Hors ligne, rien ne s'écrit : l'app s'ouvre sans profil
+  // et le demande au retour du réseau. L'invité n'a pas de profils.
   useEffect(() => {
-    if (session?.user?.id && !session.user.is_anonymous) ensureFavoritesLoaded();
-  }, [session?.user?.id, session?.user?.is_anonymous, ensureFavoritesLoaded]);
+    if (loading) return; // session pas encore lue : le profil gardé au rechargement doit survivre
+    if (!sessionUserId || isGuestSession) syncProfiles(null);
+    else if (checked && online) syncProfiles(sessionUserId);
+  }, [loading, sessionUserId, isGuestSession, checked, online, syncProfiles]);
+
+  useEffect(() => {
+    const profileOpen = profileStatus === "ready" || profileStatus === "idle";
+    if (session?.user?.id && !session.user.is_anonymous && profileOpen) ensureFavoritesLoaded();
+  }, [session?.user?.id, session?.user?.is_anonymous, profileStatus, ensureFavoritesLoaded]);
 
   if (loading) {
     return (
@@ -236,6 +251,14 @@ export default function App() {
 
   if (banned) {
     return <BanScreen kind={banKind} reason={banReason} until={banUntil} />;
+  }
+
+  if (profileStatus === "loading" || profileStatus === "picking") {
+    return (
+      <Suspense fallback={<RouteFallback />}>
+        <ProfileGate />
+      </Suspense>
+    );
   }
 
   return (

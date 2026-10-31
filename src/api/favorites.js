@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { dataOwnerId } from "@/lib/profileSession";
 import { isGuestSession } from "@/lib/guest";
 import { invalidateCache } from "@/hooks/useCachedResource";
 import { getAnimePage } from "@/api/animeApi";
@@ -48,7 +49,7 @@ export async function addFavorite({ slug, title, cover, genre, mediaType }) {
   if (!userId) throw new Error("Non connecté");
   const { error } = await supabase.from("favorites").upsert(
     {
-      user_id: userId,
+      user_id: dataOwnerId(userId),
       anime_slug: slug,
       anime_title: title || null,
       anime_cover: cover || null,

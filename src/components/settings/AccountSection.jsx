@@ -10,6 +10,7 @@ import { resolveAvatar, resolveBanner } from "@/api/profile";
 import { platform } from "@/platform";
 import { Section } from "./SettingsLayout";
 import DiscordSyncModal from "./DiscordSyncModal";
+import ProfileSwitchCard from "@/components/profiles/ProfileSwitchCard";
 
 function LinkedAccountButton({
   icon: Icon,
@@ -301,6 +302,7 @@ export default function AccountSection({ number }) {
           onLinkDiscord={handleLinkDiscord}
           onManageDiscord={handleManageDiscord}
         />
+        <ProfileSwitchCard />
       </Section>
       {discordSyncOffer && (
         <DiscordSyncModal

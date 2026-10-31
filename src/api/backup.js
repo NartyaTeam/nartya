@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { dataOwnerId } from "@/lib/profileSession";
 
 /** Export et import JSON des favoris, listes et progression. */
 
@@ -54,7 +55,7 @@ export async function importBackup(data) {
       favorites
         .filter((f) => f?.anime_slug)
         .map((f) => ({
-          user_id: userId,
+          user_id: dataOwnerId(userId),
           anime_slug: f.anime_slug,
           anime_title: f.anime_title ?? null,
           anime_cover: f.anime_cover ?? null,
@@ -69,7 +70,7 @@ export async function importBackup(data) {
       lists
         .filter((l) => l?.anime_slug && VALID_STATUS.has(l.status))
         .map((l) => ({
-          user_id: userId,
+          user_id: dataOwnerId(userId),
           anime_slug: l.anime_slug,
           status: l.status,
           anime_title: l.anime_title ?? null,
@@ -88,7 +89,7 @@ export async function importBackup(data) {
       progress
         .filter((p) => p?.episode_key && p?.anime_slug)
         .map((p) => ({
-          user_id: userId,
+          user_id: dataOwnerId(userId),
           episode_key: p.episode_key,
           anime_slug: p.anime_slug,
           anime_title: p.anime_title ?? null,

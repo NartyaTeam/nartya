@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { dataOwnerId } from "@/lib/profileSession";
 import { isGuestSession } from "@/lib/guest";
 import { expireCache } from "@/hooks/useCachedResource";
 
@@ -138,7 +139,7 @@ export async function getEpisodeProgress(slug, seasonId, episodeNumber, language
   const { data, error } = await supabase
     .from("episode_progress")
     .select("position_seconds, duration, progress_percent, completed, updated_at")
-    .eq("user_id", userId)
+    .eq("user_id", dataOwnerId(userId))
     .eq("episode_key", key)
     .maybeSingle();
   if (error || !data) return null;
@@ -171,7 +172,7 @@ export async function saveEpisodeProgress({
 
   const { error } = await supabase.from("episode_progress").upsert(
     {
-      user_id: userId,
+      user_id: dataOwnerId(userId),
       episode_key: episodeKey(slug, seasonId, episodeNumber, language),
       anime_slug: slug,
       anime_title: cleanTitle(title),
@@ -212,7 +213,7 @@ export async function markEpisodeWatched({ slug, seasonId, episodeNumber, langua
   if (!userId || isGuestSession()) return;
   const { error } = await supabase.from("episode_progress").upsert(
     {
-      user_id: userId,
+      user_id: dataOwnerId(userId),
       episode_key: episodeKey(slug, seasonId, episodeNumber, language),
       anime_slug: slug,
       anime_title: cleanTitle(title),
@@ -240,7 +241,7 @@ export async function markEpisodesWatched({ slug, seasonId, episodeNumbers, lang
   if (!userId || isGuestSession() || !episodeNumbers?.length) return;
   const now = new Date().toISOString();
   const rows = episodeNumbers.map((num) => ({
-    user_id: userId,
+    user_id: dataOwnerId(userId),
     episode_key: episodeKey(slug, seasonId, num, language),
     anime_slug: slug,
     anime_title: cleanTitle(title),
@@ -345,7 +346,7 @@ export async function getLastWatched(slug, userId) {
   const { data, error } = await supabase
     .from("episode_progress")
     .select("season_id, episode_number, language, progress_percent, completed, updated_at")
-    .eq("user_id", userId)
+    .eq("user_id", dataOwnerId(userId))
     .eq("anime_slug", slug)
     .order("updated_at", { ascending: false })
     .limit(1)

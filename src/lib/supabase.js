@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { authOwnedByHub } from "./hubAuth";
 import { platform } from "@/platform";
 import { SITE_URL } from "@/config/instance";
+import { profileAwareFetch } from "./profileSession";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -56,6 +57,7 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     storageKey: "nartya-auth",
     storage: sharedStorage,
   },
+  global: { fetch: profileAwareFetch },
 });
 
 /** Enregistré côté Supabase (Auth > URL Configuration > Redirect URLs). */

@@ -116,8 +116,9 @@ Une entrée à `null` ou `noop` dans `capacitor.js` = fonction absente sur Andro
 | Section | Desktop | Android | Notes |
 | ------- | ------- | ------- | ----- |
 | Compte | ✅ | 🟡 | Android : bloc « Comptes liés » (liaison Discord propre à l'app). Desktop : délégué au Hub |
+| Profils (« Changer de profil ») | ⏳ | ⏳ | Carte du profil ouvert dans « Compte ». Desktop : aussi le bouton ⇄ en bas de la barre latérale |
 | Reconnexion Discord | ✅ | ✅ | Modale obligatoire une fois pour les comptes Discord liés avant l'ajout automatique au serveur communautaire |
-| AniList & MyAnimeList | ✅ | ✅ | Comptes uniquement. Liaison dans le navigateur, puis synchro faite par le serveur : même comportement partout |
+| AniList & MyAnimeList | ✅ | ✅ | Comptes uniquement, profil principal seulement. Liaison dans le navigateur, puis synchro faite par le serveur : même comportement partout |
 | Déconnexion | Déconnecte aussi le Hub et ferme l'app | 🟡 | Déconnecte seulement cet appareil |
 | Lecture | ✅ | 🟡 | Sans « Qualité source Anime4K » |
 | Notifications | ✅ | ✅ | |
@@ -146,6 +147,7 @@ Une entrée à `null` ou `noop` dans `capacitor.js` = fonction absente sur Andro
 | Ouvrir dans une nouvelle fenêtre | 🖥️ | ❌ | |
 | Partage natif | — | 📱 | |
 | Deep links `nartya://anime/…`, `nartya://watch/…`, `nartya://party/…` | — | 📱 | |
+| Écran « Qui est là ? » (profils façon Netflix) | ⏳ | ⏳ | Au lancement, une fois en ligne : choix du profil, code à 4 chiffres, gestion (nom, avatar, code). Sauvegardes séparées par profil |
 | Mode invité (lecture seule) | ✅ | ✅ | Mêmes restrictions |
 | Bannissement machine | ✅ | ✅ | Identifiant d'appareil haché sur Android |
 

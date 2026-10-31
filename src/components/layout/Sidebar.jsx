@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { NavLink, useLocation } from "react-router-dom";
-import { Heart, User, LogIn, LogOut, Clapperboard, Download, Settings, ListChecks, HelpCircle, CalendarDays, Bug, Trophy, Compass, Sparkles, ChevronDown, UserPlus, BookOpen, Search, Library, MessagesSquare, Activity, Users, History, LayoutList } from "lucide-react";
+import { Heart, User, LogIn, LogOut, ArrowLeftRight, Clapperboard, Download, Settings, ListChecks, HelpCircle, CalendarDays, Bug, Trophy, Compass, Sparkles, ChevronDown, UserPlus, BookOpen, Search, Library, MessagesSquare, Activity, Users, History, LayoutList } from "lucide-react";
 import BugReportModal from "@/components/BugReportModal";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useNetworkStore } from "@/stores/useNetworkStore";
@@ -18,6 +18,8 @@ import NotificationBell from "@/components/announcements/NotificationBell";
 import { useAnnouncementsStore } from "@/stores/useAnnouncementsStore";
 import { guestBlockToast } from "@/lib/guest";
 import { useSignOutModalStore } from "@/stores/useSignOutModalStore";
+import { useProfilesStore } from "@/stores/useProfilesStore";
+import { profileAvatarSrc } from "@/components/profiles/ProfileAvatar";
 import { DISCORD_INVITE } from "@/config/instance";
 import DiscordIcon from "@/components/icons/DiscordIcon";
 
@@ -159,6 +161,8 @@ export default function Sidebar() {
   const session = useAuthStore((s) => s.session);
   const user = useAuthStore((s) => s.user);
   const showSignOut = useSignOutModalStore((s) => s.show);
+  const activeProfile = useProfilesStore((s) => s.active);
+  const switchProfile = useProfilesStore((s) => s.switchProfile);
   const refreshAvatar = useAuthStore((s) => s.refreshAvatarFromDiscord);
   const online = useNetworkStore((s) => s.online);
 
@@ -416,9 +420,9 @@ export default function Sidebar() {
                 {/* Rail replié : la cloche ne tient pas à côté de l'avatar. */}
                 <span className="relative shrink-0">
                   <Avatar
-                    src={resolveAvatar(user)}
-                    name={user?.username}
-                    onError={refreshAvatar}
+                    src={activeProfile ? profileAvatarSrc(activeProfile, user) : resolveAvatar(user)}
+                    name={activeProfile?.name ?? user?.username}
+                    onError={!activeProfile || (activeProfile.is_main && !activeProfile.avatar_url) ? refreshAvatar : undefined}
                     className="h-8 w-8 max-w-none shrink-0 rounded-full"
                     textClassName="text-xs"
                   />
@@ -427,7 +431,7 @@ export default function Sidebar() {
                   )}
                 </span>
                 <div className="min-w-0 flex-1 leading-none" style={fade}>
-                  <p className="whitespace-nowrap text-sm font-semibold">{user?.username || "—"}</p>
+                  <p className="whitespace-nowrap text-sm font-semibold">{activeProfile?.name ?? (user?.username || "—")}</p>
                   <div className="mt-1 flex flex-wrap items-center gap-1">
                     <RoleBadge role={user?.role} showMember />
                     <SupporterBadge profile={user} />
@@ -435,7 +439,17 @@ export default function Sidebar() {
                 </div>
               </NavLink>
               {/* Révélée quand l'élargissement du rail est presque terminé. */}
-              <NotificationBell className="ml-auto" style={notificationFade} />
+              {activeProfile && (
+                <button
+                  onClick={switchProfile}
+                  title="Changer de profil"
+                  className="ml-auto shrink-0 text-muted transition-colors hover:text-primary"
+                  style={notificationFade}
+                >
+                  <ArrowLeftRight size={17} />
+                </button>
+              )}
+              <NotificationBell className={activeProfile ? "" : "ml-auto"} style={notificationFade} />
             </div>
           ) : (
             <NavLink

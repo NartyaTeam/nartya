@@ -1,3 +1,4 @@
+import { useProfilesStore } from "@/stores/useProfilesStore";
 import {
   Settings as SettingsIcon,
   Play,
@@ -46,6 +47,8 @@ export default function SettingsPage() {
 
   const session = useAuthStore((s) => s.session);
   const hasAccount = useHasAccount();
+  // AniList / MyAnimeList suivent les listes du profil principal seulement.
+  const onMainProfile = useProfilesStore((s) => !s.active || s.active.is_main);
   const { data: homeData } = useCachedResource(
     "home:sections:v2",
     getHomeSections,
@@ -53,7 +56,7 @@ export default function SettingsPage() {
   );
   const navigationItems = [
     session && { id: "account", label: "Compte", icon: UserRound },
-    hasAccount && { id: "trackers", label: "AniList & MAL", icon: ListChecks },
+    hasAccount && onMainProfile && { id: "trackers", label: "AniList & MAL", icon: ListChecks },
     { id: "playback", label: "Lecture", icon: Play },
     { id: "notifications", label: "Notifications", icon: Bell },
     canDownload && { id: "downloads", label: "Téléchargements", icon: Download },
@@ -181,7 +184,7 @@ export default function SettingsPage() {
         <main className="min-w-0 space-y-8 md:space-y-16">
         {session && <AccountSection number={sectionNumber("account")} />}
 
-        {hasAccount && <TrackersSection number={sectionNumber("trackers")} />}
+        {hasAccount && onMainProfile && <TrackersSection number={sectionNumber("trackers")} />}
 
         <PlaybackSection number={sectionNumber("playback")} />
 
