@@ -5,6 +5,16 @@
  */
 export const IOS_CHANGELOG = [
   {
+    version: "1.9.1",
+    date: "31 octobre 2026",
+    items: [
+      {
+        type: "fixed",
+        text: "Code de profil oublié : le code reçu par e-mail est vérifié dès que tu le saisis.",
+      },
+    ],
+  },
+  {
     version: "1.9.0",
     date: "31 octobre 2026",
     items: [
