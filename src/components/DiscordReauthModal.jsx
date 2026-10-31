@@ -4,7 +4,8 @@ import { LoaderCircle, RefreshCw } from "lucide-react";
 import DiscordIcon from "@/components/icons/DiscordIcon";
 import { useAuthStore } from "@/stores/useAuthStore";
 
-// En dev : `localStorage.setItem("nartya-debug-discord-reauth", "1")` affiche la modale sans condition.
+// Jamais en dev (chaque lancement la redemandait) ; pour la tester :
+// `sessionStorage.setItem("nartya-debug-discord-reauth", "1")`, valable jusqu'à la fermeture de l'app.
 const DEBUG_KEY = "nartya-debug-discord-reauth";
 
 function readFlag(storage, key) {
@@ -27,12 +28,12 @@ export default function DiscordReauthModal() {
   const waiting = useAuthStore((s) => s.discordReauthPending);
   const [debugDone, setDebugDone] = useState(false);
   const wasWaiting = useRef(false);
-  const debug = import.meta.env.DEV && readFlag(localStorage, DEBUG_KEY);
+  const debug = import.meta.env.DEV && readFlag(sessionStorage, DEBUG_KEY);
 
   // Au démarrage, la session amorcée peut porter un jeton expiré (sur le bureau, le Hub le
   // rafraîchit) : l'API répondrait 401. On attend un jeton valide, et on retente au suivant.
   useEffect(() => {
-    if (!accessToken || discordGuild !== "unknown") return;
+    if (import.meta.env.DEV || !accessToken || discordGuild !== "unknown") return;
     if (expiresAt && expiresAt * 1000 <= Date.now()) return;
     checkDiscordGuild();
   }, [accessToken, expiresAt, discordGuild, checkDiscordGuild]);
@@ -43,7 +44,7 @@ export default function DiscordReauthModal() {
     wasWaiting.current = waiting;
   }, [waiting, reauthError]);
 
-  const open = debug ? !debugDone : !!userId && discordGuild === "missing";
+  const open = debug ? !debugDone : !import.meta.env.DEV && !!userId && discordGuild === "missing";
   if (!open) return null;
 
   return createPortal(
