@@ -1,5 +1,4 @@
 import {
-  Clapperboard,
   FastForward,
   Gauge,
   Languages,
@@ -53,7 +52,6 @@ export default function PlaybackSection({ number }) {
   const autoSkip = useSettingsStore((s) => s.autoSkip);
   const skipButtonEnabled = useSettingsStore((s) => s.skipButtonEnabled);
   const autoSkipOpEd = useSettingsStore((s) => s.autoSkipOpEd);
-  const nartyaIntro = useSettingsStore((s) => s.nartyaIntro);
   const achievementsInPlayback = useSettingsStore((s) => s.achievementsInPlayback);
   const resumeLimit = useSettingsStore((s) => s.resumeLimit);
   const liteMode = useSettingsStore((s) => s.liteMode);
@@ -212,20 +210,6 @@ export default function PlaybackSection({ number }) {
           align="end"
           className="min-w-[11rem]"
           options={ACHIEVEMENT_PLAYBACK_OPTIONS}
-        />
-      </SettingRow>
-
-      <SettingRow
-        icon={Clapperboard}
-        label="Intro Nartya"
-        description="Courte animation Nartya à l'ouverture de l'app."
-        details="Jouée pendant que l'app se charge. Passable d'un clic ou avec Échap."
-        inlineControl
-      >
-        <Toggle
-          label="Intro Nartya"
-          checked={nartyaIntro}
-          onChange={(v) => setSetting("nartyaIntro", v)}
         />
       </SettingRow>
 

@@ -29,7 +29,6 @@ const DEFAULTS = {
   advancedPlayerControls: false, // affiche le sélecteur d'hébergeur
   playerUpdateNoticeSeen: false,
   spoilerMode: false, // floute les vignettes des épisodes non vus
-  nartyaIntro: true,
   planningLanguage: "all", // filtre du calendrier : "all" | "vf" | "vostfr"
   planningContent: "anime", // contenu du calendrier : "anime" | "scans" | "all"
   favoriteGenres: [], // thèmes préférés, mis en avant sur l'accueil (5 à 8)

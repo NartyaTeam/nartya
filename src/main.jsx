@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useEffect, useState } from "react";
+import React, { lazy, Suspense } from "react";
 import ReactDOM from "react-dom/client";
 import { HashRouter } from "react-router-dom";
 import { Slide, ToastContainer } from "react-toastify";
@@ -7,10 +7,6 @@ import "react-toastify/dist/ReactToastify.css";
 import App from "./App.jsx";
 import { platform } from "./platform/index.js";
 import { installGlobalErrorLogging } from "./api/clientLogs.js";
-import { useSettingsStore } from "./stores/useSettingsStore.js";
-import NartyaIntro from "./components/NartyaIntro.jsx";
-import HalloweenIntro from "./components/HalloweenIntro.jsx";
-import { isHalloween } from "./lib/season.js";
 import "./index.css";
 
 const AchievementUnlock = lazy(() => import("./components/achievements/AchievementUnlock.jsx"));
@@ -19,30 +15,6 @@ if (platform.isMobile) document.documentElement.classList.add("mobile-runtime");
 
 // Avant le rendu, pour ne pas manquer une exception au montage.
 installGlobalErrorLogging();
-
-/** La fenêtre est créée cachée : on attend qu'elle soit visible pour jouer l'ident. */
-function AppIntro() {
-  const [state, setState] = useState(() =>
-    !useSettingsStore.getState().nartyaIntro
-      ? "done"
-      : document.visibilityState === "visible"
-        ? "playing"
-        : "waiting"
-  );
-
-  useEffect(() => {
-    if (state !== "waiting") return undefined;
-    const onVisible = () => {
-      if (document.visibilityState === "visible") setState("playing");
-    };
-    document.addEventListener("visibilitychange", onVisible);
-    return () => document.removeEventListener("visibilitychange", onVisible);
-  }, [state]);
-
-  if (state !== "playing") return null;
-  const Intro = isHalloween() ? HalloweenIntro : NartyaIntro;
-  return <Intro onDone={() => setState("done")} />;
-}
 
 function AchievementUnlockHost() {
   const hasPending = useAchievementUnlockStore((state) => state.queue.length > 0);
@@ -79,7 +51,6 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       <App />
       {/* La cérémonie de succès couvre toute l'app, lecteur compris. */}
       <AchievementUnlockHost />
-      <AppIntro />
       {platform.isMobile ? (
         <ToastContainer
           theme="dark"
