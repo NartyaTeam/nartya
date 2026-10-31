@@ -4,6 +4,7 @@ import { useAuthStore } from "@/stores/useAuthStore";
 import { useProfilesStore } from "@/stores/useProfilesStore";
 import {
   checkAccountProfilePin,
+  checkProfilePinResetCode,
   confirmProfilePinReset,
   profileErrorMessage,
   requestProfilePinReset,
@@ -99,6 +100,7 @@ export default function ProfileGate() {
         <PinResetFlow
           profile={resetFor}
           request={requestProfilePinReset}
+          check={checkProfilePinResetCode}
           confirm={confirmProfilePinReset}
           errorMessage={profileErrorMessage}
           onCancel={() => setResetFor(null)}

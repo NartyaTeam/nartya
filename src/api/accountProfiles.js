@@ -89,6 +89,13 @@ export async function requestProfilePinReset(id) {
   return json.data;
 }
 
+/** Code reçu par e-mail, vérifié dès sa saisie → `{ ok }` ou `{ ok: false, error }`. */
+export async function checkProfilePinResetCode(id, code) {
+  const { data, error } = await supabase.rpc("check_profile_pin_reset_code", { p_profile: id, p_code: code });
+  if (error) throw error;
+  return data;
+}
+
 /** `{ ok: true, profile }` ou `{ ok: false, error: "code_invalid" | "code_expired" }`. */
 export async function confirmProfilePinReset(id, code, newPin) {
   const { data, error } = await supabase.rpc("reset_account_profile_pin", {

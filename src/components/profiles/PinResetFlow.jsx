@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Loader2, Mail } from "lucide-react";
 import PinPad from "./PinPad";
 
@@ -6,9 +6,10 @@ import PinPad from "./PinPad";
  * Code de profil oublié, comme le mot de passe oublié : un code à 6 chiffres part à l'adresse
  * e-mail du compte, puis on choisit le nouveau code du profil (ou on le retire).
  *
- * `request()` → `{ email }` (adresse masquée) ; `confirm(code, newPin)` → `{ ok, error }`.
+ * `request()` → `{ email }` (adresse masquée) ; `check(code)` vérifie le code reçu dès sa saisie ;
+ * `confirm(code, newPin)` le revérifie et l'utilise. Les deux → `{ ok, error }`.
  */
-export default function PinResetFlow({ profile, request, confirm, errorMessage, onDone, onCancel }) {
+export default function PinResetFlow({ profile, request, check, confirm, errorMessage, onDone, onCancel }) {
   const [step, setStep] = useState("sending"); // sending | code | pin | failed
   const [email, setEmail] = useState(null);
   const [code, setCode] = useState(null);
@@ -29,9 +30,33 @@ export default function PinResetFlow({ profile, request, confirm, errorMessage, 
     }
   }, [request, profile.id, errorMessage]);
 
+  // Un seul envoi à l'ouverture (le double montage du mode strict en enverrait deux).
+  const sent = useRef(false);
   useEffect(() => {
+    if (sent.current) return;
+    sent.current = true;
     send();
   }, [send]);
+
+  const verify = async (value) => {
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await check(profile.id, value);
+      if (res?.ok) {
+        setCode(value);
+        setStep("pin");
+        return;
+      }
+      setError(errorMessage(res?.error));
+      if (res?.error !== "code_invalid") setStep("failed");
+    } catch (e) {
+      setError(errorMessage(e));
+    } finally {
+      setBusy(false);
+      setResetKey((n) => n + 1);
+    }
+  };
 
   const finish = async (newPin) => {
     setBusy(true);
@@ -71,16 +96,7 @@ export default function PinResetFlow({ profile, request, confirm, errorMessage, 
             Un code à 6 chiffres a été envoyé à <span className="font-semibold text-text">{email}</span>. Il est
             valable 15 minutes.
           </p>
-          <PinPad
-            length={6}
-            resetKey={resetKey}
-            error={error}
-            onComplete={(value) => {
-              setCode(value);
-              setError(null);
-              setStep("pin");
-            }}
-          />
+          <PinPad length={6} resetKey={resetKey} error={error} busy={busy} onComplete={verify} />
           <button onClick={send} className="mt-4 text-sm text-muted hover:text-text hover:underline">
             Renvoyer un code
           </button>
