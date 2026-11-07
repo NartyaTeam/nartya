@@ -317,9 +317,16 @@ export default function WatchPage() {
     `${seasonId}|${epNumber}|${lang}`
   );
 
+  // `saveProgress` change dès que le titre ou l'affiche de l'anime arrive (fiche chargée après
+  // le début de la lecture, revalidation au retour du réseau) : en dépendre relançait la lecture
+  // locale en plein épisode.
+  const localInputsRef = useRef(null);
+  localInputsRef.current = { saveProgress, userId };
+
   // Fichier local, sans extraction ni catalogue.
   useEffect(() => {
     if (!playLocal) return;
+    const { saveProgress, userId } = localInputsRef.current;
     let cancelled = false;
     // `playLocal` peut passer à `true` sans action (téléchargement terminé en fond).
     const { time: carryTime, duration: carryDuration } = positionRef.current;
@@ -369,7 +376,7 @@ export default function WatchPage() {
     return () => {
       cancelled = true;
     };
-  }, [playLocal, localMode, slug, seasonId, epNumber, lang, localItem?.file, userId, saveProgress]);
+  }, [playLocal, localMode, slug, seasonId, epNumber, lang, localItem?.file]);
 
   useEffect(() => {
     const onVisibility = () => {
@@ -394,9 +401,21 @@ export default function WatchPage() {
     setSkipRemaining(null);
   }, [slug, seasonId, epNumber, lang, clearFailedSources]);
 
+  // Une revalidation du cache (retour du réseau, liste périmée rechargée) livre une nouvelle
+  // liste d'épisodes au contenu identique : en dépendre par référence relançait l'extraction,
+  // donc rechargeait l'épisode en pleine lecture. L'effet dépend du contenu des sources de
+  // l'épisode et lit le reste dans un ref.
+  const extractionInputsRef = useRef(null);
+  extractionInputsRef.current = { episodes, currentIndex, currentEpisode, userId };
+  const episodeSourcesKey = useMemo(
+    () => (currentEpisode ? JSON.stringify(currentEpisode.lecteurs ?? null) : null),
+    [currentEpisode]
+  );
+
   useEffect(() => {
     if (playLocal) return; // géré par l'effet de lecture locale
-    if (!episodes.length || currentIndex < 0 || !currentEpisode) return;
+    if (episodeSourcesKey == null) return;
+    const { episodes, currentIndex, currentEpisode, userId } = extractionInputsRef.current;
     let cancelled = false;
     setLoading(true);
     setError(null);
@@ -449,7 +468,7 @@ export default function WatchPage() {
     return () => {
       cancelled = true;
     };
-  }, [playLocal, slug, seasonId, epNumber, lang, source, currentIndex, currentEpisode, episodes, retryToken, userId, failedSources]);
+  }, [playLocal, slug, seasonId, epNumber, lang, source, episodeSourcesKey, retryToken, failedSources]);
 
   useEffect(() => {
     if (videoUrl) setPlayerMounted(true);
