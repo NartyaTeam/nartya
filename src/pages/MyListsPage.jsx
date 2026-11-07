@@ -55,7 +55,7 @@ function ListCard({ row, summary, onOpen, onRemove }) {
           )}
           <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/75 to-transparent" />
           {watched > 0 && (
-            <span className="absolute bottom-2 left-2 rounded-md bg-black/65 px-2 py-1 text-[0.65rem] font-semibold tabular-nums text-white backdrop-blur-md">
+            <span className="absolute bottom-2 left-2 rounded-md bg-black/65 px-2 py-1 text-2xs font-semibold tabular-nums text-white backdrop-blur-md">
               {watched} ép. vu{watched > 1 ? "s" : ""}
             </span>
           )}
@@ -63,7 +63,7 @@ function ListCard({ row, summary, onOpen, onRemove }) {
         <h3 className="mt-2 line-clamp-2 text-sm font-semibold leading-5 text-text transition-colors md:group-hover:text-primary">
           {displayTitle(row.anime_slug, row.anime_title || row.anime_slug)}
         </h3>
-        <p className="mt-0.5 text-[0.68rem] text-muted">
+        <p className="mt-0.5 text-2xs text-muted">
           {row.status === "planned" && !watched ? "Prêt à commencer" : LIST_STATUS_LABEL[row.status]}
         </p>
       </button>
@@ -75,7 +75,7 @@ function ListCard({ row, summary, onOpen, onRemove }) {
         }}
         title="Retirer de ma liste"
         aria-label={`Retirer ${row.anime_title || row.anime_slug} de ma liste`}
-        className="absolute right-2 top-2 z-10 hidden h-8 w-8 items-center justify-center rounded-full bg-black/65 text-white/90 opacity-0 backdrop-blur-md transition-[opacity,background-color,transform] md:flex md:hover:bg-red-500/85 md:group-hover:opacity-100"
+        className="absolute right-2 top-2 z-10 hidden h-8 w-8 items-center justify-center rounded-full bg-black/65 text-white/90 opacity-0 backdrop-blur-md transition-[opacity,background-color,transform] md:flex md:hover:bg-danger/85 md:group-hover:opacity-100"
       >
         <X size={15} />
       </button>
@@ -143,7 +143,7 @@ function AddAnimeSheet({ rows, onAdd, onClose }) {
           <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-white/20 md:hidden" />
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[0.65rem] font-semibold uppercase tracking-[0.24em] text-primary/80">À regarder plus tard</p>
+              <p className="text-2xs font-semibold uppercase tracking-[0.24em] text-primary/80">À regarder plus tard</p>
               <h2 className="t-impact mt-1 text-3xl">Ajouter un anime</h2>
             </div>
             <button onClick={onClose} aria-label="Fermer" className="flex h-10 w-10 items-center justify-center rounded-full bg-white/[0.06] text-muted active:bg-white/10">
@@ -327,7 +327,7 @@ export default function MyListsPage() {
           <div>
             <div className="mb-2 flex items-center gap-2">
               <span className="h-px w-6 bg-primary" />
-              <p className="text-[0.65rem] font-semibold uppercase tracking-[0.28em] text-primary/80">Carnet de visionnage</p>
+              <p className="text-2xs font-semibold uppercase tracking-[0.28em] text-primary/80">Carnet de visionnage</p>
             </div>
             <div className="flex items-baseline gap-2.5">
               <h1 className="t-impact text-4xl md:text-5xl">Mes listes</h1>
@@ -362,7 +362,7 @@ export default function MyListsPage() {
                 }`}
               >
                 {status.label}
-                <span className={`text-[0.65rem] tabular-nums ${isActive ? "text-primary" : "text-muted/65"}`}>
+                <span className={`text-2xs tabular-nums ${isActive ? "text-primary" : "text-muted/65"}`}>
                   {counts[status.key] || 0}
                 </span>
                 {isActive && <span className="absolute inset-x-3 bottom-0 h-0.5 rounded-full bg-primary" />}

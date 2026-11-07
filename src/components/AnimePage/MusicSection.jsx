@@ -27,7 +27,7 @@ function ThemeRow({ theme, isOpen, onToggle }) {
             theme.type === "OP" ? "bg-primary/12 text-primary" : "bg-white/[0.06] text-text/80"
           }`}
         >
-          <span className="text-[0.6rem] font-semibold uppercase tracking-wider opacity-70">{theme.type}</span>
+          <span className="text-3xs font-semibold uppercase tracking-wider opacity-70">{theme.type}</span>
           <span className="mt-0.5 font-display text-sm font-bold">{theme.sequence}</span>
         </span>
 

@@ -12,7 +12,7 @@ export default function SupporterBadge({ profile, size = "sm", className = "" })
   const isUltimate = tier === "ultimate";
   const Icon = isUltimate ? Crown : Sparkles;
   const label = isUltimate ? "Ultimate" : "Supporter";
-  const dims = size === "lg" ? "gap-1.5 px-2 py-1 text-[0.7rem]" : "gap-1 px-1.5 py-0.5 text-[0.6rem]";
+  const dims = size === "lg" ? "gap-1.5 px-2 py-1 text-2xs" : "gap-1 px-1.5 py-0.5 text-3xs";
 
   return (
     <span
@@ -22,7 +22,7 @@ export default function SupporterBadge({ profile, size = "sm", className = "" })
         backgroundColor: `rgb(${GOLD} / 0.12)`,
         borderColor: `rgb(${GOLD} / 0.35)`,
       }}
-      className={`inline-flex items-center rounded-[5px] border font-semibold uppercase tracking-kana ${dims} ${className}`}
+      className={`inline-flex items-center rounded-md border font-semibold uppercase tracking-kana ${dims} ${className}`}
     >
       <Icon size={size === "lg" ? 12 : 10} strokeWidth={2.5} />
       {label}

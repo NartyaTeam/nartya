@@ -93,7 +93,7 @@ function HelpHint({ label, children }) {
             id={tooltipId}
             role="tooltip"
             style={position ? { top: position.top, left: position.left, width: position.width } : { visibility: "hidden" }}
-            className="pointer-events-none fixed z-[200] rounded-md border border-border bg-surface-2 px-3 py-2.5 text-left text-[0.7rem] font-normal leading-5 text-muted shadow-xl"
+            className="pointer-events-none fixed z-[200] rounded-md border border-border bg-surface-2 px-3 py-2.5 text-left text-2xs font-normal leading-5 text-muted shadow-xl"
           >
             {children}
           </span>,
@@ -112,7 +112,7 @@ export function SettingRow({ icon: Icon, label, description, details, inlineCont
     >
       <div className="flex min-w-0 gap-3 md:gap-4">
         {Icon && (
-          <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary/[0.08] text-primary md:rounded-[5px] md:bg-white/[0.045]">
+          <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary/[0.08] text-primary md:rounded-md md:bg-white/[0.045]">
             <Icon size={16} />
           </span>
         )}
@@ -122,7 +122,7 @@ export function SettingRow({ icon: Icon, label, description, details, inlineCont
             {details && <HelpHint label={label}>{details}</HelpHint>}
           </div>
           {description && (
-            <p className="mt-1 max-w-2xl text-[0.7rem] leading-[1.15rem] text-muted md:mt-1.5 md:text-xs md:leading-5">{description}</p>
+            <p className="mt-1 max-w-2xl text-2xs leading-[1.15rem] text-muted md:mt-1.5 md:text-xs md:leading-5">{description}</p>
           )}
         </div>
       </div>
@@ -147,14 +147,14 @@ export function Section({ id, number, eyebrow, title, description, children }) {
           {number}
         </span>
         <div>
-          <p className="hidden text-[0.6rem] font-bold uppercase tracking-[0.24em] text-primary md:block">
+          <p className="hidden text-3xs font-bold uppercase tracking-[0.24em] text-primary md:block">
             {eyebrow}
           </p>
           <h2 className="t-impact text-2xl text-text md:mt-2 md:text-3xl">
             {title}
           </h2>
           {description && (
-            <p className="mt-1 max-w-2xl text-[0.7rem] leading-[1.15rem] text-muted md:mt-2 md:text-sm md:leading-6">{description}</p>
+            <p className="mt-1 max-w-2xl text-2xs leading-[1.15rem] text-muted md:mt-2 md:text-sm md:leading-6">{description}</p>
           )}
         </div>
       </header>

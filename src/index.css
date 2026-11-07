@@ -157,7 +157,7 @@
     }
   }
   .eyebrow {
-    @apply text-[0.7rem] font-bold uppercase tracking-kana text-primary;
+    @apply text-2xs font-bold uppercase tracking-kana text-primary;
   }
   .vertical-kana {
     writing-mode: vertical-rl;

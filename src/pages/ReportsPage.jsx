@@ -37,8 +37,8 @@ const LIST_W_STORAGE_KEY = "nartya-reports-list-w";
 
 const STATUS_DOT = {
   open: "bg-primary",
-  handled: "bg-sky-400",
-  resolved: "bg-emerald-400",
+  handled: "bg-info",
+  resolved: "bg-success",
   rejected: "bg-muted/60",
 };
 
@@ -109,7 +109,7 @@ function ReportsList({ reports, selectedId, onSelect, loading }) {
                           {cat?.label || "Autre"}
                         </p>
                         <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${STATUS_DOT[r.status] || STATUS_DOT.open}`} />
-                        <span className="shrink-0 text-[0.6rem] text-muted/55">
+                        <span className="shrink-0 text-3xs text-muted/55">
                           {relativeDate(r.lastMessageAt || r.openedAt)}
                         </span>
                       </div>

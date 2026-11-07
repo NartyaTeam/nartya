@@ -31,9 +31,9 @@ import {
 import { Section, SettingRow, Toggle } from "./SettingsLayout";
 
 const BUTTON =
-  "inline-flex shrink-0 items-center justify-center gap-2 rounded-[5px] border border-border bg-white/[0.035] px-3.5 py-2 text-sm font-medium leading-5 text-text transition-colors hover:border-white/20 hover:bg-surface-2 disabled:pointer-events-none disabled:opacity-50";
+  "inline-flex shrink-0 items-center justify-center gap-2 rounded-md border border-border bg-white/[0.035] px-3.5 py-2 text-sm font-medium leading-5 text-text transition-colors hover:border-white/20 hover:bg-surface-2 disabled:pointer-events-none disabled:opacity-50";
 const PRIMARY_BUTTON =
-  "inline-flex shrink-0 items-center justify-center gap-2 rounded-[5px] border border-primary bg-primary px-3.5 py-2 text-sm font-semibold leading-5 text-primary-fg transition-opacity hover:opacity-90 disabled:pointer-events-none disabled:opacity-50";
+  "inline-flex shrink-0 items-center justify-center gap-2 rounded-md border border-primary bg-primary px-3.5 py-2 text-sm font-semibold leading-5 text-primary-fg transition-opacity hover:opacity-90 disabled:pointer-events-none disabled:opacity-50";
 
 const THRESHOLD_OPTIONS = [50, 60, 70, 75, 80, 85, 90, 95, 100].map((n) => ({ value: String(n), label: `${n} %` }));
 
@@ -86,7 +86,7 @@ function importLabel(state) {
 
 function ProviderBadge({ id }) {
   return (
-    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary/[0.08] text-[0.6rem] font-black tracking-wide text-primary md:rounded-[5px] md:bg-white/[0.045]">
+    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary/[0.08] text-3xs font-black tracking-wide text-primary md:rounded-md md:bg-white/[0.045]">
       {BADGES[id]}
     </span>
   );
@@ -98,20 +98,20 @@ function ProviderRow({ provider, account, available, busy, onLink, onUnlink }) {
     <div className="grid gap-3 border-t border-border/45 py-4 first:border-t-0 md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:gap-5 md:py-6">
       <div className="flex min-w-0 gap-3 md:gap-4">
         {account?.avatar_url ? (
-          <img src={account.avatar_url} alt="" className="h-9 w-9 shrink-0 rounded-xl object-cover md:rounded-[5px]" />
+          <img src={account.avatar_url} alt="" className="h-9 w-9 shrink-0 rounded-xl object-cover md:rounded-md" />
         ) : (
           <ProviderBadge id={provider.id} />
         )}
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <p className="text-sm font-semibold text-text">{provider.label}</p>
-            {account?.needs_relink && <TriangleAlert size={14} className="text-amber-400" />}
+            {account?.needs_relink && <TriangleAlert size={14} className="text-warning" />}
           </div>
-          <p className="mt-1 text-[0.7rem] leading-[1.15rem] text-muted md:mt-1.5 md:text-xs md:leading-5">
+          <p className="mt-1 text-2xs leading-[1.15rem] text-muted md:mt-1.5 md:text-xs md:leading-5">
             {accountDescription(account, available)}
           </p>
           {account?.last_error && !account.needs_relink && (
-            <p className="mt-1 text-[0.7rem] leading-[1.15rem] text-amber-400/90 md:text-xs">{account.last_error}</p>
+            <p className="mt-1 text-2xs leading-[1.15rem] text-warning/90 md:text-xs">{account.last_error}</p>
           )}
         </div>
       </div>

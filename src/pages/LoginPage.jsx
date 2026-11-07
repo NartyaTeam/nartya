@@ -221,14 +221,14 @@ export default function LoginPage() {
 
           <div className="my-5 flex items-center gap-3">
             <span className="h-px flex-1 bg-border" />
-            <span className="text-[0.7rem] uppercase tracking-kana text-muted/70">ou</span>
+            <span className="text-2xs uppercase tracking-kana text-muted/70">ou</span>
             <span className="h-px flex-1 bg-border" />
           </div>
 
           <button
             onClick={onDiscord}
             disabled={!!busy}
-            className="flex w-full items-center justify-center gap-2.5 rounded-md bg-[#5865F2] px-4 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:bg-[#4d59e0] disabled:opacity-60"
+            className="flex w-full items-center justify-center gap-2.5 rounded-md bg-discord px-4 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:bg-[#4d59e0] disabled:opacity-60"
           >
             {busy === "discord" ? (
               <Loader2 size={16} className="animate-spin" />

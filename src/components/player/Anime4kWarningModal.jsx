@@ -13,15 +13,15 @@ import { assessAnime4kCapability } from "@/utils/anime4k";
 const STATUS_META = {
   recommended: {
     Icon: CheckCircle2,
-    border: "border-emerald-400/25",
-    bg: "bg-emerald-400/[0.07]",
-    text: "text-emerald-300",
+    border: "border-success/25",
+    bg: "bg-success/[0.07]",
+    text: "text-success",
   },
   caution: {
     Icon: Gauge,
-    border: "border-amber-300/25",
-    bg: "bg-amber-300/[0.07]",
-    text: "text-amber-200",
+    border: "border-warning/25",
+    bg: "bg-warning/[0.07]",
+    text: "text-warning",
   },
   poor: {
     Icon: AlertTriangle,
@@ -99,7 +99,7 @@ export default function Anime4kWarningModal({ mode, sourceWidth, sourceHeight, o
           <div className="pr-8">
             <div className="flex items-center gap-2.5">
               <span className="h-px w-6 bg-primary" />
-              <p className="text-[0.65rem] font-bold uppercase tracking-[0.24em] text-primary">
+              <p className="text-2xs font-bold uppercase tracking-[0.24em] text-primary">
                 Qualité d'image
               </p>
             </div>
@@ -120,7 +120,7 @@ export default function Anime4kWarningModal({ mode, sourceWidth, sourceHeight, o
             <div className="min-w-0">
               <p className={`text-sm font-bold ${meta.text}`}>{report.title}</p>
               <p className="mt-1 text-xs leading-relaxed text-muted">{report.summary}</p>
-              <p className="mt-2 truncate text-[0.7rem] font-medium text-text/75" title={report.gpu}>
+              <p className="mt-2 truncate text-2xs font-medium text-text/75" title={report.gpu}>
                 {report.gpu}
               </p>
             </div>
@@ -138,7 +138,7 @@ export default function Anime4kWarningModal({ mode, sourceWidth, sourceHeight, o
             </div>
           </div>
 
-          <p className="mt-4 text-[0.7rem] leading-relaxed text-muted/70">
+          <p className="mt-4 text-2xs leading-relaxed text-muted/70">
             Mode {mode.toUpperCase().split("").join("+")}
             {sourceHeight && outputHeight ? ` · ${sourceHeight}p vers ${outputHeight}p` : " · résolution doublée"}.
             La détection reste une estimation locale et aucune information matérielle n'est envoyée.

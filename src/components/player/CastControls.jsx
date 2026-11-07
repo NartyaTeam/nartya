@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Cast, Play, Pause, Square, Volume2, VolumeX, Loader2, X, RotateCw, Plus } from "lucide-react";
 import { toast } from "@/lib/toast";
 import { useCastStore } from "@/stores/useCastStore";
+import { Button } from "@/components/ui/Button";
 
 // Au-delà, une recherche vide affiche l'aide.
 const SEARCH_GRACE_MS = 8000;
@@ -156,13 +157,13 @@ export default function CastControls({ getMedia, getCurrentTime, onMediaFailed }
         autoFocus
         className="min-w-0 flex-1 rounded-md bg-white/[0.06] px-2.5 py-1.5 text-sm text-text ring-1 ring-border placeholder:text-muted focus:outline-none focus:ring-primary"
       />
-      <button
+      <Button
         type="submit"
         disabled={adding}
-        className="rounded-md bg-primary px-2.5 py-1.5 text-xs font-medium text-primary-fg disabled:opacity-50"
+        size="sm"
       >
         {adding ? <Loader2 className="animate-spin" size={14} /> : "Ajouter"}
-      </button>
+      </Button>
     </form>
   ) : (
     <button
@@ -258,7 +259,7 @@ export default function CastControls({ getMedia, getCurrentTime, onMediaFailed }
             <>
               <div className="mb-3 flex items-center justify-between">
                 <div className="min-w-0">
-                  <p className="text-[0.65rem] uppercase tracking-wider text-muted">
+                  <p className="text-2xs uppercase tracking-wider text-muted">
                     {connecting ? "Connexion…" : "Cast sur"}
                   </p>
                   <p className="truncate text-sm font-semibold text-text">
@@ -291,7 +292,7 @@ export default function CastControls({ getMedia, getCurrentTime, onMediaFailed }
                 style={castRangeBg(current, Math.max(1, duration))}
                 className="cast-range w-full"
               />
-              <div className="mb-3 flex justify-between text-[0.65rem] tabular-nums text-muted">
+              <div className="mb-3 flex justify-between text-2xs tabular-nums text-muted">
                 <span>{fmt(current)}</span>
                 <span>{fmt(duration)}</span>
               </div>

@@ -23,8 +23,8 @@ const MAX_FILE_MB = 5;
 
 const STATUS_META = {
   open: { label: "Ouvert", cls: "bg-primary/10 text-primary" },
-  handled: { label: "Pris en charge", cls: "bg-sky-400/10 text-sky-300" },
-  resolved: { label: "Résolu", cls: "bg-emerald-400/10 text-emerald-300" },
+  handled: { label: "Pris en charge", cls: "bg-info/10 text-info" },
+  resolved: { label: "Résolu", cls: "bg-success/10 text-success" },
   rejected: { label: "Non retenu", cls: "bg-white/[0.06] text-muted" },
 };
 
@@ -77,7 +77,7 @@ function MessageBubble({ message, onOpenImage }) {
         <div className={`mb-1 flex items-center gap-2 ${alignRight ? "justify-end" : ""}`}>
           <span className="text-xs font-semibold text-text/90">{message.authorName}</span>
           {fromTeam && <RoleBadge role={message.authorRole} />}
-          <span className="text-[0.65rem] tabular-nums text-muted/60">
+          <span className="text-2xs tabular-nums text-muted/60">
             {messageTime(message.createdAt)}
           </span>
         </div>
@@ -187,11 +187,11 @@ export default function ReportConversation({ report, messages, loading, sending,
       <header className="flex min-h-[4.5rem] flex-col justify-center gap-1.5 border-b border-border/70 bg-surface/55 px-4 py-2.5 backdrop-blur-xl sm:px-5">
         <div className="flex items-center gap-2">
           <span
-            className={`shrink-0 rounded-[4px] px-2 py-0.5 text-[0.62rem] font-bold uppercase tracking-kana ${status.cls}`}
+            className={`shrink-0 rounded px-2 py-0.5 text-3xs font-bold uppercase tracking-kana ${status.cls}`}
           >
             {status.label}
           </span>
-          <span className="shrink-0 rounded-[4px] bg-white/[0.05] px-2 py-0.5 text-[0.62rem] font-semibold text-muted">
+          <span className="shrink-0 rounded bg-white/[0.05] px-2 py-0.5 text-3xs font-semibold text-muted">
             {bugCategoryLabel(report.category)}
           </span>
           <span className="truncate text-xs text-muted">

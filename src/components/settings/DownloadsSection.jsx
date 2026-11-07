@@ -49,7 +49,7 @@ function DownloadDirRow() {
   return (
     <div className="grid gap-5 border-t border-border/50 py-6 md:grid-cols-[minmax(0,1fr)_minmax(220px,360px)] md:items-center">
       <div className="flex min-w-0 gap-4">
-        <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-[5px] bg-white/[0.045] text-primary">
+        <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-md bg-white/[0.045] text-primary">
           <HardDrive size={16} />
         </span>
         <div className="min-w-0">
@@ -60,7 +60,7 @@ function DownloadDirRow() {
               : "Choisis où conserver les épisodes hors ligne."}
           </p>
           <p
-            className="mt-3 truncate border-l-2 border-primary/45 bg-black/15 px-3 py-2 font-mono text-[11px] text-muted"
+            className="mt-3 truncate border-l-2 border-primary/45 bg-black/15 px-3 py-2 font-mono text-2xs text-muted"
             title={info?.dir || ""}
           >
             {info?.dir || "…"}
@@ -73,7 +73,7 @@ function DownloadDirRow() {
           type="button"
           onClick={() => openDownloadsDir()}
           disabled={!info}
-          className="inline-flex items-center gap-1.5 rounded-[5px] border border-border bg-white/[0.035] px-3 py-2 text-xs font-medium text-text transition-colors hover:border-white/20 hover:text-primary disabled:opacity-50"
+          className="inline-flex items-center gap-1.5 rounded-md border border-border bg-white/[0.035] px-3 py-2 text-xs font-medium text-text transition-colors hover:border-white/20 hover:text-primary disabled:opacity-50"
         >
           <FolderOpen size={14} />
           Ouvrir
@@ -82,7 +82,7 @@ function DownloadDirRow() {
           type="button"
           onClick={handleChange}
           disabled={pending || !info}
-          className="inline-flex items-center gap-1.5 rounded-[5px] border border-border bg-white/[0.035] px-3 py-2 text-xs font-medium text-text transition-colors hover:border-white/20 hover:text-primary disabled:opacity-50"
+          className="inline-flex items-center gap-1.5 rounded-md border border-border bg-white/[0.035] px-3 py-2 text-xs font-medium text-text transition-colors hover:border-white/20 hover:text-primary disabled:opacity-50"
         >
           <FolderSearch size={14} />
           Changer…

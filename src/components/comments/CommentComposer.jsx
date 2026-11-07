@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { AtSign, EyeOff, Loader2, Send, X } from "lucide-react";
 import { mentionToken } from "@/lib/commentMentions";
 import EpisodeMentionPicker from "./EpisodeMentionPicker";
+import { Button } from "@/components/ui/Button";
 
 const MAX = 1500; // même borne que côté serveur
 
@@ -148,7 +149,7 @@ export default function CommentComposer({
         </button>
 
         <span
-          className={`ml-auto text-[0.7rem] tabular-nums ${
+          className={`ml-auto text-2xs tabular-nums ${
             tooLong ? "font-semibold text-primary" : "text-muted/60"
           }`}
         >
@@ -165,14 +166,14 @@ export default function CommentComposer({
             Annuler
           </button>
         )}
-        <button
+        <Button
           type="submit"
           disabled={busy || tooShort || tooLong}
-          className="flex items-center gap-1.5 rounded-md bg-primary px-3.5 py-1.5 text-xs font-semibold text-primary-fg transition-opacity hover:opacity-90 disabled:opacity-40"
+          size="sm"
         >
           {busy ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}
           {submitLabel}
-        </button>
+        </Button>
       </div>
     </form>
   );

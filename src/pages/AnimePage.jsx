@@ -690,7 +690,7 @@ export default function AnimePage() {
                   rel="noreferrer"
                   className="group inline-flex items-center gap-2 rounded-md bg-surface/70 px-3 py-2 text-sm font-bold text-text ring-2 ring-border transition-colors hover:bg-white/[0.1] hover:text-primary"
                 >
-                  <img src={asset("anime-sama.png")} alt="" className="h-4 w-4 rounded-[3px] object-cover" />
+                  <img src={asset("anime-sama.png")} alt="" className="h-4 w-4 rounded object-cover" />
                   Voir sur Anime-Sama
                   <ExternalLink size={13} className="text-muted transition-colors group-hover:text-primary" />
                 </a>

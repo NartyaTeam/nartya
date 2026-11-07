@@ -40,7 +40,7 @@ export default function FeatureBanner({ className = "" }) {
         <LayoutList size={17} />
       </span>
       <p className="min-w-0 flex-1 text-xs leading-snug sm:text-sm">
-        <span className="mr-1.5 rounded bg-black px-1.5 py-0.5 text-[0.6rem] font-black uppercase tracking-widest text-white sm:text-[0.65rem]">
+        <span className="mr-1.5 rounded bg-black px-1.5 py-0.5 text-3xs font-black uppercase tracking-widest text-white sm:text-2xs">
           Grosse nouveauté
         </span>
         <strong>Les tier lists débarquent sur Nartya !</strong>{" "}

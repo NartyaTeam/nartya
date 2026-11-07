@@ -65,7 +65,7 @@ export default function TierListsPage() {
       <header className="mb-6">
         <div className="mb-2 flex items-center gap-2">
           <span className="h-px w-6 bg-primary" />
-          <p className="text-[0.65rem] font-semibold uppercase tracking-[0.28em] text-primary/80">Communauté</p>
+          <p className="text-2xs font-semibold uppercase tracking-[0.28em] text-primary/80">Communauté</p>
         </div>
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>

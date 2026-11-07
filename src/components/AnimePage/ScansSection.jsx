@@ -203,7 +203,7 @@ export function ScansSection({ slug, scans = [], animeTitle, animeCover, onRepor
             className="flex w-full items-center gap-2 border-b border-border/70 px-4 py-3.5 text-left active:bg-white/[0.03]"
           >
             <div className="min-w-0 flex-1">
-              <p className="text-[0.65rem] font-medium uppercase tracking-wider text-muted">Édition</p>
+              <p className="text-2xs font-medium uppercase tracking-wider text-muted">Édition</p>
               <p className="truncate font-display text-base font-semibold text-text">{active?.label || oeuvre}</p>
             </div>
             <ChevronDown size={18} className="shrink-0 text-muted" />

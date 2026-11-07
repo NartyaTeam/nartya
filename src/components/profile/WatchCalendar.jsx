@@ -66,7 +66,7 @@ export default function WatchCalendar({ userId }) {
         <h3 className="section-title !text-xl">
           Une année de visionnage
         </h3>
-        <p className="shrink-0 text-[11px] text-muted">
+        <p className="shrink-0 text-2xs text-muted">
           {total.toLocaleString("fr-FR")} épisode{total > 1 ? "s" : ""} · {activeDays} jour
           {activeDays > 1 ? "s" : ""} actif{activeDays > 1 ? "s" : ""}
         </p>
@@ -78,7 +78,7 @@ export default function WatchCalendar({ userId }) {
             {DAY_LABELS.map((d, i) => (
               <span
                 key={i}
-                className="flex h-[11px] items-center text-[9px] leading-none text-muted/60"
+                className="flex h-[11px] items-center text-3xs leading-none text-muted/60"
                 style={{ visibility: i % 2 ? "visible" : "hidden" }}
               >
                 {d}
@@ -93,7 +93,7 @@ export default function WatchCalendar({ userId }) {
               {Array.from({ length: columns }, (_, col) => {
                 const label = labels.find((l) => l.col === col);
                 return (
-                  <span key={col} className="whitespace-nowrap text-[9px] leading-none text-muted/70">
+                  <span key={col} className="whitespace-nowrap text-3xs leading-none text-muted/70">
                     {label?.label}
                   </span>
                 );
@@ -107,7 +107,7 @@ export default function WatchCalendar({ userId }) {
                 cell ? (
                   <span
                     key={cell.day}
-                    className="rounded-[2px]"
+                    className="rounded-sm"
                     style={cellStyle(cell.count, max)}
                     title={`${new Date(`${cell.day}T00:00:00`).toLocaleDateString("fr-FR", {
                       day: "numeric",
@@ -123,7 +123,7 @@ export default function WatchCalendar({ userId }) {
         </div>
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] text-muted">
+      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-2xs text-muted">
         {best?.count > 0 && (
           <span>
             Meilleur jour ·{" "}
@@ -141,7 +141,7 @@ export default function WatchCalendar({ userId }) {
           {[0, 1, 2, 3, 4].map((step) => (
             <span
               key={step}
-              className="h-[11px] w-[11px] rounded-[2px]"
+              className="h-[11px] w-[11px] rounded-sm"
               style={cellStyle(step === 0 ? 0 : Math.round((max * step) / 4), max)}
             />
           ))}

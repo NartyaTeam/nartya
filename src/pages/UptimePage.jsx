@@ -44,12 +44,12 @@ function ServiceRow({ service }) {
     <div className="flex items-center justify-between gap-4 px-5 py-3.5">
       <div className="flex min-w-0 items-center gap-3">
         <span
-          className={`h-2 w-2 shrink-0 rounded-full ${service.ok ? "bg-emerald-400" : "bg-red-400"}`}
+          className={`h-2 w-2 shrink-0 rounded-full ${service.ok ? "bg-success" : "bg-danger"}`}
         />
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold text-text">{service.label}</p>
           {!service.ok && service.detail && (
-            <p className="mt-0.5 truncate text-xs text-red-300/90">{service.detail}</p>
+            <p className="mt-0.5 truncate text-xs text-danger/90">{service.detail}</p>
           )}
           {service.ok && service.detail && (
             <p className="mt-0.5 truncate text-xs text-muted">{service.detail}</p>
@@ -57,11 +57,11 @@ function ServiceRow({ service }) {
         </div>
       </div>
       <div className="shrink-0 text-right">
-        <p className={`text-xs font-bold ${service.ok ? "text-emerald-300" : "text-red-300"}`}>
+        <p className={`text-xs font-bold ${service.ok ? "text-success" : "text-danger"}`}>
           {service.ok ? "En ligne" : "Hors ligne"}
         </p>
         {service.ok && service.ms != null && (
-          <p className="text-[0.65rem] tabular-nums text-muted/60">{service.ms}ms</p>
+          <p className="text-2xs tabular-nums text-muted/60">{service.ms}ms</p>
         )}
       </div>
     </div>
@@ -145,25 +145,25 @@ export default function UptimePage() {
   let banner = null;
   if (error && !data) {
     banner = {
-      cls: "border-red-400/25 bg-red-400/[0.06] text-red-200",
+      cls: "border-danger/25 bg-danger/[0.06] text-danger",
       icon: XCircle,
       text: "Impossible de récupérer l'état des services. Vérifie ta connexion.",
     };
   } else if (coreDown) {
     banner = {
-      cls: "border-red-400/25 bg-red-400/[0.06] text-red-200",
+      cls: "border-danger/25 bg-danger/[0.06] text-danger",
       icon: XCircle,
       text: "Un service essentiel est perturbé — le catalogue ou la lecture peuvent être affectés.",
     };
   } else if (enrichDown) {
     banner = {
-      cls: "border-amber-400/25 bg-amber-400/[0.06] text-amber-200",
+      cls: "border-warning/25 bg-warning/[0.06] text-warning",
       icon: RefreshCw,
       text: "Tout l'essentiel fonctionne. Un service d'enrichissement est perturbé : certaines fiches peuvent être moins complètes (synopsis, vignettes, musiques…).",
     };
   } else if (data) {
     banner = {
-      cls: "border-emerald-400/25 bg-emerald-400/[0.06] text-emerald-200",
+      cls: "border-success/25 bg-success/[0.06] text-success",
       icon: CheckCircle2,
       text: "Tout fonctionne normalement.",
     };
@@ -213,7 +213,7 @@ export default function UptimePage() {
         </div>
       )}
 
-      <div className="mt-6 flex items-center gap-1.5 px-1 text-[0.7rem] text-muted/70">
+      <div className="mt-6 flex items-center gap-1.5 px-1 text-2xs text-muted/70">
         <Clock3 size={12} />
         {lastChecked
           ? `Dernière vérification ${relativeSeconds(lastChecked)}`

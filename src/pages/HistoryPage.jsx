@@ -2,11 +2,13 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { format, isSameYear, isToday, isYesterday } from "date-fns";
 import { fr } from "date-fns/locale";
-import { BookOpen, History, Play, Search, X } from "lucide-react";
+import { BookOpen, Compass, History, Play, Search, X } from "lucide-react";
 import { getReadingHistory, getWatchHistory } from "@/api/history";
 import { useDisplayTitle } from "@/stores/useTitlesStore";
 import { formatSeasonId } from "@/utils/watchHistory";
 import MediaTabs from "@/components/lists/MediaTabs";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Button } from "@/components/ui/Button";
 
 function dayLabel(date) {
   if (isToday(date)) return "Aujourd'hui";
@@ -39,7 +41,7 @@ function HistoryRow({ cover, title, detail, time, onOpen, onResume, resumeLabel 
       <button onClick={onOpen} className="min-w-0 flex-1 text-left">
         <p className="line-clamp-1 text-sm font-semibold text-text transition-colors md:group-hover:text-primary">{title}</p>
         <p className="mt-0.5 line-clamp-1 text-xs text-muted">{detail}</p>
-        <p className="mt-0.5 text-[0.68rem] tabular-nums text-muted/70">{time}</p>
+        <p className="mt-0.5 text-2xs tabular-nums text-muted/70">{time}</p>
       </button>
       <button
         onClick={onResume}
@@ -139,7 +141,7 @@ export default function HistoryPage() {
       <header className="mb-6">
         <div className="mb-2 flex items-center gap-2">
           <span className="h-px w-6 bg-primary" />
-          <p className="text-[0.65rem] font-semibold uppercase tracking-[0.28em] text-primary/80">Ma bibliothèque</p>
+          <p className="text-2xs font-semibold uppercase tracking-[0.28em] text-primary/80">Ma bibliothèque</p>
         </div>
         <h1 className="t-impact text-4xl md:text-5xl">Historique</h1>
         <p className="mt-1.5 max-w-xl text-sm text-muted">
@@ -177,18 +179,25 @@ export default function HistoryPage() {
           ))}
         </div>
       ) : groups.length === 0 ? (
-        <div className="flex min-h-[40dvh] flex-col items-center justify-center rounded-md border-2 border-dashed border-border px-7 text-center">
-          <span className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
-            {query.trim() ? <Search size={24} /> : media === "manga" ? <BookOpen size={24} /> : <History size={24} />}
-          </span>
-          <p className="mt-4 text-sm text-muted">
-            {query.trim()
+        <EmptyState
+          compact={!!query.trim()}
+          icon={query.trim() ? Search : media === "manga" ? BookOpen : History}
+          title={query.trim() ? null : "Rien pour l'instant"}
+          description={
+            query.trim()
               ? `Rien dans l'historique ne correspond à « ${query.trim()} ».`
               : media === "manga"
                 ? "Les mangas que tu lis apparaîtront ici."
-                : "Les animes que tu regardes apparaîtront ici."}
-          </p>
-        </div>
+                : "Les animes que tu regardes apparaîtront ici."
+          }
+          action={
+            query.trim() ? null : (
+              <Button icon={Compass} onClick={() => navigate(media === "manga" ? "/mangas" : "/")}>
+                {media === "manga" ? "Découvrir des mangas" : "Découvrir des animes"}
+              </Button>
+            )
+          }
+        />
       ) : (
         <div className="max-w-3xl space-y-7">
           {groups.map((group) => (

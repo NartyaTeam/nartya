@@ -37,9 +37,9 @@ const mbps = (bits) => (Number.isFinite(bits) && bits > 0 ? `${(bits / 1e6).toFi
 
 function marginTone(m) {
   if (!Number.isFinite(m)) return "text-white/60";
-  if (m >= 3) return "text-emerald-400";
-  if (m >= 1.5) return "text-amber-300";
-  return "text-red-400";
+  if (m >= 3) return "text-success";
+  if (m >= 1.5) return "text-warning";
+  return "text-danger";
 }
 
 export default function DevStatsOverlay({ getMedia, videoUrl, source, episodeLabel, language }) {
@@ -175,11 +175,11 @@ export default function DevStatsOverlay({ getMedia, videoUrl, source, episodeLab
   const origin = source?.origin || "?";
 
   return (
-    <div className="pointer-events-auto absolute left-5 top-16 z-[54] w-[300px] select-text bg-black/75 font-mono text-[11px] leading-[1.45] text-white/90 shadow-lg backdrop-blur-sm">
+    <div className="pointer-events-auto absolute left-5 top-16 z-[54] w-[300px] select-text bg-black/75 font-mono text-2xs leading-[1.45] text-white/90 shadow-lg backdrop-blur-sm">
       <button
         type="button"
         onClick={toggle}
-        className="flex w-full items-center justify-between border-b border-white/10 px-2.5 py-1.5 text-left text-[10px] uppercase tracking-wider text-white/60 hover:text-white"
+        className="flex w-full items-center justify-between border-b border-white/10 px-2.5 py-1.5 text-left text-3xs uppercase tracking-wider text-white/60 hover:text-white"
       >
         <span>
           Debug · {source?.label || "source ?"} · {host}
@@ -229,7 +229,7 @@ export default function DevStatsOverlay({ getMedia, videoUrl, source, episodeLab
           />
           <Sep />
           <Row k="Tampon" v={stats ? `${stats.ahead.toFixed(1)} s` : "—"} />
-          <Row k="Calages" v={stats ? String(stats.stalls) : "—"} tone={stats?.stalls ? "text-amber-300" : undefined} />
+          <Row k="Calages" v={stats ? String(stats.stalls) : "—"} tone={stats?.stalls ? "text-warning" : undefined} />
           <Row
             k="Images perdues"
             v={stats?.totalFrames ? `${stats.dropped} / ${stats.totalFrames}` : "—"}

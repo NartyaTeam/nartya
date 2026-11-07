@@ -51,7 +51,7 @@ export default function OfflineBanner() {
         role="status"
         aria-label="Mode hors ligne — seuls tes épisodes téléchargés sont disponibles"
         title="Mode hors ligne"
-        className={`${DESKTOP_POSITION} flex h-9 w-9 items-center justify-center rounded-lg border border-amber-500/25 bg-surface/95 text-amber-300 shadow-lg backdrop-blur-sm animate-fade-in`}
+        className={`${DESKTOP_POSITION} flex h-9 w-9 items-center justify-center rounded-lg border border-warning/25 bg-surface/95 text-warning shadow-lg backdrop-blur-sm animate-fade-in`}
       >
         <WifiOff size={15} />
       </div>
@@ -60,7 +60,7 @@ export default function OfflineBanner() {
 
   return (
     <div
-      className={`${DESKTOP_POSITION} flex items-center gap-2 rounded-lg border border-amber-500/25 bg-surface/95 px-3.5 py-2.5 text-xs font-medium text-amber-300 shadow-lg backdrop-blur-sm animate-fade-in`}
+      className={`${DESKTOP_POSITION} flex items-center gap-2 rounded-lg border border-warning/25 bg-surface/95 px-3.5 py-2.5 text-xs font-medium text-warning shadow-lg backdrop-blur-sm animate-fade-in`}
     >
       <WifiOff size={14} />
       Mode hors ligne — seuls tes épisodes téléchargés sont disponibles.

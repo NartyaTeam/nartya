@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { X, Check, Loader2, ZoomIn, Move } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 
 const VIEW = 288; // côté du cadre à l'écran (px)
 const OUT = 512; // côté de l'image exportée (px)
@@ -157,14 +158,14 @@ export default function AvatarCropModal({ file, onCancel, onConfirm }) {
           >
             Annuler
           </button>
-          <button
+          <Button
             onClick={confirm}
             disabled={busy || !nat}
-            className="flex items-center gap-2 rounded-md bg-primary px-5 py-2.5 text-sm font-bold text-primary-fg transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
+            size="lg"
           >
             {busy ? <Loader2 size={16} className="animate-spin" /> : <Check size={15} />}
             Appliquer
-          </button>
+          </Button>
         </div>
       </div>
     </div>,

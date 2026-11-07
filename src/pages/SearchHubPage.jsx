@@ -342,7 +342,7 @@ export default function SearchHubPage() {
               <SlidersHorizontal size={15} />
               <span className="hidden sm:inline">Filtres</span>
               {draftFiltersCount > 0 && (
-                <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[0.6rem] font-bold text-primary-fg">
+                <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-3xs font-bold text-primary-fg">
                   {draftFiltersCount}
                 </span>
               )}
@@ -364,7 +364,7 @@ export default function SearchHubPage() {
               {media !== "manga" && (
                 <div className="space-y-6">
                   <div>
-                    <p className="mb-2.5 text-[0.65rem] font-bold uppercase tracking-[0.16em] text-muted/70">
+                    <p className="mb-2.5 text-2xs font-bold uppercase tracking-[0.16em] text-muted/70">
                       Format
                     </p>
                     <div className="flex flex-wrap gap-2">
@@ -381,7 +381,7 @@ export default function SearchHubPage() {
                   </div>
 
                   <div className={type === "Film" ? "opacity-40" : ""}>
-                    <p className="mb-2.5 text-[0.65rem] font-bold uppercase tracking-[0.16em] text-muted/70">
+                    <p className="mb-2.5 text-2xs font-bold uppercase tracking-[0.16em] text-muted/70">
                       Nombre d'épisodes
                     </p>
                     <div className="flex flex-wrap gap-2">
@@ -399,7 +399,7 @@ export default function SearchHubPage() {
                   </div>
 
                   <div>
-                    <p className="mb-2.5 text-[0.65rem] font-bold uppercase tracking-[0.16em] text-muted/70">
+                    <p className="mb-2.5 text-2xs font-bold uppercase tracking-[0.16em] text-muted/70">
                       Langue
                     </p>
                     <div className="flex flex-wrap gap-2">
@@ -416,7 +416,7 @@ export default function SearchHubPage() {
                   </div>
 
                   <div>
-                    <p className="mb-2.5 text-[0.65rem] font-bold uppercase tracking-[0.16em] text-muted/70">
+                    <p className="mb-2.5 text-2xs font-bold uppercase tracking-[0.16em] text-muted/70">
                       Note AniList
                     </p>
                     <div className="flex flex-wrap gap-2">
@@ -437,7 +437,7 @@ export default function SearchHubPage() {
               <div className={media === "manga" ? "" : "border-t border-white/[0.07] pt-5 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0"}>
                 {media === "manga" && (
                   <div className="mb-5">
-                    <p className="mb-2.5 text-[0.65rem] font-bold uppercase tracking-[0.16em] text-muted/70">
+                    <p className="mb-2.5 text-2xs font-bold uppercase tracking-[0.16em] text-muted/70">
                       Origine
                     </p>
                     <div className="flex flex-wrap gap-2">
@@ -453,7 +453,7 @@ export default function SearchHubPage() {
                     </div>
                   </div>
                 )}
-                <p className="mb-2.5 text-[0.65rem] font-bold uppercase tracking-[0.16em] text-muted/70">
+                <p className="mb-2.5 text-2xs font-bold uppercase tracking-[0.16em] text-muted/70">
                   Genres
                 </p>
                 <div className="flex flex-wrap gap-2">
@@ -467,7 +467,7 @@ export default function SearchHubPage() {
                     </Choice>
                   ))}
                 </div>
-                <p className="mb-2.5 mt-4 text-[0.65rem] font-bold uppercase tracking-[0.16em] text-muted/70">
+                <p className="mb-2.5 mt-4 text-2xs font-bold uppercase tracking-[0.16em] text-muted/70">
                   Thèmes
                 </p>
                 <div className="max-h-40 overflow-y-auto pr-2">
@@ -488,7 +488,7 @@ export default function SearchHubPage() {
 
             {media !== "manga" && (
               <div className="mt-6 border-t border-white/[0.07] pt-5">
-                <p className="mb-1 text-[0.65rem] font-bold uppercase tracking-[0.16em] text-muted/70">
+                <p className="mb-1 text-2xs font-bold uppercase tracking-[0.16em] text-muted/70">
                   Thèmes précis
                 </p>
                 <p className="mb-3 text-xs text-muted">Un thème à la fois, d'après les tags d'AniList.</p>

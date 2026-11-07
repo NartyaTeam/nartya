@@ -14,6 +14,13 @@
   --primary-fg: 32 28 35; /* encre sur corail, comme les bannières */
   --accent: 232 176 72; /* miel */
   --sakura: 255 150 130;
+  /* États : succès, avertissement, erreur, information. */
+  --success: 52 211 153;
+  --warning: 251 191 36;
+  --danger: 248 113 113;
+  --info: 56 189 248;
+  --gold: 214 170 104; /* or des badges premium */
+  --discord: 88 101 242;
 }
 
 /* Classe sur :root : coupe le grain et neutralise animations et transitions. */

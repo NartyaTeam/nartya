@@ -34,7 +34,7 @@ export default function MentionPreviewCard({ info, align = "start" }) {
       </div>
       <div className="p-3">
         {seasonLabel && (
-          <p className="mb-0.5 truncate text-[0.65rem] font-semibold uppercase tracking-kana text-primary">
+          <p className="mb-0.5 truncate text-2xs font-semibold uppercase tracking-kana text-primary">
             {seasonLabel}
           </p>
         )}

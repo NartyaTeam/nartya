@@ -29,7 +29,7 @@ function pickResume(episodes, progressMap) {
 function Field({ label, children }) {
   return (
     <div>
-      <p className="mb-1.5 text-[0.7rem] font-semibold uppercase tracking-wider text-muted">{label}</p>
+      <p className="mb-1.5 text-2xs font-semibold uppercase tracking-wider text-muted">{label}</p>
       {children}
     </div>
   );
@@ -169,7 +169,7 @@ export default function ListDetailDrawer({ row, onClose, onStatusChange, onDates
               onClick={handleRemove}
               aria-label="Retirer de ma liste"
               title="Retirer de ma liste"
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-black/45 text-white/90 backdrop-blur-md transition-colors hover:bg-red-500/70"
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-black/45 text-white/90 backdrop-blur-md transition-colors hover:bg-danger/70"
             >
               <Trash2 size={15} />
             </button>
@@ -219,7 +219,7 @@ export default function ListDetailDrawer({ row, onClose, onStatusChange, onDates
                     <span className="text-sm font-semibold text-text">
                       {total ? `${watched} / ${total}` : `${watched}`}
                     </span>
-                    <span className="text-[0.7rem] text-muted">
+                    <span className="text-2xs text-muted">
                       {allWatched ? "Terminé" : total ? `${remaining} restant${remaining > 1 ? "s" : ""}` : "épisode(s)"}
                     </span>
                   </div>

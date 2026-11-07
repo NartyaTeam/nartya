@@ -63,7 +63,7 @@ export default function BackupSection({ number }) {
       >
         <button
           onClick={handleExport}
-          className="inline-flex items-center gap-2 rounded-[5px] border border-border bg-white/[0.035] px-3.5 py-2 text-sm font-medium text-text transition-colors hover:border-white/20 hover:bg-surface-2"
+          className="inline-flex items-center gap-2 rounded-md border border-border bg-white/[0.035] px-3.5 py-2 text-sm font-medium text-text transition-colors hover:border-white/20 hover:bg-surface-2"
         >
           <Download size={15} />
           Exporter
@@ -78,7 +78,7 @@ export default function BackupSection({ number }) {
       >
         <button
           onClick={() => fileRef.current?.click()}
-          className="inline-flex items-center gap-2 rounded-[5px] border border-border bg-white/[0.035] px-3.5 py-2 text-sm font-medium text-text transition-colors hover:border-white/20 hover:bg-surface-2"
+          className="inline-flex items-center gap-2 rounded-md border border-border bg-white/[0.035] px-3.5 py-2 text-sm font-medium text-text transition-colors hover:border-white/20 hover:bg-surface-2"
         >
           <Upload size={15} />
           Importer

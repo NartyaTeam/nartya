@@ -31,7 +31,7 @@ export default function CommunityBanner() {
 
           <button
             onClick={openDiscord}
-            className="inline-flex shrink-0 items-center gap-2.5 self-start rounded-lg bg-[#5865F2] px-5 py-2.5 font-display text-sm font-bold text-white transition-all hover:brightness-110 md:self-auto"
+            className="inline-flex shrink-0 items-center gap-2.5 self-start rounded-lg bg-discord px-5 py-2.5 font-display text-sm font-bold text-white transition-all hover:brightness-110 md:self-auto"
           >
             <DiscordIcon className="h-4 w-4" />
             Rejoindre

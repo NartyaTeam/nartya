@@ -207,7 +207,7 @@ export default function CommentItem({
             {displayedRating != null && (
               <span
                 title={`Note donnée à cet anime : ${displayedRating}/5`}
-                className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-1.5 py-0.5 text-[0.65rem] font-bold tabular-nums text-primary ring-1 ring-primary/20"
+                className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-1.5 py-0.5 text-2xs font-bold tabular-nums text-primary ring-1 ring-primary/20"
               >
                 <Star size={10} className="fill-current" />
                 {displayedRating}/5
@@ -216,7 +216,7 @@ export default function CommentItem({
             <RoleBadge role={c.author?.role} />
             <RankBadge rank={c.author?.rankBadge} />
             <SupporterBadge profile={c.author} />
-            <span className="text-[0.7rem] text-muted/70">
+            <span className="text-2xs text-muted/70">
               {timeAgo(c.createdAt)}
               {c.editedAt && " · modifié"}
             </span>
@@ -302,7 +302,7 @@ export default function CommentItem({
               {hidden && (
                 <button
                   onClick={() => setRevealed(true)}
-                  className="absolute inset-0 flex items-center justify-center rounded bg-surface/40 text-[0.7rem] font-semibold uppercase tracking-kana text-primary"
+                  className="absolute inset-0 flex items-center justify-center rounded bg-surface/40 text-2xs font-semibold uppercase tracking-kana text-primary"
                 >
                   Spoiler · afficher
                 </button>
@@ -317,7 +317,7 @@ export default function CommentItem({
 
           {reporting && (
             <div className="mt-2 rounded-lg bg-surface-2 p-2.5 ring-1 ring-border">
-              <p className="mb-2 text-[0.65rem] font-semibold uppercase tracking-kana text-muted">
+              <p className="mb-2 text-2xs font-semibold uppercase tracking-kana text-muted">
                 Motif du signalement
               </p>
               <div className="flex flex-wrap gap-1.5">

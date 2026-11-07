@@ -46,7 +46,7 @@ function BottomItem({ to, icon: Icon, label }) {
     <NavLink
       to={to}
       aria-label={label}
-      className={`relative flex min-h-14 flex-1 flex-col items-center justify-center gap-1 px-1 text-[0.62rem] font-medium transition-colors active:scale-95 ${
+      className={`relative flex min-h-14 flex-1 flex-col items-center justify-center gap-1 px-1 text-3xs font-medium transition-colors active:scale-95 ${
         active ? "font-bold text-primary" : "text-muted"
       }`}
     >
@@ -65,7 +65,7 @@ function ProfileItem({ user }) {
     <NavLink
       to="/profile"
       aria-label="Profil"
-      className={`relative flex min-h-14 flex-1 flex-col items-center justify-center gap-1 px-1 text-[0.62rem] font-medium transition-colors active:scale-95 ${
+      className={`relative flex min-h-14 flex-1 flex-col items-center justify-center gap-1 px-1 text-3xs font-medium transition-colors active:scale-95 ${
         active ? "font-bold text-primary" : "text-muted"
       }`}
     >
@@ -75,7 +75,7 @@ function ProfileItem({ user }) {
         name={user?.username}
         onError={refreshAvatar}
         className={`h-[22px] w-[22px] max-w-none rounded-full ring-2 ${active ? "ring-primary" : "ring-border"}`}
-        textClassName="text-[0.6rem]"
+        textClassName="text-3xs"
       />
       <span className="max-w-full truncate">Profil</span>
     </NavLink>
@@ -190,7 +190,7 @@ export default function MobileNavigation({ searchPath = "/recherche", forceVisib
           onClick={() => setOpen(true)}
           aria-label="Plus de destinations"
           aria-expanded={open}
-          className={`relative flex min-h-14 flex-1 flex-col items-center justify-center gap-1 px-1 text-[0.62rem] font-medium transition-colors active:scale-95 ${
+          className={`relative flex min-h-14 flex-1 flex-col items-center justify-center gap-1 px-1 text-3xs font-medium transition-colors active:scale-95 ${
             open || moreActive ? "text-primary" : "text-muted"
           }`}
         >

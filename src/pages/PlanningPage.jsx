@@ -102,7 +102,7 @@ function ReleaseCard({ item, dayDate, now, languageFilter }) {
             Ép. {ep}
           </span>
         ) : item.type ? (
-          <span className="absolute left-1.5 top-1.5 z-10 rounded bg-bg/90 px-1.5 py-0.5 text-[0.62rem] font-bold uppercase tracking-wide text-text ring-1 ring-border">
+          <span className="absolute left-1.5 top-1.5 z-10 rounded bg-bg/90 px-1.5 py-0.5 text-3xs font-bold uppercase tracking-wide text-text ring-1 ring-border">
             {item.type}
           </span>
         ) : null}
@@ -117,7 +117,7 @@ function ReleaseCard({ item, dayDate, now, languageFilter }) {
         <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-1 bg-gradient-to-t from-black/80 via-black/30 to-transparent p-1.5 pt-6">
           {item.time ? (
             <span
-              className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[0.68rem] font-bold backdrop-blur-sm ${
+              className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-2xs font-bold backdrop-blur-sm ${
                 released ? "bg-primary text-primary-fg" : "bg-black/60 text-white/90"
               }`}
             >
@@ -125,7 +125,7 @@ function ReleaseCard({ item, dayDate, now, languageFilter }) {
               {released ? "Sorti" : item.time}
             </span>
           ) : item.status ? (
-            <span className="inline-flex items-center rounded bg-amber-500/90 px-1.5 py-0.5 text-[0.68rem] font-bold text-black backdrop-blur-sm">
+            <span className="inline-flex items-center rounded bg-warning/90 px-1.5 py-0.5 text-2xs font-bold text-black backdrop-blur-sm">
               {item.status}
             </span>
           ) : (
@@ -164,7 +164,7 @@ function DaySection({ day, now, innerRef, languageFilter }) {
           {day.date && <span className="ml-1 font-sans text-base font-medium normal-case text-muted">{day.date}</span>}
         </h2>
         {isToday && (
-          <span className="rounded bg-primary px-2 py-0.5 text-[0.65rem] font-bold uppercase tracking-wider text-primary-fg">
+          <span className="rounded bg-primary px-2 py-0.5 text-2xs font-bold uppercase tracking-wider text-primary-fg">
             Aujourd'hui
           </span>
         )}
@@ -345,7 +345,7 @@ export default function PlanningPage() {
                     {day.name}
                     {day.items.length > 0 && (
                       <span
-                        className={`text-[0.7rem] font-bold tabular-nums transition-colors ${
+                        className={`text-2xs font-bold tabular-nums transition-colors ${
                           isActive ? "text-primary" : "text-muted/70 group-hover:text-text/70"
                         }`}
                       >

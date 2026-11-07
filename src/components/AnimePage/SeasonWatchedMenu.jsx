@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { CheckCheck, ChevronDown, ChevronUp } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 
 /** Toute la saison, jusqu'à l'épisode N, ou tout retirer. `lastEpisode` borne la saisie. */
 export function SeasonWatchedMenu({
@@ -64,7 +65,7 @@ export function SeasonWatchedMenu({
 
       {open && (
         <div className="absolute left-0 top-[calc(100%+6px)] z-30 w-64 rounded-lg border border-border bg-surface p-3 shadow-[0_16px_40px_-16px_rgba(0,0,0,0.8)]">
-          <p className="mb-2 text-[0.7rem] font-semibold uppercase tracking-kana text-muted">
+          <p className="mb-2 text-2xs font-semibold uppercase tracking-kana text-muted">
             Épisodes vus
           </p>
 
@@ -116,12 +117,12 @@ export function SeasonWatchedMenu({
                 </button>
               </div>
             </div>
-            <button
+            <Button
               onClick={applyUpto}
-              className="shrink-0 rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-fg transition-colors hover:bg-primary/90"
+              className="shrink-0"
             >
               Valider
-            </button>
+            </Button>
           </div>
 
           {watchedCount > 0 && (

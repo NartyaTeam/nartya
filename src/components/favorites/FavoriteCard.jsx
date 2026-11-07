@@ -65,7 +65,7 @@ export default function FavoriteCard({ anime, summary, sortable = false }) {
       )}
 
       {summary && (
-        <div className="mt-1.5 flex items-center gap-2 text-[0.68rem] text-muted md:hidden">
+        <div className="mt-1.5 flex items-center gap-2 text-2xs text-muted md:hidden">
           <span className="shrink-0 font-medium text-text/80">Ép. {summary.lastEpisode}</span>
           {!summary.lastCompleted && summary.lastPercent > 0 ? (
             <>

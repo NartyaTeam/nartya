@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { X, Check, Loader2, ZoomIn, Move, AlertTriangle } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 
 // Doit rester le ratio de la bannière réelle (`sm:aspect-[460/148]`) et de son aperçu.
 const FRAME_W = 460;
@@ -166,7 +167,7 @@ export default function BannerCropModal({ file, onCancel, onConfirm }) {
           </div>
 
           {lowRes && (
-            <p className="mt-2 flex items-start gap-1.5 text-xs text-amber-400">
+            <p className="mt-2 flex items-start gap-1.5 text-xs text-warning">
               <AlertTriangle size={13} className="mt-0.5 shrink-0" />
               Zone un peu petite ({effW} px de large) — la bannière risque d'être floue. Dézoome ou
               choisis une image plus grande pour un meilleur rendu.
@@ -182,14 +183,14 @@ export default function BannerCropModal({ file, onCancel, onConfirm }) {
           >
             Annuler
           </button>
-          <button
+          <Button
             onClick={confirm}
             disabled={busy || !nat}
-            className="flex items-center gap-2 rounded-md bg-primary px-5 py-2.5 text-sm font-bold text-primary-fg transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
+            size="lg"
           >
             {busy ? <Loader2 size={16} className="animate-spin" /> : <Check size={15} />}
             Appliquer
-          </button>
+          </Button>
         </div>
       </div>
     </div>,

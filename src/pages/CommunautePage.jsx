@@ -14,7 +14,7 @@ function ActionButton({ icon: Icon, label, onClick, variant = "ghost", disabled 
     variant === "primary"
       ? "bg-primary text-primary-fg hover:bg-primary/90"
       : variant === "danger"
-      ? "text-muted ring-1 ring-border hover:text-red-300 hover:ring-red-400/40"
+      ? "text-muted ring-1 ring-border hover:text-danger hover:ring-danger/40"
       : "text-muted ring-1 ring-border hover:text-text hover:ring-primary/40";
   return (
     <button onClick={onClick} disabled={disabled} title={title} className={`${base} ${styles}`}>

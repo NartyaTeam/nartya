@@ -68,7 +68,7 @@ export default function MobileChangelogPage() {
         <div className="relative">
           <div className="flex items-center gap-2 text-primary">
             <Sparkles size={14} />
-            <span className="text-[0.62rem] font-bold uppercase tracking-[0.22em]">
+            <span className="text-3xs font-bold uppercase tracking-[0.22em]">
               Journal de bord
             </span>
           </div>

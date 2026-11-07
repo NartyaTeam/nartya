@@ -60,7 +60,7 @@ export default function ProfileFriendButton({ userId, handle, username }) {
       <button
         onClick={() => run(() => removeFriend(userId), "none", "Demande annulée.")}
         disabled={busy}
-        className={`${base} ${glass} hover:text-red-300`}
+        className={`${base} ${glass} hover:text-danger`}
         title="Annuler la demande"
       >
         <Clock size={15} /> Demande envoyée
@@ -82,7 +82,7 @@ export default function ProfileFriendButton({ userId, handle, username }) {
           onClick={() => run(() => respondFriendRequest(userId, false), "none")}
           disabled={busy}
           title="Refuser"
-          className={`${base} ${glass} hover:text-red-300`}
+          className={`${base} ${glass} hover:text-danger`}
         >
           <X size={15} />
         </button>

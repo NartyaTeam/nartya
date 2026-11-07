@@ -130,18 +130,18 @@ export default function TierListPage() {
       <header className="mb-5 max-w-5xl">
         <div className="mb-2 flex items-center gap-2">
           <span className="h-px w-6 bg-primary" />
-          <Link to="/tierlists" className="text-[0.65rem] font-semibold uppercase tracking-[0.28em] text-primary/80 hover:text-primary">
+          <Link to="/tierlists" className="text-2xs font-semibold uppercase tracking-[0.28em] text-primary/80 hover:text-primary">
             Tier list
           </Link>
           {!list.isPublic && (
-            <span className="flex items-center gap-1 rounded bg-white/10 px-1.5 py-0.5 text-[0.65rem] font-bold text-text">
+            <span className="flex items-center gap-1 rounded bg-white/10 px-1.5 py-0.5 text-2xs font-bold text-text">
               <EyeOff size={11} /> Brouillon, visible par toi seul
             </span>
           )}
         </div>
         <h1 className="t-impact text-3xl md:text-4xl">{list.title}</h1>
         <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-muted">
-          <Avatar src={resolveAvatar(list.author)} name={authorName} className="h-6 w-6" textClassName="text-[0.6rem]" />
+          <Avatar src={resolveAvatar(list.author)} name={authorName} className="h-6 w-6" textClassName="text-3xs" />
           {list.author.handle ? (
             <Link to={`/u/${list.author.handle}`} className="font-semibold text-text hover:text-primary">
               {authorName}

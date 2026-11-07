@@ -36,6 +36,7 @@ import {
   PrivacySettings,
 } from "./ProfileEditFields";
 import PosterPickerModal from "./PosterPickerModal";
+import { Button } from "@/components/ui/Button";
 
 const MAX_FILE_MB = 5;
 const MAX_BIO = 300;
@@ -321,7 +322,7 @@ export default function ProfileEditModal({ onClose }) {
               {/* Une source trop petite paraît floue en pleine largeur. */}
               {bannerUrl && bannerDims && (
                 <span
-                  className="absolute bottom-2 right-3 z-10 rounded bg-black/55 px-2 py-0.5 text-[0.7rem] font-medium tabular-nums text-white/90 ring-1 ring-white/15 backdrop-blur"
+                  className="absolute bottom-2 right-3 z-10 rounded bg-black/55 px-2 py-0.5 text-2xs font-medium tabular-nums text-white/90 ring-1 ring-white/15 backdrop-blur"
                   title={
                     bannerDims.w < 1920
                       ? "Résolution faible pour le plein écran : réimporte une source d'au moins 1920 px de large."
@@ -329,7 +330,7 @@ export default function ProfileEditModal({ onClose }) {
                   }
                 >
                   {bannerDims.w} × {bannerDims.h} px
-                  {bannerDims.w < 1920 && <span className="ml-1 text-amber-300">· faible</span>}
+                  {bannerDims.w < 1920 && <span className="ml-1 text-warning">· faible</span>}
                 </span>
               )}
               {isPremium && preview.banner && <BannerDecor token={preview.banner} />}
@@ -427,7 +428,7 @@ export default function ProfileEditModal({ onClose }) {
 
           {/* Distinct de la bannière, affiché flouté et sans recadrage ; sans lui, l'aperçu montre la bannière. */}
           <div>
-            <label className="text-[0.7rem] font-semibold uppercase tracking-kana text-muted">
+            <label className="text-2xs font-semibold uppercase tracking-kana text-muted">
               Fond de page
             </label>
             <div className="relative mt-2 h-24 w-full overflow-hidden rounded-lg bg-surface-2 ring-1 ring-border">
@@ -485,12 +486,12 @@ export default function ProfileEditModal({ onClose }) {
           </div>
 
           <div>
-            <label className="text-[0.7rem] font-semibold uppercase tracking-kana text-muted">
+            <label className="text-2xs font-semibold uppercase tracking-kana text-muted">
               Pseudo affiché
             </label>
             <div
               className={`mt-2 flex items-center rounded-md border bg-bg/40 px-3 transition-colors focus-within:border-primary/60 ${
-                username && !usernameValid ? "border-red-500/50" : "border-border"
+                username && !usernameValid ? "border-danger/50" : "border-border"
               }`}
             >
               <input
@@ -502,7 +503,7 @@ export default function ProfileEditModal({ onClose }) {
               />
             </div>
             {username && !usernameValid ? (
-              <p className="mt-1.5 text-xs text-red-400">
+              <p className="mt-1.5 text-xs text-danger">
                 3 à 24 caractères : lettres, chiffres, espace, « _ », « . » et « - ».
               </p>
             ) : (
@@ -513,12 +514,12 @@ export default function ProfileEditModal({ onClose }) {
           </div>
 
           <div>
-            <label className="text-[0.7rem] font-semibold uppercase tracking-kana text-muted">
+            <label className="text-2xs font-semibold uppercase tracking-kana text-muted">
               Pseudo public (lien de profil)
             </label>
             <div
               className={`mt-2 flex items-center rounded-md border bg-bg/40 px-3 transition-colors focus-within:border-primary/60 ${
-                handle && !handleValid ? "border-red-500/50" : "border-border"
+                handle && !handleValid ? "border-danger/50" : "border-border"
               }`}
             >
               <span className="text-sm text-muted">{SITE_HOST}/u/</span>
@@ -531,7 +532,7 @@ export default function ProfileEditModal({ onClose }) {
               />
             </div>
             {handle && !handleValid && (
-              <p className="mt-1.5 text-xs text-red-400">
+              <p className="mt-1.5 text-xs text-danger">
                 3 à 20 caractères : lettres minuscules, chiffres et « _ ».
               </p>
             )}
@@ -539,10 +540,10 @@ export default function ProfileEditModal({ onClose }) {
 
           <div>
             <div className="flex items-baseline justify-between">
-              <label className="text-[0.7rem] font-semibold uppercase tracking-kana text-muted">
+              <label className="text-2xs font-semibold uppercase tracking-kana text-muted">
                 Bio
               </label>
-              <span className="text-[0.7rem] tabular-nums text-muted/60">
+              <span className="text-2xs tabular-nums text-muted/60">
                 {bio.length}/{MAX_BIO}
               </span>
             </div>
@@ -618,14 +619,14 @@ export default function ProfileEditModal({ onClose }) {
           >
             Annuler
           </button>
-          <button
+          <Button
             onClick={save}
             disabled={busy || !handleValid || !usernameValid}
-            className="flex items-center gap-2 rounded-md bg-primary px-5 py-2.5 text-sm font-bold text-primary-fg transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
+            size="lg"
           >
             {saving ? <Loader2 size={16} className="animate-spin" /> : <Check size={15} />}
             Enregistrer
-          </button>
+          </Button>
         </div>
       </div>
 

@@ -69,7 +69,7 @@ export function ExternalWatch({ animeTitle, destinations = [] }) {
                   Disponible sur {nom}
                 </h2>
                 {infos.gratuit && (
-                  <span className="inline-flex items-center gap-1 text-[0.68rem] font-semibold uppercase tracking-wide text-primary">
+                  <span className="inline-flex items-center gap-1 text-2xs font-semibold uppercase tracking-wide text-primary">
                     <span className="h-1.5 w-1.5 rounded-full bg-primary" />
                     Gratuit
                   </span>

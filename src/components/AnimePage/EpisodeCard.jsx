@@ -130,7 +130,7 @@ function EpisodeActionsSheet({
         <div className="pt-2.5">
           <div className="mx-auto mb-3 h-1 w-9 rounded-full bg-white/20" />
           <div className="border-b border-border/70 px-5 pb-4">
-            <p className="text-[0.68rem] font-semibold uppercase tracking-kana text-muted">
+            <p className="text-2xs font-semibold uppercase tracking-kana text-muted">
               Épisode {num}
             </p>
             <p className="mt-1 line-clamp-1 text-base font-semibold text-text">
@@ -368,14 +368,14 @@ function EpisodeCardInner({
           </span>
           {upcoming ? (
             <span
-              className={`absolute bottom-1.5 right-1.5 rounded px-1.5 py-0.5 text-[0.62rem] font-bold backdrop-blur-sm ${
+              className={`absolute bottom-1.5 right-1.5 rounded px-1.5 py-0.5 text-3xs font-bold backdrop-blur-sm ${
                 delayed ? "bg-primary/95 text-primary-fg" : "bg-accent/90 text-bg"
               }`}
             >
               {delayed ? "Retard" : "Bientôt"}
             </span>
           ) : (
-            <span className="absolute bottom-1.5 right-1.5 rounded-[3px] shadow-sm">
+            <span className="absolute bottom-1.5 right-1.5 rounded shadow-sm">
               <Flag
                 lang={selectedLanguage}
                 countryOfOrigin={countryOfOrigin}
@@ -396,7 +396,7 @@ function EpisodeCardInner({
             </div>
           )}
           {!upcoming && watched && (
-            <span className="absolute right-1.5 top-1.5 flex h-5 items-center gap-1 rounded-full bg-black/75 px-1.5 text-[0.62rem] font-bold text-white/90 shadow-md ring-1 ring-white/15 backdrop-blur-sm md:hidden">
+            <span className="absolute right-1.5 top-1.5 flex h-5 items-center gap-1 rounded-full bg-black/75 px-1.5 text-3xs font-bold text-white/90 shadow-md ring-1 ring-white/15 backdrop-blur-sm md:hidden">
               <Check size={11} strokeWidth={3} />
               Vu
             </span>
@@ -454,7 +454,7 @@ function EpisodeCardInner({
             <>
               {/* Si la source les fournit. */}
               {(episode.length || episode.rating != null) && (
-                <p className="mt-1 flex items-center gap-2.5 pr-7 text-[0.68rem] text-muted/80 sm:text-xs">
+                <p className="mt-1 flex items-center gap-2.5 pr-7 text-2xs text-muted/80 sm:text-xs">
                   {episode.length ? (
                     <span className="inline-flex items-center gap-1">
                       <Clock3 size={12} />

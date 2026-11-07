@@ -556,7 +556,7 @@ export default function PartyRoomPage() {
           {options.isPublic && (
             <span
               title="Salon public : visible sur la page Watch Party"
-              className="ml-2 mr-auto flex items-center gap-1 text-[11px] font-semibold text-accent"
+              className="ml-2 mr-auto flex items-center gap-1 text-2xs font-semibold text-accent"
             >
               <Globe size={12} /> Public
             </span>

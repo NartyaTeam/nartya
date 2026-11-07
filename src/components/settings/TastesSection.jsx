@@ -61,7 +61,7 @@ export default function TastesSection({ number }) {
           )}
         </div>
         <div className="flex flex-wrap gap-2">{MAIN_GENRES.map(chip)}</div>
-        <p className="text-[0.65rem] font-bold uppercase tracking-[0.16em] text-muted/70">Plus précis</p>
+        <p className="text-2xs font-bold uppercase tracking-[0.16em] text-muted/70">Plus précis</p>
         <div className="flex max-h-48 flex-wrap gap-2 overflow-y-auto pr-1">{SECONDARY_GENRES.map(chip)}</div>
       </div>
     </Section>

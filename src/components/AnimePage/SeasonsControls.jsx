@@ -197,7 +197,7 @@ export function SeasonDownloadButton({
     <button
       onClick={onCancel}
       title="Annuler le téléchargement de cette saison (les épisodes déjà terminés sont conservés)"
-      className={`group flex ${controlH} items-center gap-2 rounded-md bg-surface px-3.5 text-sm font-medium text-text ring-1 ring-border transition-colors hover:bg-red-500/20 hover:text-red-400 hover:ring-red-500/40`}
+      className={`group flex ${controlH} items-center gap-2 rounded-md bg-surface px-3.5 text-sm font-medium text-text ring-1 ring-border transition-colors hover:bg-danger/20 hover:text-danger hover:ring-danger/40`}
     >
       {/* Le libellé ne change pas au survol. */}
       <Loader2 size={16} className="animate-spin group-hover:hidden" />

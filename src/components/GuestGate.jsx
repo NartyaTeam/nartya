@@ -106,7 +106,7 @@ export default function GuestGate({ feature }) {
           <Icon size={24} />
         </div>
 
-        <p className="text-[0.7rem] font-medium uppercase tracking-kana text-muted/70">
+        <p className="text-2xs font-medium uppercase tracking-kana text-muted/70">
           Réservé aux comptes
         </p>
         <h1 className="mt-1 font-display text-2xl font-bold">{cfg.title}</h1>

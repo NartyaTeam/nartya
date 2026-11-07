@@ -48,7 +48,7 @@ function HeroFigure({ value, label, tone = "text" }) {
       >
         {value}
       </div>
-      <div className="mt-1.5 text-[0.65rem] font-bold uppercase tracking-kana text-text/60">{label}</div>
+      <div className="mt-1.5 text-2xs font-bold uppercase tracking-kana text-text/60">{label}</div>
     </div>
   );
 }
@@ -82,10 +82,10 @@ function TierBadge({ family, tier, unlocked }) {
           </span>
         )}
       </div>
-      <p className={`mt-1 min-h-8 line-clamp-2 text-center font-display text-[0.7rem] font-bold leading-4 sm:min-h-0 sm:truncate sm:text-xs ${unlocked ? "text-text" : "text-muted/55"}`}>
+      <p className={`mt-1 min-h-8 line-clamp-2 text-center font-display text-2xs font-bold leading-4 sm:min-h-0 sm:truncate sm:text-xs ${unlocked ? "text-text" : "text-muted/55"}`}>
         {tier.name}
       </p>
-      <p className="mt-0.5 text-[0.66rem] tabular-nums text-muted/55">
+      <p className="mt-0.5 text-2xs tabular-nums text-muted/55">
         {formatAchievementValue(family, tier.threshold)}
       </p>
     </div>
@@ -111,7 +111,7 @@ function AchievementCard({ family, value, unlockedIds }) {
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
             <h2 className="font-display text-base font-bold tracking-tight text-text">{family.name}</h2>
-            <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[0.62rem] font-bold uppercase tracking-[0.15em] text-primary">
+            <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-3xs font-bold uppercase tracking-[0.15em] text-primary">
               {unlocked.length}/{family.tiers.length}
             </span>
           </div>
@@ -133,11 +133,11 @@ function AchievementCard({ family, value, unlockedIds }) {
         <div className="mt-3 border-t border-border/45 pt-3">
           <div className="mb-2 flex items-end justify-between gap-3">
             {next ? (
-              <span className="text-[0.62rem] font-bold uppercase tracking-[0.12em] text-muted sm:text-[0.65rem] sm:tracking-[0.15em]">
+              <span className="text-3xs font-bold uppercase tracking-[0.12em] text-muted sm:text-2xs sm:tracking-[0.15em]">
                 Prochain · {formatAchievementValue(family, next.threshold)}
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1.5 text-[0.65rem] font-bold uppercase tracking-[0.15em] text-amber-300">
+              <span className="inline-flex items-center gap-1.5 text-2xs font-bold uppercase tracking-[0.15em] text-warning">
                 <Sparkles size={12} /> Famille complétée
               </span>
             )}
@@ -231,7 +231,7 @@ export default function AchievementsPage() {
           </button>
 
           <div className="max-w-lg">
-            <p className="mb-2 text-[0.65rem] font-bold uppercase tracking-[0.22em] text-primary sm:hidden">
+            <p className="mb-2 text-2xs font-bold uppercase tracking-[0.22em] text-primary sm:hidden">
               Collection personnelle
             </p>
             <div className="mb-2.5 hidden items-center gap-2 text-primary sm:inline-flex">
@@ -258,11 +258,11 @@ export default function AchievementsPage() {
                   <span className="font-display text-2xl font-extrabold tabular-nums text-primary">
                     {loading ? "—" : `${percent}%`}
                   </span>
-                  <span className="ml-2 text-[0.65rem] font-bold uppercase tracking-[0.14em] text-text/50">
+                  <span className="ml-2 text-2xs font-bold uppercase tracking-[0.14em] text-text/50">
                     accompli
                   </span>
                 </div>
-                <span className="pb-1 text-[0.68rem] font-semibold tabular-nums text-text/60">
+                <span className="pb-1 text-2xs font-semibold tabular-nums text-text/60">
                   {loading ? "—" : `${unlockedTotal}/${total}`} emblèmes
                 </span>
               </div>
@@ -274,7 +274,7 @@ export default function AchievementsPage() {
               </div>
             </div>
 
-            <p className="mt-3 inline-flex items-center gap-1.5 text-[0.68rem] text-text/50 sm:mt-4 sm:text-xs sm:text-text/55">
+            <p className="mt-3 inline-flex items-center gap-1.5 text-2xs text-text/50 sm:mt-4 sm:text-xs sm:text-text/55">
               <ShieldCheck size={13} className="text-primary" /> Seul le temps réellement regardé compte.
             </p>
           </div>

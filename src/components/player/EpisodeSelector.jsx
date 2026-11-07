@@ -185,7 +185,7 @@ export function EpisodeSelector({
                         className="flex w-full gap-6 px-7 pb-7 pt-0 text-left"
                       >
                         {/* Décalée à la verticale du titre. */}
-                        <div className="group relative ml-[calc(1.25em+1.5rem)] aspect-video w-52 shrink-0 overflow-hidden rounded-[2px] bg-surface-2">
+                        <div className="group relative ml-[calc(1.25em+1.5rem)] aspect-video w-52 shrink-0 overflow-hidden rounded-sm bg-surface-2">
                           {img ? (
                             <img src={img} alt="" loading="lazy" className="h-full w-full object-cover" />
                           ) : (
@@ -199,7 +199,7 @@ export function EpisodeSelector({
                             </span>
                           </span>
                           {isCurrent && (
-                            <span className="absolute inset-x-0 bottom-0 bg-black/70 px-2 py-1 text-[0.7rem] font-bold uppercase tracking-wider text-white">
+                            <span className="absolute inset-x-0 bottom-0 bg-black/70 px-2 py-1 text-2xs font-bold uppercase tracking-wider text-white">
                               Lecture en cours
                             </span>
                           )}

@@ -286,7 +286,7 @@ function ResumeCard({ item, onClick, onRemove, busy }) {
           </div>
 
           {remaining && (
-            <span className="absolute bottom-2 right-2 rounded bg-black/75 px-1.5 py-0.5 text-[0.7rem] font-semibold tabular-nums backdrop-blur-sm">
+            <span className="absolute bottom-2 right-2 rounded bg-black/75 px-1.5 py-0.5 text-2xs font-semibold tabular-nums backdrop-blur-sm">
               {remaining}
             </span>
           )}

@@ -20,9 +20,9 @@ import AnnouncementModal from "@/components/announcements/AnnouncementModal";
 import { platform } from "@/platform";
 
 const TYPE_META = {
-  info: { icon: Info, iconClass: "text-sky-400" },
-  success: { icon: CheckCircle2, iconClass: "text-emerald-400" },
-  warning: { icon: AlertTriangle, iconClass: "text-amber-400" },
+  info: { icon: Info, iconClass: "text-info" },
+  success: { icon: CheckCircle2, iconClass: "text-success" },
+  warning: { icon: AlertTriangle, iconClass: "text-warning" },
 };
 
 function openLink(url) {
@@ -64,7 +64,7 @@ function AnnouncementItem({ announcement, onDismiss, onOpen }) {
             <span className="line-clamp-1 min-w-0 flex-1 text-sm font-semibold text-text">
               {a.title || "Annonce Nartya"}
             </span>
-            <span className="shrink-0 text-[0.65rem] text-muted/70">
+            <span className="shrink-0 text-2xs text-muted/70">
               {formatDistanceToNow(new Date(a.createdAt), { addSuffix: true, locale: fr })}
             </span>
           </span>
@@ -74,12 +74,12 @@ function AnnouncementItem({ announcement, onDismiss, onOpen }) {
           </span>
 
           {(a.authorAvatar || a.authorName) && (
-            <span className="mt-1 flex min-w-0 items-center gap-1.5 text-[0.68rem] text-muted/75">
+            <span className="mt-1 flex min-w-0 items-center gap-1.5 text-2xs text-muted/75">
               <Avatar
                 src={a.authorAvatar}
                 name={a.authorName}
                 className="h-4 w-4 shrink-0 rounded-full"
-                textClassName="text-[0.5rem]"
+                textClassName="text-3xs"
               />
               <span className="max-w-24 truncate">{a.authorName || "Nartya"}</span>
             </span>
@@ -92,7 +92,7 @@ function AnnouncementItem({ announcement, onDismiss, onOpen }) {
               <button
                 key={index}
                 onClick={() => openLink(button.url)}
-                className="inline-flex items-center gap-1.5 rounded border border-border px-2.5 py-1.5 text-[0.7rem] font-semibold text-text transition-colors hover:border-primary/50 hover:text-primary"
+                className="inline-flex items-center gap-1.5 rounded border border-border px-2.5 py-1.5 text-2xs font-semibold text-text transition-colors hover:border-primary/50 hover:text-primary"
               >
                 <LinkIcon size={12} />
                 {button.label}
@@ -178,7 +178,7 @@ export default function AnnouncementsPanel() {
               <h2 className="font-display text-sm font-bold tracking-tight text-text">
                 Notifications
               </h2>
-              <span className="truncate text-[0.68rem] text-muted">
+              <span className="truncate text-2xs text-muted">
                 · {unread ? `${unread} non lue${unread > 1 ? "s" : ""}` : "À jour"}
               </span>
             </div>
@@ -210,7 +210,7 @@ export default function AnnouncementsPanel() {
                   }`}
                 >
                   {label}
-                  <span className="rounded bg-white/[0.06] px-1.5 py-0.5 text-[0.6rem] tabular-nums text-muted">
+                  <span className="rounded bg-white/[0.06] px-1.5 py-0.5 text-3xs tabular-nums text-muted">
                     {count}
                   </span>
                 </button>
@@ -220,7 +220,7 @@ export default function AnnouncementsPanel() {
             {unread > 0 && (
               <button
                 onClick={markAllSeen}
-                className="mb-1.5 inline-flex items-center gap-1.5 rounded px-2 py-1.5 text-[0.68rem] font-semibold text-muted transition-colors hover:bg-white/[0.05] hover:text-text"
+                className="mb-1.5 inline-flex items-center gap-1.5 rounded px-2 py-1.5 text-2xs font-semibold text-muted transition-colors hover:bg-white/[0.05] hover:text-text"
               >
                 <CheckCheck size={14} />
                 Tout lire
@@ -236,7 +236,7 @@ export default function AnnouncementsPanel() {
                 <section key={label} aria-labelledby={`notifications-${label}`}>
                   <h3
                     id={`notifications-${label}`}
-                    className="sticky top-0 z-10 bg-surface px-4 py-1.5 text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-muted/65"
+                    className="sticky top-0 z-10 bg-surface px-4 py-1.5 text-3xs font-semibold uppercase tracking-[0.16em] text-muted/65"
                   >
                     {label}
                   </h3>
