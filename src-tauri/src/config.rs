@@ -1,7 +1,6 @@
 //! Adresses de l'instance, lues dans `src/config/instance.js` à la compilation (voir `build.rs`).
 
 pub const SITE_URL: &str = env!("NARTYA_SITE_URL");
-#[allow(dead_code)]
 pub const API_URL: &str = env!("NARTYA_API_URL");
 
 #[cfg(test)]

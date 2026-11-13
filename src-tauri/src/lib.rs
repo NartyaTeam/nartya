@@ -6,6 +6,7 @@ mod hub;
 mod oauth;
 mod session;
 mod state;
+mod stream;
 mod system;
 mod url_guard;
 mod window;
@@ -16,6 +17,9 @@ use tauri::{Emitter, Manager};
 use tauri_plugin_deep_link::DeepLinkExt;
 
 use session::SharedSession;
+
+/// `None` si le proxy local n'a pas pu démarrer.
+pub struct StreamSlot(pub Option<Arc<stream::StreamService>>);
 
 /// Hors ligne sans session : on montre directement l'app (téléchargements) plutôt que d'attendre
 /// une connexion dans le Hub.
@@ -48,9 +52,12 @@ pub fn run() {
             commands::session_get,
             commands::session_set,
             commands::session_remove,
+            commands::resolve_stream,
         ])
         .on_page_load(|webview, payload| {
-            if webview.label() == "main" && matches!(payload.event(), tauri::webview::PageLoadEvent::Finished) {
+            if webview.label() == "main"
+                && matches!(payload.event(), tauri::webview::PageLoadEvent::Finished)
+            {
                 window::reveal(webview.app_handle(), false);
             }
         })
@@ -90,6 +97,7 @@ pub fn run() {
             handle.state::<state::AppState>().set_defer_reveal(deferred);
 
             let _ = tauri::async_runtime::block_on(oauth::start(handle.clone()));
+            app.manage(StreamSlot(tauri::async_runtime::block_on(stream::start())));
 
             let on_url = handle.clone();
             app.deep_link().on_open_url(move |event| {

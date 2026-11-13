@@ -39,7 +39,7 @@ export const tauriPlatform = {
   softwareDecode: false,
   getMachineId: () => invoke("get_machine_id"),
   getAnime4kCapabilities: () => invoke("get_anime4k_capabilities"),
-  resolveStream: async () => ({ success: false, error: "Résolution native indisponible" }),
+  resolveStream: (payload) => invoke("resolve_stream", { payload: payload || {} }),
   getCaptchaToken: () => invoke("get_captcha_token"),
   downloads: null,
   // Partagée avec Nartya Hub.

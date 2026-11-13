@@ -97,7 +97,11 @@ pub fn reveal(app: &AppHandle, force: bool) {
 
 pub fn schedule_reveal_fallback(app: &AppHandle, deferred: bool) {
     let app = app.clone();
-    let delay = if deferred { GATE_TIMEOUT } else { REVEAL_FALLBACK };
+    let delay = if deferred {
+        GATE_TIMEOUT
+    } else {
+        REVEAL_FALLBACK
+    };
     std::thread::spawn(move || {
         std::thread::sleep(delay);
         reveal(&app, true);

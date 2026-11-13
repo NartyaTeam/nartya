@@ -90,3 +90,20 @@ pub fn session_set(session: Session, key: String, value: String) -> bool {
 pub fn session_remove(session: Session, key: String) -> bool {
     is_session_key(&key) && session.remove(&key)
 }
+
+/// Le jeton d'accès est lu dans le fichier partagé, pas reçu de la page : une page compromise ne
+/// peut pas imposer le sien ni choisir la destination.
+#[tauri::command]
+pub async fn resolve_stream(
+    session: Session<'_>,
+    stream: State<'_, crate::StreamSlot>,
+    payload: Option<crate::stream::ResolveRequest>,
+) -> Result<Value, String> {
+    let Some(service) = stream.0.clone() else {
+        return Ok(json!({ "success": false, "error": "Proxy local indisponible" }));
+    };
+    let access_token = session.access_token();
+    Ok(service
+        .resolve(payload.unwrap_or_default(), access_token)
+        .await)
+}

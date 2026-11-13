@@ -16,7 +16,6 @@ use serde_json::{Map, Value};
 const SESSION_FILE: &str = "session.json";
 const HUB_FILE: &str = "hub.json";
 const DEBOUNCE: Duration = Duration::from_millis(150);
-#[allow(dead_code)]
 const MAX_TOKEN_LEN: usize = 16_384;
 
 pub struct SharedSession {
@@ -33,7 +32,9 @@ pub fn is_session_key(key: &str) -> bool {
         Some(rest) => {
             rest.len() > 1
                 && rest.starts_with('-')
-                && rest[1..].chars().all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
+                && rest[1..]
+                    .chars()
+                    .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
         }
         None => false,
     }
@@ -59,7 +60,12 @@ impl SharedSession {
         let _ = fs::create_dir_all(&dir);
         let file = dir.join(SESSION_FILE);
         restrict_permissions(&dir, &file);
-        Self { dir, file, write_lock: Mutex::new(()), watcher: Mutex::new(None) }
+        Self {
+            dir,
+            file,
+            write_lock: Mutex::new(()),
+            watcher: Mutex::new(None),
+        }
     }
 
     fn read_all(&self) -> Map<String, Value> {
@@ -74,7 +80,9 @@ impl SharedSession {
     }
 
     fn write_all(&self, map: &Map<String, Value>) -> std::io::Result<()> {
-        let tmp = self.dir.join(format!("{SESSION_FILE}.{}.tmp", std::process::id()));
+        let tmp = self
+            .dir
+            .join(format!("{SESSION_FILE}.{}.tmp", std::process::id()));
         let body = serde_json::to_vec(map)?;
         let result = fs::write(&tmp, body).and_then(|_| {
             restrict_permissions(&self.dir, &tmp);
@@ -108,7 +116,6 @@ impl SharedSession {
 
     /// Lu dans le fichier partagé, pas reçu de la page : une page compromise ne peut pas en
     /// imposer un autre.
-    #[allow(dead_code)]
     pub fn access_token(&self) -> Option<String> {
         parse_access_token(&self.get("nartya-auth")?)
     }
@@ -116,7 +123,9 @@ impl SharedSession {
     /// Écrit par le Hub : `{version, lastSeen, exePath}`, `None` s'il n'a jamais tourné ici.
     pub fn hub_info(&self) -> Option<Value> {
         let raw = fs::read_to_string(self.dir.join(HUB_FILE)).ok()?;
-        serde_json::from_str::<Value>(&raw).ok().filter(Value::is_object)
+        serde_json::from_str::<Value>(&raw)
+            .ok()
+            .filter(Value::is_object)
     }
 
     /// On surveille le dossier : le fichier est remplacé, pas modifié.
@@ -127,13 +136,19 @@ impl SharedSession {
         let watcher = notify::recommended_watcher(move |event: notify::Result<notify::Event>| {
             let Ok(event) = event else { return };
             let touches_session = event.paths.is_empty()
-                || event.paths.iter().any(|p| p.file_name().is_some_and(|n| n == session_file));
+                || event
+                    .paths
+                    .iter()
+                    .any(|p| p.file_name().is_some_and(|n| n == session_file));
             if touches_session {
                 let _ = tx.send(());
             }
         });
         let Ok(mut watcher) = watcher else { return };
-        if watcher.watch(&self.dir, RecursiveMode::NonRecursive).is_err() {
+        if watcher
+            .watch(&self.dir, RecursiveMode::NonRecursive)
+            .is_err()
+        {
             return;
         }
         *self.watcher.lock().unwrap() = Some(watcher);
@@ -162,7 +177,6 @@ fn value_to_string(value: &Value) -> Option<String> {
     }
 }
 
-#[allow(dead_code)]
 fn parse_access_token(raw: &str) -> Option<String> {
     let parsed: Value = serde_json::from_str(raw).ok()?;
     let session = parsed.get("currentSession").unwrap_or(&parsed);
@@ -197,7 +211,10 @@ mod tests {
         let (_tmp, s) = session();
         assert_eq!(s.get("nartya-auth"), None);
         assert!(s.set("nartya-auth", r#"{"access_token":"x"}"#));
-        assert_eq!(s.get("nartya-auth").as_deref(), Some(r#"{"access_token":"x"}"#));
+        assert_eq!(
+            s.get("nartya-auth").as_deref(),
+            Some(r#"{"access_token":"x"}"#)
+        );
         assert!(s.set("nartya-auth-movie", "m"));
         assert!(s.remove("nartya-auth"));
         assert_eq!(s.get("nartya-auth"), None);
@@ -218,7 +235,10 @@ mod tests {
 
     #[test]
     fn jeton_d_acces() {
-        assert_eq!(parse_access_token(r#"{"access_token":"abc"}"#).as_deref(), Some("abc"));
+        assert_eq!(
+            parse_access_token(r#"{"access_token":"abc"}"#).as_deref(),
+            Some("abc")
+        );
         assert_eq!(
             parse_access_token(r#"{"currentSession":{"access_token":"def"}}"#).as_deref(),
             Some("def")
@@ -247,7 +267,9 @@ mod tests {
         thread::sleep(Duration::from_millis(300));
         // Comme le Hub : un autre processus écrit le fichier.
         fs::write(&s.file, r#"{"nartya-auth":"nouvelle"}"#).unwrap();
-        let got = rx.recv_timeout(Duration::from_secs(5)).expect("changement non détecté");
+        let got = rx
+            .recv_timeout(Duration::from_secs(5))
+            .expect("changement non détecté");
         assert_eq!(got.as_deref(), Some("nouvelle"));
         fs::write(&s.file, "{}").unwrap();
         assert_eq!(rx.recv_timeout(Duration::from_secs(5)).unwrap(), None);

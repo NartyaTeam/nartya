@@ -105,21 +105,33 @@ mod tests {
 
     #[test]
     fn route_anime() {
-        assert_eq!(parse_navigation("nartya://anime/one-piece"), Some("/anime/one-piece".into()));
-        assert_eq!(parse_navigation("nartya://open/anime/naruto?x=1"), Some("/anime/naruto".into()));
+        assert_eq!(
+            parse_navigation("nartya://anime/one-piece"),
+            Some("/anime/one-piece".into())
+        );
+        assert_eq!(
+            parse_navigation("nartya://open/anime/naruto?x=1"),
+            Some("/anime/naruto".into())
+        );
         assert_eq!(parse_navigation("nartya://anime/"), None);
     }
 
     #[test]
     fn route_profil_nettoie_le_pseudo() {
-        assert_eq!(parse_navigation("nartya://u/Zeleff_01"), Some("/u/Zeleff_01".into()));
+        assert_eq!(
+            parse_navigation("nartya://u/Zeleff_01"),
+            Some("/u/Zeleff_01".into())
+        );
         assert_eq!(parse_navigation("nartya://u/a-b.c"), Some("/u/abc".into()));
         assert_eq!(parse_navigation("nartya://u/../x"), None);
     }
 
     #[test]
     fn route_party_en_majuscules() {
-        assert_eq!(parse_navigation("nartya://party/ab12cd"), Some("/party/AB12CD".into()));
+        assert_eq!(
+            parse_navigation("nartya://party/ab12cd"),
+            Some("/party/AB12CD".into())
+        );
     }
 
     #[test]
@@ -139,7 +151,9 @@ mod tests {
     #[test]
     fn callback_oauth() {
         assert!(is_auth_callback("nartya://auth-callback#access_token=x"));
-        assert!(is_auth_callback("http://127.0.0.1:41234/auth-callback?code=1"));
+        assert!(is_auth_callback(
+            "http://127.0.0.1:41234/auth-callback?code=1"
+        ));
         assert!(!is_auth_callback("http://localhost:41234/auth-callback"));
         assert!(!is_auth_callback("nartya://anime/x"));
     }
@@ -147,7 +161,10 @@ mod tests {
     #[test]
     fn classement() {
         assert_eq!(classify("nartya://auth-callback"), Some(Link::AuthCallback));
-        assert_eq!(classify("nartya://anime/a"), Some(Link::Navigate("/anime/a".into())));
+        assert_eq!(
+            classify("nartya://anime/a"),
+            Some(Link::Navigate("/anime/a".into()))
+        );
         assert_eq!(classify("nartya://rien"), None);
     }
 }

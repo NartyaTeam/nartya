@@ -134,6 +134,26 @@ Non vérifié : deep-link au démarrage à froid, plein écran sur un écran de 
 
 Proxy local, client HTTP DoH, résolveur de flux, session partagée, callback OAuth, captcha. Critère : lire un épisode de bout en bout.
 
+#### État de la phase 2 (2026-11-13) : fait
+
+Porté en Rust : session partagée (fichier + surveillance), retour OAuth en loopback (ports 8351-8353), captcha, lancement du Hub (et fenêtre qui attend la connexion sans session), client HTTP avec DoH et refus des adresses privées, recette des hébergeurs, extraction vidéo (6 stratégies), poignées opaques, proxy local (HLS, Range, cache de segments, lecture anticipée, URL signées, playlist préchargée) et résolveur de flux. 50 tests Rust.
+
+Vérifié sur cette machine, avec la vraie session :
+- la session du Hub est lue : l'app s'ouvre sur le compte, sans passer par l'écran de connexion ;
+- **un épisode se lit de bout en bout dans l'interface réelle** (HLS 720p via le proxy Rust, seek, 0 image perdue) ; 2 sources sur 4 résolues, les 2 autres renvoient `HTTP 404` côté hébergeur (même résultat attendu avec Electron) ;
+- le proxy refuse sans jeton (403), avec un mauvais jeton (403), poignée inconnue (410) ;
+- le captcha rend un vrai jeton en 6-9 s, la fenêtre captcha n'a accès à aucune commande ;
+- les commandes sont déclarées dans `build.rs` et autorisées par capability pour la seule fenêtre principale : un appel `plugin:opener|open_url` ou `plugin:window|close` depuis la page est refusé.
+
+Parité avec le JavaScript : les 17 cas d'extraction testés donnent les mêmes résultats que `src/shared/videoExtract.js`. Les motifs de la recette sont de simples regex : le crate `regex` suffit, sans lookaround.
+
+Écarts connus avec Electron :
+- DoH : appliqué aux requêtes de la coque (comme avant), pas au rendu de la page (Electron le configurait via `configureHostResolver`) ;
+- le serveur LAN du Cast et `/local` (fichiers téléchargés) arrivent en phase 3 ;
+- `getAnime4kCapabilities` ne renvoie plus le détail du GPU (la page le déduit déjà de WebGPU).
+
+Non vérifié : MP4 direct avec `Range` sur un vrai hébergeur (couvert par des tests unitaires seulement), temps de démarrage comparé à Electron.
+
 ### Phase 3 : le reste
 
 Téléchargements + fusion ffmpeg (mp4 et HLS), Cast, Discord, lancement du Hub.

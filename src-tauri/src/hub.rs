@@ -21,7 +21,8 @@ pub enum Mode {
 
 /// Lancée par le Hub : pas d'onboarding « Découvre le Hub ».
 pub fn is_managed() -> bool {
-    std::env::args().any(|a| a == "--hub-managed") || std::env::var("NARTYA_HUB").as_deref() == Ok("1")
+    std::env::args().any(|a| a == "--hub-managed")
+        || std::env::var("NARTYA_HUB").as_deref() == Ok("1")
 }
 
 /// `nartya-hub://` n'est pas toujours enregistré par l'installeur : l'exécutable d'abord.
@@ -45,7 +46,10 @@ fn exe_candidates() -> Vec<PathBuf> {
     }
     #[cfg(all(not(windows), not(target_os = "macos")))]
     {
-        vec![PathBuf::from("/opt/Nartya Hub/nartya-hub"), PathBuf::from("/usr/bin/nartya-hub")]
+        vec![
+            PathBuf::from("/opt/Nartya Hub/nartya-hub"),
+            PathBuf::from("/usr/bin/nartya-hub"),
+        ]
     }
 }
 
@@ -53,7 +57,10 @@ pub fn resolve_exe(session: &SharedSession) -> Option<PathBuf> {
     let marker = session
         .hub_info()
         .and_then(|info| info.get("exePath")?.as_str().map(PathBuf::from));
-    marker.into_iter().chain(exe_candidates()).find(|p| p.exists())
+    marker
+        .into_iter()
+        .chain(exe_candidates())
+        .find(|p| p.exists())
 }
 
 /// `None` si indéterminable.
@@ -61,7 +68,11 @@ fn is_running(exe: &std::path::Path) -> Option<bool> {
     let name = exe.file_name()?.to_string_lossy().to_lowercase();
     let mut sys = sysinfo::System::new();
     sys.refresh_processes(sysinfo::ProcessesToUpdate::All, true);
-    Some(sys.processes().values().any(|p| p.name().to_string_lossy().to_lowercase() == name))
+    Some(
+        sys.processes()
+            .values()
+            .any(|p| p.name().to_string_lossy().to_lowercase() == name),
+    )
 }
 
 /// Le verrou d'instance du Hub évite les doublons.
@@ -105,10 +116,18 @@ pub fn open(app: &AppHandle, session: &SharedSession) -> Value {
     if launch(session, Mode::Visible) {
         return json!({ "success": true, "method": "exe" });
     }
-    if app.opener().open_url("nartya-hub://open", None::<&str>).is_ok() {
+    if app
+        .opener()
+        .open_url("nartya-hub://open", None::<&str>)
+        .is_ok()
+    {
         return json!({ "success": true, "method": "protocol" });
     }
-    if app.opener().open_url(format!("{SITE_URL}/"), None::<&str>).is_ok() {
+    if app
+        .opener()
+        .open_url(format!("{SITE_URL}/"), None::<&str>)
+        .is_ok()
+    {
         return json!({ "success": true, "method": "website" });
     }
     json!({ "success": false, "method": null })

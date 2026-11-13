@@ -17,6 +17,7 @@ const COMMANDS: &[&str] = &[
     "session_get",
     "session_set",
     "session_remove",
+    "resolve_stream",
 ];
 
 /// `export const NOM = "valeur";` dans `src/config/instance.js` : une seule source de vérité
@@ -34,10 +35,13 @@ fn instance_const(source: &str, name: &str) -> String {
 
 fn main() {
     println!("cargo:rerun-if-changed=../src/config/instance.js");
-    let source = fs::read_to_string("../src/config/instance.js")
-        .expect("src/config/instance.js illisible");
+    let source =
+        fs::read_to_string("../src/config/instance.js").expect("src/config/instance.js illisible");
     for name in ["SITE_URL", "API_URL"] {
-        println!("cargo:rustc-env=NARTYA_{name}={}", instance_const(&source, name));
+        println!(
+            "cargo:rustc-env=NARTYA_{name}={}",
+            instance_const(&source, name)
+        );
     }
 
     let manifest = tauri_build::AppManifest::new().commands(COMMANDS);

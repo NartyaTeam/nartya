@@ -19,6 +19,7 @@
     "allow-get-captcha-token",
     "allow-session-get",
     "allow-session-set",
-    "allow-session-remove"
+    "allow-session-remove",
+    "allow-resolve-stream"
   ]
 }

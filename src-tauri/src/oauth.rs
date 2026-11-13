@@ -62,16 +62,24 @@ fn error_copy(params: &HashMap<String, String>) -> (&'static str, &'static str) 
         .find_map(|k| params.get(*k).filter(|v| !v.is_empty()))
         .map(|v| v.replace('+', " ").to_lowercase())
         .unwrap_or_default();
-    if raw.contains("identity is already linked to another user") || raw.contains("identity_already_exists") {
+    if raw.contains("identity is already linked to another user")
+        || raw.contains("identity_already_exists")
+    {
         return (
             "Ce compte Discord est déjà utilisé",
             "Il est déjà lié à un autre compte Nartya. Connectez-vous à ce compte ou choisissez un autre compte Discord.",
         );
     }
     if raw.contains("access_denied") {
-        return ("Autorisation annulée", "Aucune modification n'a été apportée à votre compte Nartya.");
+        return (
+            "Autorisation annulée",
+            "Aucune modification n'a été apportée à votre compte Nartya.",
+        );
     }
-    ("Échec de la connexion", "Refermez cet onglet et réessayez depuis l'application Nartya.")
+    (
+        "Échec de la connexion",
+        "Refermez cet onglet et réessayez depuis l'application Nartya.",
+    )
 }
 
 fn error_page(params: &HashMap<String, String>) -> String {
@@ -93,13 +101,23 @@ async fn callback(
     let full_url = format!(
         "http://127.0.0.1:{}{}",
         ctx.port,
-        uri.path_and_query().map(|p| p.as_str()).unwrap_or(CALLBACK_PATH)
+        uri.path_and_query()
+            .map(|p| p.as_str())
+            .unwrap_or(CALLBACK_PATH)
     );
     // Même canal que le deep-link.
     deep_link::handle(&ctx.app, &full_url);
 
-    let body = if params.contains_key("code") { success_page() } else { error_page(&params) };
-    ([(header::CONTENT_TYPE, "text/html; charset=utf-8")], Html(body)).into_response()
+    let body = if params.contains_key("code") {
+        success_page()
+    } else {
+        error_page(&params)
+    };
+    (
+        [(header::CONTENT_TYPE, "text/html; charset=utf-8")],
+        Html(body),
+    )
+        .into_response()
 }
 
 fn router(ctx: Ctx) -> Router {
@@ -115,7 +133,10 @@ pub async fn start(app: AppHandle) -> Option<u16> {
         match TcpListener::bind((Ipv4Addr::LOCALHOST, port)).await {
             Ok(listener) => {
                 app.state::<AppState>().set_auth_port(port);
-                let app_router = router(Ctx { app: app.clone(), port });
+                let app_router = router(Ctx {
+                    app: app.clone(),
+                    port,
+                });
                 tauri::async_runtime::spawn(async move {
                     let _ = axum::serve(listener, app_router).await;
                 });
@@ -138,14 +159,24 @@ mod tests {
     use super::*;
 
     fn params(pairs: &[(&str, &str)]) -> HashMap<String, String> {
-        pairs.iter().map(|(k, v)| (k.to_string(), v.to_string())).collect()
+        pairs
+            .iter()
+            .map(|(k, v)| (k.to_string(), v.to_string()))
+            .collect()
     }
 
     #[test]
     fn messages_d_erreur() {
-        assert_eq!(error_copy(&params(&[("error", "access_denied")])).0, "Autorisation annulée");
         assert_eq!(
-            error_copy(&params(&[("error_description", "Identity+is+already+linked+to+another+user")])).0,
+            error_copy(&params(&[("error", "access_denied")])).0,
+            "Autorisation annulée"
+        );
+        assert_eq!(
+            error_copy(&params(&[(
+                "error_description",
+                "Identity+is+already+linked+to+another+user"
+            )]))
+            .0,
             "Ce compte Discord est déjà utilisé"
         );
         assert_eq!(error_copy(&params(&[])).0, "Échec de la connexion");

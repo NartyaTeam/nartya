@@ -57,7 +57,9 @@ pub fn machine_id() -> String {
 pub fn anime4k_capabilities() -> Value {
     let mut sys = sysinfo::System::new();
     sys.refresh_memory();
-    let cores = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(0);
+    let cores = std::thread::available_parallelism()
+        .map(|n| n.get())
+        .unwrap_or(0);
     json!({
         "platform": node_platform(),
         "arch": node_arch(),
@@ -78,7 +80,10 @@ mod tests {
     fn empreinte_stable_de_32_caracteres() {
         let a = hash_machine_id("PC", "win32", "x64", "aa:bb:cc:dd:ee:ff");
         assert_eq!(a.len(), 32);
-        assert_eq!(a, hash_machine_id("PC", "win32", "x64", "aa:bb:cc:dd:ee:ff"));
+        assert_eq!(
+            a,
+            hash_machine_id("PC", "win32", "x64", "aa:bb:cc:dd:ee:ff")
+        );
         assert_ne!(a, hash_machine_id("PC", "win32", "x64", "no-mac"));
     }
 
