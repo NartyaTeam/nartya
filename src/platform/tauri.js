@@ -40,10 +40,23 @@ export const tauriPlatform = {
   getMachineId: () => invoke("get_machine_id"),
   getAnime4kCapabilities: () => invoke("get_anime4k_capabilities"),
   resolveStream: async () => ({ success: false, error: "Résolution native indisponible" }),
+  getCaptchaToken: () => invoke("get_captcha_token"),
   downloads: null,
-  session: null,
+  // Partagée avec Nartya Hub.
+  session: {
+    get: (key) => invoke("session_get", { key }),
+    set: (key, value) => invoke("session_set", { key, value }),
+    remove: (key) => invoke("session_remove", { key }),
+    /** `value` = valeur brute de `nartya-auth`, `null` si effacée. Retourne le désabonnement. */
+    onChanged: (cb) => listen("session:changed", cb),
+  },
   cast: null,
-  hub: null,
+  hub: {
+    // { version, lastSeen }, ou null sans hub.
+    getInfo: () => invoke("hub_get_info"),
+    isManaged: () => invoke("hub_is_managed"),
+    open: () => invoke("hub_open"),
+  },
   discord: null,
   openExternal,
   async openAuth(url) {

@@ -11,6 +11,8 @@ const MIN_WIDTH: f64 = 1400.0;
 const MIN_HEIGHT: f64 = 680.0;
 /// Si la page ne signale jamais son chargement, la fenêtre ne reste pas invisible.
 const REVEAL_FALLBACK: Duration = Duration::from_secs(8);
+/// Sans session, le temps de se connecter dans le Hub avant que la fenêtre s'impose.
+const GATE_TIMEOUT: Duration = Duration::from_secs(90);
 
 /// Tous les webviews du process partagent un seul environnement WebView2 : ces arguments
 /// doivent être identiques pour chaque fenêtre, sinon la création d'une seconde échoue
@@ -74,26 +76,31 @@ pub fn create_main(app: &AppHandle) -> tauri::Result<WebviewWindow> {
     builder.build()
 }
 
-/// Montre la fenêtre, puis livre le deep-link arrivé pendant le chargement.
-pub fn reveal(app: &AppHandle) {
+/// Montre la fenêtre, puis livre le deep-link arrivé pendant le chargement. Pendant l'attente
+/// du Hub, la page se charge mais la fenêtre reste cachée (`force` la montre quand même).
+pub fn reveal(app: &AppHandle, force: bool) {
     let Some(win) = app.get_webview_window("main") else {
         return;
     };
-    if !win.is_visible().unwrap_or(false) {
+    let state = app.state::<AppState>();
+    if force {
+        state.set_defer_reveal(false);
+    }
+    if !state.defer_reveal() && !win.is_visible().unwrap_or(false) {
         let _ = win.show();
     }
-    let state = app.state::<AppState>();
     if !state.is_ready() {
         state.set_ready();
         deep_link::flush_pending(app);
     }
 }
 
-pub fn schedule_reveal_fallback(app: &AppHandle) {
+pub fn schedule_reveal_fallback(app: &AppHandle, deferred: bool) {
     let app = app.clone();
+    let delay = if deferred { GATE_TIMEOUT } else { REVEAL_FALLBACK };
     std::thread::spawn(move || {
-        std::thread::sleep(REVEAL_FALLBACK);
-        reveal(&app);
+        std::thread::sleep(delay);
+        reveal(&app, true);
     });
 }
 
@@ -121,5 +128,6 @@ pub fn force_focus_main(app: &AppHandle) -> bool {
     let _ = win.set_always_on_top(true);
     let _ = win.set_always_on_top(false);
     let _ = win.set_focus();
+    app.state::<AppState>().set_defer_reveal(false);
     true
 }

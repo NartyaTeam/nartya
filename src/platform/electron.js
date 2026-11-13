@@ -13,6 +13,7 @@ export const electronPlatform = {
   resolveStream: (payload) =>
     api?.resolveStream?.(payload) ??
     Promise.resolve({ success: false, error: "Résolution native indisponible" }),
+  getCaptchaToken: api?.getCaptchaToken ? () => api.getCaptchaToken() : undefined,
   downloads: api?.downloads || null,
   session: api?.session || null,
   cast: api?.cast || null,

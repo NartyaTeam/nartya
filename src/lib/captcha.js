@@ -75,10 +75,10 @@ async function getInlineToken() {
 
 export async function getCaptchaToken() {
   try {
-    if (window.electronAPI?.getCaptchaToken) {
-      const res = await window.electronAPI.getCaptchaToken();
+    if (platform.isDesktop && platform.getCaptchaToken) {
+      const res = await platform.getCaptchaToken();
       if (res?.token) return res.token;
-      console.warn("[captcha] échec côté Electron:", res?.error || "inconnu");
+      console.warn("[captcha] échec côté desktop:", res?.error || "inconnu");
       return null;
     }
     if (platform.getCaptchaToken && platform.name?.startsWith("capacitor-")) {

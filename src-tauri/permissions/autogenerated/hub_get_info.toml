@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-hub-get-info"
+description = "Enables the hub_get_info command without any pre-configured scope."
+commands.allow = ["hub_get_info"]
+
+[[permission]]
+identifier = "deny-hub-get-info"
+description = "Denies the hub_get_info command without any pre-configured scope."
+commands.deny = ["hub_get_info"]
