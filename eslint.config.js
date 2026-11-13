@@ -4,7 +4,7 @@ import react from "eslint-plugin-react";
 import reactHooks from "eslint-plugin-react-hooks";
 
 export default [
-  { ignores: ["dist/", "release/", "android/", "ios/", "api/", "node_modules/", ".claude/"] },
+  { ignores: ["dist/", "release/", "android/", "ios/", "api/", "node_modules/", ".claude/", "src-tauri/"] },
   js.configs.recommended,
   {
     files: ["src/**/*.{js,jsx}"],
