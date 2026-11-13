@@ -758,6 +758,10 @@ html.mobile-runtime {
       transparent
     );
   }
+  /* Hors écran : voir lib/skeletonVisibility.js. */
+  .skeleton-idle::after {
+    display: none;
+  }
 }
 
 @keyframes hero-progress {

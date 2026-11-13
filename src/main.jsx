@@ -7,6 +7,7 @@ import "react-toastify/dist/ReactToastify.css";
 import App from "./App.jsx";
 import { platform } from "./platform/index.js";
 import { installGlobalErrorLogging } from "./api/clientLogs.js";
+import { installSkeletonVisibility } from "./lib/skeletonVisibility.js";
 import "./index.css";
 
 const AchievementUnlock = lazy(() => import("./components/achievements/AchievementUnlock.jsx"));
@@ -15,6 +16,7 @@ if (platform.isMobile) document.documentElement.classList.add("mobile-runtime");
 
 // Avant le rendu, pour ne pas manquer une exception au montage.
 installGlobalErrorLogging();
+installSkeletonVisibility();
 
 function AchievementUnlockHost() {
   const hasPending = useAchievementUnlockStore((state) => state.queue.length > 0);
