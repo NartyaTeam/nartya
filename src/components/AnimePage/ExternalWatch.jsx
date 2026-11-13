@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ArrowUpRight, Tv } from "lucide-react";
+import { platform } from "@/platform";
 
 /** Pour les œuvres du catalogue qui ne sont qu'un lien sortant vers le diffuseur officiel. */
 
@@ -43,8 +44,7 @@ function Logo({ host, size = 18 }) {
 }
 
 function ouvrir(url) {
-  if (window.electronAPI?.openExternal) window.electronAPI.openExternal(url);
-  else window.open(url, "_blank", "noopener,noreferrer");
+  platform.openExternal(url);
 }
 
 export function ExternalWatch({ animeTitle, destinations = [] }) {

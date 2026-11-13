@@ -9,6 +9,7 @@ export const electronPlatform = {
   // Décodage GPU réellement désactivé (ChromeOS/Crostini), pas simplement « Linux ».
   softwareDecode: !!api?.hardwareAccelerationDisabled,
   getMachineId: () => api?.getMachineId?.() ?? Promise.resolve(null),
+  getAnime4kCapabilities: () => api?.getAnime4kCapabilities?.() ?? Promise.resolve(null),
   resolveStream: (payload) =>
     api?.resolveStream?.(payload) ??
     Promise.resolve({ success: false, error: "Résolution native indisponible" }),

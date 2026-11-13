@@ -33,6 +33,34 @@ jobs:
       - name: Build front (Vite)
         run: npm run build
 
+  tauri:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install
+        run: npm ci
+      - name: Build front (embarqué dans la coque)
+        run: npm run build
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      - name: Clippy
+        working-directory: src-tauri
+        run: cargo clippy --all-targets -- -D warnings
+      - name: Tests Rust
+        working-directory: src-tauri
+        run: cargo test
+      - name: Build de la coque
+        working-directory: src-tauri
+        run: cargo build
+
   android:
     runs-on: ubuntu-latest
     steps:

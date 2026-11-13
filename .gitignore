@@ -41,3 +41,7 @@ supabase/.temp/
 # Config locale de l'IDE et brouillons de notes de version.
 /.idea/
 /PATCHNOTE-DISCORD.md
+
+# Coque Tauri : artefacts de build Rust.
+src-tauri/target/
+src-tauri/gen/

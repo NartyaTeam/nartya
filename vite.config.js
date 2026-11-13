@@ -19,7 +19,17 @@ function contentSecurityPolicy(supabaseUrl) {
     "font-src": ["'self'", "data:", "https://fonts.gstatic.com"],
     "img-src": ["'self'", "data:", "blob:", "https:", "http://127.0.0.1:*"],
     "media-src": ["'self'", "data:", "blob:", "https:", "http://127.0.0.1:*"],
-    "connect-src": ["'self'", "https:", supabaseWs, "http://127.0.0.1:*", "data:", "blob:"],
+    // `ipc:` et `ipc.localhost` : canal des commandes de la coque Tauri.
+    "connect-src": [
+      "'self'",
+      "https:",
+      supabaseWs,
+      "http://127.0.0.1:*",
+      "ipc:",
+      "http://ipc.localhost",
+      "data:",
+      "blob:",
+    ],
     "worker-src": ["'self'", "blob:"],
     "frame-src": ["https://challenges.cloudflare.com"],
     "object-src": ["'none'"],

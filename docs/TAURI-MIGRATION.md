@@ -110,6 +110,26 @@ Non couvert par la phase 0 : décalage vidéo en plein écran à l'œil, Anime4K
 - Fenêtre, plein écran, instance unique, deep-link `nartya://`, `open-external`, infos système.
 - Capabilities. CI Windows (build + lint + `cargo test`).
 
+#### État de la phase 1 (2026-11-13, branche `feat/tauri-shell`)
+
+Fait : `src-tauri/` (fenêtre, instance unique, deep-link `nartya://`, `open_external`, version, `app_quit` / `app_focus`, `hub_is_managed`, identifiant machine, capacités Anime4K), `src/platform/tauri.js`, job CI Windows (clippy, `cargo test`, build), scripts `npm run tauri:dev` / `tauri:build`.
+
+Vérifié sur cette machine :
+- l'app complète s'affiche dans la coque, fenêtre 1400×880 visible et focalisée après le chargement de la page ;
+- les 8 commandes répondent depuis la page ; `open_external` refuse `file://` ;
+- une 2e instance lancée avec `nartya://anime/…`, `nartya://party/…` ou `nartya://auth-callback#…` n'ouvre pas de fenêtre et la 1re reçoit `navigate-to` / `auth-callback` ;
+- **l'identifiant machine est identique à celui qu'Electron calcule** (même empreinte sur cette machine) : les bans machine restent valables ;
+- clippy sans avertissement, 11 tests Rust.
+
+À savoir :
+- un build debug lancé avec `cargo run` charge `http://localhost:5173` : passer par `npm run tauri:dev`, ou lancer Vite à côté ;
+- sans pont de session, l'app affiche l'écran « connexion depuis le Hub » : la session partagée est donc le **premier chantier de la phase 2** ;
+- `hub`, `session`, `downloads`, `cast`, `discord` valent `null` côté Tauri (le front les traite comme sur le web), `resolveStream` renvoie « indisponible » ;
+- les arguments WebView2 incluent maintenant l'équivalent de `backgroundThrottling: false` ;
+- le port de debug (CDP) n'est ouvert que si `NARTYA_CDP_PORT` est défini, en build debug.
+
+Non vérifié : deep-link au démarrage à froid, plein écran sur un écran de moins de 1400 px logiques (Electron remettait la taille minimale à 0), build release et installeur, exécution de la CI.
+
 ### Phase 2 : cœur lecture
 
 Proxy local, client HTTP DoH, résolveur de flux, session partagée, callback OAuth, captcha. Critère : lire un épisode de bout en bout.

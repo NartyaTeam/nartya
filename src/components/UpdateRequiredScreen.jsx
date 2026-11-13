@@ -22,10 +22,10 @@ export default function UpdateRequiredScreen({ latest, message, downloadUrl, sha
         await installAppUpdate({ downloadUrl, sha256 });
         return;
       }
-      const info = await window.electronAPI?.hub?.getInfo?.().catch(() => null);
+      const info = await platform.hub?.getInfo?.().catch(() => null);
       const res = await openHub(!!info);
       if (!res?.success && downloadUrl) {
-        window.electronAPI?.openExternal?.(downloadUrl);
+        platform.openExternal(downloadUrl);
       }
     } finally {
       setBusy(false);

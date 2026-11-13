@@ -6,6 +6,8 @@
  * (requestVideoFrameCallback), pas l'écran.
  */
 
+import { platform } from "@/platform";
+
 // Modes de l'upstream mpv. `export` = nom de la classe dans le paquet.
 const MODES = {
   a: { export: "ModeA", label: "Mode A — sources floues" },
@@ -77,7 +79,7 @@ function getWebGlRenderer() {
 export async function assessAnime4kCapability({ mode = "a", sourceWidth = 0, sourceHeight = 0 } = {}) {
   let system = {};
   try {
-    system = (await window.electronAPI?.getAnime4kCapabilities?.()) || {};
+    system = (await platform.getAnime4kCapabilities?.()) || {};
   } catch (_) {}
 
   const memoryGb = system.memoryBytes
