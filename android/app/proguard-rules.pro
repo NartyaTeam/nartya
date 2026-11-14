@@ -26,3 +26,6 @@
 -keepattributes *Annotation*
 -keep @interface com.getcapacitor.annotation.** { *; }
 -keep @com.getcapacitor.annotation.CapacitorPlugin class com.nartya.app.** { *; }
+
+# Pont JNI vers le cœur Rust : les noms de classe et de méthode sont résolus par la bibliothèque native.
+-keep class com.nartya.app.core.NartyaCore { native <methods>; }

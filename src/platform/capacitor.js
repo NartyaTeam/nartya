@@ -37,6 +37,35 @@ function currentAccessToken() {
   }
 }
 
+// Garde-fou du cœur Rust (lecture seulement). `false` ramène la lecture sur le proxy Java ;
+// pour un essai sans rebuild : localStorage["nartya-rust-core"] = "0" (coupé) ou "1" (actif).
+const RUST_CORE_ENABLED = true;
+
+function rustCoreWanted() {
+  if (Capacitor.getPlatform() !== "android") return false;
+  try {
+    const override = localStorage.getItem("nartya-rust-core");
+    if (override === "0") return false;
+    if (override === "1") return true;
+  } catch {}
+  return RUST_CORE_ENABLED;
+}
+
+let corePromise = null;
+
+/** Démarre le cœur natif ; `false` si la bibliothèque manque (on reste alors sur le proxy Java). */
+function ensureCore() {
+  if (!corePromise) {
+    corePromise = NartyaProxy.coreStart()
+      .then((info) => info?.success === true)
+      .catch(() => false);
+    void corePromise.then((ok) => {
+      if (!ok) corePromise = null;
+    });
+  }
+  return corePromise;
+}
+
 function adoptProxy(port, token) {
   if (!Number.isInteger(port) || port <= 0) throw new Error("Port du proxy natif invalide");
   if (!token || typeof token !== "string") throw new Error("Jeton du proxy natif manquant");
@@ -334,6 +363,15 @@ export const capacitorPlatform = {
     if (!token || typeof token !== "string") return { success: false, error: "Jeton manquant" };
     if (!apiBaseUrl || !/^https?:\/\//i.test(apiBaseUrl)) {
       return { success: false, error: "API non configurée (URL absolue attendue)" };
+    }
+
+    // Le cœur Rust résout et sert la lecture ; le jeton de session passe par l'appel, jamais l'URL
+    // de l'hébergeur. Les téléchargements restent sur le chemin Java (poignées propres à Java).
+    if (mode !== "download" && rustCoreWanted() && (await ensureCore())) {
+      return NartyaProxy.coreResolve({
+        request: { token, forceRefresh: !!forceRefresh, mode: mode || null },
+        accessToken: currentAccessToken() || "",
+      });
     }
 
     // Retour au premier plan : le proxy est peut-être en cours de relance.

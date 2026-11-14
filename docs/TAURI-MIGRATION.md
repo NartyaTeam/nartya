@@ -251,7 +251,7 @@ L'API Node du VPS reste hors sujet. Les deux fichiers de `src/shared/` (extracti
 
 Question : peut-on remplacer `ProxyServer.java` (594 lignes) et `Downloads.java` (907 lignes) par `nartya-core`, en gardant Capacitor ? **Oui, sans obstacle technique rencontré.**
 
-Ajouts : `crates/nartya-android` (bibliothèque `cdylib`, pont JNI : `nativeStart` démarre le cœur et renvoie port + jeton, `nativeResolve` résout un flux), la classe Java de référence `crates/nartya-android/java/com/nartya/app/core/NartyaCore.java`, deux sondes (`examples/probe.rs`, `examples/dns.rs`), un accesseur `Proxy::token()` et l'export de `Target` dans le cœur, un job CI `android-core` (clippy du cœur et du pont pour arm64, `-D warnings`).
+Ajouts : `crates/nartya-android` (bibliothèque `cdylib`, pont JNI : `nativeStart` démarre le cœur et renvoie port + jeton, `nativeResolve` résout un flux), la classe Java de référence `android/app/src/main/java/com/nartya/app/core/NartyaCore.java`, deux sondes (`examples/probe.rs`, `examples/dns.rs`), un accesseur `Proxy::token()` et l'export de `Target` dans le cœur, un job CI `android-core` (clippy du cœur et du pont pour arm64, `-D warnings`).
 
 Mesures (release, LTO) :
 
@@ -288,6 +288,20 @@ adb shell "chmod +x /data/local/tmp/probe && /data/local/tmp/probe"
 ```
 
 Conclusion : la voie Capacitor + JNI est la moins risquée. Tauri mobile n'est pas testé et n'apporterait pas de gain avant d'avoir réécrit les plugins Java. iOS suivrait le même schéma (bibliothèque statique + pont Swift), non testé faute de macOS.
+
+### Android : la lecture passe par le cœur (2026-11-14, étape 1)
+
+`resolveStream` sur Android appelle le cœur Rust, comme `tauri.js` : la page envoie `{ token, forceRefresh }`, le cœur interroge l'API (URL fixée côté cœur), récupère la recette, extrait le flux et renvoie une URL de lecture locale avec jeton ; la page ne voit jamais l'URL de l'hébergeur.
+
+- **Plugin** : `NartyaProxyPlugin.coreStart()` (démarre le cœur, port + jeton) et `coreResolve({ request, accessToken })`, exécutés sur un fil à part (les appels bloquent). Un `catch Throwable` rend `success: false` si la bibliothèque manque (ABI absente, cargo-ndk non installé).
+- **Jeton de session** : sur Android il vit dans le `localStorage` de la WebView, hors de portée du natif ; la page le passe donc à `coreResolve` (même WebView que celle qui le détient déjà). Différence avec Tauri, où la coque le possède.
+- **Garde-fou** : `RUST_CORE_ENABLED` dans `src/platform/capacitor.js` ; essai sans rebuild avec `localStorage["nartya-rust-core"]` = `"0"` (coupé) ou `"1"`. Coupé, indisponible, iOS ou `mode: "download"` : ancien chemin Java inchangé (`ProxyServer.java`, `Downloads.java` conservés ; les téléchargements gardent leurs poignées Java).
+- **Build** : tâche Gradle `buildNartyaCore` (cargo-ndk, `-o android/app/src/main/jniLibs`, dossier ignoré par git) branchée sur `preBuild`. `-PnartyaCore=true` force (échoue sans cargo-ndk), `false` saute, par défaut compile si cargo-ndk est installé (le job CI `android` n'en a pas : il saute la tâche). `-PnartyaCoreAbis=x86_64` pour l'émulateur ; défaut `arm64-v8a,armeabi-v7a`. Prérequis : NDK 27, `rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android`, `cargo install cargo-ndk`. Règle R8 pour les méthodes natives dans `proguard-rules.pro`.
+
+Vérifié : `cargo test --workspace` et clippy `-D warnings` OK ; `lintDebug` + `testDebugUnitTest` OK (cœur sauté) ; APK debug x86_64 installé sur l'émulateur `nartya_probe` : depuis la WebView, `coreStart` (447 ms, JNI sur ART), `coreResolve` d'un faux jeton atteint l'API de production depuis le cœur (réponse 401 « Connecte-toi »), le proxy local renvoie 403 sans jeton.
+
+**Non vérifié** : une lecture réelle d'un flux HLS (aucun compte de test, je n'ai pas créé de compte invité en production) ; l'APK release minifié (règle R8 non éprouvée) ; un appareil arm64 ; le comportement du cœur après mise en arrière-plan/processus tué (la page ne relance pas le cœur : `coreStart` est idempotent mais le port ne change pas tant que le processus vit).
+**Reste** : valider la lecture sur un compte réel, puis accord pour supprimer la partie lecture de `ProxyServer.java` ; téléchargements via le cœur (Host JNI, événements) ; `fetchEmbedUrl` reste sur le proxy Java (utilisé seulement par l'ancien chemin).
 
 ### Phase 5 : Linux et macOS (optionnel)
 

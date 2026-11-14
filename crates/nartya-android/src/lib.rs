@@ -1,7 +1,7 @@
 //! Pont JNI vers le cœur. Les fonctions natives sont appelées depuis un fil Java : elles
 //! bloquent le temps de l'opération, l'appelant ne doit pas être le fil principal.
 //!
-//! Classe Java correspondante : `com.nartya.app.core.NartyaCore`.
+//! Classe Java correspondante : `android/app/src/main/java/com/nartya/app/core/NartyaCore.java`.
 
 use std::{
     path::Path,

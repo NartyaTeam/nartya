@@ -16,9 +16,13 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 import com.getcapacitor.annotation.Permission;
 import com.getcapacitor.annotation.PermissionCallback;
 
+import com.nartya.app.core.NartyaCore;
+
 import org.json.JSONObject;
 
 import java.io.File;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Proxy de streaming local et téléchargements hors ligne. Progression poussée par l'événement
@@ -37,6 +41,10 @@ public class NartyaProxyPlugin extends Plugin {
     private static JSObject currentConfigs = new JSObject();
     private static volatile NartyaProxyPlugin activePlugin;
     private static volatile Context appContext;
+    // Les appels au cœur Rust bloquent le temps de l'opération : fil à part, hors du fil des plugins.
+    private static final ExecutorService CORE_EXECUTOR = Executors.newCachedThreadPool();
+    private static final Object CORE_LOCK = new Object();
+    private static JSObject coreInfo;
 
     @Override
     public void load() {
@@ -72,6 +80,46 @@ public class NartyaProxyPlugin extends Plugin {
         currentConfigs = call.getObject("configs", new JSObject());
         if (server != null) server.updateConfigs(currentConfigs);
         call.resolve(new JSObject().put("success", true));
+    }
+
+    // Cœur Rust (libnartya_android.so) : lecture seulement pour l'instant. Si la bibliothèque est
+    // absente de l'APK, la page reçoit success=false et reste sur le proxy Java.
+
+    @PluginMethod
+    public void coreStart(PluginCall call) {
+        Context context = getContext().getApplicationContext();
+        CORE_EXECUTOR.execute(() -> {
+            try {
+                synchronized (CORE_LOCK) {
+                    if (coreInfo == null) {
+                        JSObject started = new JSObject(NartyaCore.nativeStart(context.getFilesDir().getAbsolutePath()));
+                        if (!started.optBoolean("success", false)) {
+                            call.resolve(started);
+                            return;
+                        }
+                        coreInfo = started;
+                    }
+                }
+                call.resolve(coreInfo);
+            } catch (Throwable e) {
+                // UnsatisfiedLinkError compris : pas de bibliothèque pour cette ABI.
+                call.resolve(new JSObject().put("success", false).put("error", String.valueOf(e.getMessage())));
+            }
+        });
+    }
+
+    /** Requête : { request: { token, forceRefresh, mode }, accessToken }. */
+    @PluginMethod
+    public void coreResolve(PluginCall call) {
+        JSObject request = call.getObject("request", new JSObject());
+        String accessToken = call.getString("accessToken", "");
+        CORE_EXECUTOR.execute(() -> {
+            try {
+                call.resolve(new JSObject(NartyaCore.nativeResolve(request.toString(), accessToken)));
+            } catch (Throwable e) {
+                call.resolve(new JSObject().put("success", false).put("error", String.valueOf(e.getMessage())));
+            }
+        });
     }
 
     @PluginMethod
