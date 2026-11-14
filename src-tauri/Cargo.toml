@@ -38,8 +38,12 @@ sysinfo = { version = "0.37", default-features = false, features = ["system"] }
 netdev = "0.36"
 tokio-util = { version = "0.7.19", features = ["io"] }
 tauri-plugin-dialog = "2.7.3"
+mdns-sd = { version = "0.21.7", default-features = false }
+tokio-rustls = { version = "0.26.6", default-features = false, features = ["ring"] }
+rustls = { version = "0.23", default-features = false, features = ["ring", "std"] }
 
 [dev-dependencies]
+rcgen = { version = "0.14.7", default-features = false, features = ["ring", "pem"] }
 tempfile = "3"
 
 [profile.release]

@@ -4,7 +4,7 @@
 use std::{
     collections::HashMap,
     io,
-    net::Ipv4Addr,
+    net::{IpAddr, Ipv4Addr, SocketAddr},
     sync::{
         atomic::{AtomicU16, Ordering},
         Arc, Mutex,
@@ -14,7 +14,7 @@ use std::{
 
 use axum::{
     body::Body,
-    extract::{Query, State},
+    extract::{ConnectInfo, Query, State},
     http::{header, HeaderMap, Method, StatusCode},
     response::Response,
     routing::get,
@@ -27,7 +27,7 @@ use futures_util::{
 };
 use indexmap::IndexMap;
 use reqwest::Method as UpMethod;
-use tokio::sync::{mpsc, Semaphore};
+use tokio::sync::{mpsc, oneshot, Semaphore};
 
 use super::{
     handles::{random_token, Handles, Target},
@@ -111,6 +111,31 @@ pub fn is_segment_url(url: &str) -> bool {
         || (path.ends_with(".mp4") && !path.contains("/embed") && !path.contains("shell.php"))
 }
 
+/// Où et avec quel jeton le client nous joint : loopback pour la page, réseau local pour la TV.
+struct Scope {
+    origin: String,
+    token: String,
+}
+
+impl Scope {
+    fn token_suffix(&self) -> String {
+        format!("&t={}", urlencoding::encode(&self.token))
+    }
+}
+
+/// Listener ouvert sur le réseau local le temps d'un cast, protégé par son propre jeton.
+struct Lan {
+    port: u16,
+    token: String,
+    _stop: oneshot::Sender<()>,
+}
+
+#[derive(Clone)]
+struct Ctx {
+    proxy: Arc<Proxy>,
+    lan: bool,
+}
+
 pub struct Proxy {
     pub net: Arc<Net>,
     pub recipe: Arc<RecipeStore>,
@@ -122,6 +147,9 @@ pub struct Proxy {
     signed: Mutex<IndexMap<String, (String, Instant)>>,
     /// Racine des téléchargements, servis sous `/local`.
     local_root: SharedRoot,
+    lan: Mutex<Option<Lan>>,
+    /// Dernière requête reçue de chaque appareil sur le listener LAN.
+    lan_seen: Mutex<HashMap<IpAddr, Instant>>,
 }
 
 fn cors(builder: axum::http::response::Builder) -> axum::http::response::Builder {
@@ -211,6 +239,8 @@ impl Proxy {
             warm: Mutex::default(),
             signed: Mutex::default(),
             local_root,
+            lan: Mutex::default(),
+            lan_seen: Mutex::default(),
         })
     }
 
@@ -242,30 +272,159 @@ impl Proxy {
         ))
     }
 
-    fn check_token(&self, given: Option<&String>) -> bool {
+    fn token_ok(given: Option<&String>, expected: &str) -> bool {
         let Some(given) = given else { return false };
-        let (a, b) = (given.as_bytes(), self.token.as_bytes());
+        let (a, b) = (given.as_bytes(), expected.as_bytes());
         // Temps constant sur la longueur attendue.
-        a.len() == b.len() && a.iter().zip(b).fold(0u8, |acc, (x, y)| acc | (x ^ y)) == 0
+        !b.is_empty()
+            && a.len() == b.len()
+            && a.iter().zip(b).fold(0u8, |acc, (x, y)| acc | (x ^ y)) == 0
     }
 
-    fn token_suffix(&self) -> String {
-        format!("&t={}", urlencoding::encode(&self.token))
+    /// `None` : jeton invalide. Sur le LAN, l'hôte demandé n'est cru que s'il est une IPv4 avec
+    /// notre port (il finit dans les playlists réécrites).
+    fn scope_for(
+        &self,
+        lan: bool,
+        query: &HashMap<String, String>,
+        headers: &HeaderMap,
+    ) -> Option<Scope> {
+        let given = query.get("t");
+        if !lan {
+            if !Self::token_ok(given, &self.token) {
+                return None;
+            }
+            return Some(Scope {
+                origin: format!("http://127.0.0.1:{}", self.port().unwrap_or(0)),
+                token: self.token.clone(),
+            });
+        }
+        let guard = self.lan.lock().unwrap();
+        let lan = guard.as_ref()?;
+        if !Self::token_ok(given, &lan.token) {
+            return None;
+        }
+        let host = headers
+            .get(header::HOST)
+            .and_then(|v| v.to_str().ok())
+            .and_then(|h| h.parse::<SocketAddr>().ok())
+            .filter(|a| a.is_ipv4() && a.port() == lan.port)
+            .map(|a| a.to_string())
+            .unwrap_or_else(|| format!("127.0.0.1:{}", lan.port));
+        Some(Scope {
+            origin: format!("http://{host}"),
+            token: lan.token.clone(),
+        })
+    }
+
+    fn router(self: &Arc<Self>, lan: bool) -> Router {
+        Router::new()
+            .route("/video/proxy", get(handle_get).options(handle_preflight))
+            .route("/local", get(handle_local).options(handle_preflight))
+            .fallback(|| async { json_error(StatusCode::NOT_FOUND, "Not Found") })
+            .with_state(Ctx {
+                proxy: self.clone(),
+                lan,
+            })
     }
 
     pub async fn start(self: &Arc<Self>) -> io::Result<u16> {
         let listener = tokio::net::TcpListener::bind((Ipv4Addr::LOCALHOST, 0)).await?;
         let port = listener.local_addr()?.port();
         self.port.store(port, Ordering::SeqCst);
-        let app = Router::new()
-            .route("/video/proxy", get(handle_get).options(handle_preflight))
-            .route("/local", get(handle_local).options(handle_preflight))
-            .fallback(|| async { json_error(StatusCode::NOT_FOUND, "Not Found") })
-            .with_state(self.clone());
+        let app = self
+            .router(false)
+            .into_make_service_with_connect_info::<SocketAddr>();
         tauri::async_runtime::spawn(async move {
             let _ = axum::serve(listener, app).await;
         });
         Ok(port)
+    }
+
+    /// Ouvre le listener LAN (0.0.0.0) s'il ne l'est pas déjà.
+    async fn start_lan(self: &Arc<Self>) -> io::Result<()> {
+        if self.lan.lock().unwrap().is_some() {
+            return Ok(());
+        }
+        let listener = tokio::net::TcpListener::bind((Ipv4Addr::UNSPECIFIED, 0)).await?;
+        let port = listener.local_addr()?.port();
+        let (stop, stopped) = oneshot::channel::<()>();
+        {
+            let mut guard = self.lan.lock().unwrap();
+            if guard.is_some() {
+                return Ok(());
+            }
+            *guard = Some(Lan {
+                port,
+                token: random_token(24),
+                _stop: stop,
+            });
+        }
+        let app = self
+            .router(true)
+            .into_make_service_with_connect_info::<SocketAddr>();
+        tauri::async_runtime::spawn(async move {
+            let _ = axum::serve(listener, app)
+                .with_graceful_shutdown(async move {
+                    let _ = stopped.await;
+                })
+                .await;
+        });
+        println!("[cast] serveur LAN démarré sur le port {port}");
+        Ok(())
+    }
+
+    pub fn stop_lan(&self) {
+        if self.lan.lock().unwrap().take().is_some() {
+            self.lan_seen.lock().unwrap().clear();
+            println!("[cast] serveur LAN arrêté");
+        }
+    }
+
+    pub fn last_lan_request_from(&self, ip: IpAddr) -> Option<Instant> {
+        self.lan_seen.lock().unwrap().get(&ip).copied()
+    }
+
+    /// Adresse du proxy vue de `device_ip` : carte du même sous-réseau, port LAN, jeton de cast.
+    /// Seul ce qui sort de notre proxy loopback (avec son jeton) est accepté.
+    pub async fn to_cast_url(
+        self: &Arc<Self>,
+        local_url: &str,
+        device_ip: Ipv4Addr,
+    ) -> Option<String> {
+        let mut url = url::Url::parse(local_url).ok()?;
+        let port = self.port()?;
+        let loopback = matches!(url.host_str(), Some("127.0.0.1") | Some("localhost"));
+        if !loopback
+            || url.port() != Some(port)
+            || !matches!(url.path(), "/video/proxy" | "/local")
+        {
+            return None;
+        }
+        let given = url
+            .query_pairs()
+            .find(|(k, _)| k == "t")
+            .map(|(_, v)| v.into_owned());
+        if !Self::token_ok(given.as_ref(), &self.token) {
+            return None;
+        }
+        self.start_lan().await.ok()?;
+        let (lan_port, lan_token) = {
+            let guard = self.lan.lock().unwrap();
+            let lan = guard.as_ref()?;
+            (lan.port, lan.token.clone())
+        };
+        let local = crate::cast::net::local_address_for(device_ip);
+        url.set_host(Some(&local.to_string())).ok()?;
+        url.set_port(Some(lan_port)).ok()?;
+        let pairs: Vec<(String, String)> = url
+            .query_pairs()
+            .map(|(k, v)| (k.into_owned(), v.into_owned()))
+            .filter(|(k, _)| k != "t")
+            .chain(std::iter::once(("t".to_string(), lan_token)))
+            .collect();
+        url.query_pairs_mut().clear().extend_pairs(pairs);
+        Some(url.to_string())
     }
 
     /// Le lecteur la demande dans la seconde : la connexion au CDN est déjà ouverte.
@@ -363,18 +522,18 @@ impl Proxy {
         provider: Option<&str>,
         content: &str,
         base: &str,
+        scope: &Scope,
     ) -> Response {
-        let port = self.port().unwrap_or(0);
         let rewrite = Rewrite {
             provider,
             referer: &target.referer,
             origin: &target.origin,
-            token_suffix: &self.token_suffix(),
+            token_suffix: &scope.token_suffix(),
         };
         let body = transform_playlist(
             content,
             base,
-            &format!("http://127.0.0.1:{port}/video/proxy"),
+            &format!("{}/video/proxy", scope.origin),
             &rewrite,
             &|t| self.handles.mint(t),
         );
@@ -390,6 +549,7 @@ impl Proxy {
         handle: &str,
         target: Arc<Target>,
         range: Option<String>,
+        scope: &Scope,
     ) -> Response {
         let recipe = self.recipe.current();
         let provider = provider_of(&target, recipe.as_deref());
@@ -419,7 +579,7 @@ impl Proxy {
         if range.is_none() {
             if let Some(warm) = self.take_warm(handle) {
                 if let Some((text, url)) = warm.await {
-                    return self.send_playlist(&target, provider.as_deref(), &text, &url);
+                    return self.send_playlist(&target, provider.as_deref(), &text, &url, scope);
                 }
             }
         }
@@ -485,7 +645,7 @@ impl Proxy {
         if is_playlist {
             let base = response.url().to_string();
             return match response.text().await {
-                Ok(text) => self.send_playlist(&target, provider.as_deref(), &text, &base),
+                Ok(text) => self.send_playlist(&target, provider.as_deref(), &text, &base, scope),
                 Err(e) => json_error(
                     StatusCode::BAD_GATEWAY,
                     &redact_urls(&e.without_url().to_string()),
@@ -728,18 +888,32 @@ async fn handle_preflight() -> Response {
         .unwrap()
 }
 
+/// Trace la requête LAN (même refusée) : sert à savoir si la TV est venue chercher la vidéo.
+fn note_lan_peer(ctx: &Ctx, peer: SocketAddr) {
+    if ctx.lan {
+        ctx.proxy
+            .lan_seen
+            .lock()
+            .unwrap()
+            .insert(peer.ip().to_canonical(), Instant::now());
+    }
+}
+
 async fn handle_get(
-    State(proxy): State<Arc<Proxy>>,
+    State(ctx): State<Ctx>,
+    ConnectInfo(peer): ConnectInfo<SocketAddr>,
     method: Method,
     Query(query): Query<HashMap<String, String>>,
     headers: HeaderMap,
 ) -> Response {
+    let proxy = ctx.proxy.clone();
+    note_lan_peer(&ctx, peer);
     if method != Method::GET {
         return json_error(StatusCode::METHOD_NOT_ALLOWED, "Method Not Allowed");
     }
-    if !proxy.check_token(query.get("t")) {
+    let Some(scope) = proxy.scope_for(ctx.lan, &query, &headers) else {
         return json_error(StatusCode::FORBIDDEN, "Jeton invalide");
-    }
+    };
     let Some(handle) = query.get("h") else {
         return json_error(StatusCode::BAD_REQUEST, "Lien de lecture expiré");
     };
@@ -751,28 +925,83 @@ async fn handle_get(
         .get(header::RANGE)
         .and_then(|v| v.to_str().ok())
         .map(str::to_string);
-    proxy.handle_proxy(handle, target, range).await
+    proxy.handle_proxy(handle, target, range, &scope).await
 }
 
 async fn handle_local(
-    State(proxy): State<Arc<Proxy>>,
+    State(ctx): State<Ctx>,
+    ConnectInfo(peer): ConnectInfo<SocketAddr>,
     Query(query): Query<HashMap<String, String>>,
     headers: HeaderMap,
 ) -> Response {
-    if !proxy.check_token(query.get("t")) {
+    let proxy = ctx.proxy.clone();
+    note_lan_peer(&ctx, peer);
+    let Some(scope) = proxy.scope_for(ctx.lan, &query, &headers) else {
         return json_error(StatusCode::FORBIDDEN, "Jeton invalide");
-    }
+    };
     let id = query.get("id").map(String::as_str).unwrap_or("");
     let rel = query.get("path").map(String::as_str).unwrap_or("video.mp4");
     let range = headers.get(header::RANGE).and_then(|v| v.to_str().ok());
     let root = proxy.local_root.read().unwrap().clone();
-    let origin = format!("http://127.0.0.1:{}", proxy.port().unwrap_or(0));
-    super::local::serve(&root, id, rel, range, &origin, &proxy.token_suffix()).await
+    super::local::serve(&root, id, rel, range, &scope.origin, &scope.token_suffix()).await
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn query_param(url: &str, key: &str) -> String {
+        url::Url::parse(url)
+            .unwrap()
+            .query_pairs()
+            .find(|(k, _)| k == key)
+            .map(|(_, v)| v.into_owned())
+            .unwrap_or_default()
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn listener_lan_avec_son_propre_jeton() {
+        let root: SharedRoot = Arc::new(std::sync::RwLock::new(std::env::temp_dir()));
+        let proxy = Proxy::new(
+            Arc::new(Net::new()),
+            Arc::new(RecipeStore::default()),
+            Arc::new(Handles::default()),
+            root,
+        );
+        let port = proxy.start().await.unwrap();
+        let local = proxy.local_url("x", "video.mp4").unwrap();
+        let device = Ipv4Addr::new(192, 168, 1, 20);
+
+        // Seul ce qui sort de notre proxy, avec son jeton, devient une URL de cast.
+        assert!(proxy.to_cast_url("https://exemple.com/video/proxy?t=a", device).await.is_none());
+        let bad = format!("http://127.0.0.1:{port}/video/proxy?h=x&t=faux");
+        assert!(proxy.to_cast_url(&bad, device).await.is_none());
+
+        let cast = proxy.to_cast_url(&local, device).await.unwrap();
+        let lan_port: u16 = url::Url::parse(&cast).unwrap().port().unwrap();
+        assert_ne!(lan_port, port);
+        assert!(cast.contains("/local?"));
+        let (loop_token, lan_token) = (query_param(&local, "t"), query_param(&cast, "t"));
+        assert_ne!(loop_token, lan_token);
+
+        let http = reqwest::Client::builder().no_proxy().build().unwrap();
+        let status = |port: u16, token: &str| {
+            let http = http.clone();
+            let url = format!("http://127.0.0.1:{port}/local?id=x&path=video.mp4&t={token}");
+            async move { http.get(url).send().await.unwrap().status().as_u16() }
+        };
+        assert_eq!(status(lan_port, &loop_token).await, 403);
+        assert_eq!(status(port, &lan_token).await, 403);
+        assert_eq!(status(lan_port, "").await, 403);
+        assert_ne!(status(lan_port, &lan_token).await, 403);
+        assert_ne!(status(port, &loop_token).await, 403);
+        assert!(proxy.last_lan_request_from(Ipv4Addr::LOCALHOST.into()).is_some());
+
+        proxy.stop_lan();
+        tokio::time::sleep(Duration::from_millis(200)).await;
+        let url = format!("http://127.0.0.1:{lan_port}/local?t={lan_token}");
+        assert!(http.get(url).send().await.is_err());
+    }
 
     #[test]
     fn urls_de_segments() {

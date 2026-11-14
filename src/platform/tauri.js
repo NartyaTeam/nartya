@@ -63,7 +63,17 @@ export const tauriPlatform = {
     /** `value` = valeur brute de `nartya-auth`, `null` si effacée. Retourne le désabonnement. */
     onChanged: (cb) => listen("session:changed", cb),
   },
-  cast: null,
+  // Le serveur LAN et la découverte mDNS vivent dans la coque ; mêmes événements qu'Electron.
+  cast: {
+    discover: () => invoke("cast_discover"),
+    addHost: (ip) => invoke("cast_add_host", { ip: String(ip || "") }),
+    diagnostics: () => invoke("cast_diagnostics"),
+    start: (deviceId, media) => invoke("cast_start", { deviceId, media }),
+    control: (action, value) => invoke("cast_control", { action, value: value ?? null }),
+    stop: () => invoke("cast_stop"),
+    onDevices: (cb) => (typeof cb === "function" ? listen("cast:devices", cb) : noop),
+    onStatus: (cb) => (typeof cb === "function" ? listen("cast:status", cb) : noop),
+  },
   hub: {
     // { version, lastSeen }, ou null sans hub.
     getInfo: () => invoke("hub_get_info"),

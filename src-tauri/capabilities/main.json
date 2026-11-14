@@ -33,6 +33,12 @@
     "allow-downloads-open-dir",
     "allow-discord-connect",
     "allow-discord-set-presence",
-    "allow-discord-clear-presence"
+    "allow-discord-clear-presence",
+    "allow-cast-discover",
+    "allow-cast-add-host",
+    "allow-cast-diagnostics",
+    "allow-cast-start",
+    "allow-cast-control",
+    "allow-cast-stop"
   ]
 }

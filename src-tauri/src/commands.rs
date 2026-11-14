@@ -174,6 +174,41 @@ pub fn downloads_open_dir(downloads: DownloadsState) -> Value {
     downloads.open_dir()
 }
 
+// ---- Cast
+
+type CastState<'a> = State<'a, std::sync::Arc<crate::cast::Cast>>;
+
+#[tauri::command]
+pub fn cast_discover(cast: CastState) -> Value {
+    cast.discover()
+}
+
+#[tauri::command]
+pub async fn cast_add_host(cast: CastState<'_>, ip: String) -> Result<Value, ()> {
+    Ok(cast.add_host(&ip).await)
+}
+
+#[tauri::command]
+pub async fn cast_diagnostics(cast: CastState<'_>) -> Result<Value, ()> {
+    Ok(cast.diagnostics().await)
+}
+
+#[tauri::command]
+pub async fn cast_start(cast: CastState<'_>, device_id: String, media: Value) -> Result<Value, ()> {
+    Ok(cast.start(&device_id, media).await)
+}
+
+#[tauri::command]
+pub async fn cast_control(cast: CastState<'_>, action: String, value: Option<Value>) -> Result<Value, ()> {
+    Ok(cast.control(&action, &value.unwrap_or(Value::Null)).await)
+}
+
+#[tauri::command]
+pub async fn cast_stop(cast: CastState<'_>) -> Result<Value, ()> {
+    cast.end_session("stop", json!({})).await;
+    Ok(json!({ "success": true }))
+}
+
 // ---- Discord Rich Presence
 
 #[tauri::command]

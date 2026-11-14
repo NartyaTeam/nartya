@@ -15,6 +15,7 @@ use std::sync::Arc;
 
 pub use handles::Handles;
 pub use net::{Net, NetError};
+pub use proxy::Proxy;
 pub use provider::{build_provider_request, provider_headers};
 pub use recipe::RecipeStore;
 pub use resolver::{api_base_url, ResolveRequest, StreamService};

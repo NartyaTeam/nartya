@@ -1,4 +1,5 @@
 mod captcha;
+mod cast;
 mod commands;
 mod config;
 mod deep_link;
@@ -70,6 +71,12 @@ pub fn run() {
             commands::discord_connect,
             commands::discord_set_presence,
             commands::discord_clear_presence,
+            commands::cast_discover,
+            commands::cast_add_host,
+            commands::cast_diagnostics,
+            commands::cast_start,
+            commands::cast_control,
+            commands::cast_stop,
         ])
         .on_page_load(|webview, payload| {
             if webview.label() == "main"
@@ -119,6 +126,10 @@ pub fn run() {
             let data_dir = app.path().config_dir()?.join("nartya");
             let (doc, default_root, root) = downloads::open_root(&data_dir);
             let (parts, service) = tauri::async_runtime::block_on(stream::start(root.clone()));
+            app.manage(cast::Cast::new(
+                handle.clone(),
+                service.as_ref().map(|s| s.proxy.clone()),
+            ));
             app.manage(StreamSlot(service));
             app.manage(downloads::Downloads::new(
                 handle.clone(),
@@ -156,6 +167,9 @@ pub fn run() {
             if let tauri::RunEvent::Exit = event {
                 if let Some(downloads) = app.try_state::<Arc<downloads::Downloads>>() {
                     downloads.flush();
+                }
+                if let Some(cast) = app.try_state::<Arc<cast::Cast>>() {
+                    tauri::async_runtime::block_on(cast.shutdown());
                 }
             }
         });

@@ -184,6 +184,18 @@ Module `src-tauri/src/discord.rs` : Rich Presence par l'IPC local (tube nommé `
 
 Non vérifié : affichage réel dans un client Discord, reconnexion après fermeture de Discord.
 
+#### État de la phase 3c : Cast (2026-11-14) : code écrit, lecture sur la TV non testée
+
+Module `src-tauri/src/cast/` : découverte mDNS (`mdns-sd`, coupée après 3 min d'inactivité), client CASTV2 écrit à la main (TLS sans vérification du certificat auto-signé, trames protobuf, heartbeat, `rustls` + `ring`), session (LAUNCH du Default Media Receiver, LOAD, sondage du statut chaque seconde, play / pause / seek / volume / muet, fin propre avec STOP), ajout manuel par IP, diagnostics et pare-feu Windows (PowerShell, cache 60 s). Même contrat qu'Electron : commandes `cast_*`, événements `cast:devices` et `cast:status`.
+
+Serveur LAN : le proxy ouvre un second listener `0.0.0.0` le temps d'un cast, avec **son propre jeton** ; le jeton loopback n'y marche pas et inversement. `to_cast_url` n'accepte que des URL issues du proxy loopback avec leur jeton, et choisit la carte du sous-réseau de la TV (WSL, VPN écartés). Les playlists réécrites portent l'adresse par laquelle la TV nous a joints.
+
+Vérifié : 92 tests Rust, dont un faux récepteur TLS auto-signé (LAUNCH, PING/PONG), l'isolation des jetons LAN / loopback et l'arrêt du listener. Contre la vraie TV de cette machine (Philips, `192.168.1.88`) : découverte mDNS, TLS et `GET_STATUS` OK (tests `#[ignore]` `decouverte_reelle` et `appareil_reel`).
+
+Différence avec Electron : « Arrêter » envoie un STOP au récepteur (Electron fermait seulement la connexion, la TV gardait la dernière image).
+
+Non vérifié : LOAD et lecture réelle sur la TV (lancerait une vidéo chez l'utilisateur), pare-feu Windows côté PowerShell, reprise après coupure du Wi-Fi.
+
 ### Phase 4 : packaging et bascule Windows
 
 - Installeur NSIS, manifeste compatible Hub, bootstrapper WebView2.

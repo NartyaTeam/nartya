@@ -31,6 +31,12 @@ const COMMANDS: &[&str] = &[
     "discord_connect",
     "discord_set_presence",
     "discord_clear_presence",
+    "cast_discover",
+    "cast_add_host",
+    "cast_diagnostics",
+    "cast_start",
+    "cast_control",
+    "cast_stop",
 ];
 
 /// `export const NOM = "valeur";` dans `src/config/instance.js` : une seule source de vérité
