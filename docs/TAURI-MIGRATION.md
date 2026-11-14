@@ -303,6 +303,21 @@ Vérifié : `cargo test --workspace` et clippy `-D warnings` OK ; `lintDebug` + 
 **Non vérifié** : une lecture réelle d'un flux HLS (aucun compte de test, je n'ai pas créé de compte invité en production) ; l'APK release minifié (règle R8 non éprouvée) ; un appareil arm64 ; le comportement du cœur après mise en arrière-plan/processus tué (la page ne relance pas le cœur : `coreStart` est idempotent mais le port ne change pas tant que le processus vit).
 **Reste** : valider la lecture sur un compte réel, puis accord pour supprimer la partie lecture de `ProxyServer.java` ; téléchargements via le cœur (Host JNI, événements) ; `fetchEmbedUrl` reste sur le proxy Java (utilisé seulement par l'ancien chemin).
 
+### Android : les téléchargements passent par le cœur (2026-11-14, étape 2)
+
+Même garde-fou que la lecture (`RUST_CORE_ENABLED` / `localStorage["nartya-rust-core"]`) : activé, **lecture et téléchargements** vont ensemble au cœur ; coupé ou cœur absent, tout reste sur Java. Ne pas basculer d'un mode à l'autre sur une installation qui contient des épisodes : chaque mode a son index (voir ci-dessous).
+
+- **Pont** : `NartyaCore.nativeCall(commande, argsJson)` reprend les commandes Tauri (`downloads_list`, `_start`, `_cancel`, `_cancel_season`, `_remove`, `_set_max_concurrent`, `_local_url`). Le plugin les expose par `coreCall`.
+- **Événements** : `nativeStart` reçoit un `NartyaCore.Listener` ; le cœur garde la `JavaVM` et une référence globale (`JniHost`), rattache ses fils Tokio et appelle `onEvent("downloads:progress", item)`. Le plugin les relaie à la page (`downloadProgress`) et pilote `DownloadForegroundService` d'après les statuts reçus (service conservé tel quel).
+- **Données existantes** : dossiers identiques (`<données>/downloads/<id base64url>/`). L'index Java (`downloads/index.json`, plus les copies `item.json` des dossiers) est converti au premier démarrage en `downloads.json` (`downloads::legacy`, testé) ; `index.json` n'est pas touché et sert de sauvegarde. Statut `interrupted` devient `error`. Limite : un dossier sans `index.json` ni `item.json` n'est pas reconstruit (le code Java le faisait depuis le nom du dossier).
+- **Lecture hors ligne** : `/local` est servi par le proxy du cœur.
+- **Page** : `capacitor.js` appelle `coreCall` pour list/start/cancel/remove/setMaxConcurrent/localUrl ; la résolution en mode téléchargement rend une poignée du cœur. Les réglages de dossier restent statiques (stockage privé).
+
+Vérifié sur l'émulateur : reprise d'un faux `index.json` Java (`downloads.json` créé), `downloads_list`, lecture d'un fichier par `/local` avec `Range` (206), `downloads_remove` (dossier supprimé), et la chaîne d'événements Rust → JNI → plugin → page (queued, downloading, error) sur un téléchargement de scan qui échoue volontairement (« Accès refusé par l'hébergeur »).
+**Non vérifié** : un téléchargement réel complet (MP4 et HLS, sans ffmpeg : playlist + segments), l'affichage de la notification de premier plan, la reprise après processus tué, un vrai index Java produit par une ancienne version, l'APK release (R8), arm64.
+
+**Reste côté Android** : valider tout cela avec un compte réel ; supprimer `ProxyServer.java`, `Downloads.java` et `fetchEmbedUrl` (+ leurs tests Java) après accord ; forcer `-PnartyaCore=true` dans le script de publication ; session de consolidation (voir ci-dessus).
+
 ### Phase 5 : Linux et macOS (optionnel)
 
 À décider selon la phase 0 : WebKitGTK et WKWebView sont moins sûrs que Chromium pour WebGPU, MSE/HLS et le plein écran. Ne pas lancer sans vérification équivalente à la phase 0 sur chaque plateforme.

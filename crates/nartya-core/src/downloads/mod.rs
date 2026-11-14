@@ -3,6 +3,7 @@
 //! (`<racine>/<id en base64url>/`), mêmes champs. Les deux coques voient la même bibliothèque.
 
 mod hls;
+pub mod legacy;
 mod mp4;
 pub mod paths;
 mod scans;

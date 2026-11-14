@@ -4,45 +4,130 @@
 //! Classe Java correspondante : `android/app/src/main/java/com/nartya/app/core/NartyaCore.java`.
 
 use std::{
-    path::Path,
+    path::{Path, PathBuf},
     sync::{Arc, OnceLock},
 };
 
 use jni::{
-    objects::{JClass, JString},
+    objects::{GlobalRef, JClass, JObject, JString, JValue},
     sys::jstring,
-    JNIEnv,
+    JNIEnv, JavaVM,
 };
-use nartya_core::stream::{self, Parts, ResolveRequest, StreamService};
+use nartya_core::{
+    downloads::{self, Downloads},
+    host::{BoxFuture, MoveChoice, MovePrompt},
+    stream::{self, Parts, ResolveRequest, StreamService},
+    Host,
+};
 use serde_json::{json, Value};
 
 pub struct Core {
     pub runtime: tokio::runtime::Runtime,
     pub parts: Parts,
     pub service: Option<Arc<StreamService>>,
+    pub downloads: Arc<Downloads>,
 }
 
 static CORE: OnceLock<Core> = OnceLock::new();
 
-/// Démarre le cœur une seule fois (proxy local sur le loopback) et renvoie son adresse.
+/// Hôte sans page ni fenêtre : sondes et tests.
+pub struct NoopHost;
+
+impl Host for NoopHost {
+    fn emit(&self, _event: &str, _payload: Value) {}
+    fn open_path(&self, _path: &Path) -> Result<(), String> {
+        Err("Indisponible sur Android".into())
+    }
+    fn pick_folder(&self, _title: &str, _start: &Path) -> BoxFuture<'static, Option<PathBuf>> {
+        Box::pin(async { None })
+    }
+    fn ask_move_downloads(&self, _prompt: MovePrompt) -> BoxFuture<'static, MoveChoice> {
+        Box::pin(async { MoveChoice::Cancel })
+    }
+}
+
+/// Événements du cœur remontés à Java (`NartyaCore.Listener.onEvent`).
+struct JniHost {
+    vm: JavaVM,
+    listener: GlobalRef,
+}
+
+impl Host for JniHost {
+    fn emit(&self, event: &str, payload: Value) {
+        // Les fils Tokio restent rattachés à la JVM une fois pour toutes.
+        let Ok(mut env) = self.vm.attach_current_thread_permanently() else {
+            return;
+        };
+        let (Ok(event), Ok(payload)) = (env.new_string(event), env.new_string(payload.to_string()))
+        else {
+            return;
+        };
+        let result = env.call_method(
+            &self.listener,
+            "onEvent",
+            "(Ljava/lang/String;Ljava/lang/String;)V",
+            &[JValue::Object(&event), JValue::Object(&payload)],
+        );
+        if result.is_err() {
+            let _ = env.exception_clear();
+        }
+    }
+    fn open_path(&self, _path: &Path) -> Result<(), String> {
+        Err("Indisponible sur Android".into())
+    }
+    fn pick_folder(&self, _title: &str, _start: &Path) -> BoxFuture<'static, Option<PathBuf>> {
+        Box::pin(async { None })
+    }
+    fn ask_move_downloads(&self, _prompt: MovePrompt) -> BoxFuture<'static, MoveChoice> {
+        Box::pin(async { MoveChoice::Cancel })
+    }
+}
+
 pub fn start(data_dir: &Path) -> &'static Core {
+    start_with_host(data_dir, Arc::new(NoopHost))
+}
+
+/// Démarre le cœur une seule fois : proxy local sur le loopback et téléchargements.
+pub fn start_with_host(data_dir: &Path, host: Arc<dyn Host>) -> &'static Core {
     CORE.get_or_init(|| {
         let runtime = tokio::runtime::Builder::new_multi_thread()
             .enable_all()
             .build()
             .expect("runtime Tokio");
-        let root = std::sync::Arc::new(std::sync::RwLock::new(data_dir.join("downloads")));
-        let (parts, service) = runtime.block_on(stream::start(root));
+        let imported = downloads::legacy::import_android_index(data_dir);
+        if imported > 0 {
+            println!("[downloads] {imported} entrée(s) reprise(s) de l'ancien index Android");
+        }
+        let (doc, default_root, root) = downloads::open_root(data_dir);
+        let (parts, service) = runtime.block_on(stream::start(root.clone()));
+        let downloads = runtime.block_on(async {
+            Downloads::new(
+                host,
+                downloads::Init {
+                    data_dir: data_dir.to_path_buf(),
+                    doc,
+                    default_root,
+                    root,
+                    net: parts.net.clone(),
+                    recipe: parts.recipe.clone(),
+                    handles: parts.handles.clone(),
+                },
+            )
+        });
         Core {
             runtime,
             parts,
             service,
+            downloads,
         }
     })
 }
 
 pub fn start_json(data_dir: &Path) -> Value {
-    let core = start(data_dir);
+    start_info(start(data_dir))
+}
+
+fn start_info(core: &Core) -> Value {
     match &core.service {
         Some(s) => json!({ "success": true, "port": s.proxy.port(), "token": s.proxy.token() }),
         None => json!({ "success": false, "error": "Proxy local indisponible" }),
@@ -61,6 +146,41 @@ pub fn resolve_json(request: &str, access_token: Option<String>) -> Value {
         .block_on(async move { service.resolve(request, access_token).await })
 }
 
+/// Commandes de téléchargement, mêmes noms et mêmes arguments que les commandes Tauri.
+pub fn call(command: &str, args: &str) -> Value {
+    let Some(core) = CORE.get() else {
+        return json!({ "success": false, "error": "Cœur non démarré" });
+    };
+    let args: Value = serde_json::from_str(args).unwrap_or(Value::Null);
+    let id = args["id"].as_str().unwrap_or("").to_string();
+    let downloads = core.downloads.clone();
+    match command {
+        "downloads_list" => downloads.list(),
+        "downloads_start" => core.runtime.block_on(downloads.start(args)),
+        "downloads_cancel" => core
+            .runtime
+            .block_on(async move { downloads.cancel(&id).await }),
+        "downloads_cancel_season" => core.runtime.block_on(downloads.cancel_season(args)),
+        "downloads_remove" => core
+            .runtime
+            .block_on(async move { downloads.remove(&id).await }),
+        "downloads_set_max_concurrent" => {
+            let _guard = core.runtime.enter();
+            downloads.set_max_concurrent(args["n"].as_f64().unwrap_or(1.0));
+            json!({ "success": true })
+        }
+        "downloads_local_url" => {
+            let rel = args["rel"].as_str().unwrap_or("video.mp4");
+            let url = core
+                .service
+                .as_ref()
+                .and_then(|s| s.proxy.local_url(&id, rel));
+            json!({ "url": url })
+        }
+        _ => json!({ "success": false, "error": "Commande inconnue" }),
+    }
+}
+
 fn read(env: &mut JNIEnv, s: &JString) -> Option<String> {
     env.get_string(s).ok().map(Into::into)
 }
@@ -76,9 +196,16 @@ pub extern "system" fn Java_com_nartya_app_core_NartyaCore_nativeStart(
     mut env: JNIEnv,
     _class: JClass,
     data_dir: JString,
+    listener: JObject,
 ) -> jstring {
     let value = match read(&mut env, &data_dir) {
-        Some(dir) => start_json(Path::new(&dir)),
+        Some(dir) => {
+            let host: Arc<dyn Host> = match (env.get_java_vm(), env.new_global_ref(&listener)) {
+                (Ok(vm), Ok(listener)) => Arc::new(JniHost { vm, listener }),
+                _ => Arc::new(NoopHost),
+            };
+            start_info(start_with_host(Path::new(&dir), host))
+        }
         None => json!({ "success": false, "error": "Dossier de données invalide" }),
     };
     reply(&mut env, value)
@@ -94,5 +221,18 @@ pub extern "system" fn Java_com_nartya_app_core_NartyaCore_nativeResolve(
     let request = read(&mut env, &request).unwrap_or_default();
     let token = read(&mut env, &access_token).filter(|t| !t.is_empty());
     let value = resolve_json(&request, token);
+    reply(&mut env, value)
+}
+
+#[no_mangle]
+pub extern "system" fn Java_com_nartya_app_core_NartyaCore_nativeCall(
+    mut env: JNIEnv,
+    _class: JClass,
+    command: JString,
+    args: JString,
+) -> jstring {
+    let command = read(&mut env, &command).unwrap_or_default();
+    let args = read(&mut env, &args).unwrap_or_default();
+    let value = call(&command, &args);
     reply(&mut env, value)
 }

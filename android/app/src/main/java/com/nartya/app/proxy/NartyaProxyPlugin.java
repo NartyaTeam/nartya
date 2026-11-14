@@ -45,6 +45,8 @@ public class NartyaProxyPlugin extends Plugin {
     private static final ExecutorService CORE_EXECUTOR = Executors.newCachedThreadPool();
     private static final Object CORE_LOCK = new Object();
     private static JSObject coreInfo;
+    // Téléchargements en cours côté cœur, d'après ses événements (pour le service de premier plan).
+    private static final java.util.Set<String> coreActive = java.util.concurrent.ConcurrentHashMap.newKeySet();
 
     @Override
     public void load() {
@@ -92,7 +94,7 @@ public class NartyaProxyPlugin extends Plugin {
             try {
                 synchronized (CORE_LOCK) {
                     if (coreInfo == null) {
-                        JSObject started = new JSObject(NartyaCore.nativeStart(context.getFilesDir().getAbsolutePath()));
+                        JSObject started = new JSObject(NartyaCore.nativeStart(context.getFilesDir().getAbsolutePath(), NartyaProxyPlugin::handleCoreEvent));
                         if (!started.optBoolean("success", false)) {
                             call.resolve(started);
                             return;
@@ -120,6 +122,40 @@ public class NartyaProxyPlugin extends Plugin {
                 call.resolve(new JSObject().put("success", false).put("error", String.valueOf(e.getMessage())));
             }
         });
+    }
+
+    /** Commandes de téléchargement du cœur : { command, args }. */
+    @PluginMethod
+    public void coreCall(PluginCall call) {
+        String command = call.getString("command", "");
+        JSObject args = call.getObject("args", new JSObject());
+        CORE_EXECUTOR.execute(() -> {
+            try {
+                call.resolve(new JSObject(NartyaCore.nativeCall(command, args.toString())));
+            } catch (Throwable e) {
+                call.resolve(new JSObject().put("success", false).put("error", String.valueOf(e.getMessage())));
+            }
+        });
+    }
+
+    /** Événements du cœur, sur un de ses fils : la page et la notification de premier plan. */
+    private static void handleCoreEvent(String event, String payloadJson) {
+        if (!"downloads:progress".equals(event)) return;
+        try {
+            JSONObject item = new JSONObject(payloadJson);
+            String id = item.optString("id");
+            String status = item.optString("status");
+            if ("downloading".equals(status) || "queued".equals(status)) coreActive.add(id);
+            else coreActive.remove(id);
+            NartyaProxyPlugin plugin = activePlugin;
+            if (plugin != null) plugin.notifyListeners("downloadProgress", JSObject.fromJSONObject(item));
+            Context context = appContext;
+            if (context != null) {
+                try {
+                    DownloadForegroundService.update(context, item, coreActive.size());
+                } catch (Exception ignored) {}
+            }
+        } catch (Exception ignored) {}
     }
 
     @PluginMethod

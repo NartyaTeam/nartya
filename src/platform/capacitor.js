@@ -37,7 +37,7 @@ function currentAccessToken() {
   }
 }
 
-// Garde-fou du cœur Rust (lecture seulement). `false` ramène la lecture sur le proxy Java ;
+// Garde-fou du cœur Rust (lecture et téléchargements). `false` ramène la lecture sur le proxy Java ;
 // pour un essai sans rebuild : localStorage["nartya-rust-core"] = "0" (coupé) ou "1" (actif).
 const RUST_CORE_ENABLED = true;
 
@@ -65,6 +65,9 @@ function ensureCore() {
   }
   return corePromise;
 }
+
+const coreReady = async () => rustCoreWanted() && (await ensureCore());
+const coreCall = (command, args = {}) => NartyaProxy.coreCall({ command, args });
 
 function adoptProxy(port, token) {
   if (!Number.isInteger(port) || port <= 0) throw new Error("Port du proxy natif invalide");
@@ -366,8 +369,8 @@ export const capacitorPlatform = {
     }
 
     // Le cœur Rust résout et sert la lecture ; le jeton de session passe par l'appel, jamais l'URL
-    // de l'hébergeur. Les téléchargements restent sur le chemin Java (poignées propres à Java).
-    if (mode !== "download" && rustCoreWanted() && (await ensureCore())) {
+    // de l'hébergeur ; en téléchargement, il rend une poignée que `downloads.start` lui rend.
+    if (await coreReady()) {
       return NartyaProxy.coreResolve({
         request: { token, forceRefresh: !!forceRefresh, mode: mode || null },
         accessToken: currentAccessToken() || "",
@@ -481,12 +484,17 @@ export const capacitorPlatform = {
   downloads: {
     async list() {
       try {
+        if (await coreReady()) return await coreCall("downloads_list");
         return await NartyaProxy.downloadList();
       } catch {
         return { items: [] };
       }
     },
-    start(payload) {
+    async start(payload) {
+      if (await coreReady()) {
+        await NartyaProxy.requestDownloadPermission().catch(() => ({ granted: false }));
+        return coreCall("downloads_start", payload || {});
+      }
       // Pas d'URL à résoudre.
       if (payload?.type === "scan") {
         return NartyaProxy.requestDownloadPermission()
@@ -509,7 +517,10 @@ export const capacitorPlatform = {
           }),
         );
     },
-    cancel: (id) => NartyaProxy.downloadCancel({ id }),
+    async cancel(id) {
+      if (await coreReady()) return coreCall("downloads_cancel", { id });
+      return NartyaProxy.downloadCancel({ id });
+    },
     async cancelSeason(payload) {
       const { items = [] } = await this.list();
       const matches = items.filter((item) =>
@@ -523,9 +534,16 @@ export const capacitorPlatform = {
       await Promise.all(matches.map((item) => this.cancel(item.id)));
       return { success: true, canceled: matches.length };
     },
-    remove: (id) => NartyaProxy.downloadRemove({ id }),
-    setMaxConcurrent: async () => ({ success: true }),
+    async remove(id) {
+      if (await coreReady()) return coreCall("downloads_remove", { id });
+      return NartyaProxy.downloadRemove({ id });
+    },
+    async setMaxConcurrent(n) {
+      if (await coreReady()) return coreCall("downloads_set_max_concurrent", { n: Number(n) || 1 });
+      return { success: true };
+    },
     async localUrl(id, rel = "video.mp4") {
+      if (await coreReady()) return (await coreCall("downloads_local_url", { id, rel })).url || null;
       const origin = (await ensureProxy()).replace("/video/proxy", "");
       const query = new URLSearchParams({ id, path: rel, t: proxyToken });
       return `${origin}/local?${query}`;
