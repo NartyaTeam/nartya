@@ -2,7 +2,9 @@
 # (`src-tauri` aujourd'hui) l'embarque et n'implémente que ce qui lui est propre.
 [workspace]
 resolver = "2"
-members = ["crates/nartya-core", "src-tauri"]
+members = ["crates/nartya-core", "crates/nartya-android", "src-tauri"]
+# La bibliothèque Android ne se compile qu'avec `cargo ndk` ou à la demande.
+default-members = ["crates/nartya-core", "src-tauri"]
 
 [profile.release]
 codegen-units = 1

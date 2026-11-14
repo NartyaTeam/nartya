@@ -1,0 +1,21 @@
+[package]
+name = "nartya-android"
+version = "1.40.1"
+description = "Pont JNI vers nartya-core pour la coque Android (bibliothèque native chargée par Capacitor)"
+authors = ["NartyaTeam"]
+edition = "2021"
+rust-version = "1.80"
+license = "ISC"
+
+[lib]
+name = "nartya_android"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+nartya-core = { path = "../nartya-core" }
+jni = "0.21"
+serde_json = "1"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net"] }
+
+[dev-dependencies]
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }

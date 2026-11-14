@@ -251,6 +251,11 @@ impl Proxy {
         }
     }
 
+    /// Jeton exigé sur chaque requête du listener loopback (pour les coques qui construisent les URL).
+    pub fn token(&self) -> &str {
+        &self.token
+    }
+
     /// `None` si le proxy n'a pas démarré.
     pub fn playback_url(&self, handle: &str, is_hls: bool) -> Option<String> {
         let port = self.port()?;

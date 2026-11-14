@@ -13,7 +13,7 @@ mod resolver;
 
 use std::sync::Arc;
 
-pub use handles::Handles;
+pub use handles::{Handles, Target};
 pub use net::{Net, NetError};
 pub use proxy::Proxy;
 pub use provider::{build_provider_request, provider_headers};

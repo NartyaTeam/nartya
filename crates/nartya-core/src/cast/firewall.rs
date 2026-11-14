@@ -34,6 +34,7 @@ impl FirewallStatus {
 
 static CACHED: Mutex<Option<(Instant, Option<FirewallStatus>)>> = Mutex::new(None);
 
+#[cfg(any(windows, test))]
 fn as_list(v: Option<&Value>) -> Vec<String> {
     match v {
         Some(Value::Array(items)) => items
@@ -45,6 +46,7 @@ fn as_list(v: Option<&Value>) -> Vec<String> {
     }
 }
 
+#[cfg(any(windows, test))]
 /// Une règle `Profile` peut valoir « Any » ou lister plusieurs profils séparés par des virgules.
 fn covers(rules: &[String], category: &str) -> bool {
     rules
@@ -54,6 +56,7 @@ fn covers(rules: &[String], category: &str) -> bool {
         .any(|p| p == category || p == "Any")
 }
 
+#[cfg(any(windows, test))]
 fn parse(stdout: &str) -> Option<FirewallStatus> {
     let data: Value = serde_json::from_str(stdout.trim()).ok()?;
     let networks = as_list(data.get("networks"));

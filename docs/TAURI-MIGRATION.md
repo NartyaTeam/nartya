@@ -247,6 +247,48 @@ Règle pour la suite : **toute nouvelle logique va dans le cœur**, la coque ne 
 
 L'API Node du VPS reste hors sujet. Les deux fichiers de `src/shared/` (extraction, recette) sont utilisés par elle et par le web : le Rust les reproduit, gardés alignés par des tests communs.
 
+### Essai de faisabilité Android (2026-11-14) : le cœur tourne sous Android
+
+Question : peut-on remplacer `ProxyServer.java` (594 lignes) et `Downloads.java` (907 lignes) par `nartya-core`, en gardant Capacitor ? **Oui, sans obstacle technique rencontré.**
+
+Ajouts : `crates/nartya-android` (bibliothèque `cdylib`, pont JNI : `nativeStart` démarre le cœur et renvoie port + jeton, `nativeResolve` résout un flux), la classe Java de référence `crates/nartya-android/java/com/nartya/app/core/NartyaCore.java`, deux sondes (`examples/probe.rs`, `examples/dns.rs`), un accesseur `Proxy::token()` et l'export de `Target` dans le cœur, un job CI `android-core` (clippy du cœur et du pont pour arm64, `-D warnings`).
+
+Mesures (release, LTO) :
+
+| ABI | Taille de `libnartya_android.so` |
+|---|---|
+| arm64-v8a | 4,2 Mo |
+| armeabi-v7a | 2,7 Mo |
+| x86 / x86_64 (émulateurs) | 4,4 / 4,7 Mo |
+
+Soit environ 7 Mo dans l'APK pour arm64 + armv7, à retrancher du code Java supprimé. Compilation de 1 à 1,5 min par ABI. Aucune dépendance bloquante : `ring`, `rustls` (racines `webpki` embarquées, pas besoin du magasin système), `mdns-sd`, `notify`, `netdev`, `sysinfo` compilent tels quels.
+
+Vérifié sur l'émulateur Android 15 (x86_64, accélération WHPX, AVD `nartya_probe`) :
+- le cœur démarre en 3 à 8 ms, le proxy filtre par jeton (403 sans jeton, 410 poignée inconnue) ;
+- DoH (1.1.1.1, 8.8.8.8), résolveur système et HTTPS fonctionnent ; le proxy ramène `https://nartya.app/` (76 Ko en 1,4 s, DoH compris) ;
+- le **JNI sur ART** : chargement de la bibliothèque, `nativeStart` et `nativeResolve` appelés depuis Java, requêtes HTTP vers le proxy depuis Java ;
+- l'identifiant machine se calcule.
+Un premier essai, lancé juste après le démarrage de l'émulateur, a échoué en 11 ms (réseau pas encore prêt) ; le même binaire a ensuite fonctionné.
+
+Non vérifié : un appareil arm64 réel (compilé et passé à clippy, jamais exécuté), la lecture d'un vrai flux HLS dans la WebView, les téléchargements et le service de premier plan, le cycle de vie (processus tué en arrière-plan).
+
+Travail restant pour passer à l'intégration :
+1. **`Host` par JNI** : les événements (`downloads:progress`) remontent par un rappel Java ; le cœur doit garder la `JavaVM` et rattacher ses fils.
+2. **Plugin Capacitor** : `NartyaProxyPlugin` appelle `NartyaCore` au lieu de `ProxyServer` / `Downloads` ; le service de premier plan des téléchargements (103 lignes) reste, il appelle le cœur.
+3. **Côté page** : le proxy Java reçoit aujourd'hui les recettes (`configs`) poussées par la page et la page construit les URL. Le cœur suit le modèle du bureau : la page ne voit jamais l'URL de l'hébergeur, elle reçoit une poignée par `resolveStream`. Android doit donc passer par `resolveStream` (comme `tauri.js`), ce qui est le vrai chantier du front.
+4. **ffmpeg** : pas d'exécutable embarqué sous Android ; la fusion HLS retombe sur « playlist + segments » (déjà géré par le cœur).
+5. **Build** : une tâche Gradle qui lance `cargo ndk -t arm64-v8a -t armeabi-v7a -o android/app/src/main/jniLibs build -p nartya-android --release`.
+6. **Tests** : les tests Java du proxy (`ProxyServerTest`, la sonde instrumentée) sont remplacés par ceux du cœur.
+
+Reproduire l'essai :
+```
+cargo ndk -t x86_64 -P 24 build -p nartya-android --release --example probe
+adb push target/x86_64-linux-android/release/examples/probe /data/local/tmp/
+adb shell "chmod +x /data/local/tmp/probe && /data/local/tmp/probe"
+```
+
+Conclusion : la voie Capacitor + JNI est la moins risquée. Tauri mobile n'est pas testé et n'apporterait pas de gain avant d'avoir réécrit les plugins Java. iOS suivrait le même schéma (bibliothèque statique + pont Swift), non testé faute de macOS.
+
 ### Phase 5 : Linux et macOS (optionnel)
 
 À décider selon la phase 0 : WebKitGTK et WKWebView sont moins sûrs que Chromium pour WebGPU, MSE/HLS et le plein écran. Ne pas lancer sans vérification équivalente à la phase 0 sur chaque plateforme.
