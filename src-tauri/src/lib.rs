@@ -2,6 +2,7 @@ mod captcha;
 mod commands;
 mod config;
 mod deep_link;
+mod discord;
 mod downloads;
 mod hub;
 mod oauth;
@@ -39,6 +40,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .manage(state::AppState::default())
+        .manage(discord::Discord::start())
         .invoke_handler(tauri::generate_handler![
             commands::open_external,
             commands::app_quit,
@@ -65,6 +67,9 @@ pub fn run() {
             commands::downloads_get_dir,
             commands::downloads_choose_dir,
             commands::downloads_open_dir,
+            commands::discord_connect,
+            commands::discord_set_presence,
+            commands::discord_clear_presence,
         ])
         .on_page_load(|webview, payload| {
             if webview.label() == "main"

@@ -70,7 +70,11 @@ export const tauriPlatform = {
     isManaged: () => invoke("hub_is_managed"),
     open: () => invoke("hub_open"),
   },
-  discord: null,
+  discord: {
+    connect: (clientId) => invoke("discord_connect", { clientId: String(clientId) }),
+    setPresence: (params) => invoke("discord_set_presence", { params }),
+    clearPresence: () => invoke("discord_clear_presence"),
+  },
   openExternal,
   async openAuth(url) {
     try {

@@ -30,6 +30,9 @@
     "allow-downloads-local-url",
     "allow-downloads-get-dir",
     "allow-downloads-choose-dir",
-    "allow-downloads-open-dir"
+    "allow-downloads-open-dir",
+    "allow-discord-connect",
+    "allow-discord-set-presence",
+    "allow-discord-clear-presence"
   ]
 }

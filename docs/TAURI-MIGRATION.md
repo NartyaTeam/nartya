@@ -178,6 +178,12 @@ ffmpeg : en dev, celui de `node_modules/ffmpeg-static` ; une fois packagé, cher
 
 Non vérifié : téléchargement MP4 direct sur un vrai hébergeur (couvert par la logique Electron reprise à l'identique), déplacement du dossier vers un autre disque.
 
+#### État de la phase 3b : Discord (2026-11-14) : code écrit, non testé avec un vrai Discord
+
+Module `src-tauri/src/discord.rs` : Rich Presence par l'IPC local (tube nommé `discord-ipc-N` sous Windows, socket Unix ailleurs), reconnexion toutes les 30 s si Discord est fermé, bouton qui passe par une page du site (Discord n'accepte que http/https), chrono stable tant que l'épisode ne change pas. Commandes `discord_connect`, `discord_set_presence`, `discord_clear_presence` déclarées dans `build.rs` et autorisées pour la fenêtre principale. 69 tests Rust, clippy propre.
+
+Non vérifié : affichage réel dans un client Discord, reconnexion après fermeture de Discord.
+
 ### Phase 4 : packaging et bascule Windows
 
 - Installeur NSIS, manifeste compatible Hub, bootstrapper WebView2.

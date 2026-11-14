@@ -173,3 +173,26 @@ pub async fn downloads_choose_dir(downloads: DownloadsState<'_>) -> Result<Value
 pub fn downloads_open_dir(downloads: DownloadsState) -> Value {
     downloads.open_dir()
 }
+
+// ---- Discord Rich Presence
+
+#[tauri::command]
+pub fn discord_connect(discord: State<'_, crate::discord::Discord>, client_id: String) -> Value {
+    discord.connect(&client_id);
+    json!({ "success": true })
+}
+
+#[tauri::command]
+pub fn discord_set_presence(discord: State<'_, crate::discord::Discord>, params: Value) -> Value {
+    if !params.is_object() {
+        return json!({ "success": false, "error": "Paramètres invalides" });
+    }
+    discord.set(params);
+    json!({ "success": true })
+}
+
+#[tauri::command]
+pub fn discord_clear_presence(discord: State<'_, crate::discord::Discord>) -> Value {
+    discord.clear();
+    json!({ "success": true })
+}

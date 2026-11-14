@@ -28,6 +28,9 @@ const COMMANDS: &[&str] = &[
     "downloads_get_dir",
     "downloads_choose_dir",
     "downloads_open_dir",
+    "discord_connect",
+    "discord_set_presence",
+    "discord_clear_presence",
 ];
 
 /// `export const NOM = "valeur";` dans `src/config/instance.js` : une seule source de vérité
