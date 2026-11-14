@@ -451,10 +451,13 @@ html.mobile-runtime {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
-  .app-drag {
+  /* Pas sous Tauri : WebView2 y traite chaque zone comme une région de fenêtre, et la barre
+     sticky les fait recalculer à chaque pixel de scroll (~9 ms par envoi, scroll en retard de
+     plusieurs secondes). La fenêtre y garde sa barre de titre native. */
+  :root:not(.tauri-runtime) .app-drag {
     -webkit-app-region: drag;
   }
-  .app-no-drag {
+  :root:not(.tauri-runtime) .app-no-drag {
     -webkit-app-region: no-drag;
   }
   .text-glow {
