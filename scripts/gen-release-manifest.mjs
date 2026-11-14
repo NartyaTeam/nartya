@@ -4,8 +4,11 @@
  * l'installeur à télécharger par plateforme, avec son sha256. Le changelog
  * (`src/data/changelog.js`) y est embarqué, tronqué aux 15 versions les plus récentes.
  *
- * Usage : node scripts/gen-release-manifest.mjs <dir> [--version x.y.z] [--out chemin]
- *   <dir> : dossier contenant les artefacts electron-builder (installeurs + latest*.yml).
+ * Usage : node scripts/gen-release-manifest.mjs <dir> [--version x.y.z] [--out chemin] [--channel beta]
+ *   <dir> : dossier contenant les artefacts electron-builder (installeurs + latest*.yml), ou
+ *           `release/tauri` pour la coque Tauri.
+ *   --channel beta : écrit `manifest.beta.json`, que le hub lit si l'utilisateur a activé les
+ *           versions bêta (la stable `manifest.json` n'est pas touchée).
  */
 import { readdirSync, statSync, readFileSync, writeFileSync, createReadStream } from "node:fs";
 import { createHash } from "node:crypto";
@@ -17,7 +20,7 @@ const CHANGELOG_MAX_VERSIONS = 15;
 
 const dir = process.argv[2];
 if (!dir) {
-  console.error("usage: gen-release-manifest.mjs <dir> [--version x.y.z] [--out chemin]");
+  console.error("usage: gen-release-manifest.mjs <dir> [--version x.y.z] [--out chemin] [--channel beta]");
   process.exit(1);
 }
 const args = process.argv.slice(3);
@@ -26,7 +29,9 @@ const flag = (name) => {
   return i >= 0 ? args[i + 1] : null;
 };
 const version = flag("--version") || JSON.parse(readFileSync("package.json", "utf8")).version;
-const out = flag("--out") || join(dir, "manifest.json");
+const channel = flag("--channel");
+const manifestName = channel === "beta" ? "manifest.beta.json" : "manifest.json";
+const out = flag("--out") || join(dir, manifestName);
 
 const INSTALLER_EXT = new Set([".exe", ".dmg", ".zip", ".appimage", ".deb"]);
 
@@ -89,5 +94,5 @@ const manifest = {
 };
 writeFileSync(out, JSON.stringify(manifest, null, 2) + "\n");
 console.log(
-  `✅ manifest.json → ${out} (${files.length} fichiers, v${version}, ${changelog.length} entrée(s) de changelog)`
+  `✅ ${manifestName} → ${out} (${files.length} fichiers, v${version}, ${changelog.length} entrée(s) de changelog)`
 );

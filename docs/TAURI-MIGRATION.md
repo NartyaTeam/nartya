@@ -213,12 +213,14 @@ Installeur NSIS en mode utilisateur courant (sans droits admin), bootstrapper We
 
 Migration du `localStorage` : Electron écrit `localstorage-export.json` dans son dossier de données (`electron/utils/storage-export.js`, 5 s après le chargement puis chaque minute et à la fermeture) ; la coque Tauri la verse dans la page au premier lancement (`src-tauri/src/migrate.rs`, script d'initialisation). Les clés déjà présentes ne sont jamais écrasées, les clés de session passent par le pont du Hub et sont exclues, un drapeau empêche de recommencer. **Il faut publier une version Electron avec cet export avant la bascule**, sinon les réglages et la progression locale ne suivent pas.
 
-Vérifié : l'installeur se construit (NSIS compile les hooks), son contenu est correct, 93 tests Rust dont l'import (valeur hostile incluse), lint propre. Le dépôt du Hub n'est pas sur cette machine : son format n'a pas pu être relu.
+Hub (dépôt `NartyaTeam/nartya-hub`, cloné dans `Desktop/nartya-hub`) : sa détection lit le registre (`DisplayName` « Nartya » ou « Nartya <version> », `DisplayVersion`, `DisplayIcon` = l'exe) puis lance l'installeur en `/S` ; l'installeur Tauri y répond tel quel, sans changement. Ajouté côté Hub : un **canal bêta** (réglage « Recevoir les versions bêta », `manifest.beta.json`, repli sur la stable, cache par canal, 7 tests). Côté app, `node scripts/gen-release-manifest.mjs release/tauri --channel beta --version <x.y.z-beta.n>` produit ce manifest. Procédure de bêta : `npm run tauri:bundle`, envoyer `Nartya-<v>-win.exe` dans `dl/anime/` sur le VPS, puis publier `manifest.beta.json` à côté de `manifest.json`.
+
+Vérifié : l'installeur se construit (NSIS compile les hooks), son contenu est correct, 93 tests Rust dont l'import (valeur hostile incluse), lint propre.
 
 Non vérifié :
 - **installation réelle** de l'installeur (elle remplacerait l'Electron de cette machine : raccourcis et clé de registre) ;
 - **lancement du binaire release** : un `tauri dev` tournait, l'instance unique l'a laissé sortir ;
-- **détection de la version par le Hub** : la clé de registre est `Uninstall\Nartya` au lieu d'un GUID, et l'`UninstallString` n'a pas `/currentuser` ; à vérifier dans le dépôt du Hub ;
+- **détection par le Hub en conditions réelles** : relue dans son code, jamais exécutée contre cet installeur (clé `Uninstall\Nartya` au lieu d'un GUID, `UninstallString` sans `/currentuser` : sans conséquence d'après `winInstall.js` et `nsis.js`) ;
 - migration depuis une vraie installation Electron, WebView2 absent, Windows 10.
 
 Reste de la phase : canal bêta via le Hub, réécriture de `test:providers:electron`, retrait d'Electron sur Windows.
