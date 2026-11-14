@@ -36,7 +36,7 @@ pub struct Discord(mpsc::UnboundedSender<Command>);
 impl Discord {
     pub fn start() -> Self {
         let (tx, rx) = mpsc::unbounded_channel();
-        tauri::async_runtime::spawn(run(rx));
+        tokio::spawn(run(rx));
         Self(tx)
     }
 

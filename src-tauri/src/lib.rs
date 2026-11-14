@@ -1,19 +1,15 @@
 mod captcha;
-mod cast;
 mod commands;
-mod config;
 mod deep_link;
-mod discord;
-mod downloads;
+mod host;
 mod hub;
 mod migrate;
 mod oauth;
-mod session;
 mod state;
-mod stream;
-mod system;
-mod url_guard;
 mod window;
+
+// Le cœur est partagé avec les autres coques ; les modules de la coque l'atteignent par ces chemins.
+pub use nartya_core::{cast, config, discord, downloads, session, stream, system, url_guard};
 
 use std::sync::Arc;
 
@@ -42,7 +38,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .manage(state::AppState::default())
-        .manage(discord::Discord::start())
+        .manage(tauri::async_runtime::block_on(async { discord::Discord::start() }))
         .invoke_handler(tauri::generate_handler![
             commands::open_external,
             commands::app_quit,
@@ -127,23 +123,27 @@ pub fn run() {
             let data_dir = app.path().config_dir()?.join("nartya");
             let (doc, default_root, root) = downloads::open_root(&data_dir);
             let (parts, service) = tauri::async_runtime::block_on(stream::start(root.clone()));
-            app.manage(cast::Cast::new(
-                handle.clone(),
-                service.as_ref().map(|s| s.proxy.clone()),
-            ));
+            // Le cœur lance des tâches Tokio : les constructeurs s'exécutent dans le runtime de Tauri.
+            let host: Arc<dyn nartya_core::Host> = Arc::new(host::TauriHost(handle.clone()));
+            let proxy = service.as_ref().map(|s| s.proxy.clone());
+            app.manage(tauri::async_runtime::block_on(async {
+                cast::Cast::new(host.clone(), proxy)
+            }));
             app.manage(StreamSlot(service));
-            app.manage(downloads::Downloads::new(
-                handle.clone(),
-                downloads::Init {
-                    data_dir,
-                    doc,
-                    default_root,
-                    root,
-                    net: parts.net,
-                    recipe: parts.recipe,
-                    handles: parts.handles,
-                },
-            ));
+            app.manage(tauri::async_runtime::block_on(async {
+                downloads::Downloads::new(
+                    host,
+                    downloads::Init {
+                        data_dir,
+                        doc,
+                        default_root,
+                        root,
+                        net: parts.net,
+                        recipe: parts.recipe,
+                        handles: parts.handles,
+                    },
+                )
+            }));
 
             let on_url = handle.clone();
             app.deep_link().on_open_url(move |event| {

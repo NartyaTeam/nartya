@@ -367,6 +367,7 @@ pub fn find_ffmpeg() -> Option<PathBuf> {
     let dev = cfg!(debug_assertions).then(|| {
         Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("..")
+            .join("..")
             .join("node_modules")
             .join("ffmpeg-static")
             .join(name)

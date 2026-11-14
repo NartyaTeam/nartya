@@ -335,7 +335,7 @@ impl Proxy {
         let app = self
             .router(false)
             .into_make_service_with_connect_info::<SocketAddr>();
-        tauri::async_runtime::spawn(async move {
+        tokio::spawn(async move {
             let _ = axum::serve(listener, app).await;
         });
         Ok(port)
@@ -363,7 +363,7 @@ impl Proxy {
         let app = self
             .router(true)
             .into_make_service_with_connect_info::<SocketAddr>();
-        tauri::async_runtime::spawn(async move {
+        tokio::spawn(async move {
             let _ = axum::serve(listener, app)
                 .with_graceful_shutdown(async move {
                     let _ = stopped.await;

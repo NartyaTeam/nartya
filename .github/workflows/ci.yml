@@ -49,17 +49,12 @@ jobs:
         with:
           components: clippy
       - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: src-tauri
       - name: Clippy
-        working-directory: src-tauri
-        run: cargo clippy --all-targets -- -D warnings
-      - name: Tests Rust
-        working-directory: src-tauri
-        run: cargo test
+        run: cargo clippy --workspace --all-targets -- -D warnings
+      - name: Tests Rust (cœur et coque)
+        run: cargo test --workspace
       - name: Build de la coque
-        working-directory: src-tauri
-        run: cargo build
+        run: cargo build -p nartya
       - name: Installeur Windows (NSIS)
         run: npm run tauri:bundle
       - uses: actions/upload-artifact@v4

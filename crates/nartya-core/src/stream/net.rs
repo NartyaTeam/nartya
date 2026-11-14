@@ -277,6 +277,12 @@ pub fn build_headers(map: &HashMap<String, String>) -> HeaderMap {
     headers
 }
 
+impl Default for Net {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Net {
     pub fn new() -> Self {
         let dns = Arc::new(Dns::new());

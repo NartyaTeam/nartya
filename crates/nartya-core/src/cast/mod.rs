@@ -16,10 +16,9 @@ use std::{
 };
 
 use serde_json::{json, Value};
-use tauri::{AppHandle, Emitter};
 use tokio::{sync::mpsc, task::AbortHandle};
 
-use crate::stream::Proxy;
+use crate::{host::Host, stream::Proxy};
 use castv2::{Client, Event, NS_MEDIA, NS_RECEIVER, PLATFORM_ID};
 use discovery::{Device, Devices, Discovery, DEFAULT_PORT};
 
@@ -47,7 +46,7 @@ struct Session {
 }
 
 pub struct Cast {
-    app: AppHandle,
+    host: Arc<dyn Host>,
     proxy: Option<Arc<Proxy>>,
     devices: Devices,
     discovery: Mutex<Option<Discovery>>,
@@ -92,9 +91,9 @@ fn volume_of(v: &Value) -> Option<(f64, bool)> {
 }
 
 impl Cast {
-    pub fn new(app: AppHandle, proxy: Option<Arc<Proxy>>) -> Arc<Self> {
+    pub fn new(host: Arc<dyn Host>, proxy: Option<Arc<Proxy>>) -> Arc<Self> {
         Arc::new(Self {
-            app,
+            host,
             proxy,
             devices: Devices::default(),
             discovery: Mutex::default(),
@@ -105,7 +104,7 @@ impl Cast {
     }
 
     fn emit(&self, event: &str, payload: Value) {
-        let _ = self.app.emit_to("main", event, payload);
+        self.host.emit(event, payload);
     }
 
     fn push_devices(&self) {
@@ -144,7 +143,7 @@ impl Cast {
     /// Un paquet multicast se perd facilement : on redemande tant que l'écoute est ouverte.
     fn spawn_requery(self: &Arc<Self>) {
         let weak = Arc::downgrade(self);
-        tauri::async_runtime::spawn(async move {
+        tokio::spawn(async move {
             loop {
                 tokio::time::sleep(REQUERY_EVERY).await;
                 let Some(cast) = weak.upgrade() else { return };
@@ -159,7 +158,7 @@ impl Cast {
     fn arm_idle(self: &Arc<Self>) {
         let generation = self.idle_gen.fetch_add(1, Ordering::SeqCst) + 1;
         let weak = Arc::downgrade(self);
-        tauri::async_runtime::spawn(async move {
+        tokio::spawn(async move {
             tokio::time::sleep(DISCOVERY_IDLE).await;
             let Some(cast) = weak.upgrade() else { return };
             if cast.idle_gen.load(Ordering::SeqCst) == generation

@@ -16,11 +16,13 @@ use std::{
 };
 
 use serde_json::{json, Map, Value};
-use tauri::{AppHandle, Emitter};
 use tokio_util::sync::CancellationToken;
 use url::Url;
 
-use crate::stream::{api_base_url, Handles, Net, RecipeStore};
+use crate::{
+    host::{Host, MoveChoice, MovePrompt},
+    stream::{api_base_url, Handles, Net, RecipeStore},
+};
 use paths::{is_valid_id, item_dir, validate_root};
 use transfer::{Ctx, DlError};
 
@@ -70,7 +72,7 @@ impl State {
 }
 
 pub struct Downloads {
-    app: AppHandle,
+    host: Arc<dyn Host>,
     net: Arc<Net>,
     recipe: Arc<RecipeStore>,
     handles: Arc<Handles>,
@@ -152,7 +154,7 @@ pub struct Init {
 }
 
 impl Downloads {
-    pub fn new(app: AppHandle, init: Init) -> Arc<Self> {
+    pub fn new(host: Arc<dyn Host>, init: Init) -> Arc<Self> {
         let mut state = State {
             doc: init.doc,
             queue: VecDeque::new(),
@@ -182,7 +184,7 @@ impl Downloads {
         }
 
         let this = Arc::new(Self {
-            app,
+            host,
             net: init.net,
             recipe: init.recipe,
             handles: init.handles,
@@ -196,7 +198,7 @@ impl Downloads {
 
         // Sauvegarde différée : la progression change l'index plusieurs fois par seconde.
         let weak = Arc::downgrade(&this);
-        tauri::async_runtime::spawn(async move {
+        tokio::spawn(async move {
             loop {
                 tokio::time::sleep(SAVE_DELAY).await;
                 let Some(this) = weak.upgrade() else { return };
@@ -243,7 +245,7 @@ impl Downloads {
 
     fn emit(&self, item: Option<Value>) {
         if let Some(item) = item {
-            let _ = self.app.emit_to("main", "downloads:progress", item);
+            self.host.emit("downloads:progress", item);
         }
     }
 
@@ -287,7 +289,7 @@ impl Downloads {
                 (job, token)
             };
             let this = self.clone();
-            tauri::async_runtime::spawn(async move {
+            tokio::spawn(async move {
                 this.run(job, token).await;
             });
         }
@@ -742,39 +744,19 @@ impl Downloads {
     }
 
     pub fn open_dir(&self) -> Value {
-        use tauri_plugin_opener::OpenerExt;
-        match self
-            .app
-            .opener()
-            .open_path(self.root().to_string_lossy(), None::<&str>)
-        {
+        match self.host.open_path(&self.root()) {
             Ok(()) => json!({ "success": true }),
-            Err(e) => json!({ "success": false, "error": e.to_string() }),
+            Err(e) => json!({ "success": false, "error": e }),
         }
     }
 
     /// Sélecteur natif, puis « déplacer / laisser / annuler ».
     pub async fn choose_dir(&self) -> Value {
-        use tauri_plugin_dialog::{DialogExt, MessageDialogButtons, MessageDialogResult};
-
         if self.state.lock().unwrap().busy() {
             return json!({ "success": false, "error": "Un téléchargement est en cours — réessaie après." });
         }
         let root = self.root();
-        let (tx, rx) = tokio::sync::oneshot::channel();
-        let mut picker = self
-            .app
-            .dialog()
-            .file()
-            .set_title("Dossier de téléchargement")
-            .set_directory(&root);
-        if let Some(win) = tauri::Manager::get_webview_window(&self.app, "main") {
-            picker = picker.set_parent(&win);
-        }
-        picker.pick_folder(move |picked| {
-            let _ = tx.send(picked.and_then(|p| p.into_path().ok()));
-        });
-        let Ok(Some(picked)) = rx.await else {
+        let Some(picked) = self.host.pick_folder("Dossier de téléchargement", &root).await else {
             return json!({ "canceled": true });
         };
         let dir = std::path::absolute(&picked).unwrap_or(picked);
@@ -788,36 +770,21 @@ impl Downloads {
         let count = self.state.lock().unwrap().items().len();
         let mut moving = false;
         if count > 0 {
-            const MOVE: &str = "Déplacer les épisodes";
-            const LEAVE: &str = "Laisser sur place";
-            const CANCEL: &str = "Annuler";
-            let (tx, rx) = tokio::sync::oneshot::channel();
-            let mut dialog = self
-                .app
-                .dialog()
-                .message(format!(
-                    "Déplacer les {count} épisode(s) déjà téléchargé(s) vers le nouveau dossier ?\n\n\
-« Laisser sur place » retire ces épisodes de ta bibliothèque hors ligne : leurs fichiers \
-restent sur le disque mais Nartya ne les retrouvera plus."
-                ))
-                .title("Changer le dossier de téléchargement")
-                .buttons(MessageDialogButtons::YesNoCancelCustom(
-                    MOVE.into(),
-                    LEAVE.into(),
-                    CANCEL.into(),
-                ));
-            if let Some(win) = tauri::Manager::get_webview_window(&self.app, "main") {
-                dialog = dialog.parent(&win);
-            }
-            dialog.show_with_result(move |r| {
-                let _ = tx.send(r);
-            });
-            match rx.await.unwrap_or_default() {
-                MessageDialogResult::Yes => moving = true,
-                MessageDialogResult::Custom(label) if label == MOVE => moving = true,
-                MessageDialogResult::No => {}
-                MessageDialogResult::Custom(label) if label == LEAVE => {}
-                _ => return json!({ "canceled": true }),
+            let prompt = MovePrompt {
+                title: "Changer le dossier de téléchargement",
+                message: format!(
+                    "Déplacer les {count} épisode(s) déjà téléchargé(s) vers le nouveau dossier ?
+
+« Laisser sur place » retire ces épisodes de ta bibliothèque hors ligne : leurs fichiers restent sur le disque mais Nartya ne les retrouvera plus."
+                ),
+                move_label: "Déplacer les épisodes",
+                leave_label: "Laisser sur place",
+                cancel_label: "Annuler",
+            };
+            match self.host.ask_move_downloads(prompt).await {
+                MoveChoice::Move => moving = true,
+                MoveChoice::Leave => {}
+                MoveChoice::Cancel => return json!({ "canceled": true }),
             }
         }
 

@@ -34,7 +34,7 @@ const build = spawnSync("npx", ["tauri", "build", "--config", "src-tauri/tauri.b
 });
 if (build.status !== 0) process.exit(build.status ?? 1);
 
-const built = path(`src-tauri/target/release/bundle/nsis/Nartya_${version}_x64-setup.exe`);
+const built = path(`target/release/bundle/nsis/Nartya_${version}_x64-setup.exe`);
 if (!existsSync(built)) {
   console.error(`[bundle] installeur attendu introuvable : ${built}`);
   process.exit(1);

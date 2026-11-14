@@ -225,6 +225,28 @@ Non vérifié :
 
 Reste de la phase : canal bêta via le Hub, réécriture de `test:providers:electron`, retrait d'Electron sur Windows.
 
+### Un seul cœur, des coques minces (2026-11-14)
+
+Objectif : ne maintenir la logique de Nartya qu'une fois. Aujourd'hui le proxy, la résolution des flux, les téléchargements et le Cast existent en JavaScript (Electron, ~4 900 lignes), en Rust (Tauri) et en Java (Android : `ProxyServer` 594 lignes, `Downloads` 907 lignes). Chaque correction se fait trois fois.
+
+**Étape 1, faite : le crate `crates/nartya-core`.** Workspace Cargo à la racine (`Cargo.toml`, un seul `target/` et un seul `Cargo.lock`), deux membres :
+- `crates/nartya-core` (~7 900 lignes) : proxy local et serveur LAN, client HTTP avec DoH, recette et extraction vidéo, poignées opaques, résolveur de flux, téléchargements, Cast (mDNS, CASTV2, pare-feu), Discord, session partagée, identifiant machine. Aucune dépendance à Tauri ni à une fenêtre.
+- `src-tauri` (~1 400 lignes) : uniquement ce qui est propre à Tauri : fenêtre, deep-link, instance unique, captcha (webview), retour OAuth, lancement du Hub, import du localStorage d'Electron, et les commandes `invoke` qui appellent le cœur.
+
+Le cœur n'a besoin que d'un runtime Tokio et de l'interface `Host` (`crates/nartya-core/src/host.rs`) : événements vers la page, ouverture d'un dossier, sélecteur de dossier, question « déplacer les épisodes ? ». Chaque coque l'implémente (`src-tauri/src/host.rs` pour Tauri) ; le texte de la question est écrit une fois dans le cœur. Même résultat qu'avant : 93 tests, clippy propre, installeur construit.
+
+Règle pour la suite : **toute nouvelle logique va dans le cœur**, la coque ne garde que l'interface. Les modules `oauth` et `hub` de la coque sont de bons candidats au déplacement (ils ne tiennent à Tauri que par l'envoi d'événements).
+
+**Étapes suivantes, par ordre de gain :**
+
+1. **Supprimer Electron sur Windows** après la bêta : ~4 900 lignes de JS et les dépendances `castv2-client`, `multicast-dns`, `dns-packet`, `discord-rpc`, `electron-store`, `node-fetch`.
+2. **Android : remplacer `ProxyServer.java` et `Downloads.java` par le cœur** (~1 500 lignes). Deux voies : (a) garder Capacitor et appeler le cœur compilé en bibliothèque native (`cargo-ndk` + JNI) ; (b) passer à Tauri mobile, qui reprend la même coque et le même cœur mais oblige à réécrire les plugins Java (lecteur, écran, partage, mise à jour). (a) est moins risquée, (b) unifie davantage.
+3. **Linux et macOS** : soit une coque Tauri (WebKitGTK / WKWebView, à valider comme la phase 0 : WebGPU, MSE/HLS, plein écran), soit garder Electron en lui faisant appeler le cœur par un module natif Node (`napi-rs`), ce qui supprime la duplication sans changer de moteur web.
+4. **Un seul contrat côté page** : `src/platform/{electron,tauri,capacitor}.js` (1 000 lignes) listent les mêmes commandes avec trois transports. Une fois les coques alignées, un seul adaptateur suffit.
+5. **iOS** : ~600 lignes natives, même question que pour Android.
+
+L'API Node du VPS reste hors sujet. Les deux fichiers de `src/shared/` (extraction, recette) sont utilisés par elle et par le web : le Rust les reproduit, gardés alignés par des tests communs.
+
 ### Phase 5 : Linux et macOS (optionnel)
 
 À décider selon la phase 0 : WebKitGTK et WKWebView sont moins sûrs que Chromium pour WebGPU, MSE/HLS et le plein écran. Ne pas lancer sans vérification équivalente à la phase 0 sur chaque plateforme.
