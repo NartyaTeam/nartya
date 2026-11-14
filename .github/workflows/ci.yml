@@ -60,6 +60,13 @@ jobs:
       - name: Build de la coque
         working-directory: src-tauri
         run: cargo build
+      - name: Installeur Windows (NSIS)
+        run: npm run tauri:bundle
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nartya-tauri-windows
+          path: release/tauri/
+          retention-days: 7
 
   android:
     runs-on: ubuntu-latest

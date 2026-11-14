@@ -6,6 +6,7 @@ mod deep_link;
 mod discord;
 mod downloads;
 mod hub;
+mod migrate;
 mod oauth;
 mod session;
 mod state;
@@ -156,7 +157,8 @@ pub fn run() {
                 }
             }
 
-            window::create_main(&handle)?;
+            let import = migrate::init_script(&app.path().config_dir()?.join("nartya"));
+            window::create_main(&handle, import)?;
             window::schedule_reveal_fallback(&handle, deferred);
             Ok(())
         })

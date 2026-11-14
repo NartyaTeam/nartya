@@ -998,9 +998,17 @@ mod tests {
         assert!(proxy.last_lan_request_from(Ipv4Addr::LOCALHOST.into()).is_some());
 
         proxy.stop_lan();
-        tokio::time::sleep(Duration::from_millis(200)).await;
         let url = format!("http://127.0.0.1:{lan_port}/local?t={lan_token}");
-        assert!(http.get(url).send().await.is_err());
+        // L'arrêt est asynchrone : on laisse jusqu'à 3 s au listener pour se fermer.
+        let mut closed = false;
+        for _ in 0..30 {
+            if http.get(&url).send().await.is_err() {
+                closed = true;
+                break;
+            }
+            tokio::time::sleep(Duration::from_millis(100)).await;
+        }
+        assert!(closed, "le listener LAN répond encore après stop_lan");
     }
 
     #[test]

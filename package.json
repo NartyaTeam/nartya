@@ -37,7 +37,8 @@
     "electron:build:mac": "npm run build && electron-builder --mac",
     "electron:build:linux": "npm run build && electron-builder --linux --x64 --arm64",
     "tauri:dev": "tauri dev",
-    "tauri:build": "tauri build"
+    "tauri:build": "tauri build",
+    "tauri:bundle": "node scripts/tauri-bundle.mjs"
   },
   "keywords": [
     "anime",

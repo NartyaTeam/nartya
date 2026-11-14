@@ -450,6 +450,10 @@ mod tests {
                         "status": { "applications": [{ "appId": "CC1AD845", "transportId": "web-7", "sessionId": "s1" }] },
                     });
                     tls.write_all(&reply(NS_RECEIVER, status)).await.unwrap();
+                    // On lit jusqu'à la fermeture côté client : fermer avec des données non lues
+                    // (le PONG) enverrait un RST qui peut jeter la réponse encore en vol.
+                    let mut sink = [0u8; 1024];
+                    while tls.read(&mut sink).await.unwrap_or(0) > 0 {}
                     return;
                 }
             }

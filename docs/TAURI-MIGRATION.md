@@ -202,6 +202,27 @@ Non vérifié : LOAD et lecture réelle sur la TV (lancerait une vidéo chez l'u
 - Canal bêta via le Hub, migration des utilisateurs, réécriture des tests (`test:providers:electron`).
 - Retrait d'Electron sur Windows quand la bêta est stable.
 
+#### État de la phase 4 (2026-11-14) : installeur prêt, bascule pas faite
+
+`npm run tauri:bundle` (`scripts/tauri-bundle.mjs`) : copie ffmpeg à côté de l'exe, lance `tauri build` avec la surcharge `src-tauri/tauri.bundle.conf.json` (le bundle reste désactivé dans `tauri.conf.json` pour que `cargo build` ne demande pas ffmpeg), puis écrit `release/tauri/Nartya-<version>-win.exe` + `.sha256`, le nom que le Hub attend. **38 Mo contre 149 Mo pour Electron** ; contenu : `Nartya.exe` (23 Mo) et `ffmpeg.exe`. La version de `package.json` et celle de `tauri.conf.json` doivent concorder, sinon le script refuse. La CI Windows construit l'installeur et le publie en artefact.
+
+Installeur NSIS en mode utilisateur courant (sans droits admin), bootstrapper WebView2 téléchargé en silencieux, français. Le hook `src-tauri/installer-hooks.nsh` :
+- installe dans `%LOCALAPPDATA%\Programs\Nartya`, comme electron-builder (le Hub le cherche là), sauf dossier choisi à la main ;
+- désinstalle d'abord une installation Electron au même endroit (`Uninstall Nartya.exe /S`), sans toucher à `%APPDATA%\nartya` ;
+- nomme l'entrée « Nartya <version> » dans les applications installées, comme avant.
+
+Migration du `localStorage` : Electron écrit `localstorage-export.json` dans son dossier de données (`electron/utils/storage-export.js`, 5 s après le chargement puis chaque minute et à la fermeture) ; la coque Tauri la verse dans la page au premier lancement (`src-tauri/src/migrate.rs`, script d'initialisation). Les clés déjà présentes ne sont jamais écrasées, les clés de session passent par le pont du Hub et sont exclues, un drapeau empêche de recommencer. **Il faut publier une version Electron avec cet export avant la bascule**, sinon les réglages et la progression locale ne suivent pas.
+
+Vérifié : l'installeur se construit (NSIS compile les hooks), son contenu est correct, 93 tests Rust dont l'import (valeur hostile incluse), lint propre. Le dépôt du Hub n'est pas sur cette machine : son format n'a pas pu être relu.
+
+Non vérifié :
+- **installation réelle** de l'installeur (elle remplacerait l'Electron de cette machine : raccourcis et clé de registre) ;
+- **lancement du binaire release** : un `tauri dev` tournait, l'instance unique l'a laissé sortir ;
+- **détection de la version par le Hub** : la clé de registre est `Uninstall\Nartya` au lieu d'un GUID, et l'`UninstallString` n'a pas `/currentuser` ; à vérifier dans le dépôt du Hub ;
+- migration depuis une vraie installation Electron, WebView2 absent, Windows 10.
+
+Reste de la phase : canal bêta via le Hub, réécriture de `test:providers:electron`, retrait d'Electron sur Windows.
+
 ### Phase 5 : Linux et macOS (optionnel)
 
 À décider selon la phase 0 : WebKitGTK et WKWebView sont moins sûrs que Chromium pour WebGPU, MSE/HLS et le plein écran. Ne pas lancer sans vérification équivalente à la phase 0 sur chaque plateforme.

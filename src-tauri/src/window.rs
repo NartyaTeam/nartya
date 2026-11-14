@@ -22,6 +22,7 @@ pub fn browser_args() -> String {
     // Le premier lot reprend les défauts de Tauri. L'overlay vidéo DirectComposition décale
     // l'image en plein écran avec une mise à l'échelle ≠ 100 %. Les trois derniers évitent que
     // la vidéo saccade quand la fenêtre perd le focus (PiP, second écran).
+    #[allow(unused_mut)] // modifié en debug seulement (port CDP)
     let mut args = String::from(
         "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection,DirectCompositionVideoOverlays \
          --disable-background-timer-throttling --disable-renderer-backgrounding \
@@ -50,7 +51,8 @@ fn is_app_url(url: &url::Url) -> bool {
     }
 }
 
-pub fn create_main(app: &AppHandle) -> tauri::Result<WebviewWindow> {
+/// `init_script` : reprise du localStorage d'Electron (voir `migrate`).
+pub fn create_main(app: &AppHandle, init_script: Option<String>) -> tauri::Result<WebviewWindow> {
     let opener = app.clone();
     let builder = WebviewWindowBuilder::new(app, "main", WebviewUrl::default())
         .title("Nartya")
@@ -69,6 +71,11 @@ pub fn create_main(app: &AppHandle) -> tauri::Result<WebviewWindow> {
             }
             false
         });
+
+    let builder = match init_script {
+        Some(script) => builder.initialization_script(script),
+        None => builder,
+    };
 
     #[cfg(windows)]
     let builder = builder.additional_browser_args(&browser_args());

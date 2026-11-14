@@ -19,6 +19,7 @@ import { registerStreamIpc } from "./utils/stream-resolver.js";
 import { ensureHubRunning, launchHubExe, resolveHubExe, registerHubIpc } from "./utils/hub-launcher.js";
 import { registerCaptchaIpc } from "./utils/captcha-window.js";
 import { registerSystemIpc } from "./utils/system-info.js";
+import { initStorageExport } from "./utils/storage-export.js";
 import { IS_DEV as isDev } from "./utils/api-base.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -424,6 +425,7 @@ app.whenReady().then(async () => {
 
   initDownloads(app, () => mainWindow);
   initCast(() => mainWindow);
+  initStorageExport(app, () => mainWindow);
 
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
