@@ -3,7 +3,10 @@
 //! par `document.title` et dépose le résultat dans `window.__nartyaCaptcha`.
 
 use std::{
-    sync::{Arc, Mutex},
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc, Mutex,
+    },
     time::Duration,
 };
 
@@ -35,11 +38,23 @@ const WATCH_SCRIPT: &str = r#"
 })();
 "#;
 
+/// Deux demandes simultanées créeraient deux fenêtres du même nom : la seconde répond « busy ».
+static BUSY: AtomicBool = AtomicBool::new(false);
+
+struct Release;
+
+impl Drop for Release {
+    fn drop(&mut self) {
+        BUSY.store(false, Ordering::SeqCst);
+    }
+}
+
 /// `{ token }` ou `{ error }`.
 pub async fn get_token(app: AppHandle) -> Value {
-    if app.get_webview_window(LABEL).is_some() {
+    if BUSY.swap(true, Ordering::SeqCst) {
         return json!({ "error": "busy" });
     }
+    let _release = Release;
     let Ok(site) = SITE_URL.parse::<url::Url>() else {
         return json!({ "error": "invalid-site-url" });
     };

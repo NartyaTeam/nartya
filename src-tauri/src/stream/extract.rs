@@ -4,7 +4,7 @@
 
 use std::sync::LazyLock;
 
-use regex::{NoExpand, Regex, RegexBuilder};
+use regex::{Regex, RegexBuilder};
 
 use super::recipe::{recipe_regex, Recipe, Source};
 
@@ -216,15 +216,34 @@ pub fn unpack_dean_edwards(source: &str) -> Option<String> {
             continue;
         };
         let token = to_radix(index as u64, radix);
-        // `\b` ASCII, comme en JavaScript.
-        let pattern = format!(r"(?-u:\b){}(?-u:\b)", regex::escape(&token));
-        if let Ok(word) = Regex::new(&pattern) {
-            decoded = word
-                .replace_all(&decoded, NoExpand(replacement))
-                .into_owned();
+        // Remplacements successifs comme le packer d'origine (un mot remplacé peut l'être à
+        // nouveau) ; une recherche directe plutôt qu'une regex compilée par jeton.
+        if let Some(next) = replace_word(&decoded, &token, replacement) {
+            decoded = next;
         }
     }
     Some(decoded)
+}
+
+/// `\bword\b` au sens ASCII de JavaScript ; `None` si absent.
+fn replace_word(haystack: &str, word: &str, replacement: &str) -> Option<String> {
+    let is_word = |b: u8| b.is_ascii_alphanumeric() || b == b'_';
+    let bytes = haystack.as_bytes();
+    let mut out: Option<String> = None;
+    let mut copied = 0;
+    for (start, _) in haystack.match_indices(word) {
+        let end = start + word.len();
+        if (start > 0 && is_word(bytes[start - 1])) || (end < bytes.len() && is_word(bytes[end])) {
+            continue;
+        }
+        let buf = out.get_or_insert_with(|| String::with_capacity(haystack.len()));
+        buf.push_str(&haystack[copied..start]);
+        buf.push_str(replacement);
+        copied = end;
+    }
+    let mut buf = out?;
+    buf.push_str(&haystack[copied..]);
+    Some(buf)
 }
 
 fn to_radix(mut n: u64, radix: u32) -> String {
@@ -241,15 +260,15 @@ fn to_radix(mut n: u64, radix: u32) -> String {
 
 fn decode_embedded_text(value: &str) -> String {
     static ESCAPED_QUOTE: LazyLock<Regex> = LazyLock::new(|| re(r#"\\(["'\\])"#));
-    let value =
-        ["&amp;", "&#x26;", "\\u0026", "\\x26"]
-            .iter()
-            .fold(value.to_string(), |acc, entity| {
-                Regex::new(&format!("(?i){}", regex::escape(entity)))
-                    .unwrap()
-                    .replace_all(&acc, "&")
-                    .into_owned()
-            });
+    // Appliquées l'une après l'autre, comme en JavaScript : `&amp;#x26;` finit en `&`.
+    static AMPERSANDS: LazyLock<[Regex; 4]> = LazyLock::new(|| {
+        ["&amp;", "&#x26;", "\\u0026", "\\x26"].map(|entity| re_i(&regex::escape(entity)))
+    });
+    let value = AMPERSANDS
+        .iter()
+        .fold(value.to_string(), |acc, entity| {
+            entity.replace_all(&acc, "&").into_owned()
+        });
     let value = value.replace("\\/", "/");
     ESCAPED_QUOTE.replace_all(&value, "$1").into_owned()
 }
@@ -480,5 +499,19 @@ mod tests {
             &r
         ));
         assert!(!is_consistent_with_embed("", "x", &r));
+    }
+
+    #[test]
+    fn remplacement_de_mot_aux_frontieres_ascii() {
+        assert_eq!(replace_word("a ab a_ (a)", "a", "X").as_deref(), Some("X ab a_ (X)"));
+        assert_eq!(replace_word("é1é", "1", "X").as_deref(), Some("éXé"));
+        assert_eq!(replace_word("abc", "a", "X"), None);
+    }
+
+    #[test]
+    fn depaquetage_en_cascade_comme_le_packer() {
+        // `1` devient `0`, qui devient à son tour `ok` : remplacements successifs.
+        let packed = "eval(function(p,a,c,k,e,d){}('1',10,2,'ok|0'.split('|')))";
+        assert_eq!(unpack_dean_edwards(packed).as_deref(), Some("ok"));
     }
 }

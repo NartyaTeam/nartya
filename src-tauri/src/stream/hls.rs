@@ -44,7 +44,9 @@ pub fn transform_playlist(
     };
 
     // Pistes audio/sous-titres, clés AES et init segments passent par un attribut URI.
-    let uri_attr = Regex::new(r#"URI="([^"]+)""#).unwrap();
+    static URI_ATTR: std::sync::LazyLock<Regex> =
+        std::sync::LazyLock::new(|| Regex::new(r#"URI="([^"]+)""#).unwrap());
+    let uri_attr = &*URI_ATTR;
     content
         .split('\n')
         .map(|line| {

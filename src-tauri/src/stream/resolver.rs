@@ -195,9 +195,9 @@ impl StreamService {
             .ok_or_else(|| "Flux non enregistrable".to_string())?;
 
         // Sans extension dans l'URL de proxy, c'est `kind=hls` qui fait monter hls.js.
-        let is_hls = regex::Regex::new(r"(?i)\.m3u8(\?|$)")
-            .unwrap()
-            .is_match(&video_url);
+        static M3U8: std::sync::LazyLock<regex::Regex> =
+            std::sync::LazyLock::new(|| regex::Regex::new(r"(?i)\.m3u8(\?|$)").unwrap());
+        let is_hls = M3U8.is_match(&video_url);
         let resolved = Resolved { handle, is_hls };
         {
             let mut cache = self.cache.lock().unwrap();

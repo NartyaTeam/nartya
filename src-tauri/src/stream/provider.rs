@@ -80,9 +80,10 @@ fn media_referer(media_url: &str, recipe: &Recipe, key: Option<&str>) -> Option<
     }
     let re = recipe_regex(&rule.pattern, false)?;
     let caps = re.captures(media_url)?;
-    let placeholder = regex::Regex::new(r"\{(\d+)\}").unwrap();
+    static PLACEHOLDER: std::sync::LazyLock<regex::Regex> =
+        std::sync::LazyLock::new(|| regex::Regex::new(r"\{(\d+)\}").unwrap());
     Some(
-        placeholder
+        PLACEHOLDER
             .replace_all(&rule.template, |m: &regex::Captures| {
                 let i: usize = m[1].parse().unwrap_or(usize::MAX);
                 caps.get(i).map(|c| c.as_str()).unwrap_or("").to_string()

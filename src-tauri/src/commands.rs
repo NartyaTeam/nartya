@@ -12,7 +12,10 @@ use crate::{
 
 type Session<'a> = State<'a, std::sync::Arc<SharedSession>>;
 
-#[tauri::command]
+// `async` : une commande synchrone s'exécute sur le thread de la fenêtre, et un accès disque ou
+// un lancement de processus y bloquerait l'affichage et le scroll.
+
+#[tauri::command(async)]
 pub fn open_external(app: AppHandle, url: String) -> Value {
     if is_http_url(&url) && app.opener().open_url(&url, None::<&str>).is_ok() {
         return json!({ "success": true });
@@ -27,7 +30,7 @@ pub fn app_quit(app: AppHandle) -> Value {
 }
 
 /// Session arrivée du Hub : l'app passe devant, et le Hub se réduit.
-#[tauri::command]
+#[tauri::command(async)]
 pub fn app_focus(app: AppHandle, session: Session) -> Value {
     let focused = window::force_focus_main(&app);
     if focused {
@@ -41,12 +44,12 @@ pub fn hub_is_managed() -> bool {
     hub::is_managed()
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn hub_get_info(session: Session) -> Option<Value> {
     session.hub_info()
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn hub_open(app: AppHandle, session: Session) -> Value {
     hub::open(&app, &session)
 }
@@ -56,12 +59,12 @@ pub fn get_version(app: AppHandle) -> String {
     app.package_info().version.to_string()
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn get_machine_id() -> String {
     system::machine_id()
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn get_anime4k_capabilities() -> Value {
     system::anime4k_capabilities()
 }
@@ -76,17 +79,17 @@ pub async fn get_captcha_token(app: AppHandle) -> Value {
     captcha::get_token(app).await
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn session_get(session: Session, key: String) -> Option<String> {
     is_session_key(&key).then(|| session.get(&key)).flatten()
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn session_set(session: Session, key: String, value: String) -> bool {
     is_session_key(&key) && session.set(&key, &value)
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn session_remove(session: Session, key: String) -> bool {
     is_session_key(&key) && session.remove(&key)
 }

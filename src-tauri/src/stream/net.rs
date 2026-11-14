@@ -90,8 +90,9 @@ impl NetError {
 
 /// Retire les URL d'un message : les logs sont joints aux rapports de bug.
 pub fn redact_urls(message: &str) -> String {
-    let re = regex::Regex::new(r#"https?://[^\s"')]+"#).unwrap();
-    re.replace_all(message, |caps: &regex::Captures| {
+    static URL: std::sync::LazyLock<regex::Regex> =
+        std::sync::LazyLock::new(|| regex::Regex::new(r#"https?://[^\s"')]+"#).unwrap());
+    URL.replace_all(message, |caps: &regex::Captures| {
         Url::parse(&caps[0])
             .ok()
             .and_then(|u| u.host_str().map(str::to_string))
@@ -113,9 +114,16 @@ fn is_private_v4(ip: Ipv4Addr) -> bool {
         || ip.is_private()
         || ip.is_link_local()
         || ip.is_unspecified()
+        || ip.is_multicast()
+        || ip.is_broadcast()
         || o[0] == 0
+        || o[0] >= 240
         // 100.64.0.0/10 (CGNAT, dont le VPN Tailscale)
         || (o[0] == 100 && (64..=127).contains(&o[1]))
+        // 198.18.0.0/15 (bancs de test, parfois routé vers le LAN)
+        || (o[0] == 198 && (o[1] & 0xfe) == 18)
+        // 192.0.0.0/24 (IETF)
+        || (o[0] == 192 && o[1] == 0 && o[2] == 0)
 }
 
 fn is_private_v6(ip: Ipv6Addr) -> bool {
@@ -125,6 +133,7 @@ fn is_private_v6(ip: Ipv6Addr) -> bool {
     let first = ip.segments()[0];
     ip.is_loopback()
         || ip.is_unspecified()
+        || ip.is_multicast()
         // fc00::/7 et fe80::/10
         || (first & 0xfe00) == 0xfc00
         || (first & 0xffc0) == 0xfe80
@@ -220,13 +229,25 @@ impl Dns {
     }
 }
 
-struct DnsResolver(Arc<Dns>);
+struct DnsResolver {
+    dns: Arc<Dns>,
+    /// L'API (en dev, souvent `localhost`) : seul hôte autorisé à résoudre vers une adresse privée.
+    api_host: Option<String>,
+}
 
 impl Resolve for DnsResolver {
     fn resolve(&self, name: Name) -> Resolving {
-        let dns = self.0.clone();
+        let dns = self.dns.clone();
+        let trusted = self.api_host.as_deref() == Some(name.as_str());
         Box::pin(async move {
-            let ips = dns.lookup(name.as_str()).await;
+            // Revalidé ici aussi : le cache a pu expirer depuis `validate_external_url`, et une
+            // nouvelle réponse DNS pourrait pointer vers le réseau local.
+            let ips: Vec<IpAddr> = dns
+                .lookup(name.as_str())
+                .await
+                .into_iter()
+                .filter(|ip| trusted || !is_private_ip(*ip))
+                .collect();
             if ips.is_empty() {
                 let err: Box<dyn std::error::Error + Send + Sync> =
                     format!("dns error: {} introuvable", name.as_str()).into();
@@ -260,7 +281,12 @@ impl Net {
     pub fn new() -> Self {
         let dns = Arc::new(Dns::new());
         let client = reqwest::Client::builder()
-            .dns_resolver(Arc::new(DnsResolver(dns.clone())))
+            .dns_resolver(Arc::new(DnsResolver {
+                dns: dns.clone(),
+                api_host: Url::parse(&super::resolver::api_base_url())
+                    .ok()
+                    .and_then(|u| u.host_str().map(str::to_lowercase)),
+            }))
             .redirect(reqwest::redirect::Policy::none())
             // Même comportement qu'Electron : HTTP/1.1, keep-alive court.
             .http1_only()
@@ -374,7 +400,12 @@ mod tests {
             "0.0.0.0",
             "100.64.0.1",
             "100.127.1.1",
+            "198.18.0.1",
+            "198.19.255.1",
+            "224.0.0.1",
+            "255.255.255.255",
             "::1",
+            "ff02::1",
             "fd00::1",
             "fe80::1",
             "::ffff:192.168.0.1",
@@ -389,6 +420,7 @@ mod tests {
             "1.1.1.1",
             "172.32.0.1",
             "100.128.0.1",
+            "198.20.0.1",
             "2606:4700::1111",
         ] {
             assert!(
