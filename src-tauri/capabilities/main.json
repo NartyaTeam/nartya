@@ -20,6 +20,16 @@
     "allow-session-get",
     "allow-session-set",
     "allow-session-remove",
-    "allow-resolve-stream"
+    "allow-resolve-stream",
+    "allow-downloads-list",
+    "allow-downloads-start",
+    "allow-downloads-cancel",
+    "allow-downloads-cancel-season",
+    "allow-downloads-remove",
+    "allow-downloads-set-max-concurrent",
+    "allow-downloads-local-url",
+    "allow-downloads-get-dir",
+    "allow-downloads-choose-dir",
+    "allow-downloads-open-dir"
   ]
 }

@@ -158,6 +158,26 @@ Non vérifié : MP4 direct avec `Range` sur un vrai hébergeur (couvert par des 
 
 Téléchargements + fusion ffmpeg (mp4 et HLS), Cast, Discord, lancement du Hub.
 
+Découpage : 3a téléchargements, 3b Discord, 3c Cast (serveur LAN, mDNS, pare-feu).
+
+#### Revue des phases 1-2 (2026-11-14)
+
+Avant la phase 3, relecture complète du Rust : base saine. Corrigé : commandes avec accès disque, réseau ou lancement de processus passées en `async` (synchrones, elles tournaient sur le thread de la fenêtre) ; résolveur DNS du client qui refuse aussi les adresses privées (sauf l'hôte de l'API) ; dépaquetage sans regex compilée par jeton ; captcha « busy » en cas de double demande.
+
+Lag de scroll sous Tauri : `-webkit-app-region` sur la barre du haut sticky. wry active les régions non client de WebView2, et chaque pixel de scroll renvoyait toute la liste des zones (~9 ms par envoi sur le thread du navigateur). Désactivé sous Tauri (classe `tauri-runtime`).
+
+#### État de la phase 3a : téléchargements (2026-11-14) : fait
+
+Module `src-tauri/src/downloads/` : file d'attente et concurrence réglable, MP4 (plages parallèles si l'hôte accepte `Range`, sinon un flux), HLS (choix de la qualité, clé AES, init fMP4, segments, fusion ffmpeg, repli playlist + segments), scans (reprise des pages déjà présentes), images de couverture, choix et déplacement du dossier, lecture hors ligne par la route `/local` du proxy.
+
+**Compatibilité totale avec Electron** : même index (`%APPDATA%\nartya\downloads.json`, clés `items` et `root`), mêmes dossiers (`<racine>\<id en base64url>\`), mêmes champs. Les deux coques voient la même bibliothèque, sans migration.
+
+Vérifié sur cette machine : les 3 épisodes téléchargés sous Electron apparaissent et se lisent depuis le disque ; un épisode HLS 1080p téléchargé et fusionné (677 Mo, segments nettoyés) ; une annulation en cours retire dossier et entrée ; un chapitre de scan (55 pages). 64 tests Rust.
+
+ffmpeg : en dev, celui de `node_modules/ffmpeg-static` ; une fois packagé, cherché à côté de l'exécutable (à livrer en phase 4).
+
+Non vérifié : téléchargement MP4 direct sur un vrai hébergeur (couvert par la logique Electron reprise à l'identique), déplacement du dossier vers un autre disque.
+
 ### Phase 4 : packaging et bascule Windows
 
 - Installeur NSIS, manifeste compatible Hub, bootstrapper WebView2.

@@ -2,6 +2,7 @@ mod captcha;
 mod commands;
 mod config;
 mod deep_link;
+mod downloads;
 mod hub;
 mod oauth;
 mod session;
@@ -36,6 +37,7 @@ pub fn run() {
         }))
         .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
         .manage(state::AppState::default())
         .invoke_handler(tauri::generate_handler![
             commands::open_external,
@@ -53,6 +55,16 @@ pub fn run() {
             commands::session_set,
             commands::session_remove,
             commands::resolve_stream,
+            commands::downloads_list,
+            commands::downloads_start,
+            commands::downloads_cancel,
+            commands::downloads_cancel_season,
+            commands::downloads_remove,
+            commands::downloads_set_max_concurrent,
+            commands::downloads_local_url,
+            commands::downloads_get_dir,
+            commands::downloads_choose_dir,
+            commands::downloads_open_dir,
         ])
         .on_page_load(|webview, payload| {
             if webview.label() == "main"
@@ -97,7 +109,24 @@ pub fn run() {
             handle.state::<state::AppState>().set_defer_reveal(deferred);
 
             let _ = tauri::async_runtime::block_on(oauth::start(handle.clone()));
-            app.manage(StreamSlot(tauri::async_runtime::block_on(stream::start())));
+            // Même dossier de données qu'Electron (`%APPDATA%\nartya`) : les téléchargements
+            // faits avec l'une ou l'autre coque restent dans la même bibliothèque.
+            let data_dir = app.path().config_dir()?.join("nartya");
+            let (doc, default_root, root) = downloads::open_root(&data_dir);
+            let (parts, service) = tauri::async_runtime::block_on(stream::start(root.clone()));
+            app.manage(StreamSlot(service));
+            app.manage(downloads::Downloads::new(
+                handle.clone(),
+                downloads::Init {
+                    data_dir,
+                    doc,
+                    default_root,
+                    root,
+                    net: parts.net,
+                    recipe: parts.recipe,
+                    handles: parts.handles,
+                },
+            ));
 
             let on_url = handle.clone();
             app.deep_link().on_open_url(move |event| {
@@ -115,6 +144,14 @@ pub fn run() {
             window::schedule_reveal_fallback(&handle, deferred);
             Ok(())
         })
-        .run(tauri::generate_context!())
-        .expect("échec du démarrage de Nartya");
+        .build(tauri::generate_context!())
+        .expect("échec du démarrage de Nartya")
+        .run(|app, event| {
+            // L'index des téléchargements est écrit en différé.
+            if let tauri::RunEvent::Exit = event {
+                if let Some(downloads) = app.try_state::<Arc<downloads::Downloads>>() {
+                    downloads.flush();
+                }
+            }
+        });
 }

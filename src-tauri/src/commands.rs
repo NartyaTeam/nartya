@@ -110,3 +110,66 @@ pub async fn resolve_stream(
         .resolve(payload.unwrap_or_default(), access_token)
         .await)
 }
+
+// ---- Téléchargements hors ligne
+
+type DownloadsState<'a> = State<'a, std::sync::Arc<crate::downloads::Downloads>>;
+
+#[tauri::command(async)]
+pub fn downloads_list(downloads: DownloadsState) -> Value {
+    downloads.list()
+}
+
+#[tauri::command]
+pub async fn downloads_start(downloads: DownloadsState<'_>, payload: Value) -> Result<Value, ()> {
+    Ok(downloads.inner().clone().start(payload).await)
+}
+
+#[tauri::command]
+pub async fn downloads_cancel(downloads: DownloadsState<'_>, id: String) -> Result<Value, ()> {
+    Ok(downloads.cancel(&id).await)
+}
+
+#[tauri::command]
+pub async fn downloads_cancel_season(
+    downloads: DownloadsState<'_>,
+    payload: Value,
+) -> Result<Value, ()> {
+    Ok(downloads.cancel_season(payload).await)
+}
+
+#[tauri::command]
+pub async fn downloads_remove(downloads: DownloadsState<'_>, id: String) -> Result<Value, ()> {
+    Ok(downloads.remove(&id).await)
+}
+
+#[tauri::command(async)]
+pub fn downloads_set_max_concurrent(downloads: DownloadsState, n: f64) {
+    downloads.inner().set_max_concurrent(n);
+}
+
+/// `None` si le proxy local n'a pas démarré.
+#[tauri::command(async)]
+pub fn downloads_local_url(
+    stream: State<'_, crate::StreamSlot>,
+    id: String,
+    rel: Option<String>,
+) -> Option<String> {
+    let service = stream.0.as_ref()?;
+    service.proxy.local_url(&id, rel.as_deref().unwrap_or("video.mp4"))
+}
+
+#[tauri::command(async)]
+pub fn downloads_get_dir(downloads: DownloadsState) -> Value {
+    downloads.get_dir()
+}
+
+#[tauri::command]
+pub async fn downloads_choose_dir(downloads: DownloadsState<'_>) -> Result<Value, ()> {
+    Ok(downloads.choose_dir().await)
+}
+
+#[tauri::command(async)]
+pub fn downloads_open_dir(downloads: DownloadsState) -> Value {
+    downloads.open_dir()
+}

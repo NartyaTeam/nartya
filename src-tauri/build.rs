@@ -18,6 +18,16 @@ const COMMANDS: &[&str] = &[
     "session_set",
     "session_remove",
     "resolve_stream",
+    "downloads_list",
+    "downloads_start",
+    "downloads_cancel",
+    "downloads_cancel_season",
+    "downloads_remove",
+    "downloads_set_max_concurrent",
+    "downloads_local_url",
+    "downloads_get_dir",
+    "downloads_choose_dir",
+    "downloads_open_dir",
 ];
 
 /// `export const NOM = "valeur";` dans `src/config/instance.js` : une seule source de vérité

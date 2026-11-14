@@ -41,7 +41,20 @@ export const tauriPlatform = {
   getAnime4kCapabilities: () => invoke("get_anime4k_capabilities"),
   resolveStream: (payload) => invoke("resolve_stream", { payload: payload || {} }),
   getCaptchaToken: () => invoke("get_captcha_token"),
-  downloads: null,
+  // Même index et mêmes dossiers qu'Electron : la bibliothèque hors ligne est partagée.
+  downloads: {
+    list: () => invoke("downloads_list"),
+    start: (payload) => invoke("downloads_start", { payload }),
+    cancel: (id) => invoke("downloads_cancel", { id }),
+    cancelSeason: (payload) => invoke("downloads_cancel_season", { payload }),
+    remove: (id) => invoke("downloads_remove", { id }),
+    setMaxConcurrent: (n) => invoke("downloads_set_max_concurrent", { n: Number(n) || 1 }),
+    localUrl: (id, rel) => invoke("downloads_local_url", { id, rel: rel || null }),
+    getDir: () => invoke("downloads_get_dir"),
+    chooseDir: () => invoke("downloads_choose_dir"),
+    openDir: () => invoke("downloads_open_dir"),
+    onProgress: (cb) => (typeof cb === "function" ? listen("downloads:progress", cb) : noop),
+  },
   // Partagée avec Nartya Hub.
   session: {
     get: (key) => invoke("session_get", { key }),

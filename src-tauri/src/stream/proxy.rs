@@ -37,6 +37,7 @@ use super::{
     range::{parse_byte_range, slice_stream},
     recipe::RecipeStore,
 };
+use crate::downloads::SharedRoot;
 
 // Le <video> natif n'a pas le buffer de hls.js : la file découple la lecture du CDN de l'écriture
 // vers le lecteur et absorbe la gigue.
@@ -119,6 +120,8 @@ pub struct Proxy {
     segments: Mutex<SegmentCache>,
     warm: Mutex<IndexMap<String, (WarmFuture, Instant)>>,
     signed: Mutex<IndexMap<String, (String, Instant)>>,
+    /// Racine des téléchargements, servis sous `/local`.
+    local_root: SharedRoot,
 }
 
 fn cors(builder: axum::http::response::Builder) -> axum::http::response::Builder {
@@ -192,7 +195,12 @@ fn to_io(e: reqwest::Error) -> io::Error {
 }
 
 impl Proxy {
-    pub fn new(net: Arc<Net>, recipe: Arc<RecipeStore>, handles: Arc<Handles>) -> Arc<Self> {
+    pub fn new(
+        net: Arc<Net>,
+        recipe: Arc<RecipeStore>,
+        handles: Arc<Handles>,
+        local_root: SharedRoot,
+    ) -> Arc<Self> {
         Arc::new(Self {
             net,
             recipe,
@@ -202,6 +210,7 @@ impl Proxy {
             segments: Mutex::default(),
             warm: Mutex::default(),
             signed: Mutex::default(),
+            local_root,
         })
     }
 
@@ -222,6 +231,17 @@ impl Proxy {
         ))
     }
 
+    /// Fichier téléchargé ; `None` si le proxy n'a pas démarré.
+    pub fn local_url(&self, id: &str, rel: &str) -> Option<String> {
+        let port = self.port()?;
+        Some(format!(
+            "http://127.0.0.1:{port}/local?id={}&path={}&t={}",
+            urlencoding::encode(id),
+            urlencoding::encode(rel),
+            urlencoding::encode(&self.token)
+        ))
+    }
+
     fn check_token(&self, given: Option<&String>) -> bool {
         let Some(given) = given else { return false };
         let (a, b) = (given.as_bytes(), self.token.as_bytes());
@@ -239,6 +259,7 @@ impl Proxy {
         self.port.store(port, Ordering::SeqCst);
         let app = Router::new()
             .route("/video/proxy", get(handle_get).options(handle_preflight))
+            .route("/local", get(handle_local).options(handle_preflight))
             .fallback(|| async { json_error(StatusCode::NOT_FOUND, "Not Found") })
             .with_state(self.clone());
         tauri::async_runtime::spawn(async move {
@@ -731,6 +752,22 @@ async fn handle_get(
         .and_then(|v| v.to_str().ok())
         .map(str::to_string);
     proxy.handle_proxy(handle, target, range).await
+}
+
+async fn handle_local(
+    State(proxy): State<Arc<Proxy>>,
+    Query(query): Query<HashMap<String, String>>,
+    headers: HeaderMap,
+) -> Response {
+    if !proxy.check_token(query.get("t")) {
+        return json_error(StatusCode::FORBIDDEN, "Jeton invalide");
+    }
+    let id = query.get("id").map(String::as_str).unwrap_or("");
+    let rel = query.get("path").map(String::as_str).unwrap_or("video.mp4");
+    let range = headers.get(header::RANGE).and_then(|v| v.to_str().ok());
+    let root = proxy.local_root.read().unwrap().clone();
+    let origin = format!("http://127.0.0.1:{}", proxy.port().unwrap_or(0));
+    super::local::serve(&root, id, rel, range, &origin, &proxy.token_suffix()).await
 }
 
 #[cfg(test)]
