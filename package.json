@@ -21,6 +21,7 @@
     "test:unit": "node --test test/audio-track.test.mjs test/proxy-range.test.mjs test/video-providers.test.mjs test/stream-anonymization.test.mjs test/version-gate.test.mjs test/hls-detection.test.mjs test/quality-levels.test.mjs test/download-recovery.test.mjs test/session-guards.test.mjs test/changelog.test.mjs test/android-release-manifest.test.mjs test/ios-release-manifest.test.mjs test/shared-session-permissions.test.mjs",
     "test:providers:live": "node test/video-providers-live.mjs",
     "test:providers:electron": "electron test/video-providers-electron-smoke.mjs",
+    "test:providers": "cargo run -p nartya-core --example providers_smoke",
     "test:providers:ui": "node test/video-providers-ui-smoke.mjs",
     "test:cast:fake": "node test/cast-fake-receiver.mjs",
     "test:android": "node scripts/run-android-gradle.mjs testDebugUnitTest",

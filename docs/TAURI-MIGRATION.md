@@ -223,7 +223,7 @@ Non vérifié :
 - **détection par le Hub en conditions réelles** : relue dans son code, jamais exécutée contre cet installeur (clé `Uninstall\Nartya` au lieu d'un GUID, `UninstallString` sans `/currentuser` : sans conséquence d'après `winInstall.js` et `nsis.js`) ;
 - migration depuis une vraie installation Electron, WebView2 absent, Windows 10.
 
-Reste de la phase : canal bêta via le Hub, réécriture de `test:providers:electron`, retrait d'Electron sur Windows.
+Reste de la phase : canal bêta via le Hub, retrait d'Electron.
 
 ### Un seul cœur, des coques minces (2026-11-14)
 
@@ -374,3 +374,16 @@ Non revérifié sur le téléphone arm64 après cette suppression (déconnecté)
 - Parité fonctionnelle sur Windows (lecture, téléchargements, Cast, Discord, Hub).
 - RAM au repos sensiblement plus basse qu'Electron (à mesurer sur le PC modeste).
 - Aucune perte de données utilisateur (téléchargements, session, réglages).
+
+### Décision : Tauri sur les trois systèmes (2026-11-15)
+
+Mesure Supabase (30 jours) : Linux 23 et macOS 48 utilisateurs actifs, soit 1,4 % des actifs. Garder Electron pour eux coûterait plus (coque, dépendances, CI, packaging) que ça ne rapporte : **Electron disparaît partout**, une fois les bêtas Linux et macOS validées. Anime4K est optionnel : indisponible là où WebGPU ne l'est pas, sans casser la lecture.
+
+Fait (branche `feat/tauri-shell`) :
+- CI `tauri-unix` (Ubuntu, macOS) : clippy `-D warnings`, `cargo test`, build, installeurs en artefact (`.dmg` arm64, `.AppImage`, `.deb`). Surcharges de bundle par plateforme (`src-tauri/tauri.bundle.{windows,macos,linux}.conf.json`), `scripts/tauri-bundle.mjs` choisit selon la machine.
+- ffmpeg livré avec l'app : à côté de l'exe (Windows), `Contents/Resources` (macOS), `lib/Nartya` (Linux, vérifié dans le `.deb`).
+- Chemin du Hub macOS : l'exécutable dans `Nartya Hub.app/Contents/MacOS/`.
+- Test de la chaîne de lecture réelle : `npm run test:providers` (`crates/nartya-core/examples/providers_smoke.rs`), qui remplace `test:providers:electron`. `test:providers:ui` marche aussi sous Tauri avec `NARTYA_CDP_PORT=9222` (build debug).
+
+Reste : essai réel des installeurs Linux et macOS (HLS/MSE, plein écran, captcha, Cast, Discord) par des volontaires ; `.dmg` Intel et Linux arm64 non produits ; `.dmg` non signé.
+
