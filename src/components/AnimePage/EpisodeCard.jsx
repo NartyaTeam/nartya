@@ -385,7 +385,7 @@ function EpisodeCardInner({
             </span>
           )}
           {!upcoming && (
-            <div className="absolute inset-0 hidden items-center justify-center bg-black/0 opacity-0 transition-all duration-200 group-hover:bg-black/40 group-hover:opacity-100 md:flex">
+            <div className="absolute inset-0 hidden items-center justify-center bg-black/40 opacity-0 transition-opacity duration-150 will-change-[opacity] group-hover:opacity-100 md:flex">
               {loading ? (
                 <span className="h-7 w-7 animate-spin rounded-full border-2 border-white/40 border-t-white" />
               ) : (

@@ -142,7 +142,7 @@ function AnimeCard({
           <div className="h-full w-full skeleton" />
         )}
 
-        <div className="absolute inset-0 hidden items-center justify-center bg-black/0 opacity-0 transition-all duration-200 group-hover:bg-black/45 group-hover:opacity-100 md:flex">
+        <div className="absolute inset-0 hidden items-center justify-center bg-black/45 opacity-0 transition-opacity duration-150 will-change-[opacity] group-hover:opacity-100 md:flex">
           <span className="flex h-11 w-11 items-center justify-center rounded-full bg-primary text-primary-fg shadow-[0_3px_0_color-mix(in_srgb,rgb(var(--primary))_58%,black)]">
             <PrimaryIcon size={18} className={openScans ? "" : "ml-0.5 fill-current"} />
           </span>

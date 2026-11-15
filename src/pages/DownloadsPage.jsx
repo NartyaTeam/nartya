@@ -99,7 +99,7 @@ function EpisodeRow({ it, cover, selecting, selected, onToggleSelect, onPlay, on
         <div className="relative">
           <EpisodeThumb item={it} fallbackCover={cover} />
           {!inProgress && !failed && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all group-hover:bg-black/40 group-hover:opacity-100">
+            <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity duration-150 will-change-[opacity] group-hover:opacity-100">
               <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-fg">
                 <Play size={13} className="ml-0.5 fill-current" />
               </span>
