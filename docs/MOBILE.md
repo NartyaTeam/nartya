@@ -39,13 +39,13 @@ ou `noop` dans `capacitor.js` signifie que la fonction n'existe pas sur mobile.
 
 La lecture passe, comme sur desktop, par un serveur HTTP local sur `127.0.0.1` : il relaie
 les flux avec les bons en-têtes, réécrit les playlists HLS, gère `Range` et sert les fichiers
-téléchargés (route `/local`). Sur Android c'est `ProxyServer.java` (NanoHTTPD + OkHttp), sur
-iOS `NartyaProxyCore` (`Network.framework`).
+téléchargés (route `/local`). Sur Android c'est le cœur Rust (`crates/nartya-core`, chargé par JNI : `crates/nartya-android`),
+le même que sur desktop ; sur iOS `NartyaProxyCore` (`Network.framework`).
 
-Le Java fait référence : le Swift en reprend les routes, le jeton et les protections
-(anti-SSRF, anti-traversée de chemin, `Range` strict), avec les mêmes tests. Les règles des
+Le cœur Rust fait référence (l'ancien `ProxyServer.java` est supprimé) : le Swift en reprend les
+routes, le jeton et les protections (anti-SSRF, anti-traversée de chemin, `Range` strict). Les règles des
 hébergeurs ne sont pas dans l'app : elles viennent de l'API à la connexion et restent en
-mémoire (`src/shared/sourceRecipe.js`), puis sont transmises au proxy natif.
+mémoire (`src/shared/sourceRecipe.js`), puis sont transmises au proxy natif (sur Android, le cœur les récupère lui-même).
 
 ## Versions
 

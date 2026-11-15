@@ -37,23 +37,13 @@ function currentAccessToken() {
   }
 }
 
-// Garde-fou du cœur Rust (lecture et téléchargements). `false` ramène la lecture sur le proxy Java ;
-// pour un essai sans rebuild : localStorage["nartya-rust-core"] = "0" (coupé) ou "1" (actif).
-const RUST_CORE_ENABLED = true;
-
-function rustCoreWanted() {
-  if (Capacitor.getPlatform() !== "android") return false;
-  try {
-    const override = localStorage.getItem("nartya-rust-core");
-    if (override === "0") return false;
-    if (override === "1") return true;
-  } catch {}
-  return RUST_CORE_ENABLED;
-}
+// Sur Android, proxy, résolution et téléchargements sont dans le cœur Rust. iOS garde son plugin Swift.
+const isAndroid = Capacitor.getPlatform() === "android";
+const CORE_MISSING = { success: false, error: "Moteur de lecture indisponible, réinstalle l'application" };
 
 let corePromise = null;
 
-/** Démarre le cœur natif ; `false` si la bibliothèque manque (on reste alors sur le proxy Java). */
+/** Démarre le cœur natif ; `false` si la bibliothèque manque dans l'APK. */
 function ensureCore() {
   if (!corePromise) {
     corePromise = NartyaProxy.coreStart()
@@ -66,7 +56,7 @@ function ensureCore() {
   return corePromise;
 }
 
-const coreReady = async () => rustCoreWanted() && (await ensureCore());
+const coreReady = async () => isAndroid && (await ensureCore());
 const coreCall = (command, args = {}) => NartyaProxy.coreCall({ command, args });
 
 function adoptProxy(port, token) {
@@ -389,6 +379,7 @@ export const capacitorPlatform = {
         accessToken: currentAccessToken() || "",
       });
     }
+    if (isAndroid) return CORE_MISSING;
 
     // Retour au premier plan : le proxy est peut-être en cours de relance.
     if (revivePromise) await revivePromise.catch(() => {});
@@ -508,6 +499,7 @@ export const capacitorPlatform = {
         await NartyaProxy.requestDownloadPermission().catch(() => ({ granted: false }));
         return coreCall("downloads_start", payload || {});
       }
+      if (isAndroid) return CORE_MISSING;
       // Pas d'URL à résoudre.
       if (payload?.type === "scan") {
         return NartyaProxy.requestDownloadPermission()
@@ -532,6 +524,7 @@ export const capacitorPlatform = {
     },
     async cancel(id) {
       if (await coreReady()) return coreCall("downloads_cancel", { id });
+      if (isAndroid) return CORE_MISSING;
       return NartyaProxy.downloadCancel({ id });
     },
     async cancelSeason(payload) {
@@ -549,6 +542,7 @@ export const capacitorPlatform = {
     },
     async remove(id) {
       if (await coreReady()) return coreCall("downloads_remove", { id });
+      if (isAndroid) return CORE_MISSING;
       return NartyaProxy.downloadRemove({ id });
     },
     async setMaxConcurrent(n) {
@@ -557,6 +551,7 @@ export const capacitorPlatform = {
     },
     async localUrl(id, rel = "video.mp4") {
       if (await coreReady()) return (await coreCall("downloads_local_url", { id, rel })).url || null;
+      if (isAndroid) return null;
       const origin = (await ensureProxy()).replace("/video/proxy", "");
       const query = new URLSearchParams({ id, path: rel, t: proxyToken });
       return `${origin}/local?${query}`;

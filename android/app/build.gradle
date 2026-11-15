@@ -15,7 +15,6 @@ if (hasReleaseSigning) {
 def androidVersionMetadata = new JsonSlurper().parse(rootProject.file('version.json'))
 def androidVersionName = androidVersionMetadata.versionName as String
 def androidVersionCode = androidVersionMetadata.versionCode as Integer
-def nartyaProxyProbe = project.findProperty('nartyaProxyProbe') == 'true'
 if (!(androidVersionName ==~ /\d+\.\d+\.\d+/)) {
     throw new GradleException("versionName Android invalide dans android/version.json: ${androidVersionName}")
 }
@@ -32,10 +31,7 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode androidVersionCode
         versionName androidVersionName
-        // `-PnartyaProxyProbe=true` : sonde Java contre l'APK release minifié, sans AndroidX/JUnit.
-        testInstrumentationRunner nartyaProxyProbe
-                ? "com.nartya.app.proxy.NartyaProxyProbeInstrumentation"
-                : "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
@@ -114,7 +110,6 @@ dependencies {
     implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
     implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
     implementation project(':capacitor-android')
-    implementation 'org.nanohttpd:nanohttpd:2.3.1'
     implementation 'com.squareup.okhttp3:okhttp:4.12.0'
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"

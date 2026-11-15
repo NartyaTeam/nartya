@@ -354,6 +354,13 @@ Bug trouvé en route, corrigé dans `capacitor.js` : une WebView ancienne (Chrom
 
 Non vérifié : un appareil arm64 réel (aucun disponible : seul un build clippy), la reprise manuelle d'un téléchargement interrompu.
 
+### Android : code Java de lecture et de téléchargement retiré (2026-11-15)
+
+Après validation, supprimés : `ProxyServer.java` (594 lignes), `Downloads.java` (907), leurs tests (`ProxyServerTest`, la sonde instrumentée), la dépendance NanoHTTPD et le réglage Gradle `nartyaProxyProbe`. `NartyaProxyPlugin` se réduit à `coreStart`, `coreResolve`, `coreCall` et `requestDownloadPermission` (298 lignes contre ~190 avant l'étape 1, mais sans logique réseau). Il n'y a plus de garde-fou ni de repli Java sur Android : sans bibliothèque native, la page renvoie « Moteur de lecture indisponible » ; une release exige de toute façon le cœur. iOS garde son plugin Swift et son chemin dans `capacitor.js`.
+
+Vérifié (émulateur x86_64, APK release minifié) : lecture 720p, téléchargement HLS complet, notification de fin postée. `lintDebug`, `testDebugUnitTest` et clippy passent. Hors cadre : 4 tests de `test:unit` échouent (recette et extraction : `recette rend au client…`, `recette pilote détection…`, `allowlist…`, `lecteur compacté…`), dans du code non touché ici.
+Non revérifié sur le téléphone arm64 après cette suppression (déconnecté) : l'APK est identique côté Rust, seul le Java a changé.
+
 ### Phase 5 : Linux et macOS (optionnel)
 
 À décider selon la phase 0 : WebKitGTK et WKWebView sont moins sûrs que Chromium pour WebGPU, MSE/HLS et le plein écran. Ne pas lancer sans vérification équivalente à la phase 0 sur chaque plateforme.

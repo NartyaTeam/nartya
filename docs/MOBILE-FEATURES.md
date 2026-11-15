@@ -94,7 +94,7 @@ Une entrée à `null` ou `noop` dans `capacitor.js` = fonction absente sur Andro
 
 | Élément | Desktop | Android | Notes |
 | ------- | ------- | ------- | ----- |
-| Lecture HLS / MP4 | ✅ | ✅ | Proxy natif (Java) au lieu du proxy Electron. Proxy à jeton |
+| Lecture HLS / MP4 | ✅ | ✅ | Proxy natif (cœur Rust sur Android) au lieu du proxy Electron. Proxy à jeton |
 | Orientation | — | 📱 | En lecture, suit le sens du téléphone (portrait compris) ; portrait ailleurs. Bouton cadenas dans le lecteur pour figer le sens actuel (allongé sur le côté) |
 | Bouton plein écran | 🖥️ | ❌ | Le lecteur occupe déjà tout l'écran |
 | Picture-in-Picture | Bouton du lecteur | 🟡 | PiP natif : bouton du lecteur, et automatique en quittant l'app pendant la lecture. Fermer la fenêtre met en pause |
