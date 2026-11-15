@@ -8,12 +8,14 @@ import App from "./App.jsx";
 import { platform } from "./platform/index.js";
 import { installGlobalErrorLogging } from "./api/clientLogs.js";
 import { installSkeletonVisibility } from "./lib/skeletonVisibility.js";
+import { installDesktopLockdown } from "./lib/desktopLockdown.js";
 import "./index.css";
 
 const AchievementUnlock = lazy(() => import("./components/achievements/AchievementUnlock.jsx"));
 
 if (platform.isMobile) document.documentElement.classList.add("mobile-runtime");
 if (platform.name === "tauri") document.documentElement.classList.add("tauri-runtime");
+if (platform.isDesktop && import.meta.env.PROD) installDesktopLockdown();
 
 // Avant le rendu, pour ne pas manquer une exception au montage.
 installGlobalErrorLogging();
