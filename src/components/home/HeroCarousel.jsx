@@ -56,7 +56,7 @@ function HeroSlide({ anime, contentType, isActive, shouldLoad, onOpen, onPrimary
         >
           <p className="mb-3 flex items-center justify-center gap-2.5 text-[0.65rem] font-bold uppercase tracking-[0.25em] text-white/65 md:mb-4 md:justify-start md:text-[0.7rem] md:text-muted">
             <span className="h-3.5 w-[6px] -skew-x-[14deg] bg-primary" />
-            {isManga ? "Manga à la une" : "À la une"}
+            {isManga ? "Manga à la une" : anime.heroLabel || "À la une"}
           </p>
 
           {clearLogo && shouldLoad ? (

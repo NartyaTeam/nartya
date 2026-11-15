@@ -57,6 +57,11 @@ export default function HomePage() {
     { persist: true, persistentMaxAgeMs: 7 * 24 * 60 * 60 * 1000 }
   );
 
+  // Le hero tiré à la visite reste en place : la revalidation en fond en apporte un autre, qui
+  // s'affichera à la prochaine visite plutôt que de remplacer les slides sous les yeux.
+  const heroRef = useRef(null);
+  if (!heroRef.current && data?.hero?.length) heroRef.current = data.hero;
+
   if (error && !data) {
     return (
       <div className="flex h-full items-center justify-center p-8 text-center">
@@ -120,7 +125,7 @@ export default function HomePage() {
 
   return (
     <div className="animate-fade-in pb-24">
-      <HeroCarousel items={data.hero} />
+      <HeroCarousel items={heroRef.current || data.hero} />
       <div className="relative z-10 mt-1 space-y-8 md:mt-0 md:pt-6 md:space-y-12">
         <GenresRow />
         <ContinueWatching />
