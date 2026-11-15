@@ -347,158 +347,95 @@ pub fn is_consistent_with_embed(embed_url: &str, video_url: &str, recipe: &Recip
 mod tests {
     use super::*;
     use crate::stream::recipe::test_recipe;
+    use serde_json::Value;
 
-    fn recipe() -> Recipe {
-        test_recipe(
-            r#"{"sources":{
-              "jw":{"domains":["jw.test"],"strategy":"jw-sources","rejectPattern":"sendvid\\.com"},
-              "og":{"domains":["og.test"],"strategy":"meta-og","mediaPattern":"https?://videos\\d+\\.og\\.test/[^\"'\\s<>]+\\.mp4"},
-              "ps":{"domains":["ps.test"],"strategy":"player-src","mediaBase":"https://media.ps.test"},
-              "hj":{"domains":["hj.test"],"strategy":"hls-json"},
-              "pk":{"domains":["pk.test"],"strategy":"packed-jw","exclusive":true},
-              "sl":{"domains":["sl.test"],"strategy":"split-link"}
-            }}"#,
-        )
+    /// Cas communs avec `src/shared` (test/shared-extract.test.mjs) : un comportement change
+    /// dans ce fichier, les deux implémentations suivent.
+    fn fixture() -> Value {
+        serde_json::from_str(include_str!("../../../../test/fixtures/extract-cases.json"))
+            .expect("extract-cases.json")
     }
 
-    fn extract(html: &str, key: &str) -> Extracted {
-        extract_from_html(html, "https://x/", Some(key), &recipe())
+    fn recipe(fx: &Value) -> Recipe {
+        test_recipe(&fx["recipe"].to_string())
     }
 
-    #[test]
-    fn jw_sources() {
-        assert_eq!(
-            extract(r#"x sources: [{file: "https://cdn/a.m3u8"}]"#, "jw").unwrap(),
-            "https://cdn/a.m3u8"
-        );
-        assert_eq!(
-            extract(r#"<a href="https://cdn/b.m3u8?t=1">"#, "jw").unwrap(),
-            "https://cdn/b.m3u8?t=1"
-        );
-        assert!(
-            extract(r#"sources: [{file: "https://sendvid.com/x.mp4"}]"#, "jw")
-                .unwrap_err()
-                .contains("ambigu")
-        );
-        assert_eq!(extract("rien", "jw").unwrap_err(), NOT_FOUND);
+    fn text<'a>(case: &'a Value, key: &str) -> Option<&'a str> {
+        case.get(key).and_then(Value::as_str)
     }
 
     #[test]
-    fn meta_og() {
-        assert_eq!(
-            extract(r#"<meta property="og:video" content="//cdn/v.mp4">"#, "og").unwrap(),
-            "https://cdn/v.mp4"
-        );
-        assert_eq!(
-            extract(r#"<video src="https://cdn/w.mp4">"#, "og").unwrap(),
-            "https://cdn/w.mp4"
-        );
-        assert_eq!(
-            extract(r#"var video_source = "https:\/\/cdn\/x.mp4""#, "og").unwrap(),
-            "https://cdn/x.mp4"
-        );
-        assert_eq!(
-            extract("blob https://videos12.og.test/a/b.mp4 fin", "og").unwrap(),
-            "https://videos12.og.test/a/b.mp4"
-        );
-        assert_eq!(
-            extract(r#"<div data-src="https://cdn/y.mp4?z=1">"#, "og").unwrap(),
-            "https://cdn/y.mp4?z=1"
-        );
+    fn extraction_cas_communs() {
+        let fx = fixture();
+        let recipe = recipe(&fx);
+        for case in fx["extract"].as_array().unwrap() {
+            let name = text(case, "name").unwrap();
+            let result = extract_from_html(
+                text(case, "html").unwrap(),
+                text(case, "embed").unwrap(),
+                text(case, "source"),
+                &recipe,
+            );
+            if let Some(url) = text(case, "ok") {
+                assert_eq!(result.as_deref(), Ok(url), "{name}");
+                continue;
+            }
+            let error = result.expect_err(name);
+            if let Some(expected) = text(case, "error") {
+                assert_eq!(error, expected, "{name}");
+            }
+            if let Some(part) = text(case, "errorContains") {
+                assert!(error.contains(part), "{name} : {error}");
+            }
+        }
     }
 
     #[test]
-    fn player_src() {
-        assert_eq!(
-            extract(r#"player.src([{ src: "/v/1.mp4" }])"#, "ps").unwrap(),
-            "https://media.ps.test/v/1.mp4"
-        );
-        assert_eq!(
-            extract(r#"player.src([{ src: "https://c/2.mp4" }])"#, "ps").unwrap(),
-            "https://c/2.mp4"
-        );
-        let sans_base =
-            test_recipe(r#"{"sources":{"ps":{"domains":["ps.test"],"strategy":"player-src"}}}"#);
-        assert!(extract_from_html(
-            r#"player.src([{ src: "/v.mp4" }])"#,
-            "u",
-            Some("ps"),
-            &sans_base
-        )
-        .is_err());
+    fn coherence_embed_media_cas_communs() {
+        let fx = fixture();
+        let recipe = recipe(&fx);
+        for case in fx["consistency"].as_array().unwrap() {
+            let (embed, video) = (text(case, "embed").unwrap(), text(case, "video").unwrap());
+            assert_eq!(
+                is_consistent_with_embed(embed, video, &recipe),
+                case["expected"].as_bool().unwrap(),
+                "{embed} → {video}"
+            );
+        }
     }
 
     #[test]
-    fn hls_json() {
-        assert_eq!(
-            extract(r#"{"hls":"https:\/\/cdn\/m.m3u8"}"#, "hj").unwrap(),
-            "https://cdn/m.m3u8"
-        );
-        assert!(extract("{}", "hj").is_err());
+    fn detection_et_hotes_autorises_cas_communs() {
+        let fx = fixture();
+        let recipe = recipe(&fx);
+        for case in fx["detect"].as_array().unwrap() {
+            let url = text(case, "url").unwrap();
+            assert_eq!(
+                recipe.detect_source_key(url).as_deref(),
+                text(case, "key"),
+                "{url}"
+            );
+        }
+        for case in fx["allowedHosts"].as_array().unwrap() {
+            let host = text(case, "host").unwrap();
+            assert_eq!(
+                recipe.is_allowed_embed_host(host),
+                case["allowed"].as_bool().unwrap(),
+                "{host}"
+            );
+        }
     }
 
     #[test]
-    fn packed_jw_direct_et_compacte() {
-        assert_eq!(
-            extract(r#"file:"https://cdn/p.m3u8?a=1&amp;b=2""#, "pk").unwrap(),
-            "https://cdn/p.m3u8?a=1&b=2"
-        );
-        let packed = r#"eval(function(p,a,c,k,e,d){while(c--)if(k[c])p=p.replace(new RegExp('\\b'+c.toString(a)+'\\b','g'),k[c]);return p}('0:"1://2/3.m3u8"',4,4,'file|https|cdn|x'.split('|'),0,{}))"#;
-        assert_eq!(extract(packed, "pk").unwrap(), "https://cdn/x.m3u8");
-        assert!(extract("rien", "pk").is_err());
-    }
-
-    #[test]
-    fn split_link() {
-        let html = r#"<script>
-            document.getElementById('ideoolink').innerHTML = "/faux";
-            document.getElementById('robotlink').innerHTML = '//host.test/stream' + ''+ ('xcdbideo.test/get_video?id=42').substring(1).substring(2);
-        </script>"#;
-        assert_eq!(
-            extract(html, "sl").unwrap(),
-            "https://host.test/streambideo.test/get_video?id=42"
-        );
-        assert_eq!(
-            extract("Video not found", "sl").unwrap_err(),
-            "Vidéo supprimée par l'hébergeur"
-        );
-        assert_eq!(
-            extract("rien", "sl").unwrap_err(),
-            "Lien du lecteur introuvable"
-        );
-    }
-
-    #[test]
-    fn source_inconnue_et_html_vide() {
-        assert_eq!(
-            extract_from_html("", "u", Some("jw"), &recipe()).unwrap_err(),
-            "HTML invalide"
-        );
-        assert_eq!(
-            extract_from_html("x", "https://autre/", None, &recipe()).unwrap_err(),
-            "Source non reconnue"
-        );
-    }
-
-    #[test]
-    fn coherence_embed_media() {
-        let r = recipe();
-        assert!(is_consistent_with_embed(
-            "https://jw.test/e",
-            "https://jw.test/v.mp4",
-            &r
-        ));
-        assert!(is_consistent_with_embed(
-            "https://jw.test/e",
-            "https://cdn.tiers/v.mp4",
-            &r
-        ));
-        assert!(!is_consistent_with_embed(
-            "https://jw.test/e",
-            "https://pk.test/v.mp4",
-            &r
-        ));
-        assert!(!is_consistent_with_embed("", "x", &r));
+    fn depaquetage_cas_communs() {
+        for case in fixture()["unpack"].as_array().unwrap() {
+            assert_eq!(
+                unpack_dean_edwards(text(case, "packed").unwrap()).as_deref(),
+                text(case, "expected"),
+                "{}",
+                text(case, "name").unwrap()
+            );
+        }
     }
 
     #[test]

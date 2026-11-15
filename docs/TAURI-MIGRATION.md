@@ -406,4 +406,6 @@ Gardés exprès : `src-tauri/src/migrate.rs` (reprise du `localStorage` écrit p
 
 **Contrat de page unique** : `src/platform/contract.js` liste les clés que tout adaptateur expose (`PLATFORM_SHAPE`) et les capacités optionnelles dont la présence dit ce que la plateforme sait faire (`OPTIONAL_CAPABILITIES`), puis `definePlatform(overrides)` complète avec le comportement du web. `web.js` n'a plus rien à déclarer ; `tauri.js` et `capacitor*.js` ne listent que ce qu'ils font vraiment. `test/platform-contract.test.mjs` vérifie que web, Tauri et Capacitor exposent les mêmes clés, sans clé hors contrat.
 
-Reste : recette partagée JS/Rust.
+**Recette partagée JS/Rust** : en retirant Electron, `src/shared/` (extraction, recette) n'a plus qu'un consommateur, `src/platform/capacitor.js` (chemin Java d'Android quand le cœur est coupé, et iOS). Le Rust est la référence ; le JS ne disparaît qu'avec ces deux chemins. En attendant, `test/fixtures/extract-cases.json` porte les cas communs (22 extractions, cohérence embed/média, détection, allowlist, dépaquetage) : `test/shared-extract.test.mjs` les passe à `src/shared`, `stream/extract.rs` au cœur. Les deux implémentations donnent les mêmes résultats ; changer un comportement commence par ce fichier. Les tests JS de l'extraction avaient disparu avec Electron, ils sont rétablis ici.
+
+Reste pour supprimer le JS : iOS sur le cœur Rust (bibliothèque statique + pont Swift), puis retrait du chemin Java d'Android (`ProxyServer.java`, `Downloads.java`).

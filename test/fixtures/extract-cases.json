@@ -1,0 +1,280 @@
+{
+ "_doc": "Cas communs à src/shared (JS, test/shared-extract.test.mjs) et au cœur Rust (stream/extract.rs). Modifier un comportement = modifier ce fichier, les deux implémentations doivent suivre.",
+ "recipe": {
+  "sources": {
+   "jw": {
+    "domains": [
+     "jw.test"
+    ],
+    "strategy": "jw-sources",
+    "rejectPattern": "sendvid\\.com"
+   },
+   "og": {
+    "domains": [
+     "og.test"
+    ],
+    "strategy": "meta-og",
+    "mediaPattern": "https?://videos\\d+\\.og\\.test/[^\"'\\s<>]+\\.mp4"
+   },
+   "ps": {
+    "domains": [
+     "ps.test"
+    ],
+    "strategy": "player-src",
+    "mediaBase": "https://media.ps.test"
+   },
+   "ps2": {
+    "domains": [
+     "ps2.test"
+    ],
+    "strategy": "player-src"
+   },
+   "hj": {
+    "domains": [
+     "hj.test"
+    ],
+    "strategy": "hls-json"
+   },
+   "pk": {
+    "domains": [
+     "pk.test"
+    ],
+    "strategy": "packed-jw",
+    "exclusive": true
+   },
+   "sl": {
+    "domains": [
+     "sl.test"
+    ],
+    "strategy": "split-link"
+   }
+  }
+ },
+ "extract": [
+  {
+   "name": "jw : sources: [{file}]",
+   "source": "jw",
+   "html": "x sources: [{file: \"https://cdn/a.m3u8\"}]",
+   "ok": "https://cdn/a.m3u8",
+   "embed": "https://x/"
+  },
+  {
+   "name": "jw : repli sur un lien m3u8 nu",
+   "source": "jw",
+   "html": "<a href=\"https://cdn/b.m3u8?t=1\">",
+   "ok": "https://cdn/b.m3u8?t=1",
+   "embed": "https://x/"
+  },
+  {
+   "name": "jw : hébergeur rejeté",
+   "source": "jw",
+   "html": "sources: [{file: \"https://sendvid.com/x.mp4\"}]",
+   "errorContains": "ambigu",
+   "embed": "https://x/"
+  },
+  {
+   "name": "jw : rien",
+   "source": "jw",
+   "html": "rien",
+   "error": "URL vidéo non trouvée dans le HTML",
+   "embed": "https://x/"
+  },
+  {
+   "name": "og : meta og:video relative au protocole",
+   "source": "og",
+   "html": "<meta property=\"og:video\" content=\"//cdn/v.mp4\">",
+   "ok": "https://cdn/v.mp4",
+   "embed": "https://x/"
+  },
+  {
+   "name": "og : balise video",
+   "source": "og",
+   "html": "<video src=\"https://cdn/w.mp4\">",
+   "ok": "https://cdn/w.mp4",
+   "embed": "https://x/"
+  },
+  {
+   "name": "og : variable échappée",
+   "source": "og",
+   "html": "var video_source = \"https:\\/\\/cdn\\/x.mp4\"",
+   "ok": "https://cdn/x.mp4",
+   "embed": "https://x/"
+  },
+  {
+   "name": "og : motif de la recette",
+   "source": "og",
+   "html": "blob https://videos12.og.test/a/b.mp4 fin",
+   "ok": "https://videos12.og.test/a/b.mp4",
+   "embed": "https://x/"
+  },
+  {
+   "name": "og : data-src",
+   "source": "og",
+   "html": "<div data-src=\"https://cdn/y.mp4?z=1\">",
+   "ok": "https://cdn/y.mp4?z=1",
+   "embed": "https://x/"
+  },
+  {
+   "name": "ps : chemin relatif + base de la recette",
+   "source": "ps",
+   "html": "player.src([{ src: \"/v/1.mp4\" }])",
+   "ok": "https://media.ps.test/v/1.mp4",
+   "embed": "https://x/"
+  },
+  {
+   "name": "ps : URL absolue",
+   "source": "ps",
+   "html": "player.src([{ src: \"https://c/2.mp4\" }])",
+   "ok": "https://c/2.mp4",
+   "embed": "https://x/"
+  },
+  {
+   "name": "ps : chemin relatif sans base",
+   "source": "ps2",
+   "html": "player.src([{ src: \"/v.mp4\" }])",
+   "fails": true,
+   "embed": "https://x/"
+  },
+  {
+   "name": "hj : hls échappé",
+   "source": "hj",
+   "html": "{\"hls\":\"https:\\/\\/cdn\\/m.m3u8\"}",
+   "ok": "https://cdn/m.m3u8",
+   "embed": "https://x/"
+  },
+  {
+   "name": "hj : vide",
+   "source": "hj",
+   "html": "{}",
+   "fails": true,
+   "embed": "https://x/"
+  },
+  {
+   "name": "pk : lecteur direct",
+   "source": "pk",
+   "html": "file:\"https://cdn/p.m3u8?a=1&amp;b=2\"",
+   "ok": "https://cdn/p.m3u8?a=1&b=2",
+   "embed": "https://x/"
+  },
+  {
+   "name": "pk : compacté",
+   "source": "pk",
+   "html": "eval(function(p,a,c,k,e,d){while(c--)if(k[c])p=p.replace(new RegExp('\\b'+c.toString(a)+'\\b','g'),k[c]);return p}('0:\"1://2/3.m3u8\"',4,4,'file|https|cdn|x'.split('|'),0,{}))",
+   "ok": "https://cdn/x.m3u8",
+   "embed": "https://x/"
+  },
+  {
+   "name": "pk : rien",
+   "source": "pk",
+   "html": "rien",
+   "fails": true,
+   "embed": "https://x/"
+  },
+  {
+   "name": "sl : lien découpé",
+   "source": "sl",
+   "html": "<script>\n            document.getElementById('ideoolink').innerHTML = \"/faux\";\n            document.getElementById('robotlink').innerHTML = '//host.test/stream' + ''+ ('xcdbideo.test/get_video?id=42').substring(1).substring(2);\n        </script>",
+   "ok": "https://host.test/streambideo.test/get_video?id=42",
+   "embed": "https://x/"
+  },
+  {
+   "name": "sl : vidéo supprimée",
+   "source": "sl",
+   "html": "Video not found",
+   "error": "Vidéo supprimée par l'hébergeur",
+   "embed": "https://x/"
+  },
+  {
+   "name": "sl : lien introuvable",
+   "source": "sl",
+   "html": "rien",
+   "error": "Lien du lecteur introuvable",
+   "embed": "https://x/"
+  },
+  {
+   "name": "html vide",
+   "source": "jw",
+   "html": "",
+   "error": "HTML invalide",
+   "embed": "https://x/"
+  },
+  {
+   "name": "hébergeur inconnu",
+   "source": null,
+   "embed": "https://autre/",
+   "html": "x",
+   "error": "Source non reconnue"
+  }
+ ],
+ "consistency": [
+  {
+   "embed": "https://jw.test/e",
+   "video": "https://jw.test/v.mp4",
+   "expected": true
+  },
+  {
+   "embed": "https://jw.test/e",
+   "video": "https://cdn.tiers/v.mp4",
+   "expected": true
+  },
+  {
+   "embed": "https://jw.test/e",
+   "video": "https://pk.test/v.mp4",
+   "expected": false
+  },
+  {
+   "embed": "",
+   "video": "x",
+   "expected": false
+  }
+ ],
+ "detect": [
+  {
+   "url": "https://JW.test/e/1",
+   "key": "jw"
+  },
+  {
+   "url": "https://cdn.hj.test/x.m3u8",
+   "key": "hj"
+  },
+  {
+   "url": "https://autre.com/",
+   "key": null
+  }
+ ],
+ "allowedHosts": [
+  {
+   "host": "jw.test",
+   "allowed": true
+  },
+  {
+   "host": "www.jw.test",
+   "allowed": true
+  },
+  {
+   "host": "eviljw.test",
+   "allowed": false
+  },
+  {
+   "host": "127.0.0.1",
+   "allowed": false
+  }
+ ],
+ "unpack": [
+  {
+   "name": "cascade de remplacements",
+   "packed": "eval(function(p,a,c,k,e,d){}('1',10,2,'ok|0'.split('|')))",
+   "expected": "ok"
+  },
+  {
+   "name": "base hors limites",
+   "packed": "eval(function(p,a,c,k,e,d){}('0',62,1,'ok'.split('|')))",
+   "expected": null
+  },
+  {
+   "name": "pas un packer",
+   "packed": "console.log(1)",
+   "expected": null
+  }
+ ]
+}
