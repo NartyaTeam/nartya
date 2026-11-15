@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useNavigate, useSearchParams, Link } from "react-router-dom";
 import { ArrowLeft, Heart, Star, ChevronDown, ExternalLink, Megaphone, Play, Languages, Zap, ThumbsUp } from "lucide-react";
 import { toast } from "@/lib/toast";
@@ -7,7 +7,7 @@ import HeroBanner from "@/components/ui/HeroBanner";
 import { getAnimeScans } from "@/api/animeApi";
 import { animeCacheKey, ANIME_CACHE_OPTIONS, loadAnime } from "@/api/animeLoad";
 import { getLastWatched } from "@/api/progress";
-import { useCachedResource } from "@/hooks/useCachedResource";
+import { revalidateKey, useCachedResource } from "@/hooks/useCachedResource";
 import { useDiscordPresence } from "@/hooks/useDiscordPresence";
 import { useFavorite } from "@/hooks/useFavorite";
 import { useAnimeBump } from "@/hooks/useAnimeBump";
@@ -57,6 +57,22 @@ export default function AnimePage() {
     10 * 60 * 1000,
     ANIME_CACHE_OPTIONS
   );
+
+  // Fiche servie sans les données AniList (note, tags, relations) : le serveur les complète en
+  // quelques secondes, on relit donc la fiche, deux fois au plus.
+  const pendingRetries = useRef(0);
+  useEffect(() => {
+    pendingRetries.current = 0;
+  }, [slug]);
+  const anilistPending = Boolean(data?.anilistPending);
+  useEffect(() => {
+    if (!anilistPending || pendingRetries.current >= 2) return undefined;
+    const timer = setTimeout(() => {
+      pendingRetries.current += 1;
+      revalidateKey(animeCacheKey(slug, liteMode));
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, [anilistPending, slug, liteMode, data]);
 
   const anime = data?.anime;
   const anilist = data?.anilist;

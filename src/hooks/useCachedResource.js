@@ -180,6 +180,17 @@ export function expireCache(prefix) {
   }
 }
 
+/**
+ * Relit tout de suite cette clé, sans vider l'écran : la valeur connue reste affichée, la fraîche
+ * la remplace à son arrivée. Pour une donnée servie « incomplète » par le serveur.
+ */
+export function revalidateKey(key) {
+  if (!key) return;
+  const entry = store.get(key);
+  if (entry) store.set(key, { ...entry, ts: 0 });
+  for (const fn of keyedListeners.get(key) || []) fn();
+}
+
 /** Même cache, hors composant. */
 export async function getOrFetch(key, fetcher, ttlMs = 5 * 60 * 1000, options = {}) {
   if (!key) return fetcher();
