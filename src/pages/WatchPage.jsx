@@ -76,10 +76,10 @@ export default function WatchPage() {
   const ensureTracking = useListsStore((s) => s.ensureTracking);
   const completeAnime = useListsStore((s) => s.completeAnime);
 
-  // Le lecteur suit le sens du téléphone ; la navigation reste en portrait.
+  // Le lecteur est toujours en paysage (les deux sens) ; la navigation reste en portrait.
   useEffect(() => {
     if (!platform.isMobile) return undefined;
-    platform.setOrientation("player");
+    platform.setOrientation("landscape");
     return () => platform.setOrientation("portrait");
   }, []);
 

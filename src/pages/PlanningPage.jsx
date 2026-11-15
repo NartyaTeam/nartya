@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { CalendarDays, Clock } from "lucide-react";
+import { BookOpen, CalendarDays, Clock, Tv } from "lucide-react";
+import SegmentedControl from "@/components/ui/SegmentedControl";
 import PageLoader from "@/components/ui/PageLoader";
 import { usePlanningStore } from "@/stores/usePlanningStore";
 import { parseReleaseDate } from "@/utils/planning";
@@ -221,13 +222,39 @@ export default function PlanningPage() {
       (planning.days || []).map((day) => ({
         ...day,
         items: (day.items || []).filter(
-          (item) => matchesContent(item, contentFilter) && matchesLanguage(item, languageFilter)
+          // La langue ne concerne que les épisodes : un scan n'a ni VF ni VOSTFR.
+          (item) =>
+            matchesContent(item, contentFilter) &&
+            (item.kind === "scan" || matchesLanguage(item, languageFilter))
         ),
       })),
     [planning.days, languageFilter, contentFilter]
   );
   const isEmpty = !loading && days.length === 0;
-  const total = useMemo(() => days.reduce((n, d) => n + (d.items?.length || 0), 0), [days]);
+  const { total, scanCount } = useMemo(() => {
+    let all = 0;
+    let scans = 0;
+    for (const day of days) {
+      for (const item of day.items || []) {
+        all += 1;
+        if (item.kind === "scan") scans += 1;
+      }
+    }
+    return { total: all, scanCount: scans };
+  }, [days]);
+  const episodeCount = total - scanCount;
+
+  // À l'ouverture, le calendrier se place sur le jour en cours.
+  const openedOnTodayRef = useRef(false);
+  useEffect(() => {
+    if (openedOnTodayRef.current || !days.length) return;
+    const section = sectionRefs.current[todayIndex()];
+    if (!section) return;
+    openedOnTodayRef.current = true;
+    setActiveDay(todayIndex());
+    lockUntilRef.current = Date.now() + 900;
+    requestAnimationFrame(() => section.scrollIntoView({ block: "start" }));
+  }, [days]);
 
   const jumpTo = (index) => {
     setActiveDay(index);
@@ -274,45 +301,47 @@ export default function PlanningPage() {
             </p>
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex gap-1 rounded-md bg-surface p-1 ring-1 ring-border" role="group" aria-label="Type de sorties">
-            {CONTENT_FILTERS.map((option) => (
-              <button
-                key={option.value}
-                onClick={() => setSetting("planningContent", option.value)}
-                aria-pressed={contentFilter === option.value}
-                className={`rounded px-3 py-1.5 text-xs font-bold transition-colors ${
-                  contentFilter === option.value
-                    ? "bg-primary text-primary-fg"
-                    : "text-muted hover:text-text"
-                }`}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
-          <div className="flex gap-1 rounded-md bg-surface p-1 ring-1 ring-border" role="group" aria-label="Langue des sorties">
-            {LANGUAGE_FILTERS.map((option) => (
-              <button
-                key={option.value}
-                onClick={() => setSetting("planningLanguage", option.value)}
-                aria-pressed={languageFilter === option.value}
-                className={`rounded px-3 py-1.5 text-xs font-bold transition-colors ${
-                  languageFilter === option.value
-                    ? "bg-primary text-primary-fg"
-                    : "text-muted hover:text-text"
-                }`}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
-          {total > 0 && (
-            <span className="text-sm font-medium text-muted">
-              {total} sortie{total > 1 ? "s" : ""} cette semaine
+      </div>
+
+      <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center">
+        <SegmentedControl
+          label="Type de sorties"
+          options={CONTENT_FILTERS}
+          value={contentFilter}
+          onChange={(value) => setSetting("planningContent", value)}
+          className="md:w-72"
+        />
+        {contentFilter !== "scans" && (
+          <SegmentedControl
+            label="Langue des sorties"
+            options={LANGUAGE_FILTERS}
+            value={languageFilter}
+            onChange={(value) => setSetting("planningLanguage", value)}
+            className="md:w-72"
+          />
+        )}
+        {total > 0 && (
+          <div className="flex items-center gap-4 rounded-lg bg-surface px-4 py-2 text-sm ring-1 ring-border md:ml-auto">
+            <span className="font-display text-2xl font-bold leading-none text-primary tabular-nums">{total}</span>
+            <span className="leading-tight text-muted">
+              sortie{total > 1 ? "s" : ""}
+              <br />
+              cette semaine
             </span>
-          )}
-        </div>
+            <span className="h-8 w-px bg-border" aria-hidden="true" />
+            <span className="ml-auto flex items-center gap-3 text-xs font-semibold text-muted md:ml-0">
+              <span className="flex items-center gap-1.5 whitespace-nowrap">
+                <Tv size={15} className="shrink-0 text-primary" />
+                {/* Les minuscules sans hampe paraissent plus basses que le centre de la ligne. */}
+                <span className="pb-px leading-4">{episodeCount} épisode{episodeCount > 1 ? "s" : ""}</span>
+              </span>
+              <span className="flex items-center gap-1.5 whitespace-nowrap">
+                <BookOpen size={15} className="shrink-0 text-primary" />
+                <span className="pb-0.5 leading-4">{scanCount} scan{scanCount > 1 ? "s" : ""}</span>
+              </span>
+            </span>
+          </div>
+        )}
       </div>
 
       {loading && days.length === 0 ? (

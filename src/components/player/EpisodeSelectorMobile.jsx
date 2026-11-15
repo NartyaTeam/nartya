@@ -251,7 +251,7 @@ export function EpisodeSelectorMobile({
 function ChoiceOverlay({ title, onClose, children }) {
   return (
     <div
-      className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/70 backdrop-blur-2xl"
+      className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/70 pb-24 pt-14 backdrop-blur-2xl"
       style={{ animation: "fade-in 0.18s ease both" }}
       onClick={(event) => {
         event.stopPropagation();
@@ -267,9 +267,9 @@ function ChoiceOverlay({ title, onClose, children }) {
       >
         <X size={27} strokeWidth={2.4} />
       </button>
-      <p className="mb-4 font-display text-xs uppercase tracking-kana text-white/40">{title}</p>
+      <p className="mb-4 shrink-0 font-display text-xs uppercase tracking-kana text-white/40">{title}</p>
       <div
-        className="flex max-h-[70%] flex-col items-center gap-1 overflow-y-auto overscroll-contain px-6"
+        className="flex min-h-0 flex-col items-center gap-1 overflow-y-auto overscroll-contain px-6 [&>*]:shrink-0"
         onClick={(event) => event.stopPropagation()}
       >
         {children}

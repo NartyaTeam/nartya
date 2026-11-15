@@ -291,14 +291,14 @@ export default function ReportsPage() {
 
   if (!profile || loading) {
     return (
-      <div className="flex h-dvh items-center justify-center">
+      <div className="flex h-full items-center justify-center md:h-dvh">
         <Loader2 size={24} className="animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="flex h-dvh flex-col px-3 pb-[calc(4.5rem+env(safe-area-inset-bottom))] pt-[calc(env(safe-area-inset-top)+4.5rem)] md:px-5 md:pb-5 md:pt-20">
+    <div className="flex h-full flex-col px-3 pb-3 pt-[calc(env(safe-area-inset-top)+1rem)] md:h-dvh md:px-5 md:pb-5 md:pt-20">
       <div className="mx-auto mb-3 flex w-full max-w-[96rem] items-end justify-between gap-4 px-1">
         <div>
           <p className="eyebrow">Support · Signalements</p>

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { consumeSearchFocus, onSearchFocusRequest } from "@/utils/searchFocus";
 import { ArrowLeft, ChevronRight, History, Loader2, Search, X } from "lucide-react";
 import { getAnimesByGenre, getGenreCards, searchAnimes } from "@/api/animeApi";
 import { getOrFetch } from "@/hooks/useCachedResource";
@@ -139,23 +140,46 @@ export default function MobileSearchPage() {
 
   const showSearch = Boolean(term.trim());
 
+  // Double appui sur « Recherche » : champ vidé et clavier ouvert, comme dans Spotify.
+  useEffect(() => {
+    const focusSearch = () => {
+      setTerm("");
+      inputRef.current?.focus();
+    };
+    if (consumeSearchFocus()) focusSearch();
+    return onSearchFocusRequest(focusSearch);
+  }, []);
+
   return (
     <div className="min-h-full pb-5">
       <div
-        className="sticky top-0 z-20 flex items-center gap-3 border-b border-border/40 bg-bg px-4 pb-3"
-        style={{ paddingTop: "calc(env(safe-area-inset-top) + 0.75rem)" }}
+        className="sticky top-0 z-20 border-b border-border/40 bg-bg px-4 pb-3"
+        style={{ paddingTop: "calc(env(safe-area-inset-top) + 1.5rem)" }}
       >
+        <h1 className="t-impact mb-3 text-4xl">Recherche</h1>
+        <div className="flex items-center gap-3">
         {genre && !showSearch ? (
           <button onClick={() => setParams({})} aria-label="Retour aux genres" className="p-2 text-text active:scale-90">
             <ArrowLeft size={21} />
           </button>
         ) : null}
-        <div className="flex h-11 min-w-0 flex-1 items-center gap-2.5 rounded-md bg-surface px-3.5 ring-2 ring-border focus-within:ring-primary/70">
+        <div className="flex h-12 min-w-0 flex-1 items-center gap-2.5 rounded-md bg-surface px-3.5 ring-2 ring-border focus-within:ring-primary/70">
           <Search size={17} className="shrink-0 text-muted" />
           <input
             ref={inputRef}
             value={term}
             onChange={(event) => setTerm(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key !== "Enter") return;
+              // Valider ferme le clavier et garde la recherche dans les récentes.
+              event.preventDefault();
+              saveRecent(term);
+              event.currentTarget.blur();
+            }}
+            enterKeyHint="search"
+            type="search"
+            autoCapitalize="none"
+            autoCorrect="off"
             placeholder={isManga ? "Rechercher un manga…" : "Rechercher un anime…"}
             className="w-full bg-transparent text-sm outline-none placeholder:text-muted"
           />
@@ -165,6 +189,7 @@ export default function MobileSearchPage() {
               <X size={16} />
             </button>
           ) : null}
+        </div>
         </div>
       </div>
 
@@ -198,7 +223,7 @@ export default function MobileSearchPage() {
           )
         ) : genre ? (
           <>
-            <h1 className="t-impact mb-4 text-3xl">{genre}</h1>
+            <h2 className="t-impact mb-4 text-3xl">{genre}</h2>
             {genreLoading ? (
               <div className="grid grid-cols-3 gap-3">
                 {Array.from({ length: 9 }, (_, index) => <div key={index} className="aspect-[2/3] animate-pulse bg-surface-2" />)}
@@ -216,7 +241,7 @@ export default function MobileSearchPage() {
             {recents.length ? (
               <section className="mb-6">
                 <div className="mb-2 flex items-center justify-between">
-                  <h1 className="section-title !text-xl">Recherches récentes</h1>
+                  <h2 className="section-title !text-xl">Recherches récentes</h2>
                   <button onClick={clearRecents} className="text-xs text-muted">Effacer</button>
                 </div>
                 {recents.map((recent) => (
@@ -233,7 +258,7 @@ export default function MobileSearchPage() {
               </p>
             ) : (
             <>
-            <h1 className="section-title mb-3 !text-xl">Parcourir par genre</h1>
+            <h2 className="section-title mb-3 !text-xl">Parcourir par genre</h2>
             {genresLoading ? (
               <div className="grid grid-cols-2 gap-3">
                 {Array.from({ length: 8 }, (_, index) => <div key={index} className="aspect-[16/10] animate-pulse bg-surface-2" />)}

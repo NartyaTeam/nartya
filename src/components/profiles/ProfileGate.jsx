@@ -123,7 +123,7 @@ export default function ProfileGate() {
             setPinFor(null);
             setPinError(null);
           }}
-          className="absolute left-6 top-14 inline-flex items-center gap-1 text-sm text-muted hover:text-text"
+          className="absolute left-6 top-[calc(env(safe-area-inset-top)+3.5rem)] inline-flex items-center gap-1 text-sm text-muted hover:text-text"
         >
           <ChevronLeft size={18} /> Retour
         </button>
@@ -247,8 +247,8 @@ export default function ProfileGate() {
 
 function Screen({ children }) {
   return (
-    <div className="app-drag relative flex h-full flex-col items-center justify-center overflow-y-auto bg-bg px-4 py-16">
-      <Fox className="absolute left-6 top-5 h-8 w-8 text-primary" />
+    <div className="app-drag relative flex h-full flex-col items-center justify-center overflow-y-auto bg-bg px-4 pb-[calc(env(safe-area-inset-bottom)+4rem)] pt-[calc(env(safe-area-inset-top)+4rem)]">
+      <Fox className="absolute left-6 top-[calc(env(safe-area-inset-top)+1.25rem)] h-8 w-8 text-primary" />
       <div className="app-no-drag flex flex-col items-center">{children}</div>
     </div>
   );

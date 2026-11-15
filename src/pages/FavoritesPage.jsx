@@ -6,6 +6,7 @@ import { toast } from "@/lib/toast";
 import FavoriteCard from "@/components/favorites/FavoriteCard";
 import SortableGrid from "@/components/lists/SortableGrid";
 import MediaTabs, { mediaOf } from "@/components/lists/MediaTabs";
+import SegmentedControl from "@/components/ui/SegmentedControl";
 
 // Les cartes gardent une largeur de 170 à 210 px.
 const GRID_CLASS =
@@ -134,9 +135,9 @@ export default function FavoritesPage() {
           />
         )}
         {hasFavorites && (
-          <div className="mt-5 flex flex-col gap-2.5 sm:flex-row sm:items-center">
-            <div className="flex h-11 flex-1 items-center gap-2.5 rounded-md bg-surface px-3.5 ring-2 ring-border transition-colors focus-within:ring-primary/70 md:h-10 md:max-w-xs">
-              <Search size={16} className="shrink-0 text-muted" />
+          <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="flex h-12 w-full items-center gap-2.5 rounded-lg bg-surface px-3.5 ring-1 ring-border transition-shadow focus-within:ring-2 focus-within:ring-primary/70 sm:max-w-sm">
+              <Search size={18} className="shrink-0 text-muted" />
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
@@ -156,28 +157,16 @@ export default function FavoritesPage() {
               )}
             </div>
 
-            <div className="flex h-11 shrink-0 items-center gap-1 self-start rounded-md bg-surface p-1 ring-2 ring-border md:h-10">
-              <button
-                type="button"
-                onClick={() => setSortMode("genre")}
-                className={`flex h-full items-center gap-1.5 rounded px-3 text-xs font-bold transition-colors ${
-                  sortMode === "genre" ? "bg-primary text-primary-fg" : "text-muted hover:text-text"
-                }`}
-              >
-                <LayoutGrid size={14} />
-                Par genre
-              </button>
-              <button
-                type="button"
-                onClick={() => setSortMode("manual")}
-                className={`flex h-full items-center gap-1.5 rounded px-3 text-xs font-bold transition-colors ${
-                  sortMode === "manual" ? "bg-primary text-primary-fg" : "text-muted hover:text-text"
-                }`}
-              >
-                <ListOrdered size={14} />
-                Mon ordre
-              </button>
-            </div>
+            <SegmentedControl
+              label="Tri des favoris"
+              options={[
+                { value: "genre", label: (<><LayoutGrid size={14} /> Par genre</>) },
+                { value: "manual", label: (<><ListOrdered size={14} /> Mon ordre</>) },
+              ]}
+              value={sortMode}
+              onChange={setSortMode}
+              className="w-full sm:w-72"
+            />
           </div>
         )}
         {sortMode === "manual" && query.trim() && (

@@ -18,7 +18,6 @@ import {
   acquireWakeLock,
   releaseWakeLock,
   setupMobilePlayerControls,
-  setupOrientationLock,
   setupPictureInPicture,
 } from "@/utils/mobilePlayer";
 import Anime4kWarningModal from "@/components/player/Anime4kWarningModal";
@@ -321,7 +320,6 @@ export default function VideoPlayer({
     if (platform.isMobile) {
       art._mobileControlsDispose = setupMobilePlayerControls(art);
       art._pipDispose = setupPictureInPicture(art);
-      art._orientationDispose = setupOrientationLock(art);
     }
 
     // Jamais au-delà de (durée − 1 s).
@@ -531,8 +529,6 @@ export default function VideoPlayer({
           art._mobileControlsDispose = null;
           art._pipDispose?.();
           art._pipDispose = null;
-          art._orientationDispose?.();
-          art._orientationDispose = null;
         }
         teardownAudioBoost(art);
         art._pauseHideDispose?.();

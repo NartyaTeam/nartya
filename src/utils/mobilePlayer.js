@@ -106,11 +106,11 @@ function injectHudStyles() {
     // Suit la barre de contrôle d'ArtPlayer. z-index < 50 : sous l'overlay du sélecteur d'épisodes.
     ".nartya-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:flex;align-items:center;gap:clamp(20px,8vw,40px);z-index:45;opacity:0;pointer-events:none;transition:opacity .25s ease}" +
     ".art-video-player.art-hover .nartya-center,.art-video-player.art-control-show .nartya-center{opacity:1;pointer-events:auto}" +
-    ".nartya-center button{position:relative;display:flex;align-items:center;justify-content:center;color:#fff;background:rgba(0,0,0,.4);border:none;border-radius:999px;-webkit-tap-highlight-color:transparent;filter:drop-shadow(0 2px 8px rgba(0,0,0,.5))}" +
+    ".nartya-center button{position:relative;display:flex;align-items:center;justify-content:center;color:#fff;background:none;border:none;padding:0;-webkit-tap-highlight-color:transparent;filter:drop-shadow(0 1px 3px rgba(0,0,0,.9)) drop-shadow(0 2px 10px rgba(0,0,0,.6))}" +
     ".nartya-center button:active{transform:scale(0.92)}" +
-    ".nartya-center-play{width:60px;height:60px}.nartya-center-play svg{width:26px;height:26px}" +
-    ".nartya-center-seek{width:44px;height:44px}.nartya-center-seek svg{width:24px;height:24px}" +
-    ".nartya-center-seek-label{position:absolute;top:50%;left:50%;transform:translate(-50%,-52%);font:700 10px/1 system-ui,sans-serif}";
+    ".nartya-center-play{width:72px;height:72px}.nartya-center-play svg{width:46px;height:46px}" +
+    ".nartya-center-seek{width:56px;height:56px}.nartya-center-seek svg{width:38px;height:38px}" +
+    ".nartya-center-seek-label{position:absolute;top:50%;left:50%;transform:translate(-50%,-52%);font:700 12px/1 system-ui,sans-serif}";
   document.head.appendChild(style);
 }
 
@@ -550,45 +550,4 @@ export function setupPictureInPicture(art) {
   }
 
   return () => disposers.forEach((dispose) => dispose());
-}
-
-const LOCK_ICON =
-  '<svg viewBox="0 0 24 24" style="fill:none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
-const UNLOCK_ICON =
-  '<svg viewBox="0 0 24 24" style="fill:none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.9-1"/></svg>';
-
-/**
- * Android : bouton cadenas qui fige l'écran dans son sens actuel. Le lecteur suit sinon le
- * capteur, et allongé sur le côté le téléphone se croit en portrait. En quittant le lecteur,
- * WatchPage remet le portrait ; un lecteur recréé sur la même page repart déverrouillé.
- */
-let orientationLocked = false;
-
-export function setupOrientationLock(art) {
-  if (platform.os !== "android" || !art?.controls) return () => {};
-  if (orientationLocked) platform.setOrientation("player");
-  orientationLocked = false;
-  let locked = false;
-  try {
-    art.controls.add({
-      name: "orientation-lock",
-      position: "right",
-      index: 39,
-      html: UNLOCK_ICON,
-      tooltip: "Verrouiller la rotation",
-      click: (_, event) => {
-        locked = !locked;
-        orientationLocked = locked;
-        platform.setOrientation(locked ? "locked" : "player");
-        const button = event?.currentTarget || art.controls["orientation-lock"];
-        if (button) button.innerHTML = locked ? LOCK_ICON : UNLOCK_ICON;
-        try {
-          art.notice.show = locked ? "Rotation verrouillée" : "Rotation libre";
-        } catch (_) {}
-      },
-    });
-  } catch (_) {
-    return () => {};
-  }
-  return () => {};
 }

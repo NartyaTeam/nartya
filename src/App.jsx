@@ -7,6 +7,7 @@ import BanScreen from "@/components/BanScreen";
 import ReviewPrompt from "@/components/ReviewPrompt";
 import { useDeviceStore } from "@/stores/useDeviceStore";
 import UpdateRequiredScreen from "@/components/UpdateRequiredScreen";
+import { useListsStore } from "@/stores/useListsStore";
 import { useFavoritesStore } from "@/stores/useFavoritesStore";
 import { revalidateAll } from "@/hooks/useCachedResource";
 import { useClientHeartbeat } from "@/hooks/useClientHeartbeat";
@@ -225,7 +226,11 @@ export default function App() {
 
   useEffect(() => {
     const profileOpen = profileStatus === "ready" || profileStatus === "idle";
-    if (session?.user?.id && !session.user.is_anonymous && profileOpen) ensureFavoritesLoaded();
+    if (session?.user?.id && !session.user.is_anonymous && profileOpen) {
+      ensureFavoritesLoaded();
+      // Les cartes affichent le statut de liste de chaque anime.
+      useListsStore.getState().ensureLoaded();
+    }
   }, [session?.user?.id, session?.user?.is_anonymous, profileStatus, ensureFavoritesLoaded]);
 
   if (loading) {

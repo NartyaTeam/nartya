@@ -28,6 +28,16 @@
     -webkit-user-drag: none;
     user-select: none;
   }
+  /* `type="search"` ajoute sa propre croix d'effacement : les champs ont déjà la leur. */
+  input[type="search"] {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  input[type="search"]::-webkit-search-cancel-button,
+  input[type="search"]::-webkit-search-decoration {
+    -webkit-appearance: none;
+    display: none;
+  }
   ::selection {
     background: rgb(var(--primary) / 0.85);
     color: rgb(var(--primary-fg));
@@ -45,6 +55,17 @@
   }
   ::-webkit-scrollbar-thumb:hover {
     background: rgb(var(--primary) / 0.6);
+  }
+  /* Écrans tactiles : pas de barre de défilement, elle décale la page et n'apporte rien au doigt. */
+  @media (pointer: coarse) {
+    * {
+      scrollbar-width: none;
+    }
+    ::-webkit-scrollbar {
+      display: none;
+      width: 0;
+      height: 0;
+    }
   }
 }
 
@@ -139,8 +160,6 @@
       overflow-x: auto;
       padding-inline: 0;
       overscroll-behavior-x: contain;
-      scroll-padding-inline: 1rem;
-      scroll-snap-type: x proximity;
       scrollbar-width: none;
       touch-action: pan-x pan-y pinch-zoom;
       -webkit-overflow-scrolling: touch;
@@ -152,8 +171,10 @@
       transform: none !important;
       padding-inline: 1rem;
     }
-    .mobile-shell [data-carousel-viewport]:not([data-carousel-hero]) [data-carousel-card] {
-      scroll-snap-align: start;
+    /* Défilement libre, sans accroche : un point d'accroche stoppait l'élan du geste, et promouvoir
+       la piste en couche au toucher faisait saccader le début du glissement. */
+    .mobile-shell [data-carousel-viewport]:not([data-carousel-hero]):active [data-carousel-track] {
+      will-change: auto;
     }
   }
   .eyebrow {

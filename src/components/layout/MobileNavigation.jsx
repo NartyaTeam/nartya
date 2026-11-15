@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { requestSearchFocus } from "@/utils/searchFocus";
 import { NavLink, useLocation } from "react-router-dom";
 import {
   BookOpen,
@@ -39,13 +40,27 @@ function routeIsActive(pathname, to) {
   return pathname === to;
 }
 
-function BottomItem({ to, icon: Icon, label }) {
+const DOUBLE_TAP_MS = 350;
+
+function BottomItem({ to, icon: Icon, label, onDoubleTap }) {
   const { pathname } = useLocation();
   const active = routeIsActive(pathname, to);
+  const lastTapRef = useRef(0);
+  const handleClick = () => {
+    if (!onDoubleTap) return;
+    const now = Date.now();
+    if (now - lastTapRef.current < DOUBLE_TAP_MS) {
+      lastTapRef.current = 0;
+      onDoubleTap();
+    } else {
+      lastTapRef.current = now;
+    }
+  };
   return (
     <NavLink
       to={to}
       aria-label={label}
+      onClick={handleClick}
       className={`relative flex min-h-14 flex-1 flex-col items-center justify-center gap-1 px-1 text-[0.62rem] font-medium transition-colors active:scale-95 ${
         active ? "font-bold text-primary" : "text-muted"
       }`}
@@ -177,7 +192,7 @@ export default function MobileNavigation({ searchPath = "/recherche", forceVisib
         className={`fixed inset-x-0 bottom-0 z-[70] flex border-t-2 border-border bg-bg/95 px-1 pb-[env(safe-area-inset-bottom)] shadow-[0_-12px_35px_rgba(0,0,0,0.45)] backdrop-blur-xl ${forceVisible ? "" : "md:hidden"}`}
       >
         {online && <BottomItem to="/" icon={Home} label="Accueil" />}
-        {online && <BottomItem to={searchPath} icon={Search} label="Recherche" />}
+        {online && <BottomItem to={searchPath} icon={Search} label="Recherche" onDoubleTap={requestSearchFocus} />}
         {session ? (
           <ProfileItem user={profile} />
         ) : (

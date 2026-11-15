@@ -1,10 +1,19 @@
 import { memo, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { BookOpen, Play, Star, Heart } from "lucide-react";
+import { Ban, Bookmark, BookOpen, Check, Play, Star, Heart } from "lucide-react";
+import { useListsStore } from "@/stores/useListsStore";
 import { useFavoritesStore } from "@/stores/useFavoritesStore";
 import { useDisplayTitle } from "@/stores/useTitlesStore";
 import AnimeContextMenu from "@/components/anime/AnimeContextMenu";
 import { platform } from "@/platform";
+
+// Statut de la liste, rappelé sur la carte : sans lui, l'ajout ne se voit nulle part.
+const LIST_STATUS_BADGE = {
+  watching: { label: "En cours", Icon: Play, iconClassName: "fill-primary text-primary" },
+  planned: { label: "À voir", Icon: Bookmark, iconClassName: "text-sky-400" },
+  completed: { label: "Terminé", Icon: Check, iconClassName: "text-emerald-400" },
+  dropped: { label: "Abandonné", Icon: Ban, iconClassName: "text-red-400" },
+};
 
 const LONG_PRESS_DELAY_MS = 450;
 const LONG_PRESS_MOVE_TOLERANCE_PX = 12;
@@ -20,6 +29,8 @@ function AnimeCard({
 }) {
   const navigate = useNavigate();
   const isFav = useFavoritesStore((s) => s.slugs.has(anime.slug));
+  const listStatus = useListsStore((s) => (openScans ? null : s.statuses.get(anime.slug) || null));
+  const statusBadge = LIST_STATUS_BADGE[listStatus] || null;
   const title = useDisplayTitle()(anime.slug, anime.title, anime);
 
   // `complete` couvre l'image déjà en cache, pour laquelle onLoad ne se déclenche pas.
@@ -151,13 +162,26 @@ function AnimeCard({
           </span>
         )}
 
-        {showFavorite && isFav && (
-          <span
-            title="Dans tes favoris"
-            className="absolute bottom-1.5 left-1.5 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-bg/90 ring-2 ring-primary/60"
-          >
-            <Heart size={12} className="fill-primary text-primary" />
-          </span>
+        {((showFavorite && isFav) || statusBadge) && (
+          <div className="absolute inset-x-1.5 bottom-1.5 z-10 flex items-center gap-1">
+            {showFavorite && isFav && (
+              <span
+                title="Dans tes favoris"
+                className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-bg/90 ring-2 ring-primary/60"
+              >
+                <Heart size={12} className="fill-primary text-primary" />
+              </span>
+            )}
+            {statusBadge && (
+              <span
+                title={statusBadge.label}
+                className="ml-auto inline-flex min-w-0 items-center gap-1 rounded bg-bg/90 px-1.5 py-0.5 text-[0.68rem] font-bold ring-1 ring-border"
+              >
+                <statusBadge.Icon size={11} strokeWidth={3} className={`shrink-0 ${statusBadge.iconClassName}`} />
+                <span className="truncate">{statusBadge.label}</span>
+              </span>
+            )}
+          </div>
         )}
       </div>
 
