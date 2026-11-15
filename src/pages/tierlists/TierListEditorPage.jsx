@@ -21,7 +21,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Eye, EyeOff, GripVertical, Inbox, Loader2, Palette, Pencil, Plus, Save, Trash2, X } from "lucide-react";
+import { ChevronDown, Eye, EyeOff, GripVertical, Inbox, LayoutTemplate, Loader2, Palette, Plus, Save, Trash2, X } from "lucide-react";
 import { toast } from "@/lib/toast";
 import { getTierList, saveTierList, tierListErrorMessage } from "@/api/tierLists";
 import {
@@ -179,6 +179,55 @@ function ColorPopover({ color, onPick, onClose }) {
   );
 }
 
+/** Menu des modèles de rangées ; se ferme au clic à côté. */
+function TemplateMenu({ onPick }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => {
+    if (!open) return undefined;
+    const away = (e) => !ref.current?.contains(e.target) && setOpen(false);
+    const onKey = (e) => e.key === "Escape" && setOpen(false);
+    document.addEventListener("pointerdown", away);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", away);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="flex h-10 items-center gap-2 rounded-md bg-surface px-3.5 text-sm font-bold text-text ring-2 ring-border transition-colors hover:ring-primary/60"
+      >
+        <LayoutTemplate size={16} /> Modèles <ChevronDown size={14} className="text-muted" />
+      </button>
+      {open && (
+        <div className="absolute right-0 top-full z-30 mt-1.5 w-56 rounded-md bg-surface p-1 shadow-2xl ring-2 ring-border">
+          {TEMPLATES.map((template) => (
+            <button
+              key={template.id}
+              type="button"
+              onClick={() => {
+                onPick(template);
+                setOpen(false);
+              }}
+              className="flex h-9 w-full items-center rounded px-3 text-left text-sm font-bold text-muted hover:bg-white/[0.06] hover:text-text"
+            >
+              {template.name}
+            </button>
+          ))}
+          <p className="px-3 pb-1.5 pt-1 text-[0.7rem] leading-snug text-muted">
+            Remet les rangées à zéro, les animes sont conservés.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function EditableRow({ tier, canDelete, canAdd, highlight, onChange, onInsertBelow, onDelete, onTap }) {
   const [picking, setPicking] = useState(false);
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({
@@ -282,6 +331,7 @@ export default function TierListEditorPage() {
   const [overCid, setOverCid] = useState(null);
   const [menuItem, setMenuItem] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [publishing, setPublishing] = useState(false);
 
   useEffect(() => {
     if (!id && !fromId) return undefined;
@@ -497,72 +547,31 @@ export default function TierListEditorPage() {
   }
 
   return (
-    <div className="animate-fade-in px-4 pb-24 pt-[calc(env(safe-area-inset-top)+4.5rem)] sm:px-8 md:py-10">
-      <header className="mb-6 grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
-        <div className="min-w-0 max-w-2xl">
-          <div className="mb-2 flex items-center gap-2">
-            <span className="h-px w-6 bg-primary" />
-            <p className="text-[0.65rem] font-semibold uppercase tracking-[0.28em] text-primary/80">
-              {id ? "Modifier la tier list" : "Nouvelle tier list"}
-            </p>
-          </div>
-          <label className="block">
-            <span className="sr-only">Titre</span>
-            <span className="flex items-center gap-3 rounded-md bg-surface px-3 ring-2 ring-border transition-shadow focus-within:ring-primary/70">
-              <input
-                value={title}
-                maxLength={80}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Titre de ta tier list"
-                aria-label="Titre"
-                className="t-impact min-w-0 flex-1 bg-transparent py-2 text-2xl outline-none placeholder:text-muted/40 md:text-3xl"
-              />
-              <Pencil size={16} className="shrink-0 text-muted" />
-            </span>
-          </label>
-          <textarea
-            value={description}
-            maxLength={500}
-            rows={2}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Description (facultatif) : explique ton classement en quelques mots"
-            aria-label="Description"
-            className="mt-2 w-full resize-none rounded-md bg-surface px-3 py-2 text-sm outline-none ring-2 ring-border placeholder:text-muted focus:ring-primary/70"
-          />
+    <div className="animate-fade-in px-4 pb-24 pt-[calc(env(safe-area-inset-top)+1.5rem)] sm:px-8 md:py-8">
+      <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="t-impact truncate text-3xl md:text-4xl">
+            {title.trim() || (id ? "Modifier la tier list" : "Nouvelle tier list")}
+          </h1>
+          <p className="mt-1 text-xs tabular-nums text-muted">
+            {ranked} classé{ranked > 1 ? "s" : ""} · {total}/{MAX_ITEMS} animes
+          </p>
         </div>
-
-        <div className="flex flex-wrap items-center gap-2 lg:flex-col lg:items-stretch lg:pt-6">
-          <SegmentedControl
-            label="Visibilité"
-            options={[
-              { value: "public", label: "Publique", Icon: Eye },
-              { value: "draft", label: "Brouillon", Icon: EyeOff },
-            ]}
-            value={isPublic ? "public" : "draft"}
-            onChange={(value) => setIsPublic(value === "public")}
-            className="lg:w-full"
-          />
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={save}
-              disabled={saving}
-              className="flex h-10 flex-1 items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-bold text-primary-fg transition-[filter] hover:brightness-110 active:scale-95 disabled:opacity-60"
-            >
-              {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-              {isPublic ? (id ? "Enregistrer" : "Publier") : "Enregistrer le brouillon"}
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate(-1)}
-              className="flex h-10 items-center rounded-md px-3 text-sm font-bold text-muted hover:text-text"
-            >
-              Annuler
-            </button>
-          </div>
-          <span className="text-xs tabular-nums text-muted lg:text-right">
-            {ranked} classé{ranked > 1 ? "s" : ""} · {total}/{MAX_ITEMS}
-          </span>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="flex h-10 items-center rounded-md px-3 text-sm font-bold text-muted hover:text-text"
+          >
+            Annuler
+          </button>
+          <button
+            type="button"
+            onClick={() => setPublishing(true)}
+            className="flex h-10 items-center gap-2 rounded-md bg-primary px-4 text-sm font-bold text-primary-fg transition-[filter] hover:brightness-110 active:scale-95"
+          >
+            <Save size={16} /> {id ? "Enregistrer" : "Publier"}
+          </button>
         </div>
       </header>
 
@@ -574,85 +583,68 @@ export default function TierListEditorPage() {
         onDragEnd={onDragEnd}
         onDragCancel={endDrag}
       >
-        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_24rem]">
-          <div className="min-w-0 space-y-4">
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-              <div className="flex flex-wrap items-center gap-1.5">
-                <span className="text-xs font-bold uppercase tracking-wider text-muted">Modèle</span>
-                {TEMPLATES.map((template) => (
-                  <button
-                    key={template.id}
-                    type="button"
-                    onClick={() => applyTemplate(template)}
-                    className="h-8 rounded-md bg-surface px-3 text-xs font-bold text-muted ring-2 ring-border transition-colors hover:text-text hover:ring-primary/60"
-                  >
-                    {template.name}
-                  </button>
-                ))}
-              </div>
-              <p className="text-xs text-muted">
-                Clique sur le texte d'une rangée pour le changer. Glisse les affiches et les rangées (
-                <GripVertical size={12} className="inline align-[-2px]" />
-                ).
-              </p>
-            </div>
+        <AnimePicker has={has} onAdd={addItems} />
 
-            <div className="overflow-visible rounded-md bg-black ring-2 ring-border">
-              <SortableContext items={board.tiers.map((t) => ROW + t.id)} strategy={verticalListSortingStrategy}>
-                {board.tiers.map((tier) => (
-                  <EditableRow
-                    key={tier.id}
-                    tier={tier}
-                    canDelete={board.tiers.length > 1}
-                    canAdd={board.tiers.length < MAX_TIERS}
-                    highlight={active?.type === "pick" && overCid === tier.id}
-                    onChange={(patch) => updateTier(tier.id, patch)}
-                    onInsertBelow={() => insertTier(tier.id)}
-                    onDelete={() => deleteTier(tier.id)}
-                    onTap={setMenuItem}
-                  />
-                ))}
-              </SortableContext>
-            </div>
-            {board.tiers.length < MAX_TIERS && (
-              <button
-                type="button"
-                onClick={() =>
-                  setBoard((b) => ({ ...b, tiers: [...b.tiers, makeTier("", TIER_COLORS[b.tiers.length % TIER_COLORS.length])] }))
-                }
-                className="flex h-10 items-center gap-2 rounded-md bg-surface px-3.5 text-sm font-bold text-text ring-2 ring-border transition-colors hover:text-primary hover:ring-primary/60"
-              >
-                <Plus size={16} /> Ajouter une rangée
-              </button>
-            )}
-
-            <section>
-              <h2 className="mb-2 flex items-center gap-2 text-sm font-bold">
-                <Inbox size={16} className="text-primary" /> Non classés
-                <span className="text-xs font-normal text-muted">— glisse-les dans une rangée</span>
-              </h2>
-              <div className="flex min-h-[7rem] rounded-md border-2 border-dashed border-border">
-                <DropZone
-                  id={POOL}
-                  items={board.pool}
-                  onTap={setMenuItem}
-                  highlight={active?.type === "pick" && overCid === POOL}
-                  empty={
-                    <p className="m-auto px-4 py-6 text-center text-xs text-muted">
-                      Les animes ajoutés d'un clic arrivent ici.
-                    </p>
+        <div className="mt-6 min-w-0 space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-xs text-muted">
+              Clique sur le texte d'une rangée pour le changer. Glisse les affiches et les rangées (
+              <GripVertical size={12} className="inline align-[-2px]" />
+              ).
+            </p>
+            <div className="flex items-center gap-2">
+              {board.tiers.length < MAX_TIERS && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setBoard((b) => ({ ...b, tiers: [...b.tiers, makeTier("", TIER_COLORS[b.tiers.length % TIER_COLORS.length])] }))
                   }
-                />
-              </div>
-            </section>
+                  className="flex h-10 items-center gap-2 rounded-md bg-surface px-3.5 text-sm font-bold text-text ring-2 ring-border transition-colors hover:text-primary hover:ring-primary/60"
+                >
+                  <Plus size={16} /> Rangée
+                </button>
+              )}
+              <TemplateMenu onPick={applyTemplate} />
+            </div>
           </div>
 
-          <aside className="xl:sticky xl:top-20 xl:self-start">
+          <div className="overflow-visible rounded-md bg-black ring-2 ring-border">
+            <SortableContext items={board.tiers.map((t) => ROW + t.id)} strategy={verticalListSortingStrategy}>
+              {board.tiers.map((tier) => (
+                <EditableRow
+                  key={tier.id}
+                  tier={tier}
+                  canDelete={board.tiers.length > 1}
+                  canAdd={board.tiers.length < MAX_TIERS}
+                  highlight={active?.type === "pick" && overCid === tier.id}
+                  onChange={(patch) => updateTier(tier.id, patch)}
+                  onInsertBelow={() => insertTier(tier.id)}
+                  onDelete={() => deleteTier(tier.id)}
+                  onTap={setMenuItem}
+                />
+              ))}
+            </SortableContext>
+          </div>
+
+          <section>
             <h2 className="mb-2 flex items-center gap-2 text-sm font-bold">
-              <Plus size={16} className="text-primary" /> Ajouter des animes
+              <Inbox size={16} className="text-primary" /> Non classés
+              <span className="text-xs font-normal text-muted">— glisse-les dans une rangée</span>
             </h2>
-            <AnimePicker has={has} onAdd={addItems} />
-          </aside>
+            <div className="flex min-h-[7rem] rounded-md border-2 border-dashed border-border">
+              <DropZone
+                id={POOL}
+                items={board.pool}
+                onTap={setMenuItem}
+                highlight={active?.type === "pick" && overCid === POOL}
+                empty={
+                  <p className="m-auto px-4 py-6 text-center text-xs text-muted">
+                    Les animes ajoutés d'un clic arrivent ici.
+                  </p>
+                }
+              />
+            </div>
+          </section>
         </div>
 
         {createPortal(
@@ -670,6 +662,69 @@ export default function TierListEditorPage() {
           document.body
         )}
       </DndContext>
+
+      {publishing && (
+        <Modal title={id ? "Enregistrer la tier list" : "Publier la tier list"} onClose={() => !saving && setPublishing(false)}>
+          <div className="space-y-4">
+            <label className="block">
+              <span className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-muted">Titre</span>
+              <input
+                value={title}
+                maxLength={80}
+                autoFocus
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Ex. : Mes animes de 2026"
+                className="h-11 w-full rounded-md bg-bg/60 px-3 text-sm font-bold outline-none ring-2 ring-border placeholder:font-normal placeholder:text-muted focus:ring-primary/70"
+              />
+            </label>
+            <label className="block">
+              <span className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-muted">
+                Description <span className="font-medium normal-case tracking-normal text-muted/60">(facultatif)</span>
+              </span>
+              <textarea
+                value={description}
+                maxLength={500}
+                rows={3}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Explique ton classement en quelques mots"
+                className="w-full resize-none rounded-md bg-bg/60 px-3 py-2 text-sm outline-none ring-2 ring-border placeholder:text-muted focus:ring-primary/70"
+              />
+            </label>
+            <div>
+              <span className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-muted">Visibilité</span>
+              <SegmentedControl
+                label="Visibilité"
+                options={[
+                  { value: "public", label: "Publique", Icon: Eye },
+                  { value: "draft", label: "Brouillon", Icon: EyeOff },
+                ]}
+                value={isPublic ? "public" : "draft"}
+                onChange={(value) => setIsPublic(value === "public")}
+                className="w-full"
+              />
+            </div>
+            <div className="flex justify-end gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setPublishing(false)}
+                disabled={saving}
+                className="flex h-10 items-center rounded-md px-3 text-sm font-bold text-muted hover:text-text"
+              >
+                Retour
+              </button>
+              <button
+                type="button"
+                onClick={save}
+                disabled={saving}
+                className="flex h-10 items-center gap-2 rounded-md bg-primary px-4 text-sm font-bold text-primary-fg transition-[filter] hover:brightness-110 disabled:opacity-60"
+              >
+                {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                {isPublic ? (id ? "Enregistrer" : "Publier") : "Enregistrer le brouillon"}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
 
       {menuItem && (
         <Modal title={menuItem.title} onClose={() => setMenuItem(null)}>

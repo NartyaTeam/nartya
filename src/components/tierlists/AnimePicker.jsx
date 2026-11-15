@@ -11,6 +11,7 @@ import { mediaOf } from "@/components/lists/MediaTabs";
 import { useHasAccount } from "@/lib/guest";
 import { useDisplayTitle } from "@/stores/useTitlesStore";
 import { toItem } from "@/lib/tierLists";
+import SegmentedControl from "@/components/ui/SegmentedControl";
 import { TierPoster } from "./TierBoard";
 
 const SOURCES = [
@@ -35,7 +36,7 @@ function PickPoster({ item, added, onAdd }) {
       disabled={added}
       onClick={() => onAdd([item])}
       style={{ touchAction: added ? undefined : "none", opacity: isDragging ? 0.35 : 1 }}
-      className="relative cursor-grab transition-transform enabled:hover:scale-[1.04] disabled:cursor-default active:cursor-grabbing"
+      className="relative shrink-0 cursor-grab transition-transform enabled:hover:scale-[1.04] disabled:cursor-default active:cursor-grabbing"
       {...attributes}
       {...listeners}
     >
@@ -103,40 +104,68 @@ export default function AnimePicker({ has, onAdd }) {
 
   const fresh = useMemo(() => results.filter((r) => !has(r.slug)), [results, has]);
   const label = (item) => ({ ...item, title: displayTitle(item.slug, item.title) });
+  const sources = SOURCES.filter((src) => !src.account || hasAccount).map(({ value, label: text, Icon }) => ({
+    value,
+    label: text,
+    Icon,
+  }));
+
+  let hint = null;
+  if (loading && !results.length) hint = <Loader2 size={18} className="animate-spin" />;
+  else if (source === "search" && !query.trim()) hint = "Tape le nom d'un anime, en français, anglais ou japonais.";
+  else if (!results.length) hint = "Aucun résultat.";
 
   return (
-    <div className="rounded-md bg-surface/80 p-3 ring-2 ring-border">
-      <div className="flex flex-wrap gap-1.5 pb-2">
-        {SOURCES.filter((s) => !s.account || hasAccount).map(({ value, label: text, Icon }) => (
-          <button key={value} type="button" onClick={() => setSource(value)} className={`${chip(source === value)} flex items-center gap-1.5`}>
-            <Icon size={13} /> {text}
-          </button>
-        ))}
+    <section aria-label="Ajouter des animes" className="rounded-md bg-surface ring-2 ring-border">
+      <div className="flex flex-wrap items-center gap-2 p-3 pb-2">
+        <div className="no-scrollbar max-w-full overflow-x-auto">
+          <SegmentedControl label="Source des animes" options={sources} value={source} onChange={setSource} />
+        </div>
+
+        {source === "search" && (
+          <div className="flex h-11 min-w-[12rem] flex-1 items-center gap-2.5 rounded-md bg-bg/60 px-3 ring-2 ring-border focus-within:ring-primary/70 md:h-10">
+            <Search size={15} className="shrink-0 text-muted" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Chercher un anime à ajouter…"
+              aria-label="Chercher un anime à ajouter"
+              className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted"
+            />
+          </div>
+        )}
+        {source === "lists" && (
+          <div className="no-scrollbar max-w-full overflow-x-auto">
+            <SegmentedControl
+              label="Statut"
+              size="sm"
+              options={LIST_STATUSES.map((st) => ({ value: st.key, label: st.label }))}
+              value={status}
+              onChange={setStatus}
+            />
+          </div>
+        )}
+
+        <div className="ml-auto flex items-center gap-3">
+          {!loading && results.length > 0 && (
+            <span className="hidden text-xs tabular-nums text-muted sm:inline">
+              {results.length} anime{results.length > 1 ? "s" : ""}
+            </span>
+          )}
+          {fresh.length > 1 && !loading && (
+            <button
+              type="button"
+              onClick={() => onAdd(fresh.map(label))}
+              className="flex h-9 shrink-0 items-center gap-1.5 rounded-md bg-primary/15 px-3 text-xs font-bold text-primary transition-colors hover:bg-primary/25"
+            >
+              <Plus size={14} /> Tout ajouter ({fresh.length})
+            </button>
+          )}
+        </div>
       </div>
 
-      {source === "search" && (
-        <div className="mb-2 flex h-10 items-center gap-2.5 rounded-md bg-bg/60 px-3 ring-2 ring-border focus-within:ring-primary/70">
-          <Search size={15} className="shrink-0 text-muted" />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Chercher un anime à ajouter…"
-            aria-label="Chercher un anime à ajouter"
-            className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted"
-          />
-        </div>
-      )}
-      {source === "lists" && (
-        <div className="no-scrollbar mb-2 flex gap-1.5 overflow-x-auto">
-          {LIST_STATUSES.map((s) => (
-            <button key={s.key} type="button" onClick={() => setStatus(s.key)} className={chip(status === s.key)}>
-              {s.label}
-            </button>
-          ))}
-        </div>
-      )}
       {source === "genre" && (
-        <div className="no-scrollbar mb-2 flex gap-1.5 overflow-x-auto">
+        <div className="no-scrollbar flex gap-1.5 overflow-x-auto px-3 pb-2">
           {MAIN_GENRES.map((g) => (
             <button key={g} type="button" onClick={() => setGenre(g)} className={chip(genre === g)}>
               {g}
@@ -145,38 +174,20 @@ export default function AnimePicker({ has, onAdd }) {
         </div>
       )}
 
-      <div className="mb-2 flex min-h-8 items-center justify-between gap-2">
-        <p className="text-xs text-muted">
-          {loading
-            ? "Chargement…"
-            : source === "search" && !query.trim()
-              ? "Tape le nom d'un anime, en français, anglais ou japonais."
-              : `${results.length} anime${results.length > 1 ? "s" : ""} : glisse-les dans une rangée, ou clique pour les mettre de côté`}
-        </p>
-        {fresh.length > 1 && !loading && (
-          <button
-            type="button"
-            onClick={() => onAdd(fresh.map(label))}
-            className="flex h-8 shrink-0 items-center gap-1 rounded-md bg-primary/15 px-2.5 text-xs font-bold text-primary hover:bg-primary/25"
-          >
-            <Plus size={13} /> Tout ajouter ({fresh.length})
-          </button>
-        )}
-      </div>
-
-      <div className="max-h-[22rem] overflow-y-auto">
-        {loading && !results.length ? (
-          <div className="flex justify-center py-8 text-muted">
-            <Loader2 className="animate-spin" />
-          </div>
+      <div className="border-t border-border px-3 py-3">
+        {hint ? (
+          <p className="flex min-h-[7.5rem] items-center justify-center text-center text-xs text-muted">{hint}</p>
         ) : (
-          <div className="flex flex-wrap gap-1">
+          <div className="flex gap-1 overflow-x-auto pb-1">
             {results.map((item) => (
               <PickPoster key={item.slug} item={label(item)} added={has(item.slug)} onAdd={onAdd} />
             ))}
           </div>
         )}
+        {!hint && (
+          <p className="mt-1.5 text-[0.7rem] text-muted">Glisse un anime dans une rangée, ou clique pour le mettre de côté.</p>
+        )}
       </div>
-    </div>
+    </section>
   );
 }
