@@ -218,7 +218,7 @@ export default function TierListPage() {
 
       {list.isPublic &&
         (wide ? (
-          <aside className="sticky top-20 flex h-[calc(100dvh-6.5rem)] min-h-[24rem] flex-col overflow-hidden rounded-lg bg-[#121212] ring-2 ring-border">
+          <aside className="sticky top-20 flex h-[calc(100dvh-6.5rem)] min-h-[24rem] flex-col overflow-hidden rounded-md bg-surface ring-2 ring-border">
             <TierListChat target={tierListTarget(list.id)} docked />
           </aside>
         ) : (

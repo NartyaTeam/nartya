@@ -34,6 +34,7 @@ import {
   readableTextColor,
   tiersFromTemplate,
 } from "@/lib/tierLists";
+import SegmentedControl from "@/components/ui/SegmentedControl";
 import AnimePicker from "@/components/tierlists/AnimePicker";
 import { TierPoster } from "@/components/tierlists/TierBoard";
 
@@ -161,11 +162,11 @@ function ColorPopover({ color, onPick, onClose }) {
           aria-label={c}
           onClick={() => onPick(c)}
           style={{ background: c }}
-          className={`h-7 w-7 rounded-full ring-2 ring-offset-2 ring-offset-surface ${color === c ? "ring-text" : "ring-transparent"}`}
+          className={`h-7 w-7 rounded ring-2 ring-offset-2 ring-offset-surface ${color === c ? "ring-text" : "ring-transparent"}`}
         />
       ))}
-      <label className="relative col-span-6 mt-1 flex h-8 cursor-pointer items-center justify-center gap-1.5 rounded-md bg-white/[0.06] text-xs font-bold text-muted ring-1 ring-border hover:text-text">
-        <span className="h-4 w-4 rounded-full ring-1 ring-white/30" style={{ background: color }} />
+      <label className="relative col-span-6 mt-1 flex h-8 cursor-pointer items-center justify-center gap-1.5 rounded-md bg-surface-2 text-xs font-bold text-muted hover:text-text">
+        <span className="h-4 w-4 rounded ring-1 ring-white/30" style={{ background: color }} />
         Couleur personnalisée
         <input
           type="color"
@@ -497,76 +498,69 @@ export default function TierListEditorPage() {
 
   return (
     <div className="animate-fade-in px-4 pb-24 pt-[calc(env(safe-area-inset-top)+4.5rem)] sm:px-8 md:py-10">
-      <header className="mb-5">
-        <div className="mb-2 flex items-center gap-2">
-          <span className="h-px w-6 bg-primary" />
-          <p className="text-[0.65rem] font-semibold uppercase tracking-[0.28em] text-primary/80">
-            {id ? "Modifier la tier list" : "Nouvelle tier list"}
-          </p>
-        </div>
-        {/* Deux vrais champs, chacun avec son libellé : un titre sans cadre se lisait comme un
-            titre déjà écrit, et l'on tapait le titre dans la description. */}
-        <label className="block max-w-2xl">
-          <span className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-muted">Titre</span>
-          <span className="flex items-center gap-3 rounded-md bg-surface px-3 ring-2 ring-border transition-shadow focus-within:ring-primary/70">
-            <input
-              value={title}
-              maxLength={80}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Ex. : Mes animes de 2026"
-              className="t-impact min-w-0 flex-1 bg-transparent py-2 text-2xl outline-none placeholder:text-muted/40 md:text-3xl"
-            />
-            <Pencil size={16} className="shrink-0 text-muted" />
-          </span>
-        </label>
-        <label className="mt-3 block max-w-2xl">
-          <span className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-muted">
-            Description <span className="font-medium normal-case tracking-normal text-muted/60">(facultatif)</span>
-          </span>
+      <header className="mb-6 grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
+        <div className="min-w-0 max-w-2xl">
+          <div className="mb-2 flex items-center gap-2">
+            <span className="h-px w-6 bg-primary" />
+            <p className="text-[0.65rem] font-semibold uppercase tracking-[0.28em] text-primary/80">
+              {id ? "Modifier la tier list" : "Nouvelle tier list"}
+            </p>
+          </div>
+          <label className="block">
+            <span className="sr-only">Titre</span>
+            <span className="flex items-center gap-3 rounded-md bg-surface px-3 ring-2 ring-border transition-shadow focus-within:ring-primary/70">
+              <input
+                value={title}
+                maxLength={80}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Titre de ta tier list"
+                aria-label="Titre"
+                className="t-impact min-w-0 flex-1 bg-transparent py-2 text-2xl outline-none placeholder:text-muted/40 md:text-3xl"
+              />
+              <Pencil size={16} className="shrink-0 text-muted" />
+            </span>
+          </label>
           <textarea
             value={description}
             maxLength={500}
             rows={2}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Explique ton classement en quelques mots"
-            className="w-full resize-none rounded-md bg-surface px-3 py-2 text-sm outline-none ring-2 ring-border focus:ring-primary/70"
+            placeholder="Description (facultatif) : explique ton classement en quelques mots"
+            aria-label="Description"
+            className="mt-2 w-full resize-none rounded-md bg-surface px-3 py-2 text-sm outline-none ring-2 ring-border placeholder:text-muted focus:ring-primary/70"
           />
-        </label>
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          <div className="flex h-10 items-center gap-1 rounded-md bg-surface p-1 ring-2 ring-border">
-            {[
-              [true, "Publique", Eye],
-              [false, "Brouillon", EyeOff],
-            ].map(([value, text, Icon]) => (
-              <button
-                key={text}
-                type="button"
-                onClick={() => setIsPublic(value)}
-                className={`flex h-full items-center gap-1.5 rounded px-3 text-xs font-bold ${
-                  isPublic === value ? "bg-primary text-primary-fg" : "text-muted hover:text-text"
-                }`}
-              >
-                <Icon size={14} /> {text}
-              </button>
-            ))}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 lg:flex-col lg:items-stretch lg:pt-6">
+          <SegmentedControl
+            label="Visibilité"
+            options={[
+              { value: "public", label: "Publique", Icon: Eye },
+              { value: "draft", label: "Brouillon", Icon: EyeOff },
+            ]}
+            value={isPublic ? "public" : "draft"}
+            onChange={(value) => setIsPublic(value === "public")}
+            className="lg:w-full"
+          />
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={save}
+              disabled={saving}
+              className="flex h-10 flex-1 items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-bold text-primary-fg transition-[filter] hover:brightness-110 active:scale-95 disabled:opacity-60"
+            >
+              {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+              {isPublic ? (id ? "Enregistrer" : "Publier") : "Enregistrer le brouillon"}
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="flex h-10 items-center rounded-md px-3 text-sm font-bold text-muted hover:text-text"
+            >
+              Annuler
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={save}
-            disabled={saving}
-            className="flex h-10 items-center gap-2 rounded-md bg-primary px-4 text-sm font-bold text-primary-fg transition-[filter] hover:brightness-110 active:scale-95 disabled:opacity-60"
-          >
-            {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-            {isPublic ? (id ? "Enregistrer" : "Publier") : "Enregistrer le brouillon"}
-          </button>
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            className="flex h-10 items-center rounded-md px-3 text-sm font-bold text-muted hover:text-text"
-          >
-            Annuler
-          </button>
-          <span className="ml-auto text-xs tabular-nums text-muted">
+          <span className="text-xs tabular-nums text-muted lg:text-right">
             {ranked} classé{ranked > 1 ? "s" : ""} · {total}/{MAX_ITEMS}
           </span>
         </div>
@@ -582,23 +576,26 @@ export default function TierListEditorPage() {
       >
         <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_24rem]">
           <div className="min-w-0 space-y-4">
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-xs font-bold text-muted">Modèle :</span>
-              {TEMPLATES.map((template) => (
-                <button
-                  key={template.id}
-                  type="button"
-                  onClick={() => applyTemplate(template)}
-                  className="h-8 rounded-full bg-white/[0.06] px-3 text-xs font-bold text-muted ring-1 ring-border hover:text-text"
-                >
-                  {template.name}
-                </button>
-              ))}
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-xs font-bold uppercase tracking-wider text-muted">Modèle</span>
+                {TEMPLATES.map((template) => (
+                  <button
+                    key={template.id}
+                    type="button"
+                    onClick={() => applyTemplate(template)}
+                    className="h-8 rounded-md bg-surface px-3 text-xs font-bold text-muted ring-2 ring-border transition-colors hover:text-text hover:ring-primary/60"
+                  >
+                    {template.name}
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-muted">
+                Clique sur le texte d'une rangée pour le changer. Glisse les affiches et les rangées (
+                <GripVertical size={12} className="inline align-[-2px]" />
+                ).
+              </p>
             </div>
-            <p className="text-xs text-muted">
-              Clique sur le texte d'une rangée pour le changer. Glisse les affiches où tu veux, et les rangées avec{" "}
-              <GripVertical size={12} className="inline align-[-2px]" />.
-            </p>
 
             <div className="overflow-visible rounded-md bg-black ring-2 ring-border">
               <SortableContext items={board.tiers.map((t) => ROW + t.id)} strategy={verticalListSortingStrategy}>
@@ -623,7 +620,7 @@ export default function TierListEditorPage() {
                 onClick={() =>
                   setBoard((b) => ({ ...b, tiers: [...b.tiers, makeTier("", TIER_COLORS[b.tiers.length % TIER_COLORS.length])] }))
                 }
-                className="flex h-10 items-center gap-2 rounded-md bg-white/[0.06] px-3.5 text-sm font-bold text-text ring-1 ring-border hover:text-primary"
+                className="flex h-10 items-center gap-2 rounded-md bg-surface px-3.5 text-sm font-bold text-text ring-2 ring-border transition-colors hover:text-primary hover:ring-primary/60"
               >
                 <Plus size={16} /> Ajouter une rangée
               </button>
@@ -651,7 +648,9 @@ export default function TierListEditorPage() {
           </div>
 
           <aside className="xl:sticky xl:top-20 xl:self-start">
-            <h2 className="mb-2 text-sm font-bold">Ajouter des animes</h2>
+            <h2 className="mb-2 flex items-center gap-2 text-sm font-bold">
+              <Plus size={16} className="text-primary" /> Ajouter des animes
+            </h2>
             <AnimePicker has={has} onAdd={addItems} />
           </aside>
         </div>
@@ -696,7 +695,7 @@ export default function TierListEditorPage() {
                 moveItem(menuItem.slug, POOL);
                 setMenuItem(null);
               }}
-              className="flex h-10 w-full items-center gap-2 rounded-md bg-white/[0.06] px-3 text-sm font-bold ring-1 ring-border"
+              className="flex h-10 w-full items-center gap-2 rounded-md bg-surface-2 px-3 text-sm font-bold"
             >
               <Inbox size={15} /> Non classés
             </button>

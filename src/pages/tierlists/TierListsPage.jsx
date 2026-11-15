@@ -68,20 +68,10 @@ export default function TierListsPage() {
           <span className="h-px w-6 bg-primary" />
           <p className="text-[0.65rem] font-semibold uppercase tracking-[0.28em] text-primary/80">Communauté</p>
         </div>
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <h1 className="t-impact text-4xl md:text-5xl">Tier lists</h1>
-            <p className="mt-1.5 max-w-xl text-sm text-muted">
-              Classe tes animes, publie ta tier list et découvre celles de la communauté.
-            </p>
-          </div>
-          <button
-            onClick={create}
-            className="flex h-11 items-center gap-2 rounded-md bg-primary px-4 text-sm font-bold text-primary-fg transition-[filter,transform] hover:brightness-110 active:scale-95 md:h-10"
-          >
-            <Plus size={17} /> Créer une tier list
-          </button>
-        </div>
+        <h1 className="t-impact text-4xl md:text-5xl">Tier lists</h1>
+        <p className="mt-1.5 max-w-xl text-sm text-muted">
+          Classe tes animes, publie ta tier list et découvre celles de la communauté.
+        </p>
 
         <div className="mt-5 flex flex-col gap-2.5 sm:flex-row sm:items-center">
           <SegmentedControl
@@ -90,7 +80,7 @@ export default function TierListsPage() {
             value={tab}
             onChange={(value) => setParams(value === "popular" ? {} : { tab: value }, { replace: true })}
           />
-          <div className="flex h-11 flex-1 items-center gap-2.5 rounded-md bg-surface px-3.5 ring-2 ring-border transition-colors focus-within:ring-primary/70 md:h-10 md:max-w-xs">
+          <div className="flex h-11 flex-1 items-center gap-2.5 rounded-md bg-surface px-3.5 ring-2 ring-border transition-colors focus-within:ring-primary/70 md:h-10 md:max-w-sm">
             <Search size={16} className="shrink-0 text-muted" />
             <input
               value={query}
@@ -104,12 +94,18 @@ export default function TierListsPage() {
                 type="button"
                 onClick={() => setQuery("")}
                 aria-label="Effacer la recherche"
-                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-muted active:bg-white/10 active:text-text"
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded text-muted active:bg-white/10 active:text-text"
               >
                 <X size={15} />
               </button>
             )}
           </div>
+          <button
+            onClick={create}
+            className="flex h-11 items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-bold text-primary-fg transition-[filter,transform] hover:brightness-110 active:scale-95 sm:ml-auto md:h-10"
+          >
+            <Plus size={17} /> Créer une tier list
+          </button>
         </div>
       </header>
 
@@ -121,7 +117,7 @@ export default function TierListsPage() {
         </div>
       ) : items.length === 0 ? (
         <div className="flex min-h-[40dvh] flex-col items-center justify-center rounded-md border-2 border-dashed border-border px-7 text-center">
-          <span className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
+          <span className="flex h-14 w-14 items-center justify-center rounded-md bg-primary/10 text-primary">
             <LayoutList size={24} />
           </span>
           <p className="mt-4 max-w-sm text-sm text-muted">

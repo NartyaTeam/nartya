@@ -19,7 +19,7 @@ function MiniBoard({ tierMeta, preview }) {
       {rows.map((tier, i) => (
         <div key={i} className="flex h-12 border-b border-black last:border-b-0">
           <span
-            className="flex w-14 shrink-0 items-center justify-center truncate px-1 text-[0.65rem] font-bold"
+            className="flex w-16 shrink-0 items-center justify-center break-words px-1 text-center text-[0.6rem] font-bold leading-tight [overflow-wrap:anywhere]"
             style={{ background: tier.color, color: readableTextColor(tier.color) }}
           >
             {tier.label}

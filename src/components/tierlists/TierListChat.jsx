@@ -50,7 +50,7 @@ function Message({ message, onLike, onDelete, onReply, thread, onToggleThread, i
       <Avatar
         src={resolveAvatar(message.author)}
         name={name}
-        className={`mt-0.5 shrink-0 rounded-full ${isReply ? "h-6 w-6" : "h-7 w-7"}`}
+        className={`mt-0.5 shrink-0 ${isReply ? "h-6 w-6" : "h-7 w-7"}`}
         textClassName="text-[10px]"
       />
       <div className="min-w-0 flex-1">
@@ -414,13 +414,13 @@ export default function TierListChat({ target, docked = false }) {
                 ? `Répondre à ${replyTo.name}…`
                 : "Ton avis sur cette tier list…"
           }
-          className="min-w-0 flex-1 rounded-full border border-white/10 bg-white/5 px-3.5 py-2 text-sm text-white placeholder:text-white/40 focus:border-primary/60 focus:outline-none"
+          className="min-w-0 flex-1 rounded-md bg-surface px-3 py-2 text-sm text-text ring-2 ring-border placeholder:text-muted focus:outline-none focus:ring-primary/70"
         />
         <button
           type="submit"
           aria-label="Envoyer"
           disabled={!text.trim() || sending}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-fg transition-colors hover:bg-primary/90 disabled:opacity-40"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary text-primary-fg transition-colors hover:bg-primary/90 disabled:opacity-40"
         >
           {sending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
         </button>
@@ -449,11 +449,11 @@ export default function TierListChat({ target, docked = false }) {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Ouvrir le chat"
-        className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] right-4 z-40 flex h-12 items-center gap-2 rounded-full bg-primary px-4 text-sm font-bold text-primary-fg shadow-xl active:scale-95"
+        className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] right-4 z-40 flex h-12 items-center gap-2 rounded-md bg-primary px-4 text-sm font-bold text-primary-fg shadow-xl active:scale-95"
       >
         <MessageCircle size={18} /> Chat
         {(unread > 0 || count > 0) && (
-          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-black/30 px-1.5 text-[11px] tabular-nums">
+          <span className="flex h-5 min-w-5 items-center justify-center rounded bg-black/30 px-1.5 text-[11px] tabular-nums">
             {unread > 0 ? `+${unread}` : count}
           </span>
         )}

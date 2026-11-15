@@ -41,7 +41,7 @@ function PickPoster({ item, added, onAdd }) {
     >
       <TierPoster item={item} dimmed={added} />
       {added && (
-        <span className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-fg">
+        <span className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded bg-primary text-primary-fg">
           <Check size={12} />
         </span>
       )}
@@ -50,8 +50,8 @@ function PickPoster({ item, added, onAdd }) {
 }
 
 const chip = (active) =>
-  `h-8 shrink-0 rounded-full px-3 text-xs font-bold transition-colors ${
-    active ? "bg-primary text-primary-fg" : "bg-white/[0.06] text-muted ring-1 ring-border hover:text-text"
+  `h-8 shrink-0 rounded-md px-3 text-xs font-bold transition-colors ${
+    active ? "bg-primary text-primary-fg" : "bg-surface-2 text-muted hover:text-text"
   }`;
 
 /**
