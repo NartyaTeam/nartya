@@ -29,3 +29,4 @@
 
 # Pont JNI vers le cœur Rust : les noms de classe et de méthode sont résolus par la bibliothèque native.
 -keep class com.nartya.app.core.NartyaCore { native <methods>; }
+-keep interface com.nartya.app.core.NartyaCore$Listener { *; }

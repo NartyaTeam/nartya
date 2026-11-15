@@ -46,6 +46,7 @@ public class NartyaProxyPlugin extends Plugin {
     private static final Object CORE_LOCK = new Object();
     private static JSObject coreInfo;
     // Téléchargements en cours côté cœur, d'après ses événements (pour le service de premier plan).
+    private static final java.util.Set<String> legacyActive = java.util.concurrent.ConcurrentHashMap.newKeySet();
     private static final java.util.Set<String> coreActive = java.util.concurrent.ConcurrentHashMap.newKeySet();
 
     @Override
@@ -145,8 +146,13 @@ public class NartyaProxyPlugin extends Plugin {
             JSONObject item = new JSONObject(payloadJson);
             String id = item.optString("id");
             String status = item.optString("status");
-            if ("downloading".equals(status) || "queued".equals(status)) coreActive.add(id);
-            else coreActive.remove(id);
+            boolean wasActive;
+            if ("downloading".equals(status) || "queued".equals(status)) {
+                coreActive.add(id);
+                wasActive = false;
+            } else {
+                wasActive = coreActive.remove(id);
+            }
             NartyaProxyPlugin plugin = activePlugin;
             if (plugin != null) plugin.notifyListeners("downloadProgress", JSObject.fromJSONObject(item));
             Context context = appContext;
@@ -154,6 +160,7 @@ public class NartyaProxyPlugin extends Plugin {
                 try {
                     DownloadForegroundService.update(context, item, coreActive.size());
                 } catch (Exception ignored) {}
+                if (wasActive && "done".equals(status)) DownloadForegroundService.notifyFinished(context, item);
             }
         } catch (Exception ignored) {}
     }
@@ -192,6 +199,12 @@ public class NartyaProxyPlugin extends Plugin {
             int activeCount = downloads != null ? downloads.activeCount() : 0;
             if (appContext != null) {
                 DownloadForegroundService.update(appContext, item, activeCount);
+                String id = item.optString("id");
+                String status = item.optString("status");
+                if ("downloading".equals(status) || "queued".equals(status)) legacyActive.add(id);
+                else if (legacyActive.remove(id) && "done".equals(status)) {
+                    DownloadForegroundService.notifyFinished(appContext, item);
+                }
             }
             if (activeCount == 0 && plugin == null && server != null) {
                 server.stop();

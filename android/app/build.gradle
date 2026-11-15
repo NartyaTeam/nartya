@@ -65,9 +65,12 @@ android {
 // Cœur Rust (crates/nartya-android -> libnartya_android.so), compilé par cargo-ndk.
 //   -PnartyaCore=true   compile, échoue si cargo-ndk manque
 //   -PnartyaCore=false  ne compile pas
-//   (défaut) compile si cargo-ndk est installé ; sans bibliothèque, la page reste sur le proxy Java
+//   (défaut) compile si cargo-ndk est installé, et l'exige pour une tâche *Release ; sans bibliothèque, la page reste sur le proxy Java
 //   -PnartyaCoreAbis=x86_64   autres ABI, séparées par des virgules (émulateur)
-def nartyaCoreMode = (project.findProperty('nartyaCore') ?: 'auto') as String
+// Un APK release sans le coeur ferait retomber silencieusement sur le proxy Java (et sur un autre
+// index de telechargements) : une release l'exige, sauf -PnartyaCore=false explicite.
+def isReleaseBuild = gradle.startParameter.taskNames.any { it.toLowerCase().contains('release') }
+def nartyaCoreMode = (project.findProperty('nartyaCore') ?: (isReleaseBuild ? 'true' : 'auto')) as String
 def nartyaCoreAbis = ((project.findProperty('nartyaCoreAbis') ?: 'arm64-v8a,armeabi-v7a') as String).split(',')
 def hasCargoNdk = {
     try {

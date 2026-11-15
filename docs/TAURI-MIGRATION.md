@@ -318,6 +318,42 @@ Vérifié sur l'émulateur : reprise d'un faux `index.json` Java (`downloads.jso
 
 **Reste côté Android** : valider tout cela avec un compte réel ; supprimer `ProxyServer.java`, `Downloads.java` et `fetchEmbedUrl` (+ leurs tests Java) après accord ; forcer `-PnartyaCore=true` dans le script de publication ; session de consolidation (voir ci-dessus).
 
+### Android : consolidation (2026-11-15)
+
+Relecture des risques de la bascule lecture + téléchargements, avec un APK **release minifié** (R8, signé) installé sur l'émulateur x86_64.
+
+Corrigé :
+- **Interface `NartyaCore.Listener` et R8** : sans règle, R8 pouvait renommer ou retirer `onEvent`, que le cœur appelle par son nom en JNI. Règle `keep` ajoutée ; vérifié en release : `coreStart`, `coreResolve` (réponse 401 de l'API) et la chaîne d'événements d'un téléchargement (queued, downloading, error) fonctionnent.
+- **Release sans cœur** : un APK publié sans `libnartya_android.so` retombait silencieusement sur le proxy Java, donc sur l'index `index.json` au lieu de `downloads.json` (épisodes téléchargés « disparus »). Toute tâche Gradle `*Release` exige désormais cargo-ndk et échoue sans lui (sauf `-PnartyaCore=false` explicite).
+
+Vérifié : classe, méthodes natives et lib x86_64 présentes dans l'APK release (5,3 Mo avant compression), cœur chargé sous ART en release.
+
+Reste, à faire avant d'activer en production :
+- lecture d'un vrai flux et téléchargement complet avec un compte réel (MP4 et HLS) ;
+- un vrai index produit par une ancienne version de l'app, puis mise à jour par-dessus ;
+- arm64 réel (le build arm64 et armv7 n'a été exécuté que par clippy) ;
+- notification de premier plan et reprise après processus tué ;
+- `versionCode` à augmenter à la publication.
+Piège connu : revenir en arrière (garde-fou coupé ou version sans cœur) après des téléchargements faits en mode cœur masque ces épisodes, car l'index n'est pas partagé entre les deux modes.
+
+### Android : validation sur compte réel (2026-11-15)
+
+APK release minifié x86_64, émulateur Android 15, compte connecté par l'utilisateur ; pilotage par la WebView (CDP) et `adb`.
+
+Vérifié :
+- **Lecture en ligne** (One Piece, saison 1, épisode 13, VOSTFR) : hls.js lit en 720p, `readyState` 4, position qui avance, aucune erreur ; seul le port du cœur écoute côté app, le proxy Java n'a jamais démarré.
+- **Téléchargement complet** (épisode 12, HLS, 328 Mo, playlist + 150 segments) par le cœur, sans ffmpeg.
+- **Lecture hors ligne** : la playlist et un segment sont servis par `/local` (206 avec `Range`).
+- **Service de premier plan** : actif pendant un téléchargement (notification `nartya_downloads`, catégorie progress).
+- **Processus tué en plein téléchargement** : au redémarrage, l'entrée passe à « Interrompu » (4 %), l'index est intact, l'épisode terminé reste lisible.
+- **Compatibilité d'index** : noms de fichiers identiques entre l'ancien code Java et le cœur (`playlist.m3u8`, `segNNNNN`, `key.bin`, `init.mp4`, `video.mp4`, `pNNN.jpg`) et mêmes champs d'entrée, relevés dans `Downloads.java` ; la conversion de l'index est testée (tests Rust + faux index sur l'émulateur).
+
+Bug trouvé en route, corrigé dans `capacitor.js` : une WebView ancienne (Chrome 124, celle de l'émulateur) rend un hôte **vide** pour `nartya://captcha-callback?...`. Le captcha réussissait mais l'app ignorait son retour, donc connexion visiteur et Discord impossibles (« mode visiteur indisponible »). Le décodage de l'hôte retombe maintenant sur le chemin. Concerne aussi les vrais téléphones à WebView ancienne.
+
+**Mise à jour par-dessus la production (vérifiée).** Vrai APK 1.9.1 récupéré sur `nartya.app/dl/android/` (SHA-256 conforme au catalogue), installé sur l'émulateur, puis `adb install -r` de l'APK du cœur par-dessus : accepté (même signature, mêmes données conservées). Un épisode (One Piece S1E2, 335 Mo) téléchargé par le code Java (garde-fou coupé, index `index.json` réel) est repris au redémarrage suivant du processus : entrée `done` avec son titre, sa pochette et sa taille, playlist et segment servis par `/local`. Le code Java de téléchargement n'a pas changé depuis la 1.9.1 ; seul le chargement de l'index à chaud ne se rejoue pas : la conversion a lieu au démarrage du cœur, donc au premier lancement après la mise à jour (et pas en basculant le garde-fou sans relancer le processus).
+
+Non vérifié : un appareil arm64 réel (aucun disponible : seul un build clippy), la reprise manuelle d'un téléchargement interrompu.
+
 ### Phase 5 : Linux et macOS (optionnel)
 
 À décider selon la phase 0 : WebKitGTK et WKWebView sont moins sûrs que Chromium pour WebGPU, MSE/HLS et le plein écran. Ne pas lancer sans vérification équivalente à la phase 0 sur chaque plateforme.

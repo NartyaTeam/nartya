@@ -238,6 +238,18 @@ let navigationCallback = null;
 let urlListenerAttached = false;
 let captchaResolvers = [];
 
+/** Les vieilles WebView n'analysent pas l'hôte d'un schéma perso : `nartya://hote/chemin` donne un hôte vide. */
+function deepLinkParts(parsed) {
+  if (parsed.hostname || !parsed.pathname.startsWith("//")) {
+    return { host: parsed.hostname, path: parsed.pathname };
+  }
+  const rest = parsed.pathname.slice(2);
+  const slash = rest.indexOf("/");
+  return slash === -1
+    ? { host: rest, path: "/" }
+    : { host: rest.slice(0, slash), path: rest.slice(slash) };
+}
+
 function attachUrlListener() {
   if (urlListenerAttached) return;
   urlListenerAttached = true;
@@ -245,9 +257,10 @@ function attachUrlListener() {
     if (!url) return;
     try {
       const parsed = new URL(url);
+      const { host, path } = deepLinkParts(parsed);
       // Deep-link nartya://auth-callback ou App Link HTTPS.
       const isAuthCallback =
-        parsed.hostname === "auth-callback" ||
+        host === "auth-callback" ||
         (parsed.protocol === "https:" && parsed.host === SITE_HOST && parsed.pathname === "/callback");
       if (isAuthCallback) {
         authCallback?.(url);
@@ -255,7 +268,7 @@ function attachUrlListener() {
         if (Capacitor.getPlatform() === "ios") void Browser.close().catch(() => {});
         return;
       }
-      if (parsed.hostname === "captcha-callback") {
+      if (host === "captcha-callback") {
         const result = {
           token: parsed.searchParams.get("token") || null,
           error: parsed.searchParams.get("error") || null,
@@ -264,7 +277,7 @@ function attachUrlListener() {
         resolvers.forEach((resolve) => resolve(result));
         return;
       }
-      const route = `/${parsed.hostname}${parsed.pathname === "/" ? "" : parsed.pathname}`;
+      const route = `/${host}${path === "/" ? "" : path}`;
       if (route !== "/") navigationCallback?.(route);
     } catch (_) {}
   });

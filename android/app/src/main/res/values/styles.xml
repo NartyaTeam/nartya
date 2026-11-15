@@ -16,7 +16,9 @@
 
 
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
-        <item name="android:background">@drawable/splash</item>
+        <!-- Pas d'`android:background` sur ce thème : les fenêtres flottantes d'Android (poignées et
+             menu de sélection de texte) le reprennent comme fond et affichaient un grand bloc blanc
+             avec le logo Capacitor. -->
         <!-- `installSplashScreen()` ne change pas le thème de la fenêtre : sans ceci, le logo
              du splash reste en fond et apparaît dès qu'un bord se découvre. -->
         <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
