@@ -23,6 +23,13 @@ impl Host for TauriHost {
             .map_err(|e| e.to_string())
     }
 
+    fn open_url(&self, url: &str) -> Result<(), String> {
+        self.0
+            .opener()
+            .open_url(url, None::<&str>)
+            .map_err(|e| e.to_string())
+    }
+
     fn pick_folder(&self, title: &str, start: &Path) -> BoxFuture<'static, Option<PathBuf>> {
         let (tx, rx) = tokio::sync::oneshot::channel();
         let mut picker = self.0.dialog().file().set_title(title).set_directory(start);

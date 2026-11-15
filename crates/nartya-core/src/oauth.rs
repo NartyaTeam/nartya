@@ -1,7 +1,7 @@
 //! Retour OAuth en loopback (RFC 8252) : `nartya://` est peu fiable sur Linux et ChromeOS. Les
 //! ports candidats doivent être autorisés côté Supabase (Redirect URLs).
 
-use std::{collections::HashMap, net::Ipv4Addr};
+use std::{collections::HashMap, net::Ipv4Addr, sync::Arc};
 
 use axum::{
     extract::{OriginalUri, Query, State},
@@ -10,10 +10,7 @@ use axum::{
     routing::get,
     Router,
 };
-use tauri::{AppHandle, Manager};
 use tokio::net::TcpListener;
-
-use crate::{deep_link, state::AppState};
 
 // À autoriser dans Supabase : http://127.0.0.1:<port>/auth-callback
 const CANDIDATE_PORTS: [u16; 3] = [8351, 8352, 8353];
@@ -87,9 +84,12 @@ fn error_page(params: &HashMap<String, String>) -> String {
     page(title, message, "!", "#ff4a2d55", "")
 }
 
+/// Reçoit l'adresse complète du retour (`http://127.0.0.1:<port>/auth-callback?code=…`).
+pub type OnCallback = Arc<dyn Fn(&str) + Send + Sync>;
+
 #[derive(Clone)]
 struct Ctx {
-    app: AppHandle,
+    on_callback: OnCallback,
     port: u16,
 }
 
@@ -105,8 +105,7 @@ async fn callback(
             .map(|p| p.as_str())
             .unwrap_or(CALLBACK_PATH)
     );
-    // Même canal que le deep-link.
-    deep_link::handle(&ctx.app, &full_url);
+    (ctx.on_callback)(&full_url);
 
     let body = if params.contains_key("code") {
         success_page()
@@ -127,17 +126,14 @@ fn router(ctx: Ctx) -> Router {
         .with_state(ctx)
 }
 
-/// Démarre le serveur sur le premier port libre ; `None` si aucun ne l'est.
-pub async fn start(app: AppHandle) -> Option<u16> {
+/// Démarre le serveur sur le premier port libre ; `None` si aucun ne l'est. À appeler depuis le
+/// runtime Tokio de la coque.
+pub async fn start(on_callback: OnCallback) -> Option<u16> {
     for port in CANDIDATE_PORTS {
         match TcpListener::bind((Ipv4Addr::LOCALHOST, port)).await {
             Ok(listener) => {
-                app.state::<AppState>().set_auth_port(port);
-                let app_router = router(Ctx {
-                    app: app.clone(),
-                    port,
-                });
-                tauri::async_runtime::spawn(async move {
+                let app_router = router(Ctx { on_callback, port });
+                tokio::spawn(async move {
                     let _ = axum::serve(listener, app_router).await;
                 });
                 return Some(port);
@@ -149,9 +145,9 @@ pub async fn start(app: AppHandle) -> Option<u16> {
     None
 }
 
-pub fn redirect_url(app: &AppHandle) -> Option<String> {
-    let port = app.state::<AppState>().auth_port()?;
-    Some(format!("http://127.0.0.1:{port}{CALLBACK_PATH}"))
+/// Adresse de retour à donner au fournisseur, une fois le serveur démarré sur `port`.
+pub fn redirect_url(port: u16) -> String {
+    format!("http://127.0.0.1:{port}{CALLBACK_PATH}")
 }
 
 #[cfg(test)]
@@ -180,6 +176,11 @@ mod tests {
             "Ce compte Discord est déjà utilisé"
         );
         assert_eq!(error_copy(&params(&[])).0, "Échec de la connexion");
+    }
+
+    #[test]
+    fn adresse_de_retour() {
+        assert_eq!(redirect_url(8351), "http://127.0.0.1:8351/auth-callback");
     }
 
     #[test]

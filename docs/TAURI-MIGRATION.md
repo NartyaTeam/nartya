@@ -402,4 +402,6 @@ Tests : `proxy-range`, `shared-session-permissions`, `video-providers-live` et `
 
 Gardés exprès : `src-tauri/src/migrate.rs` (reprise du `localStorage` écrit par la dernière version Electron) et `src-tauri/installer-hooks.nsh` (désinstalle l'ancien Electron). À retirer quand plus aucun utilisateur n'est sur Electron.
 
-Reste : oauth et Hub dans le cœur, adaptateur de page unique, recette partagée JS/Rust.
+**oauth et Hub déplacés dans le cœur** (`nartya-core::oauth`, `nartya-core::hub`) : le serveur de retour OAuth reçoit un rappel au lieu de connaître Tauri, `redirect_url(port)` est pure, et l'ouverture d'adresse du Hub passe par `Host::open_url` (méthode par défaut qui refuse : Android et iOS n'ont pas de Hub). La coque ne garde que le branchement (rappel → deep-link, port stocké dans l'état).
+
+Reste : adaptateur de page unique, recette partagée JS/Rust.

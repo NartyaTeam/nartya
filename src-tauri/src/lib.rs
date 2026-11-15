@@ -2,14 +2,14 @@ mod captcha;
 mod commands;
 mod deep_link;
 mod host;
-mod hub;
 mod migrate;
-mod oauth;
 mod state;
 mod window;
 
 // Le cœur est partagé avec les autres coques ; les modules de la coque l'atteignent par ces chemins.
-pub use nartya_core::{cast, config, discord, downloads, session, stream, system, url_guard};
+pub use nartya_core::{
+    cast, config, discord, downloads, hub, oauth, session, stream, system, url_guard,
+};
 
 use std::sync::Arc;
 
@@ -38,7 +38,9 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .manage(state::AppState::default())
-        .manage(tauri::async_runtime::block_on(async { discord::Discord::start() }))
+        .manage(tauri::async_runtime::block_on(async {
+            discord::Discord::start()
+        }))
         .invoke_handler(tauri::generate_handler![
             commands::open_external,
             commands::app_quit,
@@ -117,7 +119,13 @@ pub fn run() {
             }
             handle.state::<state::AppState>().set_defer_reveal(deferred);
 
-            let _ = tauri::async_runtime::block_on(oauth::start(handle.clone()));
+            // Même canal que le deep-link.
+            let on_callback_app = handle.clone();
+            let on_callback: oauth::OnCallback =
+                Arc::new(move |url| deep_link::handle(&on_callback_app, url));
+            if let Some(port) = tauri::async_runtime::block_on(oauth::start(on_callback)) {
+                handle.state::<state::AppState>().set_auth_port(port);
+            }
             // Même dossier de données qu'Electron (`%APPDATA%\nartya`) : les téléchargements
             // faits avec l'une ou l'autre coque restent dans la même bibliothèque.
             let data_dir = app.path().config_dir()?.join("nartya");

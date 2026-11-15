@@ -30,6 +30,11 @@ pub trait Host: Send + Sync + 'static {
     /// Ouvre un dossier dans l'explorateur de fichiers.
     fn open_path(&self, path: &Path) -> Result<(), String>;
 
+    /// Ouvre une adresse dans le navigateur ou l'application qui la gère (`https://`, `nartya-hub://`).
+    fn open_url(&self, _url: &str) -> Result<(), String> {
+        Err("ouverture d'adresse non prise en charge".into())
+    }
+
     /// Sélecteur de dossier natif ; `None` si annulé ou indisponible.
     fn pick_folder(&self, title: &str, start: &Path) -> BoxFuture<'static, Option<PathBuf>>;
 

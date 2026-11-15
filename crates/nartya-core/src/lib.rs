@@ -9,6 +9,8 @@ pub mod config;
 pub mod discord;
 pub mod downloads;
 pub mod host;
+pub mod hub;
+pub mod oauth;
 pub mod session;
 pub mod stream;
 pub mod system;

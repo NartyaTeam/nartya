@@ -1,10 +1,13 @@
 use serde_json::{json, Value};
-use tauri::{AppHandle, State};
+use tauri::{AppHandle, Manager, State};
 use tauri_plugin_opener::OpenerExt;
 
 use crate::{
-    captcha, hub, oauth,
+    captcha,
+    host::TauriHost,
+    hub, oauth,
     session::{is_session_key, SharedSession},
+    state::AppState,
     system,
     url_guard::is_http_url,
     window,
@@ -51,7 +54,7 @@ pub fn hub_get_info(session: Session) -> Option<Value> {
 
 #[tauri::command(async)]
 pub fn hub_open(app: AppHandle, session: Session) -> Value {
-    hub::open(&app, &session)
+    hub::open(&TauriHost(app), &session)
 }
 
 #[tauri::command]
@@ -71,7 +74,7 @@ pub fn get_anime4k_capabilities() -> Value {
 
 #[tauri::command]
 pub fn get_auth_redirect_url(app: AppHandle) -> Option<String> {
-    oauth::redirect_url(&app)
+    app.state::<AppState>().auth_port().map(oauth::redirect_url)
 }
 
 #[tauri::command]
@@ -156,7 +159,9 @@ pub fn downloads_local_url(
     rel: Option<String>,
 ) -> Option<String> {
     let service = stream.0.as_ref()?;
-    service.proxy.local_url(&id, rel.as_deref().unwrap_or("video.mp4"))
+    service
+        .proxy
+        .local_url(&id, rel.as_deref().unwrap_or("video.mp4"))
 }
 
 #[tauri::command(async)]
@@ -199,7 +204,11 @@ pub async fn cast_start(cast: CastState<'_>, device_id: String, media: Value) ->
 }
 
 #[tauri::command]
-pub async fn cast_control(cast: CastState<'_>, action: String, value: Option<Value>) -> Result<Value, ()> {
+pub async fn cast_control(
+    cast: CastState<'_>,
+    action: String,
+    value: Option<Value>,
+) -> Result<Value, ()> {
     Ok(cast.control(&action, &value.unwrap_or(Value::Null)).await)
 }
 

@@ -6,10 +6,8 @@ use std::{
 };
 
 use serde_json::{json, Value};
-use tauri::AppHandle;
-use tauri_plugin_opener::OpenerExt;
 
-use crate::{config::SITE_URL, session::SharedSession};
+use crate::{config::SITE_URL, host::Host, session::SharedSession};
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum Mode {
@@ -50,12 +48,17 @@ fn exe_candidates() -> Vec<PathBuf> {
         }
         dirs.into_iter().map(|d| d.join(&rel)).collect()
     }
-    #[cfg(all(not(windows), not(target_os = "macos")))]
+    #[cfg(target_os = "linux")]
     {
         vec![
             PathBuf::from("/opt/Nartya Hub/nartya-hub"),
             PathBuf::from("/usr/bin/nartya-hub"),
         ]
+    }
+    // Android et iOS : pas de Hub à lancer.
+    #[cfg(not(any(windows, target_os = "macos", target_os = "linux")))]
+    {
+        Vec::new()
     }
 }
 
@@ -118,22 +121,14 @@ pub fn ensure_running(session: &SharedSession) {
 }
 
 /// Exécutable, sinon `nartya-hub://`, sinon le site. `method: "website"` : Hub non ouvert.
-pub fn open(app: &AppHandle, session: &SharedSession) -> Value {
+pub fn open(host: &dyn Host, session: &SharedSession) -> Value {
     if launch(session, Mode::Visible) {
         return json!({ "success": true, "method": "exe" });
     }
-    if app
-        .opener()
-        .open_url("nartya-hub://open", None::<&str>)
-        .is_ok()
-    {
+    if host.open_url("nartya-hub://open").is_ok() {
         return json!({ "success": true, "method": "protocol" });
     }
-    if app
-        .opener()
-        .open_url(format!("{SITE_URL}/"), None::<&str>)
-        .is_ok()
-    {
+    if host.open_url(&format!("{SITE_URL}/")).is_ok() {
         return json!({ "success": true, "method": "website" });
     }
     json!({ "success": false, "method": null })
