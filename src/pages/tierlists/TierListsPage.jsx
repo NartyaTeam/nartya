@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Flame, LayoutGrid, LayoutList, Loader2, Plus, Rows3, Search, Sparkles, User, X } from "lucide-react";
+import { Flame, LayoutGrid, LayoutList, List, Loader2, Plus, Search, Sparkles, User, X } from "lucide-react";
 import { listTierLists } from "@/api/tierLists";
 import { useHasAccount, guestBlockToast, GUEST_FEATURE_MSG } from "@/lib/guest";
 import { useAuthStore } from "@/stores/useAuthStore";
@@ -14,8 +14,8 @@ const FETCH = 48;
 const POPULAR_CAP = 240;
 const VIEW_KEY = "nartya:tierlists:view";
 const VIEWS = [
-  { value: "blocks", label: "Blocs", Icon: Rows3 },
-  { value: "grid", label: "Grille", Icon: LayoutGrid },
+  { value: "blocks", label: "Blocs", Icon: LayoutGrid },
+  { value: "list", label: "Liste", Icon: List },
 ];
 
 /** Les plus aimées d'abord, puis les plus commentées, puis les plus récentes : ce que montrent les cartes. */
@@ -26,7 +26,7 @@ const byPopularity = (a, b) =>
 
 function readView() {
   try {
-    return localStorage.getItem(VIEW_KEY) === "grid" ? "grid" : "blocks";
+    return localStorage.getItem(VIEW_KEY) === "list" ? "list" : "blocks";
   } catch {
     return "blocks";
   }
@@ -106,8 +106,8 @@ export default function TierListsPage() {
   const visible = popular && items ? items.slice(0, shown) : items;
   const more = popular ? Boolean(items) && shown < items.length : !done;
   const gridClass =
-    view === "grid"
-      ? "grid grid-cols-[repeat(auto-fill,minmax(11rem,1fr))] gap-3"
+    view === "list"
+      ? "flex flex-col gap-2"
       : "grid grid-cols-[repeat(auto-fill,minmax(15rem,1fr))] gap-4";
 
   const create = () => {
@@ -176,7 +176,7 @@ export default function TierListsPage() {
       {items === null ? (
         <div className={gridClass}>
           {Array.from({ length: 8 }, (_, i) => (
-            <div key={i} className={`${view === "grid" ? "h-52" : "h-[19.5rem]"} skeleton rounded-md`} />
+            <div key={i} className={`${view === "list" ? "h-[4.25rem]" : "h-[19.5rem]"} skeleton rounded-md`} />
           ))}
         </div>
       ) : items.length === 0 ? (
@@ -204,7 +204,7 @@ export default function TierListsPage() {
         <>
           <div className={gridClass}>
             {visible.map((list) => (
-              <TierListCard key={list.id} list={list} compact={view === "grid"} />
+              <TierListCard key={list.id} list={list} row={view === "list"} />
             ))}
           </div>
           {more && (

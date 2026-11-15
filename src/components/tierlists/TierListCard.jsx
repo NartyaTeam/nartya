@@ -48,18 +48,20 @@ function MiniBoard({ tierMeta, preview }) {
   );
 }
 
-/** Mosaïque : les six premières affiches, sans rangées. */
-function Mosaic({ preview }) {
-  const covers = preview.filter((c) => c.cover).slice(0, 6);
+/** Ruban : les premières affiches à la suite, pour la vue en liste. */
+function Strip({ preview }) {
+  const covers = preview.filter((c) => c.cover).slice(0, 8);
   return (
-    <div className="grid aspect-[3/2] grid-cols-3 grid-rows-2 gap-px overflow-hidden rounded-t-md bg-black">
-      {Array.from({ length: 6 }, (_, i) =>
-        covers[i] ? (
-          <img key={i} src={covers[i].cover} alt="" loading="lazy" className="h-full w-full object-cover" />
-        ) : (
-          <span key={i} className="bg-surface-2" />
-        )
-      )}
+    <div className="hidden h-14 w-[15.5rem] shrink-0 gap-px overflow-hidden rounded bg-surface-2 sm:flex">
+      {covers.map((c, i) => (
+        <img
+          key={i}
+          src={c.cover}
+          alt=""
+          loading="lazy"
+          className={`h-full shrink-0 object-cover ${kindOfSlug(c.slug) === "music" ? "aspect-square" : "aspect-[5/7]"}`}
+        />
+      ))}
     </div>
   );
 }
@@ -67,30 +69,57 @@ function Mosaic({ preview }) {
 const linkClass =
   "group flex flex-col overflow-hidden rounded-md bg-surface ring-2 ring-border transition-[box-shadow,transform] hover:-translate-y-0.5 hover:ring-primary/60";
 
-/** `compact` : vue « grille », mosaïque et pied réduit. */
-export default function TierListCard({ list, compact = false }) {
+/** `row` : vue en liste, une tier list par ligne. */
+export default function TierListCard({ list, row = false }) {
   const name = list.author.username || list.author.handle || "Membre";
+  const stats = (
+    <>
+      <span className="flex items-center gap-1 tabular-nums">
+        <ThumbsUp size={12} /> {list.likes}
+      </span>
+      <span className="flex items-center gap-1 tabular-nums">
+        <MessageSquare size={12} /> {list.comments}
+      </span>
+    </>
+  );
+  const draft = !list.isPublic && (
+    <span className="flex items-center gap-1 rounded bg-white/10 px-1.5 py-0.5 text-[0.65rem] font-bold text-text">
+      <EyeOff size={11} /> Brouillon
+    </span>
+  );
+
+  if (row) {
+    return (
+      <Link
+        to={`/tierlists/${list.id}`}
+        className="group flex items-center gap-3 rounded-md bg-surface p-2 ring-2 ring-border transition-colors hover:ring-primary/60"
+      >
+        <Strip preview={list.preview} />
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-bold text-text transition-colors group-hover:text-primary">{list.title}</p>
+          <div className="mt-1 flex items-center gap-2 text-xs text-muted">
+            <Avatar src={resolveAvatar(list.author)} name={name} className="h-5 w-5" textClassName="text-[0.55rem]" />
+            <span className="truncate">{name}</span>
+            {draft}
+          </div>
+        </div>
+        <div className="flex shrink-0 items-center gap-4 pr-2 text-xs text-muted">{stats}</div>
+      </Link>
+    );
+  }
+
   return (
     <Link to={`/tierlists/${list.id}`} className={linkClass}>
-      {compact ? <Mosaic preview={list.preview} /> : <MiniBoard tierMeta={list.tierMeta} preview={list.preview} />}
-      <div className={`flex flex-1 flex-col gap-2 ${compact ? "p-2.5" : "p-3"}`}>
+      <MiniBoard tierMeta={list.tierMeta} preview={list.preview} />
+      <div className="flex flex-1 flex-col gap-2 p-3">
         <p className="line-clamp-2 min-h-[2.5rem] text-sm font-bold leading-5 text-text transition-colors group-hover:text-primary">
           {list.title}
         </p>
         <div className="mt-auto flex items-center gap-2 text-xs text-muted">
           <Avatar src={resolveAvatar(list.author)} name={name} className="h-5 w-5" textClassName="text-[0.55rem]" />
           <span className="min-w-0 flex-1 truncate">{name}</span>
-          {!list.isPublic && (
-            <span className="flex items-center gap-1 rounded bg-white/10 px-1.5 py-0.5 text-[0.65rem] font-bold text-text">
-              <EyeOff size={11} /> Brouillon
-            </span>
-          )}
-          <span className="flex items-center gap-1 tabular-nums">
-            <ThumbsUp size={12} /> {list.likes}
-          </span>
-          <span className="flex items-center gap-1 tabular-nums">
-            <MessageSquare size={12} /> {list.comments}
-          </span>
+          {draft}
+          {stats}
         </div>
       </div>
     </Link>
