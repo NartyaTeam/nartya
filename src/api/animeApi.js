@@ -215,7 +215,7 @@ export async function getAllEpisodes(slug) {
  */
 // Stratégies d'extraction connues de cette version : l'API ne propose que les hébergeurs
 // qu'elle sait lire (cf. `requires` dans api/src/sources.js).
-const EXTRACTION_CAPS = "split-link";
+export const EXTRACTION_CAPS = "split-link";
 
 export async function getSeasonEpisodes(slug, seasonId, { lite = false } = {}) {
   const data = (

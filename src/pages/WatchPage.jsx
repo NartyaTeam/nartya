@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useParams, useSearchParams, useNavigate } from "react-router-dom";
-import { getAnimePage, getSeasonEpisodes } from "@/api/animeApi";
+import { getSeasonEpisodes } from "@/api/animeApi";
+import { animeCacheKey, ANIME_CACHE_OPTIONS, loadAnime } from "@/api/animeLoad";
 import {
   getEpisodeVideoUrl,
   episodesCacheKey,
+  EPISODES_CACHE_OPTIONS,
   EPISODES_TTL_MS,
 } from "@/utils/episodeVideoUtils";
 import {
@@ -98,11 +100,13 @@ export default function WatchPage() {
   const [localUnavailable, setLocalUnavailable] = useState(false);
   const playLocal = (localMode || localItem?.status === "done") && !localUnavailable;
 
-  // Distincte de `anime:${slug}` (AnimePage) : les deux loaders renvoient des formes différentes.
+  // Même entrée que la fiche : arrivé d'un clic sur un épisode, rien n'est redemandé. Le lecteur
+  // lit toujours la fiche complète, même en mode allégé (pays d'origine, statut).
   const { data: animeData } = useCachedResource(
-    slug ? `watch-meta:${slug}` : null,
-    () => getAnimePage(slug),
-    10 * 60 * 1000
+    slug ? animeCacheKey(slug, false) : null,
+    () => loadAnime(slug),
+    10 * 60 * 1000,
+    ANIME_CACHE_OPTIONS
   );
   const animeTitle =
     animeData?.anime?.title?.trim() || animeData?.anilist?.title || localItem?.animeTitle || slug;
@@ -113,9 +117,19 @@ export default function WatchPage() {
   const { data: epData } = useCachedResource(
     slug && seasonId ? episodesCacheKey(slug, seasonId, liteMode) : null,
     () => getSeasonEpisodes(slug, seasonId, { lite: liteMode }),
-    EPISODES_TTL_MS
+    EPISODES_TTL_MS,
+    EPISODES_CACHE_OPTIONS
   );
-  const episodes = useMemo(() => epData?.episodes || [], [epData]);
+  // La liste affichée depuis le disque est revalidée en fond. Sa nouvelle version porte d'autres
+  // jetons (valides tous les deux) : on garde la première pour ne pas relancer la résolution de
+  // l'épisode déjà en cours. Elle repart de zéro dès que la saison change.
+  const frozenEpisodes = useRef({ key: null, list: [] });
+  const episodesKey = `${slug}|${seasonId}|${liteMode}`;
+  if (frozenEpisodes.current.key !== episodesKey) frozenEpisodes.current = { key: episodesKey, list: [] };
+  if (!frozenEpisodes.current.list.length && epData?.episodes?.length) {
+    frozenEpisodes.current.list = epData.episodes;
+  }
+  const episodes = frozenEpisodes.current.list;
 
   const currentIndex = useMemo(
     () => episodes.findIndex((e) => Number(e.episode ?? e.number) === epNumber),
@@ -140,7 +154,8 @@ export default function WatchPage() {
   const { data: nextSeasonData } = useCachedResource(
     nextSeason ? episodesCacheKey(slug, nextSeason.id, liteMode) : null,
     () => getSeasonEpisodes(slug, nextSeason.id, { lite: liteMode }),
-    EPISODES_TTL_MS
+    EPISODES_TTL_MS,
+    EPISODES_CACHE_OPTIONS
   );
   const nextSeasonFirst = nextSeason ? nextSeasonData?.episodes?.[0] || null : null;
   const goesToNextSeason = !hasNext && !!nextSeasonFirst;

@@ -28,13 +28,75 @@ function readPersisted(key, maxAgeMs) {
   }
 }
 
+// Le disque ne doit pas grossir sans fin : un index (clé → date, taille) permet d'écarter les
+// plus anciennes entrées. Les listes d'épisodes pèsent jusqu'à ~120 Ko.
+const INDEX_KEY = `${PERSIST_PREFIX}__index`;
+const MAX_PERSISTED_ENTRIES = 80;
+const MAX_PERSISTED_CHARS = 4_000_000;
+
+function readIndex() {
+  try {
+    return JSON.parse(localStorage.getItem(INDEX_KEY)) || {};
+  } catch {
+    return {};
+  }
+}
+
+function writeIndex(index) {
+  try {
+    localStorage.setItem(INDEX_KEY, JSON.stringify(index));
+  } catch {
+    // l'index se reconstruit au prochain enregistrement
+  }
+}
+
+/** Retire les plus anciennes entrées jusqu'à tenir dans les bornes ; `keep` n'est jamais retirée. */
+function pruneIndex(index, keep) {
+  const byAge = Object.entries(index).sort((a, b) => a[1].t - b[1].t);
+  let total = byAge.reduce((sum, [, entry]) => sum + entry.n, 0);
+  let count = byAge.length;
+  for (const [key, entry] of byAge) {
+    if (count <= MAX_PERSISTED_ENTRIES && total <= MAX_PERSISTED_CHARS) break;
+    if (key === keep) continue;
+    try {
+      localStorage.removeItem(`${PERSIST_PREFIX}${key}`);
+    } catch {
+      // best-effort
+    }
+    delete index[key];
+    total -= entry.n;
+    count -= 1;
+  }
+}
+
 function writePersisted(key, data) {
   if (!key || typeof localStorage === "undefined") return;
+  const raw = JSON.stringify({ data, ts: Date.now() });
+  const index = readIndex();
+  index[key] = { t: Date.now(), n: raw.length };
+  pruneIndex(index, key);
   try {
-    localStorage.setItem(`${PERSIST_PREFIX}${key}`, JSON.stringify({ data, ts: Date.now() }));
+    localStorage.setItem(`${PERSIST_PREFIX}${key}`, raw);
   } catch {
-    // quota plein ou stockage indisponible : le cache mémoire suffit
+    // Quota plein : on libère la moitié des entrées les plus anciennes, puis on retente une fois.
+    const byAge = Object.entries(index)
+      .filter(([k]) => k !== key)
+      .sort((a, b) => a[1].t - b[1].t);
+    for (const [old] of byAge.slice(0, Math.ceil(byAge.length / 2))) {
+      try {
+        localStorage.removeItem(`${PERSIST_PREFIX}${old}`);
+      } catch {
+        // best-effort
+      }
+      delete index[old];
+    }
+    try {
+      localStorage.setItem(`${PERSIST_PREFIX}${key}`, raw);
+    } catch {
+      delete index[key]; // le cache mémoire suffit
+    }
   }
+  writeIndex(index);
 }
 
 function removePersisted(prefix) {
@@ -47,6 +109,9 @@ function removePersisted(prefix) {
       if (key?.startsWith(storagePrefix)) keys.push(key);
     }
     keys.forEach((key) => localStorage.removeItem(key));
+    const index = readIndex();
+    for (const key of Object.keys(index)) if (key.startsWith(prefix)) delete index[key];
+    writeIndex(index);
   } catch {
     // best-effort
   }

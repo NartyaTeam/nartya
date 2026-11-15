@@ -2,7 +2,7 @@
  * Le renderer ne voit aucune URL d'hébergeur : il échange le jeton de l'API contre une URL
  * de proxy local auprès du processus principal.
  */
-import { getSeasonEpisodes } from "@/api/animeApi";
+import { EXTRACTION_CAPS, getSeasonEpisodes } from "@/api/animeApi";
 import { getAbsoluteApiBaseUrl } from "@/config/config";
 import { getPrioritizedSources, hasPlayableSources } from "./videoSourceUtils";
 import { useSettingsStore } from "@/stores/useSettingsStore";
@@ -165,9 +165,17 @@ export function prewarmEpisodeSource(episode, language = DEFAULT_LANGUAGE, selec
   resolveStreamToken(top.id);
 }
 
+// Le format des jetons dépend des capacités annoncées à l'API : une liste gardée sur disque par
+// une version plus ancienne ne doit pas être relue par une version qui en annonce d'autres.
 export function episodesCacheKey(slug, seasonId, lite = false) {
-  return `episodes:${slug}:${seasonId}${lite ? ":lite" : ""}`;
+  return `episodes:${EXTRACTION_CAPS}:${slug}:${seasonId}${lite ? ":lite" : ""}`;
 }
+
+/**
+ * Liste d'épisodes gardée sur disque pour s'afficher tout de suite au prochain lancement, puis
+ * revalidée. Les jetons de source vivent 6 h : au-delà de 2 h, la liste n'est plus relue.
+ */
+export const EPISODES_CACHE_OPTIONS = { persist: true, persistentMaxAgeMs: 2 * 60 * 60 * 1000 };
 
 /** Carte « Reprendre » : on n'a que les coordonnées. */
 export async function prewarmEpisode(slug, seasonId, episodeNumber, language = DEFAULT_LANGUAGE) {
@@ -177,7 +185,8 @@ export async function prewarmEpisode(slug, seasonId, episodeNumber, language = D
     const data = await getOrFetch(
       episodesCacheKey(slug, seasonId, lite),
       () => getSeasonEpisodes(slug, seasonId, { lite }),
-      EPISODES_TTL_MS
+      EPISODES_TTL_MS,
+      EPISODES_CACHE_OPTIONS
     );
     const episode = (data?.episodes || []).find(
       (e) => Number(e.episode ?? e.number) === Number(episodeNumber)

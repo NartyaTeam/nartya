@@ -8,7 +8,7 @@ import {
   sourceSelectOptions,
   sortSourcesForDisplay,
 } from "@/utils/videoSourceUtils";
-import { prewarmEpisodeSource, episodesCacheKey } from "@/utils/episodeVideoUtils";
+import { prewarmEpisodeSource, episodesCacheKey, EPISODES_CACHE_OPTIONS } from "@/utils/episodeVideoUtils";
 import { downloadsAvailable, downloadId } from "@/api/downloads";
 import { useCachedResource } from "@/hooks/useCachedResource";
 import { useAuthStore } from "@/stores/useAuthStore";
@@ -108,7 +108,8 @@ export function SeasonsSection({
     // Partagée avec le lecteur, qui réutilise cette liste.
     selectedSeason ? episodesCacheKey(slug, selectedSeason.id, liteMode) : null,
     () => getSeasonEpisodes(slug, selectedSeason.id, { lite: liteMode }),
-    5 * 60 * 1000
+    5 * 60 * 1000,
+    EPISODES_CACHE_OPTIONS
   );
   const episodes = useMemo(() => epData?.episodes || [], [epData]);
   const nextEpisode = epData?.nextEpisode || null;

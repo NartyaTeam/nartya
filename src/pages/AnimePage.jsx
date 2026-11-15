@@ -3,9 +3,9 @@ import { useParams, useNavigate, useSearchParams, Link } from "react-router-dom"
 import { ArrowLeft, Heart, Star, ChevronDown, ExternalLink, Megaphone, Play, Languages, Zap, ThumbsUp } from "lucide-react";
 import { toast } from "@/lib/toast";
 import { clipTitle, titleSizeClass } from "@/utils/displayTitle";
-import { getAnimePage, resolveAnilistToSlug, getAnimeScans } from "@/api/animeApi";
-import { getMediaById } from "@/api/anilist";
-import { fetchAniZipData } from "@/api/anizip";
+import HeroBanner from "@/components/ui/HeroBanner";
+import { getAnimeScans } from "@/api/animeApi";
+import { animeCacheKey, ANIME_CACHE_OPTIONS, loadAnime } from "@/api/animeLoad";
 import { getLastWatched } from "@/api/progress";
 import { useCachedResource } from "@/hooks/useCachedResource";
 import { useDiscordPresence } from "@/hooks/useDiscordPresence";
@@ -42,34 +42,6 @@ import { getAnimeRatingSummary } from "@/api/ratings";
 
 const MANGA_FORMATS = new Set(["MANGA", "NOVEL", "ONE_SHOT"]);
 
-/** Anime absent du catalogue : fiche AniList seule, sans épisodes. */
-async function loadAnime(slug, { lite = false } = {}) {
-  const isAnilistId = /^\d+$/.test(slug);
-  const realSlug = isAnilistId ? await resolveAnilistToSlug(slug) : slug;
-
-  if (realSlug) {
-    const page = await getAnimePage(realSlug, { lite });
-    return { streamingSlug: realSlug, ...page };
-  }
-  if (isAnilistId) {
-    const [media, az] = await Promise.all([
-      getMediaById(slug).catch(() => null),
-      fetchAniZipData(slug).catch(() => null),
-    ]);
-    if (!media) throw new Error("not found");
-    return {
-      streamingSlug: null,
-      anime: null,
-      anilist: media,
-      images: az
-        ? { fanart: az.fanart, banner: az.banner, poster: az.poster, clearLogo: az.clearLogo }
-        : null,
-      seasons: [],
-    };
-  }
-  throw new Error("not found");
-}
-
 export default function AnimePage() {
   const { slug } = useParams();
   const navigate = useNavigate();
@@ -80,9 +52,10 @@ export default function AnimePage() {
   const setSetting = useSettingsStore((s) => s.setSetting);
 
   const { data, loading, error } = useCachedResource(
-    `anime:${slug}:${liteMode ? "lite" : "full"}`,
+    animeCacheKey(slug, liteMode),
     () => loadAnime(slug, { lite: liteMode }),
-    10 * 60 * 1000
+    10 * 60 * 1000,
+    ANIME_CACHE_OPTIONS
   );
 
   const anime = data?.anime;
@@ -351,11 +324,7 @@ export default function AnimePage() {
   return (
     <div className="animate-fade-in pb-16">
       <div className="relative h-[300px] w-full overflow-hidden md:h-[380px]">
-        {banner ? (
-          <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${banner})` }} />
-        ) : (
-          <div className="absolute inset-0 bg-surface" />
-        )}
+        <HeroBanner src={banner} placeholder={cover} />
         <div className="absolute inset-0 bg-gradient-to-t from-bg via-bg/50 to-bg/20" />
         <div className="absolute inset-0 bg-gradient-to-r from-bg/70 to-transparent" />
       </div>
