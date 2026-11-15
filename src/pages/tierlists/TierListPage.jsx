@@ -130,9 +130,9 @@ export default function TierListPage() {
   const kind = kindOfTiers(list.tiers, list.pool);
 
   return (
-    <div className="animate-fade-in px-4 pb-24 pt-[calc(env(safe-area-inset-top)+4.5rem)] sm:px-8 md:py-10 xl:grid xl:grid-cols-[minmax(0,1fr)_22rem] xl:items-start xl:gap-6">
+    <div className="animate-fade-in px-4 pb-24 pt-[calc(env(safe-area-inset-top)+4.5rem)] sm:px-8 md:py-10 xl:grid xl:grid-cols-[minmax(0,1fr)_22rem] xl:items-start xl:gap-6 2xl:grid-cols-[minmax(0,1fr)_26rem]">
       <div className="min-w-0">
-      <header className="mb-5 max-w-5xl">
+      <header className="mb-5">
         <Link
           to="/tierlists"
           className="mb-3 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-muted transition-colors hover:text-primary"
@@ -204,7 +204,7 @@ export default function TierListPage() {
             <button
               onClick={() => requireAccount() && navigate(`/tierlists/new?from=${list.id}`)}
               title="Faire ma version"
-              className="flex h-10 items-center justify-center gap-2 rounded-md bg-primary px-3.5 text-sm font-bold text-primary-fg transition-[filter,transform] hover:brightness-110 active:scale-95"
+              className="flex h-10 items-center justify-center gap-2 rounded-md bg-primary px-3.5 text-sm font-bold text-primary-fg ring-2 ring-primary transition-[filter,transform] hover:brightness-110 active:scale-95"
             >
               <Copy size={16} /> Faire ma version
             </button>
@@ -232,7 +232,7 @@ export default function TierListPage() {
         </div>
       </header>
 
-      <div className="max-w-5xl">
+      <div>
         <TierBoard tiers={list.tiers} onOpen={kind === "anime" ? (item) => navigate(`/anime/${item.slug}`) : undefined} />
       </div>
 
