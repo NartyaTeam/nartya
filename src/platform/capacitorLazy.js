@@ -1,3 +1,5 @@
+import { definePlatform } from "./contract.js";
+
 let loaded = null;
 
 // Sans charger @capacitor/core : le pont natif injecte `window.Capacitor` avant le premier script.
@@ -50,7 +52,7 @@ const downloadListener = (key) => (...args) => {
   };
 };
 
-export const capacitorLazyPlatform = {
+export const capacitorLazyPlatform = definePlatform({
   name: `capacitor-${nativeOs}`,
   os: nativeOs,
   isMobile: true,
@@ -114,8 +116,4 @@ export const capacitorLazyPlatform = {
   haptic: voidCall("haptic"),
   share: asyncCall("share"),
   saveImage: asyncCall("saveImage"),
-  canOpenNewWindow: false,
-  openNewWindow: () => {},
-  quit: () => {},
-  focusWindow: () => {},
-};
+});

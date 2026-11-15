@@ -1,5 +1,6 @@
+import { definePlatform, noop } from "./contract.js";
+
 const tauri = typeof window !== "undefined" ? window.__TAURI__ : null;
-const noop = () => {};
 
 const invoke = (command, args) => tauri.core.invoke(command, args);
 
@@ -30,8 +31,9 @@ const openExternal = (url) => invoke("open_external", { url });
 
 let stopAuthCallback = noop;
 
-// Les modules absents de la coque Tauri restent à `null` : le front les traite comme sur le web.
-export const tauriPlatform = {
+// Ce que la coque ne déclare pas (orientation, luminosité, volume matériel, PiP natif, nouvelle
+// fenêtre) retombe sur les défauts du contrat.
+export const tauriPlatform = definePlatform({
   name: "tauri",
   os: detectOs(),
   isMobile: false,
@@ -106,17 +108,9 @@ export const tauriPlatform = {
     await openExternal(url);
     return { opened: true };
   },
-  setOrientation: noop,
-  setBrightness: noop,
-  getVolume: async () => null,
-  setVolume: noop,
-  captureVolumeButtons: noop,
-  onVolumeChange: () => noop,
-  nativePip: null,
+  // Pas de vibration ni de partage système sur le bureau, même si la WebView expose l'API web.
   haptic: noop,
   share: async () => false,
-  canOpenNewWindow: false,
-  openNewWindow: noop,
   quit: () => invoke("app_quit"),
   focusWindow: () => invoke("app_focus"),
-};
+});

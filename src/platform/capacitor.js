@@ -1,5 +1,6 @@
 import { Capacitor, registerPlugin, SystemBars, SystemBarsStyle } from "@capacitor/core";
 import { App } from "@capacitor/app";
+import { definePlatform } from "./contract.js";
 import { Browser } from "@capacitor/browser";
 import { Device } from "@capacitor/device";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
@@ -339,7 +340,7 @@ async function hashedDeviceId() {
   }
 }
 
-export const capacitorPlatform = {
+export const capacitorPlatform = definePlatform({
   name: `capacitor-${Capacitor.getPlatform()}`,
   os: Capacitor.getPlatform(),
   isMobile: true,
@@ -717,8 +718,4 @@ export const capacitorPlatform = {
   },
   /** `{ data }` en base64. Android : `{ saved }`, false quand le partage a pris le relais. */
   saveImage: (options) => NartyaShare.saveImage(options),
-  canOpenNewWindow: false,
-  openNewWindow: noop,
-  quit: noop,
-  focusWindow: noop,
-};
+});

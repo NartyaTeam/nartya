@@ -404,4 +404,6 @@ Gardés exprès : `src-tauri/src/migrate.rs` (reprise du `localStorage` écrit p
 
 **oauth et Hub déplacés dans le cœur** (`nartya-core::oauth`, `nartya-core::hub`) : le serveur de retour OAuth reçoit un rappel au lieu de connaître Tauri, `redirect_url(port)` est pure, et l'ouverture d'adresse du Hub passe par `Host::open_url` (méthode par défaut qui refuse : Android et iOS n'ont pas de Hub). La coque ne garde que le branchement (rappel → deep-link, port stocké dans l'état).
 
-Reste : adaptateur de page unique, recette partagée JS/Rust.
+**Contrat de page unique** : `src/platform/contract.js` liste les clés que tout adaptateur expose (`PLATFORM_SHAPE`) et les capacités optionnelles dont la présence dit ce que la plateforme sait faire (`OPTIONAL_CAPABILITIES`), puis `definePlatform(overrides)` complète avec le comportement du web. `web.js` n'a plus rien à déclarer ; `tauri.js` et `capacitor*.js` ne listent que ce qu'ils font vraiment. `test/platform-contract.test.mjs` vérifie que web, Tauri et Capacitor exposent les mêmes clés, sans clé hors contrat.
+
+Reste : recette partagée JS/Rust.
