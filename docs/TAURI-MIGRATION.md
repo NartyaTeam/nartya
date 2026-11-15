@@ -387,3 +387,9 @@ Fait (branche `feat/tauri-shell`) :
 
 Reste : essai réel des installeurs Linux et macOS (HLS/MSE, plein écran, captcha, Cast, Discord) par des volontaires ; `.dmg` Intel et Linux arm64 non produits ; `.dmg` non signé.
 
+
+#### Essai réel de l'installeur Windows (2026-11-15, cette machine)
+
+Installeur `Nartya-1.40.1-win.exe` lancé en `/S` (comme le Hub) par-dessus l'Electron 1.40.1 installé, sans processus Nartya ouvert : Electron désinstallé au même emplacement (`%LOCALAPPDATA%\Programs\Nartya` ne contient plus que `Nartya.exe`, `ffmpeg.exe`, `uninstall.exe`), clé `Uninstall\Nartya` mise à jour (`DisplayName` « Nartya 1.40.1 », `DisplayIcon` = l'exe), `%APPDATA%\nartya` intact. Le binaire release se lance (~43 Mo pour le process hôte) et, avec la session du Hub, affiche « Qui est là ? » : pas d'écran de connexion.
+
+Non couvert : la migration du `localStorage` (l'Electron installé n'avait pas l'export, donc aucun `localstorage-export.json`), un Windows sans WebView2, Windows 10, la détection par le Hub dans un parcours complet (clé de registre conforme à ce qu'il lit).
