@@ -1,0 +1,8 @@
+{
+  "bundle": {
+    "targets": ["appimage", "deb"],
+    "icon": ["icons/icon.png"],
+    "category": "Video",
+    "resources": { "resources/ffmpeg": "ffmpeg" }
+  }
+}

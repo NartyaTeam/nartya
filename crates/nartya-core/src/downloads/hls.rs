@@ -358,12 +358,20 @@ pub async fn download(
     Ok(("playlist.m3u8".into(), received.load(Ordering::Relaxed)))
 }
 
-/// À côté de l'exécutable une fois packagé ; en dev, celui de `ffmpeg-static`.
+/// Livré avec l'app (à côté de l'exécutable sous Windows, `Contents/Resources` sous macOS,
+/// `lib/Nartya` sous Linux) ; en dev, celui de `ffmpeg-static`.
 pub fn find_ffmpeg() -> Option<PathBuf> {
     let name = if cfg!(windows) { "ffmpeg.exe" } else { "ffmpeg" };
-    let beside = std::env::current_exe()
+    let exe_dir = std::env::current_exe()
         .ok()
-        .and_then(|exe| exe.parent().map(|d| d.join(name)));
+        .and_then(|exe| exe.parent().map(Path::to_path_buf));
+    let beside = exe_dir.iter().flat_map(|d| {
+        [
+            d.join(name),
+            d.join("..").join("Resources").join(name),
+            d.join("..").join("lib").join("Nartya").join(name),
+        ]
+    });
     let dev = cfg!(debug_assertions).then(|| {
         Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("..")

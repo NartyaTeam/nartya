@@ -42,7 +42,13 @@ fn exe_candidates() -> Vec<PathBuf> {
     }
     #[cfg(target_os = "macos")]
     {
-        vec![PathBuf::from("/Applications/Nartya Hub.app")]
+        // L'exécutable est dans le paquet : le dossier `.app` ne se lance pas par `Command`.
+        let rel = PathBuf::from("Nartya Hub.app/Contents/MacOS/Nartya Hub");
+        let mut dirs = vec![PathBuf::from("/Applications")];
+        if let Some(home) = std::env::var_os("HOME") {
+            dirs.push(PathBuf::from(home).join("Applications"));
+        }
+        dirs.into_iter().map(|d| d.join(&rel)).collect()
     }
     #[cfg(all(not(windows), not(target_os = "macos")))]
     {

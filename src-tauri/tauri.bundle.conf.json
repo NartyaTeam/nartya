@@ -2,20 +2,7 @@
   "mainBinaryName": "Nartya",
   "bundle": {
     "active": true,
-    "targets": ["nsis"],
-    "icon": ["icons/icon.ico", "icons/icon.png"],
     "publisher": "NartyaTeam",
-    "homepage": "https://nartya.app",
-    "resources": { "resources/ffmpeg.exe": "ffmpeg.exe" },
-    "windows": {
-      "webviewInstallMode": { "type": "downloadBootstrapper", "silent": true },
-      "nsis": {
-        "installMode": "currentUser",
-        "languages": ["French"],
-        "displayLanguageSelector": false,
-        "installerIcon": "icons/icon.ico",
-        "installerHooks": "installer-hooks.nsh"
-      }
-    }
+    "homepage": "https://nartya.app"
   }
 }

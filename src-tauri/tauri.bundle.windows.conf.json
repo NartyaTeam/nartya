@@ -1,0 +1,17 @@
+{
+  "bundle": {
+    "targets": ["nsis"],
+    "icon": ["icons/icon.ico", "icons/icon.png"],
+    "resources": { "resources/ffmpeg.exe": "ffmpeg.exe" },
+    "windows": {
+      "webviewInstallMode": { "type": "downloadBootstrapper", "silent": true },
+      "nsis": {
+        "installMode": "currentUser",
+        "languages": ["French"],
+        "displayLanguageSelector": false,
+        "installerIcon": "icons/icon.ico",
+        "installerHooks": "installer-hooks.nsh"
+      }
+    }
+  }
+}

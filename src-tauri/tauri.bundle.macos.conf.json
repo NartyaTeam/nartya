@@ -1,0 +1,8 @@
+{
+  "bundle": {
+    "targets": ["dmg"],
+    "icon": ["icons/icon.icns", "icons/icon.png"],
+    "category": "Video",
+    "resources": { "resources/ffmpeg": "ffmpeg" }
+  }
+}

@@ -96,6 +96,18 @@ jobs:
         run: cargo test --workspace
       - name: Build de la coque
         run: cargo build -p nartya
+      - name: Installeurs (.dmg ou AppImage et .deb)
+        env:
+          NO_STRIP: "true"
+        run: npm run tauri:bundle
+      - name: Contenu du .deb (ffmpeg livré ?)
+        if: runner.os == 'Linux'
+        run: dpkg -c release/tauri/*.deb | grep -i -E "ffmpeg|bin/" || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nartya-tauri-${{ runner.os }}
+          path: release/tauri/
+          retention-days: 7
 
   # Le cœur Rust doit rester compilable pour Android (lien : docs/TAURI-MIGRATION.md).
   android-core:
