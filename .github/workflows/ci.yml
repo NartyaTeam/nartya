@@ -64,12 +64,16 @@ jobs:
           path: release/tauri/
           retention-days: 7
 
-  # Linux et macOS : on valide la compilation et les tests, pas encore d'installeur.
+  # Linux et macOS, une machine native par architecture (ffmpeg et le nom du fichier suivent l'arch).
   tauri-unix:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        include:
+          - { os: ubuntu-latest, name: linux-x64 }
+          - { os: ubuntu-24.04-arm, name: linux-arm64 }
+          - { os: macos-latest, name: mac-arm64 }
+          - { os: macos-15-intel, name: mac-x64 }
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -105,7 +109,7 @@ jobs:
         run: dpkg -c release/tauri/*.deb | grep -i -E "ffmpeg|bin/" || true
       - uses: actions/upload-artifact@v4
         with:
-          name: nartya-tauri-${{ runner.os }}
+          name: nartya-tauri-${{ matrix.name }}
           path: release/tauri/
           retention-days: 7
 
