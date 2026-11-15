@@ -74,7 +74,6 @@ const ProfileArtPreviewPage = import.meta.env.DEV
 const DiscordPresence = lazy(() => import("@/components/DiscordPresence"));
 const WhatsNew = lazy(() => import("@/components/WhatsNew"));
 const DiscoverHub = lazy(() => import("@/components/DiscoverHub"));
-const MilestoneGift = lazy(() => import("@/components/MilestoneGift"));
 const AnnouncementNotifier = lazy(() => import("@/components/AnnouncementNotifier"));
 const AnnouncementsPanel = lazy(() => import("@/components/announcements/AnnouncementsPanel"));
 
@@ -275,7 +274,6 @@ export default function App() {
       {!platform.isMobile && (
         <Suspense fallback={null}>
           <DiscordPresence />
-          <MilestoneGift />
           <AnnouncementNotifier />
           <AnnouncementsPanel />
           <DiscoverHub />

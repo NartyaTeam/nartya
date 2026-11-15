@@ -5,7 +5,6 @@ import MobileNavigation from "./MobileNavigation";
 import TopBar from "./TopBar";
 import ScrollToTopButton from "./ScrollToTopButton";
 import ReleaseNotifier from "@/components/ReleaseNotifier";
-import FeatureBanner from "./FeatureBanner";
 import { useScrollRestoration } from "@/hooks/useScrollRestoration";
 import AppBackdrop from "./AppBackdrop";
 
@@ -27,7 +26,6 @@ export default function AppLayout() {
         onScroll={(e) => setScrolled(e.currentTarget.scrollTop > 40)}
         className="relative z-10 flex-1 overflow-x-hidden overflow-y-auto pb-[calc(3.5rem+env(safe-area-inset-bottom))] md:pb-0"
       >
-        <FeatureBanner />
         <TopBar scrolled={scrolled} />
         {/* Remonte sous la TopBar transparente. */}
         <div className="-mt-16">

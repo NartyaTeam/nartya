@@ -22,7 +22,6 @@ import { MusicSection } from "@/components/AnimePage/MusicSection";
 import { GallerySection } from "@/components/AnimePage/GallerySection";
 import AnimeRatingButton from "@/components/AnimePage/AnimeRatingButton";
 import BugReportModal from "@/components/BugReportModal";
-import PlayerControlsNotice from "@/components/AnimePage/PlayerControlsNotice";
 import NextReleaseCountdown from "@/components/AnimePage/NextReleaseCountdown";
 import CreditsLine from "@/components/AnimePage/CreditsLine";
 import { FranchiseSection } from "@/components/AnimePage/FranchiseSection";
@@ -79,10 +78,6 @@ export default function AnimePage() {
   const defaultLanguage = useSettingsStore((s) => s.defaultLanguage);
   const liteMode = useSettingsStore((s) => s.liteMode);
   const setSetting = useSettingsStore((s) => s.setSetting);
-  // Une seule fois sur cet appareil.
-  const [playerControlsNoticeOpen, setPlayerControlsNoticeOpen] = useState(
-    () => !useSettingsStore.getState().playerUpdateNoticeSeen
-  );
 
   const { data, loading, error } = useCachedResource(
     `anime:${slug}:${liteMode ? "lite" : "full"}`,
@@ -848,15 +843,6 @@ export default function AnimePage() {
           onClose={() => setReport(null)}
           context={report.context}
           defaultCategory={report.category}
-        />
-      )}
-
-      {playerControlsNoticeOpen && (
-        <PlayerControlsNotice
-          onClose={() => {
-            setPlayerControlsNoticeOpen(false);
-            setSetting("playerUpdateNoticeSeen", true);
-          }}
         />
       )}
     </div>

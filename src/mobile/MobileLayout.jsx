@@ -3,7 +3,6 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import MobileNavigation from "@/components/layout/MobileNavigation";
 import { useScrollRestoration } from "@/hooks/useScrollRestoration";
-import FeatureBanner from "@/components/layout/FeatureBanner";
 import AppBackdrop from "@/components/layout/AppBackdrop";
 
 const DEFAULT_GLOW = "radial-gradient(100% 55% at 85% -10%, rgb(var(--primary) / 0.16), transparent 62%)";
@@ -62,10 +61,6 @@ export default function MobileLayout() {
         ref={mainRef}
         className={`relative z-10 flex-1 overflow-x-hidden overscroll-y-contain pb-[calc(4rem+env(safe-area-inset-bottom))] ${fitsScreen ? "overflow-y-hidden" : "overflow-y-auto"}`}
       >
-        {/* Sous la barre système ; décalé pour laisser la place au bouton retour. */}
-        <FeatureBanner
-          className={`mx-3 mt-[calc(env(safe-area-inset-top)+0.75rem)] rounded-lg py-2 ${showBack ? "ml-16" : ""}`}
-        />
         <Outlet />
       </main>
       {/* Pas de Sidebar dans cette coque : la barre reste visible sur tablette. */}

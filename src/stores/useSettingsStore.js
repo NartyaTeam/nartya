@@ -27,7 +27,6 @@ const DEFAULTS = {
   releaseNotifications: true, // notif système à la sortie d'un épisode d'un anime suivi
   liteMode: false,
   advancedPlayerControls: false, // affiche le sélecteur d'hébergeur
-  playerUpdateNoticeSeen: false,
   spoilerMode: false, // floute les vignettes des épisodes non vus
   planningLanguage: "all", // filtre du calendrier : "all" | "vf" | "vostfr"
   planningContent: "anime", // contenu du calendrier : "anime" | "scans" | "all"
