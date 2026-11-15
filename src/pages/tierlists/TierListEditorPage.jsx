@@ -21,7 +21,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { ChevronDown, Eye, EyeOff, GripVertical, Inbox, LayoutTemplate, Loader2, Palette, Plus, Save, Trash2, X } from "lucide-react";
+import { ChevronDown, Eye, EyeOff, GripVertical, Inbox, LayoutTemplate, Loader2, Music, Palette, Plus, Save, Trash2, Tv, UserRound, X } from "lucide-react";
 import { toast } from "@/lib/toast";
 import { getTierList, saveTierList, tierListErrorMessage } from "@/api/tierLists";
 import {
@@ -29,7 +29,9 @@ import {
   MAX_TIERS,
   TEMPLATES,
   TIER_COLORS,
+  KINDS,
   cloneTiers,
+  kindOfTiers,
   makeTier,
   readableTextColor,
   tiersFromTemplate,
@@ -40,6 +42,12 @@ import { TierPoster } from "@/components/tierlists/TierBoard";
 
 const POOL = "pool";
 const ROW = "row:";
+
+const KIND_OPTIONS = [
+  { value: "anime", label: KINDS.anime.label, Icon: Tv },
+  { value: "character", label: KINDS.character.label, Icon: UserRound },
+  { value: "music", label: KINDS.music.label, Icon: Music },
+];
 
 const itemsOf = (board, cid) => (cid === POOL ? board.pool : board.tiers.find((t) => t.id === cid)?.items || []);
 const withItems = (board, cid, items) =>
@@ -100,7 +108,7 @@ function Modal({ title, onClose, children }) {
   );
 }
 
-function SortablePoster({ item, onTap }) {
+function SortablePoster({ item, onTap, selected = false, small = false }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: item.slug,
     data: { type: "item" },
@@ -110,7 +118,9 @@ function SortablePoster({ item, onTap }) {
       ref={setNodeRef}
       item={item}
       style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.35 : 1, touchAction: "none" }}
-      className="cursor-grab active:cursor-grabbing"
+      className={`cursor-grab active:cursor-grabbing ${small ? "!w-14 sm:!w-16" : ""} ${
+        selected ? "z-[1] scale-105 ring-2 ring-primary ring-offset-2 ring-offset-surface" : ""
+      }`}
       onClick={() => onTap(item)}
       {...attributes}
       {...listeners}
@@ -118,20 +128,21 @@ function SortablePoster({ item, onTap }) {
   );
 }
 
-function DropZone({ id, items, onTap, highlight, className = "", empty }) {
+function DropZone({ id, items, onTap, highlight, className = "", empty, tail, nowrap = false, selected = null, small = false }) {
   const { setNodeRef, isOver } = useDroppable({ id, data: { type: "container" } });
   return (
     <SortableContext id={id} items={items.map((it) => it.slug)} strategy={rectSortingStrategy}>
       <div
         ref={setNodeRef}
-        className={`flex min-w-0 flex-1 flex-wrap content-start gap-0.5 p-0.5 transition-colors ${
-          isOver || highlight ? "bg-primary/15" : ""
-        } ${className}`}
+        className={`flex min-w-0 flex-1 gap-0.5 p-0.5 transition-colors ${
+          nowrap ? "flex-nowrap items-center gap-2 overflow-x-auto overflow-y-hidden px-2 py-2" : "flex-wrap content-start"
+        } ${isOver || highlight ? "bg-primary/15" : ""} ${className}`}
       >
         {items.map((item) => (
-          <SortablePoster key={item.slug} item={item} onTap={onTap} />
+          <SortablePoster key={item.slug} item={item} onTap={onTap} selected={selected === item.slug} small={small} />
         ))}
         {!items.length && empty}
+        {tail}
       </div>
     </SortableContext>
   );
@@ -228,7 +239,7 @@ function TemplateMenu({ onPick }) {
   );
 }
 
-function EditableRow({ tier, canDelete, canAdd, highlight, onChange, onInsertBelow, onDelete, onTap }) {
+function EditableRow({ tier, index, placing, canDelete, canAdd, highlight, onChange, onInsertBelow, onDelete, onTap, onPlace }) {
   const [picking, setPicking] = useState(false);
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({
     id: ROW + tier.id,
@@ -246,10 +257,18 @@ function EditableRow({ tier, canDelete, canAdd, highlight, onChange, onInsertBel
       }`}
     >
       <label
-        className="flex w-20 shrink-0 cursor-text items-center justify-center px-1 sm:w-28"
+        className="relative flex w-20 shrink-0 cursor-text items-center justify-center px-1 sm:w-28"
         style={{ background: tier.color }}
         title="Clique pour modifier le texte"
       >
+        {placing && index < 10 && (
+          <span
+            aria-hidden="true"
+            className="absolute left-1 top-1 flex h-5 min-w-5 items-center justify-center rounded bg-black/55 px-1 text-[0.7rem] font-bold tabular-nums text-white"
+          >
+            {(index + 1) % 10}
+          </span>
+        )}
         <textarea
           value={tier.label}
           maxLength={60}
@@ -261,7 +280,24 @@ function EditableRow({ tier, canDelete, canAdd, highlight, onChange, onInsertBel
           className="w-full resize-none overflow-hidden bg-transparent text-center text-xs font-bold leading-tight outline-none placeholder:text-current placeholder:opacity-50 focus:rounded focus:bg-black/10 sm:text-sm"
         />
       </label>
-      <DropZone id={tier.id} items={tier.items} onTap={onTap} highlight={highlight} className="bg-surface/70" />
+      <DropZone
+        id={tier.id}
+        items={tier.items}
+        onTap={onTap}
+        highlight={highlight}
+        className="bg-surface/70"
+        tail={
+          placing && (
+            <button
+              type="button"
+              onClick={() => onPlace(tier.id)}
+              className="flex h-10 items-center gap-1.5 self-center rounded-md border-2 border-dashed border-primary/60 px-3 text-xs font-bold text-primary transition-colors hover:bg-primary/15"
+            >
+              <Plus size={14} /> Placer ici
+            </button>
+          )
+        }
+      />
       <div className="relative flex w-9 shrink-0 flex-col items-center justify-center gap-0.5 bg-surface-2 py-1 text-muted">
         <button
           ref={setActivatorNodeRef}
@@ -332,6 +368,8 @@ export default function TierListEditorPage() {
   const [menuItem, setMenuItem] = useState(null);
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  const [kind, setKind] = useState(() => (KINDS[params.get("kind")] ? params.get("kind") : "anime"));
+  const [selected, setSelected] = useState(null);
 
   useEffect(() => {
     if (!id && !fromId) return undefined;
@@ -349,10 +387,12 @@ export default function TierListEditorPage() {
           setDescription(list.description);
           setIsPublic(list.isPublic);
           setBoard({ tiers: list.tiers.map((t) => ({ ...t, items: t.items || [] })), pool: list.pool });
+          setKind(kindOfTiers(list.tiers, list.pool));
         } else {
           setTitle(`Ma version : ${list.title}`.slice(0, 80));
           setForkedFrom(list.id);
           setBoard({ tiers: cloneTiers(list.tiers), pool: [] });
+          setKind(kindOfTiers(list.tiers));
         }
         setReady(true);
       })
@@ -402,6 +442,42 @@ export default function TierListEditorPage() {
       return from ? withItems(b, from, itemsOf(b, from).filter((it) => it.slug !== slug)) : b;
     });
   };
+
+  // Classement rapide : un élément du bac est sélectionné, un clic sur une rangée (ou sa touche
+  // 1-9, 0) l'y pose et sélectionne le suivant.
+  const current = board.pool.some((it) => it.slug === selected) ? selected : null;
+
+  const placeSelected = (tierId) => {
+    if (!current) return;
+    const at = board.pool.findIndex((it) => it.slug === current);
+    const rest = board.pool.filter((it) => it.slug !== current);
+    moveItem(current, tierId);
+    setSelected(rest[Math.min(at, rest.length - 1)]?.slug ?? null);
+  };
+
+  const placeRef = useRef(placeSelected);
+  placeRef.current = placeSelected;
+  const tiersRef = useRef(board.tiers);
+  tiersRef.current = board.tiers;
+  useEffect(() => {
+    if (!current) return undefined;
+    const onKey = (e) => {
+      const tag = e.target?.tagName;
+      if (e.ctrlKey || e.metaKey || e.altKey || tag === "INPUT" || tag === "TEXTAREA" || e.target?.isContentEditable) return;
+      if (e.key === "Escape") {
+        setSelected(null);
+        return;
+      }
+      if (!/^[0-9]$/.test(e.key)) return;
+      const tier = tiersRef.current[e.key === "0" ? 9 : Number(e.key) - 1];
+      if (tier) {
+        e.preventDefault();
+        placeRef.current(tier.id);
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [current]);
 
   const onDragStart = ({ active: a }) => {
     const type = a.data.current?.type;
@@ -554,7 +630,7 @@ export default function TierListEditorPage() {
             {title.trim() || (id ? "Modifier la tier list" : "Nouvelle tier list")}
           </h1>
           <p className="mt-1 text-xs tabular-nums text-muted">
-            {ranked} classé{ranked > 1 ? "s" : ""} · {total}/{MAX_ITEMS} animes
+            {ranked} classé{ranked > 1 ? "s" : ""} · {total}/{MAX_ITEMS} {KINDS[kind].many}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -583,37 +659,41 @@ export default function TierListEditorPage() {
         onDragEnd={onDragEnd}
         onDragCancel={endDrag}
       >
-        <AnimePicker has={has} onAdd={addItems} />
-
-        <div className="mt-6 min-w-0 space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-xs text-muted">
-              Clique sur le texte d'une rangée pour le changer. Glisse les affiches et les rangées (
-              <GripVertical size={12} className="inline align-[-2px]" />
-              ).
-            </p>
-            <div className="flex items-center gap-2">
-              {board.tiers.length < MAX_TIERS && (
-                <button
-                  type="button"
-                  onClick={() =>
-                    setBoard((b) => ({ ...b, tiers: [...b.tiers, makeTier("", TIER_COLORS[b.tiers.length % TIER_COLORS.length])] }))
-                  }
-                  className="flex h-10 items-center gap-2 rounded-md bg-surface px-3.5 text-sm font-bold text-text ring-2 ring-border transition-colors hover:text-primary hover:ring-primary/60"
-                >
-                  <Plus size={16} /> Rangée
-                </button>
-              )}
-              <TemplateMenu onPick={applyTemplate} />
-            </div>
+        <div className="relative z-20 flex flex-wrap items-center gap-2">
+          <AnimePicker kind={kind} has={has} onAdd={addItems} className="min-w-[14rem] flex-1" />
+          <SegmentedControl
+            label="Type de tier list"
+            options={KIND_OPTIONS}
+            value={kind}
+            onChange={setKind}
+            className="shrink-0"
+          />
+          <div className="ml-auto flex items-center gap-2">
+            {board.tiers.length < MAX_TIERS && (
+              <button
+                type="button"
+                onClick={() =>
+                  setBoard((b) => ({ ...b, tiers: [...b.tiers, makeTier("", TIER_COLORS[b.tiers.length % TIER_COLORS.length])] }))
+                }
+                className="flex h-10 items-center gap-2 rounded-md bg-surface px-3.5 text-sm font-bold text-text ring-2 ring-border transition-colors hover:text-primary hover:ring-primary/60"
+              >
+                <Plus size={16} /> Rangée
+              </button>
+            )}
+            <TemplateMenu onPick={applyTemplate} />
           </div>
+        </div>
 
+        <div className="mt-4 min-w-0 space-y-4">
           <div className="overflow-visible rounded-md bg-black ring-2 ring-border">
             <SortableContext items={board.tiers.map((t) => ROW + t.id)} strategy={verticalListSortingStrategy}>
-              {board.tiers.map((tier) => (
+              {board.tiers.map((tier, index) => (
                 <EditableRow
                   key={tier.id}
                   tier={tier}
+                  index={index}
+                  placing={Boolean(current)}
+                  onPlace={placeSelected}
                   canDelete={board.tiers.length > 1}
                   canAdd={board.tiers.length < MAX_TIERS}
                   highlight={active?.type === "pick" && overCid === tier.id}
@@ -626,26 +706,37 @@ export default function TierListEditorPage() {
             </SortableContext>
           </div>
 
-          <section>
-            <h2 className="mb-2 flex items-center gap-2 text-sm font-bold">
-              <Inbox size={16} className="text-primary" /> Non classés
-              <span className="text-xs font-normal text-muted">— glisse-les dans une rangée</span>
-            </h2>
-            <div className="flex min-h-[7rem] rounded-md border-2 border-dashed border-border">
-              <DropZone
-                id={POOL}
-                items={board.pool}
-                onTap={setMenuItem}
-                highlight={active?.type === "pick" && overCid === POOL}
-                empty={
-                  <p className="m-auto px-4 py-6 text-center text-xs text-muted">
-                    Les animes ajoutés d'un clic arrivent ici.
-                  </p>
-                }
-              />
-            </div>
-          </section>
         </div>
+
+        <section
+          aria-label="Non classés"
+          className="sticky bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-30 mt-4 rounded-md bg-surface shadow-2xl ring-2 ring-border md:bottom-3"
+        >
+          <div className="flex items-center gap-2 px-3 pt-2 text-xs">
+            <Inbox size={14} className="text-primary" />
+            <span className="font-bold text-text">Non classés ({board.pool.length})</span>
+            <span className="min-w-0 truncate text-muted">
+              {current
+                ? `Clique une rangée ou tape sa touche (1${board.tiers.length > 1 ? `–${board.tiers.length >= 10 ? "9, 0" : board.tiers.length}` : ""}) · Échap pour annuler`
+                : board.pool.length
+                  ? "Clique un élément puis une rangée, ou glisse-le."
+                  : `Ajoute des ${KINDS[kind].many} avec la recherche : ils arrivent ici.`}
+            </span>
+          </div>
+          <div className={`flex px-1 pb-1 ${board.pool.length ? "min-h-[6.5rem]" : "min-h-[3rem]"}`}>
+            <DropZone
+              id={POOL}
+              items={board.pool}
+              onTap={(item) => setSelected((cur) => (cur === item.slug ? null : item.slug))}
+              highlight={active?.type === "pick" && overCid === POOL}
+              nowrap
+              small
+              selected={current}
+              className={board.pool.length ? "min-h-[5.5rem]" : "min-h-[2.5rem]"}
+              empty={<p className="m-auto px-4 text-center text-xs text-muted">Rien à classer pour l'instant.</p>}
+            />
+          </div>
+        </section>
 
         {createPortal(
           <DragOverlay dropAnimation={null}>

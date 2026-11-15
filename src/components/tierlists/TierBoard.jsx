@@ -1,5 +1,5 @@
 import { forwardRef } from "react";
-import { readableTextColor } from "@/lib/tierLists";
+import { kindOfSlug, readableTextColor } from "@/lib/tierLists";
 
 /** Affiche + nom en bas, comme sur TierMaker. */
 export const TierPoster = forwardRef(function TierPoster({ item, className = "", dimmed = false, ...props }, ref) {
@@ -7,9 +7,9 @@ export const TierPoster = forwardRef(function TierPoster({ item, className = "",
     <div
       ref={ref}
       title={item.title}
-      className={`relative aspect-[5/7] w-[4.5rem] shrink-0 select-none overflow-hidden bg-surface-2 sm:w-[5.25rem] ${
-        dimmed ? "opacity-40" : ""
-      } ${className}`}
+      className={`relative w-[4.5rem] shrink-0 select-none overflow-hidden bg-surface-2 sm:w-[5.25rem] ${
+        kindOfSlug(item.slug) === "music" ? "aspect-square" : "aspect-[5/7]"
+      } ${dimmed ? "opacity-40" : ""} ${className}`}
       {...props}
     >
       {item.cover ? (

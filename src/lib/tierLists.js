@@ -62,6 +62,27 @@ export function readableTextColor(hex) {
   return 0.299 * r + 0.587 * g + 0.114 * b > 150 ? "#111111" : "#ffffff";
 }
 
+/**
+ * Ce qu'on classe. Le type n'est pas stocké : il se lit sur le préfixe du `slug` des éléments
+ * (`character:17`, `music:1529543135`), un animé garde son slug de catalogue tel quel.
+ */
+export const KINDS = {
+  anime: { label: "Animes", one: "anime", many: "animes", placeholder: "Chercher un anime à ajouter…" },
+  character: { label: "Personnages", one: "personnage", many: "personnages", placeholder: "Chercher un personnage à ajouter…" },
+  music: { label: "Musiques", one: "musique", many: "musiques", placeholder: "Chercher une musique à ajouter…" },
+};
+
+export const kindOfSlug = (slug) => {
+  const prefix = String(slug || "").split(":", 1)[0];
+  return prefix === "character" || prefix === "music" ? prefix : "anime";
+};
+
+/** Type d'une liste : celui de son premier élément, animes par défaut. */
+export function kindOfTiers(tiers = [], pool = []) {
+  const first = [...tiers.flatMap((t) => t.items || []), ...pool][0];
+  return first ? kindOfSlug(first.slug) : "anime";
+}
+
 /** Une œuvre dans une tier list : seulement ce que le serveur garde. */
 export const toItem = (a) => ({
   slug: a.slug,

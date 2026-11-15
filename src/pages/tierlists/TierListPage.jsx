@@ -12,6 +12,7 @@ import { resolveAvatar } from "@/api/profile";
 import { deleteTierList, getTierList, tierListErrorMessage, tierListTarget, voteTierList } from "@/api/tierLists";
 import { Avatar } from "@/components/ui/Avatar";
 import ConfirmModal from "@/components/ui/ConfirmModal";
+import { KINDS, kindOfTiers } from "@/lib/tierLists";
 import TierBoard from "@/components/tierlists/TierBoard";
 import TierListChat from "@/components/tierlists/TierListChat";
 
@@ -123,6 +124,7 @@ export default function TierListPage() {
   };
 
   const date = list.publishedAt || list.updatedAt;
+  const kind = kindOfTiers(list.tiers, list.pool);
 
   return (
     <div className="animate-fade-in px-4 pb-24 pt-[calc(env(safe-area-inset-top)+4.5rem)] sm:px-8 md:py-10 xl:grid xl:grid-cols-[minmax(0,1fr)_22rem] xl:items-start xl:gap-6">
@@ -150,7 +152,9 @@ export default function TierListPage() {
             <span className="font-semibold text-text">{authorName}</span>
           )}
           {date && <span>· {format(new Date(date), "d MMMM yyyy", { locale: fr })}</span>}
-          <span>· {list.itemCount} anime{list.itemCount > 1 ? "s" : ""}</span>
+          <span>
+            · {list.itemCount} {list.itemCount > 1 ? KINDS[kind].many : KINDS[kind].one}
+          </span>
           {list.forkedFrom?.title && (
             <span>
               · inspirée de{" "}
@@ -211,7 +215,7 @@ export default function TierListPage() {
       </header>
 
       <div className="max-w-5xl">
-        <TierBoard tiers={list.tiers} onOpen={(item) => navigate(`/anime/${item.slug}`)} />
+        <TierBoard tiers={list.tiers} onOpen={kind === "anime" ? (item) => navigate(`/anime/${item.slug}`) : undefined} />
       </div>
 
       </div>

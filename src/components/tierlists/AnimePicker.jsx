@@ -1,17 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, Loader2, Plus, Search, X } from "lucide-react";
-import { searchAnimes } from "@/api/animeApi";
+import { searchAnimes, searchCharacters, searchMusic } from "@/api/animeApi";
 import { useDisplayTitle } from "@/stores/useTitlesStore";
-import { toItem } from "@/lib/tierLists";
+import { KINDS, toItem } from "@/lib/tierLists";
 
 const LIMIT = 30;
+const SEARCH = { anime: searchAnimes, character: searchCharacters, music: searchMusic };
 
 /**
- * Recherche d'animes à ajouter, en menu déroulant : une recherche vague remonte plusieurs titres
- * proches, on choisit le bon. `has(slug)` : déjà dans la tier list. `onAdd(items)` reçoit des
- * éléments au format de la tier list.
+ * Recherche à ajouter, en menu déroulant : une recherche vague remonte plusieurs titres proches,
+ * on choisit le bon. `kind` : animes, personnages ou musiques. `has(slug)` : déjà dans la tier
+ * list. `onAdd(items)` reçoit des éléments au format de la tier list.
  */
-export default function AnimePicker({ has, onAdd }) {
+export default function AnimePicker({ kind = "anime", has, onAdd, className = "" }) {
   const displayTitle = useDisplayTitle();
   const rootRef = useRef(null);
   const listRef = useRef(null);
@@ -32,10 +33,10 @@ export default function AnimePicker({ has, onAdd }) {
     setLoading(true);
     const timer = setTimeout(
       () =>
-        searchAnimes(term, LIMIT)
+        SEARCH[kind](term, LIMIT)
           .then((rows) => {
             if (!alive) return;
-            setResults((rows || []).filter((r) => r?.slug).map(toItem));
+            setResults((rows || []).filter((r) => r?.slug).map((r) => ({ ...toItem(r), sub: r.subtitle || "" })));
             setCursor(0);
           })
           .catch(() => alive && setResults([]))
@@ -46,7 +47,12 @@ export default function AnimePicker({ has, onAdd }) {
       alive = false;
       clearTimeout(timer);
     };
-  }, [term]);
+  }, [term, kind]);
+
+  useEffect(() => {
+    setQuery("");
+    setResults([]);
+  }, [kind]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -64,7 +70,7 @@ export default function AnimePicker({ has, onAdd }) {
     [results, displayTitle]
   );
 
-  const pick = (item) => {
+  const pick = ({ sub: _sub, ...item }) => {
     if (!has(item.slug)) onAdd([item]);
   };
 
@@ -87,7 +93,7 @@ export default function AnimePicker({ has, onAdd }) {
   const showMenu = open && term && (rows.length > 0 || !loading);
 
   return (
-    <section aria-label="Ajouter des animes" ref={rootRef} className="relative z-20 mx-auto w-full max-w-2xl">
+    <section aria-label="Ajouter des animes" ref={rootRef} className={`relative z-20 w-full max-w-xl ${className}`}>
       <div className="flex h-12 items-center gap-3 rounded-md bg-surface px-4 ring-2 ring-border transition-colors focus-within:ring-primary/70">
         {loading ? (
           <Loader2 size={18} className="shrink-0 animate-spin text-muted" />
@@ -102,8 +108,8 @@ export default function AnimePicker({ has, onAdd }) {
           }}
           onFocus={() => setOpen(true)}
           onKeyDown={onKeyDown}
-          placeholder="Chercher un anime à ajouter…"
-          aria-label="Chercher un anime à ajouter"
+          placeholder={KINDS[kind].placeholder}
+          aria-label={KINDS[kind].placeholder}
           role="combobox"
           aria-expanded={Boolean(showMenu)}
           aria-autocomplete="list"
@@ -142,12 +148,18 @@ export default function AnimePicker({ has, onAdd }) {
                       }`}
                     >
                       {item.cover ? (
-                        <img src={item.cover} alt="" loading="lazy" className="h-12 w-9 shrink-0 rounded-sm object-cover" />
+                        <img
+                          src={item.cover}
+                          alt=""
+                          loading="lazy"
+                          className={`h-12 shrink-0 rounded-sm object-cover ${kind === "music" ? "w-12" : "w-9"}`}
+                        />
                       ) : (
                         <span className="h-12 w-9 shrink-0 rounded-sm bg-surface-2" />
                       )}
-                      <span className={`min-w-0 flex-1 truncate text-sm font-bold ${added ? "text-muted" : "text-text"}`}>
-                        {item.title}
+                      <span className="min-w-0 flex-1">
+                        <span className={`block truncate text-sm font-bold ${added ? "text-muted" : "text-text"}`}>{item.title}</span>
+                        {item.sub && <span className="block truncate text-xs text-muted">{item.sub}</span>}
                       </span>
                       {added ? (
                         <span className="flex shrink-0 items-center gap-1 text-xs font-bold text-muted">

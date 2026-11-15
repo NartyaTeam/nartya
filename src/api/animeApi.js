@@ -152,6 +152,19 @@ export async function searchAnimes(query, limit = 20, media = "anime") {
   return (await get(`/v1/${media === "manga" ? "manga" : "anime"}/search?${params.toString()}`)).data;
 }
 
+/** Personnages et musiques pour les tier lists : [{ slug, title, image, subtitle }]. */
+export async function searchCharacters(query, limit = 30) {
+  if (!query?.trim()) return [];
+  const params = new URLSearchParams({ q: query, limit: String(limit) });
+  return (await get(`/v1/characters/search?${params.toString()}`, { retries: 0 })).data;
+}
+
+export async function searchMusic(query, limit = 30) {
+  if (!query?.trim()) return [];
+  const params = new URLSearchParams({ q: query, limit: String(limit) });
+  return (await get(`/v1/music/search?${params.toString()}`, { retries: 0 })).data;
+}
+
 export async function resolveAnilistToSlug(anilistId) {
   try {
     const res = await fetch(`${getApiBaseUrl()}/v1/anime/resolve?anilist=${anilistId}`, {
