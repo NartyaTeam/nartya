@@ -1,16 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import {
-  ChevronDown,
-  RotateCcw,
-  Search,
-  SlidersHorizontal,
-  X,
-} from "lucide-react";
+import { BookOpen, Play, RotateCcw, Search, X } from "lucide-react";
 import { searchCatalog } from "@/api/animeApi";
 import { getAnimeIdsByTag } from "@/api/anilist";
 import { TROPE_GROUPS, TROPE_LABEL } from "@/utils/anilistTags";
 import CatalogResults from "@/components/catalog/CatalogResults";
+import FilterPopover from "@/components/ui/FilterPopover";
+import SegmentedControl from "@/components/ui/SegmentedControl";
+import { Select } from "@/components/ui/Select";
 import { EPISODE_RANGES, episodeRangeFor } from "@/utils/episodeRanges";
 import { MAIN_GENRES, SECONDARY_GENRES } from "@/utils/genres";
 
@@ -48,18 +45,27 @@ const SCORE_OPTIONS = [
 ];
 
 const MEDIA_OPTIONS = [
-  { value: "anime", label: "Anime" },
-  { value: "manga", label: "Manga" },
+  { value: "anime", label: "Anime", Icon: Play },
+  { value: "manga", label: "Manga", Icon: BookOpen },
 ];
 
-function Choice({ active, disabled = false, onClick, children }) {
+// Radix refuse la valeur vide : « aucun filtre » s'écrit ANY dans les menus.
+const ANY = "any";
+const forSelect = (options) => options.map((o) => ({ ...o, value: o.value || ANY }));
+const fromSelect = (value) => (value === ANY ? "" : value);
+const TYPE_SELECT = forSelect(TYPE_OPTIONS);
+const ORIGIN_SELECT = forSelect(ORIGIN_OPTIONS);
+const LANG_SELECT = forSelect(LANG_OPTIONS);
+const SCORE_SELECT = forSelect(SCORE_OPTIONS);
+const EPISODES_SELECT = forSelect(EPISODE_RANGES);
+
+function Choice({ active, onClick, children }) {
   return (
     <button
       type="button"
-      disabled={disabled}
       aria-pressed={active}
       onClick={onClick}
-      className={`rounded-md border-2 px-3 py-1.5 text-xs font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-30 ${
+      className={`rounded-md border-2 px-3 py-1.5 text-xs font-bold transition-colors ${
         active
           ? "border-primary bg-primary/15 text-primary"
           : "border-border bg-surface/60 text-muted hover:border-text/35 hover:text-text"
@@ -70,8 +76,22 @@ function Choice({ active, disabled = false, onClick, children }) {
   );
 }
 
-function genresFromParams(params) {
-  return (params.get("genre") || "").split(",").filter(Boolean);
+function PanelTitle({ children }) {
+  return <p className="mb-2.5 text-[0.65rem] font-bold uppercase tracking-[0.16em] text-muted/70">{children}</p>;
+}
+
+function CriterionChip({ label, onRemove, what }) {
+  return (
+    <button
+      type="button"
+      onClick={onRemove}
+      aria-label={`Retirer ${what} ${label}`}
+      className="inline-flex items-center gap-1.5 rounded-md bg-primary/15 px-2.5 py-1 text-xs font-semibold text-primary transition-colors hover:bg-primary/25"
+    >
+      {label}
+      <X size={12} />
+    </button>
+  );
 }
 
 export default function SearchHubPage() {
@@ -97,33 +117,14 @@ export default function SearchHubPage() {
   const committedTag = TROPE_LABEL[params.get("tag")] ? params.get("tag") : "";
 
   const [searchInput, setSearchInput] = useState(committedSearch);
-  const [media, setMedia] = useState(committedMedia);
-  const [genres, setGenres] = useState(() => genresFromParams(params));
-  const [type, setType] = useState(committedType);
-  const [duration, setDuration] = useState(
-    () => episodeRangeFor(committedEps) || EPISODE_RANGES[0]
-  );
-  const [lang, setLang] = useState(committedLang);
-  const [scoreMin, setScoreMin] = useState(committedScore);
-  const [origin, setOrigin] = useState(committedOrigin);
-  const [tag, setTag] = useState(committedTag);
   // Thème précis : AniList donne les œuvres par paquets de 150, dont on garde celles du catalogue.
   // Un paquet sans aucune œuvre du catalogue est sauté, d'où ce curseur à part de la pagination.
   const tagCursorRef = useRef({ key: "", next: 1, hasMore: true });
-  const [filtersOpen, setFiltersOpen] = useState(false);
 
   // La navbar peut naviguer vers cette page déjà montée : l'URL reste la source de vérité.
   useEffect(() => {
     setSearchInput(committedSearch);
-    setMedia(committedMedia);
-    setGenres(committedGenres);
-    setType(committedType);
-    setDuration(committedRange || EPISODE_RANGES[0]);
-    setLang(committedLang);
-    setScoreMin(committedScore);
-    setOrigin(committedOrigin);
-    setTag(committedTag);
-  }, [committedSearch, committedMedia, committedGenres, committedType, committedRange, committedLang, committedScore, committedOrigin, committedTag]);
+  }, [committedSearch]);
 
   const isManga = committedMedia === "manga";
   const committedIsFormat = ANILIST_FORMATS.has(committedType);
@@ -168,101 +169,56 @@ export default function SearchHubPage() {
     [committedSearch, committedMedia, isManga, committedGenres, committedType, committedIsFormat, committedOrigin, committedTag, committedLang, committedRange, committedScore, resetKey]
   );
 
-  const activeCriteria = useMemo(() => {
-    const items = [...committedGenres];
-    if (isManga) {
-      if (committedOrigin) items.unshift(ORIGIN_OPTIONS.find((o) => o.value === committedOrigin).label);
-      return items;
+  /** Un filtre s'applique dès qu'il change : l'URL est mise à jour, vide = critère retiré. */
+  function updateParams(changes) {
+    const next = new URLSearchParams(params);
+    for (const [key, value] of Object.entries(changes)) {
+      const text = Array.isArray(value) ? value.join(",") : value;
+      if (text) next.set(key, text);
+      else next.delete(key);
     }
-    if (committedType) items.unshift(TYPE_OPTIONS.find((o) => o.value === committedType)?.label || committedType);
-    if (committedTag) items.push(TROPE_LABEL[committedTag]);
-    if (committedRange && committedType !== "Film") {
-      items.push(`${committedRange.label} épisodes`);
-    }
-    if (committedLang) items.push(committedLang === "vf" ? "VF" : "VOSTFR");
-    if (committedScore) items.push(`Note ${committedScore}+`);
-    return items;
-  }, [isManga, committedGenres, committedOrigin, committedTag, committedType, committedRange, committedLang, committedScore]);
-
-  function toggleGenre(genre) {
-    setGenres((current) =>
-      current.includes(genre)
-        ? current.filter((item) => item !== genre)
-        : [...current, genre]
-    );
-  }
-
-  function selectType(nextType) {
-    setType(nextType);
-    if (nextType === "Film") setDuration(EPISODE_RANGES[0]);
+    setParams(next);
   }
 
   function selectMedia(nextMedia) {
-    setMedia(nextMedia);
-    // Format, durée et langue n'existent pas côté manga.
-    if (nextMedia === "manga") {
-      setType("");
-      setDuration(EPISODE_RANGES[0]);
-      setLang("");
-      setScoreMin("");
-      setTag("");
-    } else {
-      setOrigin("");
-    }
+    if (nextMedia === committedMedia) return;
+    // Format, durée, langue, note et thème précis n'existent pas côté manga ; l'origine, côté anime.
+    updateParams(
+      nextMedia === "manga"
+        ? { media: "manga", type: "", eps: "", lang: "", score: "", tag: "" }
+        : { media: "", origin: "" }
+    );
+  }
+
+  function toggleGenre(genre) {
+    updateParams({
+      genre: committedGenres.includes(genre)
+        ? committedGenres.filter((item) => item !== genre)
+        : [...committedGenres, genre],
+    });
   }
 
   function applySearch(event) {
-    event?.preventDefault();
-    const next = new URLSearchParams();
-    const query = searchInput.trim();
-    if (query) next.set("q", query);
-    if (genres.length) next.set("genre", genres.join(","));
-    if (media === "manga") {
-      next.set("media", "manga");
-      if (origin) next.set("origin", origin);
-    } else {
-      if (type) next.set("type", type);
-      if (type !== "Film" && duration.value) next.set("eps", duration.value);
-      if (lang) next.set("lang", lang);
-      if (scoreMin) next.set("score", scoreMin);
-      if (tag) next.set("tag", tag);
-    }
-    setParams(next);
-    setFiltersOpen(false);
+    event.preventDefault();
+    updateParams({ q: searchInput.trim() });
   }
 
   function clearSearch() {
     setSearchInput("");
-    const next = new URLSearchParams(params);
-    next.delete("q");
-    setParams(next);
+    updateParams({ q: "" });
     inputRef.current?.focus();
   }
 
   function resetFilters() {
-    setGenres([]);
-    setType("");
-    setDuration(EPISODE_RANGES[0]);
-    setLang("");
-    setScoreMin("");
-    setOrigin("");
-    setTag("");
-    const next = new URLSearchParams(params);
-    next.delete("origin");
-    next.delete("tag");
-    next.delete("genre");
-    next.delete("type");
-    next.delete("eps");
-    next.delete("lang");
-    next.delete("score");
-    setParams(next);
+    updateParams({ genre: "", type: "", eps: "", lang: "", score: "", origin: "", tag: "" });
   }
 
-  const draftFiltersCount =
-    genres.length + (type ? 1 : 0) + (duration.value ? 1 : 0) + (lang ? 1 : 0) + (scoreMin ? 1 : 0) + (origin ? 1 : 0) + (tag ? 1 : 0);
+  const hasCriteria =
+    committedGenres.length > 0 ||
+    Boolean(committedType || committedRange || committedLang || committedScore || committedOrigin || committedTag);
   const resultTitle = committedSearch
     ? `Résultats pour « ${committedSearch} »`
-    : activeCriteria.length
+    : hasCriteria
       ? "Sélection filtrée"
       : isManga
         ? "Tous les mangas"
@@ -286,25 +242,16 @@ export default function SearchHubPage() {
           </p>
         </header>
 
-        <div className="mx-auto mt-6 flex max-w-3xl items-center justify-center gap-2">
-          {MEDIA_OPTIONS.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => selectMedia(option.value)}
-              aria-pressed={media === option.value}
-              className={`rounded-md border-2 px-5 py-1.5 text-xs font-bold uppercase tracking-wider transition-colors ${
-                media === option.value
-                  ? "border-primary bg-primary text-primary-fg"
-                  : "border-border text-muted hover:border-text/35 hover:text-text"
-              }`}
-            >
-              {option.label}
-            </button>
-          ))}
+        <div className="mx-auto mt-6 flex max-w-4xl justify-center">
+          <SegmentedControl
+            label="Catalogue"
+            options={MEDIA_OPTIONS}
+            value={committedMedia}
+            onChange={selectMedia}
+          />
         </div>
 
-        <form onSubmit={applySearch} className="mx-auto mt-4 max-w-3xl">
+        <form onSubmit={applySearch} className="mx-auto mt-4 max-w-4xl">
           <div className="flex items-center gap-2 rounded-md border-2 border-border bg-surface/90 p-2 pl-4 shadow-card transition-[border-color,box-shadow] focus-within:border-primary/70 focus-within:shadow-[0_18px_55px_-22px_rgb(var(--primary)/.4)] sm:gap-3">
             <Search size={19} className="shrink-0 text-muted" />
             <input
@@ -315,8 +262,8 @@ export default function SearchHubPage() {
               onKeyDown={(event) => {
                 if (event.key === "Escape") clearSearch();
               }}
-              placeholder={media === "manga" ? "Rechercher un manga par titre…" : "Rechercher un anime par titre…"}
-              aria-label={media === "manga" ? "Rechercher un manga par titre" : "Rechercher un anime par titre"}
+              placeholder={isManga ? "Rechercher un manga par titre…" : "Rechercher un anime par titre…"}
+              aria-label={isManga ? "Rechercher un manga par titre" : "Rechercher un anime par titre"}
               className="min-w-0 flex-1 bg-transparent py-2.5 text-sm text-text outline-none placeholder:text-muted/55"
             />
             {searchInput && (
@@ -330,25 +277,6 @@ export default function SearchHubPage() {
               </button>
             )}
             <button
-              type="button"
-              onClick={() => setFiltersOpen((open) => !open)}
-              aria-expanded={filtersOpen}
-              className={`relative inline-flex items-center gap-2 rounded-md border-2 px-3 py-2 text-sm font-bold transition-colors ${
-                filtersOpen || draftFiltersCount
-                  ? "border-primary bg-primary/15 text-primary"
-                  : "border-border text-muted hover:border-text/35 hover:text-text"
-              }`}
-            >
-              <SlidersHorizontal size={15} />
-              <span className="hidden sm:inline">Filtres</span>
-              {draftFiltersCount > 0 && (
-                <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[0.6rem] font-bold text-primary-fg">
-                  {draftFiltersCount}
-                </span>
-              )}
-              <ChevronDown size={13} className={`transition-transform ${filtersOpen ? "rotate-180" : ""}`} />
-            </button>
-            <button
               type="submit"
               className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2.5 text-sm font-bold text-primary-fg shadow-[0_3px_0_color-mix(in_srgb,rgb(var(--primary))_58%,black)] transition hover:brightness-105 active:translate-y-[2px] active:shadow-none sm:px-5"
             >
@@ -358,188 +286,142 @@ export default function SearchHubPage() {
           </div>
         </form>
 
-        {filtersOpen && (
-          <section className="mx-auto mt-4 max-w-5xl rounded-md border-2 border-border bg-surface/80 p-5 shadow-card animate-fade-in-fast lg:p-6">
-            <div className={`grid gap-6 ${media === "manga" ? "" : "lg:grid-cols-[0.8fr_1.2fr]"}`}>
-              {media !== "manga" && (
-                <div className="space-y-6">
-                  <div>
-                    <p className="mb-2.5 text-[0.65rem] font-bold uppercase tracking-[0.16em] text-muted/70">
-                      Format
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {TYPE_OPTIONS.map((option) => (
-                        <Choice
-                          key={option.value || "any"}
-                          active={type === option.value}
-                          onClick={() => selectType(option.value)}
-                        >
-                          {option.label}
-                        </Choice>
-                      ))}
-                    </div>
-                  </div>
+        <div
+          role="group"
+          aria-label="Filtres"
+          className="mx-auto mt-3 flex max-w-4xl flex-wrap items-center justify-center gap-2"
+        >
+          {isManga ? (
+            <Select
+              title="Origine"
+              prefix="Origine"
+              emptyValue={ANY}
+              options={ORIGIN_SELECT}
+              value={committedOrigin || ANY}
+              onValueChange={(value) => updateParams({ origin: fromSelect(value) })}
+            />
+          ) : (
+            <>
+              <Select
+                title="Format"
+                prefix="Format"
+                emptyValue={ANY}
+                options={TYPE_SELECT}
+                value={committedType || ANY}
+                onValueChange={(value) =>
+                  updateParams(value === "Film" ? { type: value, eps: "" } : { type: fromSelect(value) })
+                }
+              />
+              <Select
+                title="Nombre d'épisodes"
+                prefix="Épisodes"
+                emptyValue={ANY}
+                disabled={committedType === "Film"}
+                options={EPISODES_SELECT}
+                value={committedRange?.value || ANY}
+                onValueChange={(value) => updateParams({ eps: fromSelect(value) })}
+              />
+              <Select
+                title="Langue"
+                prefix="Langue"
+                emptyValue={ANY}
+                options={LANG_SELECT}
+                value={committedLang || ANY}
+                onValueChange={(value) => updateParams({ lang: fromSelect(value) })}
+              />
+              <Select
+                title="Note AniList minimale"
+                prefix="Note"
+                emptyValue={ANY}
+                options={SCORE_SELECT}
+                value={committedScore || ANY}
+                onValueChange={(value) => updateParams({ score: fromSelect(value) })}
+              />
+            </>
+          )}
 
-                  <div className={type === "Film" ? "opacity-40" : ""}>
-                    <p className="mb-2.5 text-[0.65rem] font-bold uppercase tracking-[0.16em] text-muted/70">
-                      Nombre d'épisodes
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {EPISODE_RANGES.map((range) => (
-                        <Choice
-                          key={range.value || "any"}
-                          active={duration.value === range.value}
-                          disabled={type === "Film"}
-                          onClick={() => setDuration(range)}
-                        >
-                          {range.label}
-                        </Choice>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <p className="mb-2.5 text-[0.65rem] font-bold uppercase tracking-[0.16em] text-muted/70">
-                      Langue
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {LANG_OPTIONS.map((option) => (
-                        <Choice
-                          key={option.value || "any"}
-                          active={lang === option.value}
-                          onClick={() => setLang(option.value)}
-                        >
-                          {option.label}
-                        </Choice>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <p className="mb-2.5 text-[0.65rem] font-bold uppercase tracking-[0.16em] text-muted/70">
-                      Note AniList
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {SCORE_OPTIONS.map((option) => (
-                        <Choice
-                          key={option.value || "any"}
-                          active={scoreMin === option.value}
-                          onClick={() => setScoreMin(option.value)}
-                        >
-                          {option.label}
-                        </Choice>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+          <FilterPopover label="Genres" count={committedGenres.length} panelClassName="w-[min(92vw,36rem)]">
+            <PanelTitle>Genres</PanelTitle>
+            <div className="flex flex-wrap gap-2">
+              {MAIN_GENRES.map((genre) => (
+                <Choice key={genre} active={committedGenres.includes(genre)} onClick={() => toggleGenre(genre)}>
+                  {genre}
+                </Choice>
+              ))}
+            </div>
+            <div className="mt-5 flex items-center justify-between">
+              <PanelTitle>Thèmes</PanelTitle>
+              {committedGenres.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => updateParams({ genre: "" })}
+                  className="mb-2.5 text-xs font-semibold text-muted transition-colors hover:text-text"
+                >
+                  Tout désélectionner
+                </button>
               )}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {SECONDARY_GENRES.map((genre) => (
+                <Choice key={genre} active={committedGenres.includes(genre)} onClick={() => toggleGenre(genre)}>
+                  {genre}
+                </Choice>
+              ))}
+            </div>
+          </FilterPopover>
 
-              <div className={media === "manga" ? "" : "border-t border-white/[0.07] pt-5 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0"}>
-                {media === "manga" && (
-                  <div className="mb-5">
-                    <p className="mb-2.5 text-[0.65rem] font-bold uppercase tracking-[0.16em] text-muted/70">
-                      Origine
-                    </p>
+          {!isManga && (
+            <FilterPopover
+              label="Thèmes précis"
+              count={committedTag ? 1 : 0}
+              align="end"
+              panelClassName="w-[min(92vw,46rem)]"
+            >
+              <p className="mb-3 text-xs text-muted">Un thème à la fois, d'après les tags d'AniList.</p>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {TROPE_GROUPS.map((group) => (
+                  <div key={group.label}>
+                    <p className="mb-2 text-xs font-semibold text-text/70">{group.label}</p>
                     <div className="flex flex-wrap gap-2">
-                      {ORIGIN_OPTIONS.map((option) => (
+                      {group.tags.map(([value, label]) => (
                         <Choice
-                          key={option.value || "any"}
-                          active={origin === option.value}
-                          onClick={() => setOrigin(option.value)}
+                          key={value}
+                          active={committedTag === value}
+                          onClick={() => updateParams({ tag: committedTag === value ? "" : value })}
                         >
-                          {option.label}
+                          {label}
                         </Choice>
                       ))}
                     </div>
                   </div>
-                )}
-                <p className="mb-2.5 text-[0.65rem] font-bold uppercase tracking-[0.16em] text-muted/70">
-                  Genres
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {MAIN_GENRES.map((genre) => (
-                    <Choice
-                      key={genre}
-                      active={genres.includes(genre)}
-                      onClick={() => toggleGenre(genre)}
-                    >
-                      {genre}
-                    </Choice>
-                  ))}
-                </div>
-                <p className="mb-2.5 mt-4 text-[0.65rem] font-bold uppercase tracking-[0.16em] text-muted/70">
-                  Thèmes
-                </p>
-                <div className="max-h-40 overflow-y-auto pr-2">
-                  <div className="flex flex-wrap gap-2">
-                    {SECONDARY_GENRES.map((genre) => (
-                      <Choice
-                        key={genre}
-                        active={genres.includes(genre)}
-                        onClick={() => toggleGenre(genre)}
-                      >
-                        {genre}
-                      </Choice>
-                    ))}
-                  </div>
-                </div>
+                ))}
               </div>
-            </div>
+            </FilterPopover>
+          )}
 
-            {media !== "manga" && (
-              <div className="mt-6 border-t border-white/[0.07] pt-5">
-                <p className="mb-1 text-[0.65rem] font-bold uppercase tracking-[0.16em] text-muted/70">
-                  Thèmes précis
-                </p>
-                <p className="mb-3 text-xs text-muted">Un thème à la fois, d'après les tags d'AniList.</p>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {TROPE_GROUPS.map((group) => (
-                    <div key={group.label}>
-                      <p className="mb-2 text-xs font-semibold text-text/70">{group.label}</p>
-                      <div className="flex flex-wrap gap-2">
-                        {group.tags.map(([value, label]) => (
-                          <Choice key={value} active={tag === value} onClick={() => setTag(tag === value ? "" : value)}>
-                            {label}
-                          </Choice>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.07] pt-5">
-              <button
-                type="button"
-                onClick={resetFilters}
-                disabled={!draftFiltersCount}
-                className="inline-flex items-center gap-2 px-2 py-2 text-xs text-muted transition-colors hover:text-text disabled:opacity-35"
-              >
-                <RotateCcw size={14} /> Réinitialiser les filtres
-              </button>
-              <button type="button" onClick={applySearch} className="btn-shu px-5 py-2.5 text-sm">
-                <Search size={15} /> Appliquer les filtres
-              </button>
-            </div>
-          </section>
-        )}
-
-        {!filtersOpen && activeCriteria.length > 0 && (
-          <div className="mx-auto mt-4 flex max-w-5xl flex-wrap items-center gap-2 rounded-md border border-white/[0.08] bg-white/[0.025] px-4 py-3">
-            <SlidersHorizontal size={14} className="mr-1 text-primary" />
-            {activeCriteria.map((criterion) => (
-              <span key={criterion} className="rounded-sm bg-white/[0.06] px-2.5 py-1 text-xs text-text/80">
-                {criterion}
-              </span>
-            ))}
+          {hasCriteria && (
             <button
               type="button"
-              onClick={() => setFiltersOpen(true)}
-              className="ml-auto px-2 py-1 text-xs font-semibold text-muted transition-colors hover:text-text"
+              onClick={resetFilters}
+              className="inline-flex h-11 items-center gap-1.5 rounded-md px-3 text-xs font-semibold text-muted transition-colors hover:text-text md:h-10"
             >
-              Modifier
+              <RotateCcw size={14} /> Réinitialiser
             </button>
+          )}
+        </div>
+
+        {(committedGenres.length > 0 || committedTag) && (
+          <div className="mx-auto mt-3 flex max-w-4xl flex-wrap items-center justify-center gap-2">
+            {committedGenres.map((genre) => (
+              <CriterionChip key={genre} label={genre} what="le genre" onRemove={() => toggleGenre(genre)} />
+            ))}
+            {committedTag && (
+              <CriterionChip
+                label={TROPE_LABEL[committedTag]}
+                what="le thème"
+                onRemove={() => updateParams({ tag: "" })}
+              />
+            )}
           </div>
         )}
 

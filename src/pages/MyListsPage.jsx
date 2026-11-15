@@ -350,12 +350,14 @@ export default function MyListsPage() {
       </header>
 
       <div className="-mx-4 mb-7 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:px-0">
-        <div className="flex min-w-max border-b border-white/[0.07] sm:min-w-0">
+        <div role="tablist" aria-label="Statut de la liste" className="flex min-w-max border-b border-white/[0.07] sm:min-w-0">
           {LIST_STATUSES.map((status) => {
             const isActive = active === status.key;
             return (
               <button
                 key={status.key}
+                role="tab"
+                aria-selected={isActive}
                 onClick={() => setActive(status.key)}
                 className={`relative flex min-w-[5.4rem] flex-1 items-center justify-center gap-1.5 px-2 pb-3 pt-2 text-xs font-medium transition-colors ${
                   isActive ? "text-text" : "text-muted"

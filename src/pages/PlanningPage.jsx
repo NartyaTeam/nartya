@@ -309,7 +309,6 @@ export default function PlanningPage() {
           options={CONTENT_FILTERS}
           value={contentFilter}
           onChange={(value) => setSetting("planningContent", value)}
-          className="md:w-72"
         />
         {contentFilter !== "scans" && (
           <SegmentedControl
@@ -317,7 +316,6 @@ export default function PlanningPage() {
             options={LANGUAGE_FILTERS}
             value={languageFilter}
             onChange={(value) => setSetting("planningLanguage", value)}
-            className="md:w-72"
           />
         )}
         {total > 0 && (

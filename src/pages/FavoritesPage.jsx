@@ -136,7 +136,7 @@ export default function FavoritesPage() {
         )}
         {hasFavorites && (
           <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
-            <div className="flex h-12 w-full items-center gap-2.5 rounded-lg bg-surface px-3.5 ring-1 ring-border transition-shadow focus-within:ring-2 focus-within:ring-primary/70 sm:max-w-sm">
+            <div className="flex h-11 w-full items-center gap-2.5 rounded-md bg-surface px-3.5 ring-2 ring-border transition-colors focus-within:ring-primary/70 sm:max-w-sm md:h-10">
               <Search size={18} className="shrink-0 text-muted" />
               <input
                 value={query}
@@ -160,12 +160,12 @@ export default function FavoritesPage() {
             <SegmentedControl
               label="Tri des favoris"
               options={[
-                { value: "genre", label: (<><LayoutGrid size={14} /> Par genre</>) },
-                { value: "manual", label: (<><ListOrdered size={14} /> Mon ordre</>) },
+                { value: "genre", label: "Par genre", Icon: LayoutGrid },
+                { value: "manual", label: "Mon ordre", Icon: ListOrdered },
               ]}
               value={sortMode}
               onChange={setSortMode}
-              className="w-full sm:w-72"
+              className="w-full sm:w-auto"
             />
           </div>
         )}

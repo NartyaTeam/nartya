@@ -5,6 +5,7 @@ import { listTierLists } from "@/api/tierLists";
 import { useHasAccount, guestBlockToast, GUEST_FEATURE_MSG } from "@/lib/guest";
 import { useAuthStore } from "@/stores/useAuthStore";
 import TierListCard from "@/components/tierlists/TierListCard";
+import SegmentedControl from "@/components/ui/SegmentedControl";
 
 const PAGE = 24;
 const TABS = [
@@ -83,23 +84,12 @@ export default function TierListsPage() {
         </div>
 
         <div className="mt-5 flex flex-col gap-2.5 sm:flex-row sm:items-center">
-          <div role="tablist" className="flex h-11 w-fit items-center gap-1 rounded-md bg-surface p-1 ring-2 ring-border md:h-10">
-            {TABS.filter((t) => !t.account || hasAccount).map(({ value, label, Icon }) => (
-              <button
-                key={value}
-                type="button"
-                role="tab"
-                aria-selected={tab === value}
-                onClick={() => setParams(value === "popular" ? {} : { tab: value }, { replace: true })}
-                className={`flex h-full items-center gap-1.5 rounded px-3 text-xs font-bold transition-colors ${
-                  tab === value ? "bg-primary text-primary-fg" : "text-muted hover:text-text"
-                }`}
-              >
-                <Icon size={14} />
-                {label}
-              </button>
-            ))}
-          </div>
+          <SegmentedControl
+            label="Tier lists à afficher"
+            options={TABS.filter((t) => !t.account || hasAccount)}
+            value={tab}
+            onChange={(value) => setParams(value === "popular" ? {} : { tab: value }, { replace: true })}
+          />
           <div className="flex h-11 flex-1 items-center gap-2.5 rounded-md bg-surface px-3.5 ring-2 ring-border transition-colors focus-within:ring-primary/70 md:h-10 md:max-w-xs">
             <Search size={16} className="shrink-0 text-muted" />
             <input

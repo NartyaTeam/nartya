@@ -10,6 +10,7 @@ import { listPublicPartyRooms } from "@/api/partyRoom";
 import { resolveAvatar } from "@/api/profile";
 import { partyCapacityForTier, premiumTier } from "@/lib/premium";
 import { platform } from "@/platform";
+import SegmentedControl from "@/components/ui/SegmentedControl";
 
 const canOpenWindow = platform.canOpenNewWindow;
 const PUBLIC_REFRESH_MS = 20000;
@@ -334,24 +335,20 @@ function PosterCard({ cover, title, subtitle, onClick }) {
   );
 }
 
+const VISIBILITY_OPTIONS = [
+  { value: "private", label: "Privé", Icon: Lock },
+  { value: "public", label: "Public", Icon: Globe },
+];
+
 function VisibilitySwitch({ isPublic, onChange }) {
-  const opt = (value, Icon, label) => (
-    <button
-      type="button"
-      onClick={() => onChange(value)}
-      aria-pressed={isPublic === value}
-      className={`flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-bold transition-colors ${
-        isPublic === value ? "bg-primary text-primary-fg" : "text-muted hover:text-text"
-      }`}
-    >
-      <Icon size={13} /> {label}
-    </button>
-  );
   return (
-    <div className="flex rounded-md border border-border bg-bg p-0.5">
-      {opt(false, Lock, "Privé")}
-      {opt(true, Globe, "Public")}
-    </div>
+    <SegmentedControl
+      label="Visibilité de la salle"
+      size="sm"
+      options={VISIBILITY_OPTIONS}
+      value={isPublic ? "public" : "private"}
+      onChange={(value) => onChange(value === "public")}
+    />
   );
 }
 

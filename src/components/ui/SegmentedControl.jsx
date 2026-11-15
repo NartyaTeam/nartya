@@ -1,36 +1,93 @@
-/** Choix exclusif à segments égaux : le curseur glisse d'une option à l'autre. */
-export default function SegmentedControl({ options, value, onChange, label, className = "" }) {
-  const index = Math.max(0, options.findIndex((option) => option.value === value));
+import { useLayoutEffect, useRef, useState } from "react";
+
+const SIZES = {
+  md: "h-11 text-[0.8rem] md:h-10",
+  sm: "h-9 text-xs md:h-8",
+};
+
+/**
+ * Choix exclusif : le curseur glisse sous l'option active et épouse sa largeur réelle.
+ * Options : { value, label, Icon?, count? }. Par défaut le bloc épouse son contenu ; une largeur
+ * posée par `className` (w-full, sm:w-72…) répartit l'espace restant à parts égales.
+ */
+export default function SegmentedControl({
+  options,
+  value,
+  onChange,
+  label,
+  size = "md",
+  className = "",
+}) {
+  const rootRef = useRef(null);
+  const [thumb, setThumb] = useState(null);
+  // Le premier placement ne s'anime pas : le curseur ne vient pas de la gauche au montage.
+  const [ready, setReady] = useState(false);
+  const optionsKey = options.map((option) => option.value).join("|");
+
+  useLayoutEffect(() => {
+    const root = rootRef.current;
+    if (!root) return undefined;
+    const measure = () => {
+      const active = root.querySelector('[aria-checked="true"]');
+      setThumb(active ? { left: active.offsetLeft, width: active.offsetWidth } : null);
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(root);
+    root.querySelectorAll("button").forEach((button) => observer.observe(button));
+    document.fonts?.ready.then(measure);
+    const frame = requestAnimationFrame(() => setReady(true));
+    return () => {
+      observer.disconnect();
+      cancelAnimationFrame(frame);
+    };
+  }, [value, optionsKey]);
+
+  // Flèches : la sélection suit le focus, comme un groupe de boutons radio natif.
+  function handleKeyDown(event) {
+    const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[event.key];
+    if (!step) return;
+    event.preventDefault();
+    const current = options.findIndex((option) => option.value === value);
+    const next = options[(current + step + options.length) % options.length];
+    onChange(next.value);
+    rootRef.current?.querySelectorAll("button")[options.indexOf(next)]?.focus();
+  }
 
   return (
     <div
+      ref={rootRef}
       role="radiogroup"
       aria-label={label}
-      className={`relative grid rounded-lg bg-surface p-1 ring-1 ring-border ${className}`}
-      style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}
+      onKeyDown={handleKeyDown}
+      className={`relative flex w-fit max-w-full items-stretch rounded-md bg-surface p-1 ring-2 ring-border ${SIZES[size] || SIZES.md} ${className}`}
     >
-      <span
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-y-1 left-1 rounded-md bg-primary shadow-sm transition-transform duration-200 ease-out"
-        style={{
-          width: `calc((100% - 0.5rem) / ${options.length})`,
-          transform: `translateX(${index * 100}%)`,
-        }}
-      />
-      {options.map((option) => {
-        const active = option.value === value;
+      {thumb && (
+        <span
+          aria-hidden="true"
+          className={`pointer-events-none absolute inset-y-1 rounded-[0.3rem] bg-primary shadow-[0_2px_0_color-mix(in_srgb,rgb(var(--primary))_55%,black)] ${
+            ready ? "transition-[left,width] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]" : ""
+          }`}
+          style={{ left: thumb.left, width: thumb.width }}
+        />
+      )}
+      {options.map(({ value: optionValue, label: text, Icon, count }) => {
+        const active = optionValue === value;
         return (
           <button
-            key={option.value}
+            key={optionValue}
             type="button"
             role="radio"
             aria-checked={active}
-            onClick={() => onChange(option.value)}
-            className={`relative z-10 flex min-h-9 items-center justify-center gap-1.5 truncate rounded-md px-3 py-1.5 text-center text-xs font-bold uppercase tracking-wide transition-colors ${
+            tabIndex={active ? 0 : -1}
+            onClick={() => onChange(optionValue)}
+            className={`relative z-10 flex min-w-0 flex-auto items-center justify-center gap-1.5 whitespace-nowrap rounded px-3.5 font-bold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-1 focus-visible:ring-offset-surface ${
               active ? "text-primary-fg" : "text-muted hover:text-text"
             }`}
           >
-            {option.label}
+            {Icon && <Icon size={14} className="shrink-0" />}
+            <span className="truncate">{text}</span>
+            {count != null && <span className="tabular-nums opacity-70">{count}</span>}
           </button>
         );
       })}
