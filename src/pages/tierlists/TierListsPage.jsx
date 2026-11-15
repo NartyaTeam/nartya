@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Flame, LayoutList, Loader2, Plus, Search, Sparkles, User, X } from "lucide-react";
+import { Flame, LayoutGrid, LayoutList, Loader2, Plus, Rows3, Search, Sparkles, User, X } from "lucide-react";
 import { listTierLists } from "@/api/tierLists";
 import { useHasAccount, guestBlockToast, GUEST_FEATURE_MSG } from "@/lib/guest";
 import { useAuthStore } from "@/stores/useAuthStore";
@@ -8,6 +8,29 @@ import TierListCard from "@/components/tierlists/TierListCard";
 import SegmentedControl from "@/components/ui/SegmentedControl";
 
 const PAGE = 24;
+/** Chargement serveur par appel (maximum accepté par la fonction). */
+const FETCH = 48;
+/** Classement « populaires » : tout est chargé puis trié ici, au plus ce nombre de listes. */
+const POPULAR_CAP = 240;
+const VIEW_KEY = "nartya:tierlists:view";
+const VIEWS = [
+  { value: "blocks", label: "Blocs", Icon: Rows3 },
+  { value: "grid", label: "Grille", Icon: LayoutGrid },
+];
+
+/** Les plus aimées d'abord, puis les plus commentées, puis les plus récentes : ce que montrent les cartes. */
+const byPopularity = (a, b) =>
+  b.likes - a.likes ||
+  b.comments - a.comments ||
+  new Date(b.publishedAt || b.createdAt || 0) - new Date(a.publishedAt || a.createdAt || 0);
+
+function readView() {
+  try {
+    return localStorage.getItem(VIEW_KEY) === "grid" ? "grid" : "blocks";
+  } catch {
+    return "blocks";
+  }
+}
 const TABS = [
   { value: "popular", label: "Populaires", Icon: Flame },
   { value: "recent", label: "Récentes", Icon: Sparkles },
@@ -25,6 +48,18 @@ export default function TierListsPage() {
   const [items, setItems] = useState(null);
   const [done, setDone] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [view, setView] = useState(readView);
+  // Classement « populaires » : liste complète triée ici, affichée par tranches.
+  const [shown, setShown] = useState(PAGE);
+
+  const changeView = (value) => {
+    setView(value);
+    try {
+      localStorage.setItem(VIEW_KEY, value);
+    } catch {
+      // le choix reste valable pour la session
+    }
+  };
 
   useEffect(() => {
     const timer = setTimeout(() => setCommitted(query.trim()), 300);
@@ -35,6 +70,20 @@ export default function TierListsPage() {
     async (offset) => {
       setLoading(true);
       try {
+        if (tab === "popular") {
+          // La fonction classe sur likes moins dislikes ; les cartes montrent les likes et les
+          // commentaires, on charge donc tout et on trie sur ce qui est affiché.
+          const all = [];
+          for (let at = 0; at < POPULAR_CAP; at += FETCH) {
+            const rows = await listTierLists({ sort: tab, query: committed, offset: at, limit: FETCH });
+            all.push(...rows);
+            if (rows.length < FETCH) break;
+          }
+          setItems(all.sort(byPopularity));
+          setShown(PAGE);
+          setDone(true);
+          return;
+        }
         const rows = await listTierLists({ sort: tab, query: committed, offset, limit: PAGE });
         setItems((prev) => (offset ? [...(prev || []), ...rows] : rows));
         setDone(rows.length < PAGE);
@@ -53,6 +102,14 @@ export default function TierListsPage() {
     load(0);
   }, [load]);
 
+  const popular = tab === "popular";
+  const visible = popular && items ? items.slice(0, shown) : items;
+  const more = popular ? Boolean(items) && shown < items.length : !done;
+  const gridClass =
+    view === "grid"
+      ? "grid grid-cols-[repeat(auto-fill,minmax(11rem,1fr))] gap-3"
+      : "grid grid-cols-[repeat(auto-fill,minmax(15rem,1fr))] gap-4";
+
   const create = () => {
     if (!hasAccount) {
       guestBlockToast(session ? GUEST_FEATURE_MSG : "Connecte-toi pour créer une tier list");
@@ -68,19 +125,23 @@ export default function TierListsPage() {
           <span className="h-px w-6 bg-primary" />
           <p className="text-[0.65rem] font-semibold uppercase tracking-[0.28em] text-primary/80">Communauté</p>
         </div>
-        <h1 className="t-impact text-4xl md:text-5xl">Tier lists</h1>
-        <p className="mt-1.5 max-w-xl text-sm text-muted">
-          Classe tes animes, publie ta tier list et découvre celles de la communauté.
-        </p>
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h1 className="t-impact text-4xl md:text-5xl">Tier lists</h1>
+            <p className="mt-1.5 max-w-xl text-sm text-muted">
+              Classe tes animes, publie ta tier list et découvre celles de la communauté.
+            </p>
+          </div>
+          <button
+            onClick={create}
+            className="flex h-11 items-center gap-2 rounded-md bg-primary px-4 text-sm font-bold text-primary-fg transition-[filter,transform] hover:brightness-110 active:scale-95 md:h-10"
+          >
+            <Plus size={17} /> Créer une tier list
+          </button>
+        </div>
 
-        <div className="mt-5 flex flex-col gap-2.5 sm:flex-row sm:items-center">
-          <SegmentedControl
-            label="Tier lists à afficher"
-            options={TABS.filter((t) => !t.account || hasAccount)}
-            value={tab}
-            onChange={(value) => setParams(value === "popular" ? {} : { tab: value }, { replace: true })}
-          />
-          <div className="flex h-11 flex-1 items-center gap-2.5 rounded-md bg-surface px-3.5 ring-2 ring-border transition-colors focus-within:ring-primary/70 md:h-10 md:max-w-sm">
+        <div className="mt-5 flex flex-col gap-2.5 lg:flex-row lg:items-center">
+          <div className="flex h-11 min-w-0 flex-1 items-center gap-2.5 rounded-md bg-surface px-3.5 ring-2 ring-border transition-colors focus-within:ring-primary/70 md:h-10">
             <Search size={16} className="shrink-0 text-muted" />
             <input
               value={query}
@@ -100,19 +161,22 @@ export default function TierListsPage() {
               </button>
             )}
           </div>
-          <button
-            onClick={create}
-            className="flex h-11 items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-bold text-primary-fg transition-[filter,transform] hover:brightness-110 active:scale-95 sm:ml-auto md:h-10"
-          >
-            <Plus size={17} /> Créer une tier list
-          </button>
+          <div className="flex flex-wrap items-center gap-2.5">
+            <SegmentedControl label="Affichage" options={VIEWS} value={view} onChange={changeView} />
+            <SegmentedControl
+              label="Tier lists à afficher"
+              options={TABS.filter((t) => !t.account || hasAccount)}
+              value={tab}
+              onChange={(value) => setParams(value === "popular" ? {} : { tab: value }, { replace: true })}
+            />
+          </div>
         </div>
       </header>
 
       {items === null ? (
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(15rem,1fr))] gap-4">
+        <div className={gridClass}>
           {Array.from({ length: 8 }, (_, i) => (
-            <div key={i} className="h-60 skeleton rounded-md" />
+            <div key={i} className={`${view === "grid" ? "h-52" : "h-[19.5rem]"} skeleton rounded-md`} />
           ))}
         </div>
       ) : items.length === 0 ? (
@@ -138,15 +202,15 @@ export default function TierListsPage() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(15rem,1fr))] gap-4">
-            {items.map((list) => (
-              <TierListCard key={list.id} list={list} />
+          <div className={gridClass}>
+            {visible.map((list) => (
+              <TierListCard key={list.id} list={list} compact={view === "grid"} />
             ))}
           </div>
-          {!done && (
+          {more && (
             <div className="mt-6 flex justify-center">
               <button
-                onClick={() => load(items.length)}
+                onClick={() => (tab === "popular" ? setShown((n) => n + PAGE) : load(items.length))}
                 disabled={loading}
                 className="inline-flex items-center gap-2 rounded-md bg-white/[0.06] px-5 py-2.5 text-sm font-medium text-text ring-1 ring-border transition-colors hover:bg-white/[0.1] hover:text-primary disabled:opacity-50"
               >
