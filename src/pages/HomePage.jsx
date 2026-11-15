@@ -53,12 +53,12 @@ export default function HomePage() {
   const { data, loading, error } = useCachedResource(
     "home:sections:v2",
     getHomeSections,
-    10 * 60 * 1000,
-    { persist: true, persistentMaxAgeMs: 7 * 24 * 60 * 60 * 1000 }
+    6 * 60 * 60 * 1000,
+    { persist: true, trustPersisted: true, persistentMaxAgeMs: 7 * 24 * 60 * 60 * 1000 }
   );
 
-  // Le hero tiré à la visite reste en place : la revalidation en fond en apporte un autre, qui
-  // s'affichera à la prochaine visite plutôt que de remplacer les slides sous les yeux.
+  // Le hero affiché reste en place : une revalidation en fond (changement de jour) ne remplace pas
+  // les slides sous les yeux, le nouveau tirage s'affichera à la visite suivante.
   const heroRef = useRef(null);
   if (!heroRef.current && data?.hero?.length) heroRef.current = data.hero;
 

@@ -16,13 +16,13 @@ function writeCache(key, data) {
   }
 }
 
-function readPersisted(key, maxAgeMs) {
+function readPersisted(key, maxAgeMs, trust = false) {
   if (!key || typeof localStorage === "undefined") return null;
   try {
     const saved = JSON.parse(localStorage.getItem(`${PERSIST_PREFIX}${key}`));
     if (!saved?.data || !saved.ts || Date.now() - saved.ts > maxAgeMs) return null;
     // Valeur lue sur disque : servie tout de suite mais marquée périmée.
-    return { data: saved.data, ts: 0 };
+    return { data: saved.data, ts: trust ? saved.ts : 0 };
   } catch {
     return null;
   }
@@ -196,7 +196,7 @@ export async function getOrFetch(key, fetcher, ttlMs = 5 * 60 * 1000, options = 
   if (!key) return fetcher();
   const persist = options.persist === true;
   const persistentMaxAgeMs = options.persistentMaxAgeMs || 7 * 24 * 60 * 60 * 1000;
-  const entry = store.get(key) || (persist ? readPersisted(key, persistentMaxAgeMs) : null);
+  const entry = store.get(key) || (persist ? readPersisted(key, persistentMaxAgeMs, options.trustPersisted === true) : null);
   if (entry && !store.has(key)) store.set(key, entry);
   if (entry && Date.now() - entry.ts < ttlMs) return entry.data;
   return fetchShared(key, fetcher, { persist, fallback: entry?.data });
@@ -206,7 +206,7 @@ export function useCachedResource(key, fetcher, ttlMs = 5 * 60 * 1000, options =
   const persist = options.persist === true;
   const persistentMaxAgeMs = options.persistentMaxAgeMs || 7 * 24 * 60 * 60 * 1000;
   const cached = key
-    ? store.get(key) || (persist ? readPersisted(key, persistentMaxAgeMs) : null)
+    ? store.get(key) || (persist ? readPersisted(key, persistentMaxAgeMs, options.trustPersisted === true) : null)
     : null;
   if (key && cached && !store.has(key)) store.set(key, cached);
   const [data, setData] = useState(cached?.data ?? null);
@@ -237,7 +237,7 @@ export function useCachedResource(key, fetcher, ttlMs = 5 * 60 * 1000, options =
       return;
     }
     let alive = true;
-    const entry = store.get(key) || (persist ? readPersisted(key, persistentMaxAgeMs) : null);
+    const entry = store.get(key) || (persist ? readPersisted(key, persistentMaxAgeMs, options.trustPersisted === true) : null);
     if (entry && !store.has(key)) store.set(key, entry);
 
     if (entry) {
