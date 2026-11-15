@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Copy, Download, EyeOff, LayoutList, Loader2, Pencil, ThumbsDown, ThumbsUp, Trash2 } from "lucide-react";
+import { ArrowLeft, Copy, Download, EyeOff, LayoutList, Loader2, Pencil, ThumbsDown, ThumbsUp, Trash2 } from "lucide-react";
 import { toast } from "@/lib/toast";
 import { saveImage } from "@/lib/saveImage";
 import { renderTierList } from "@/lib/renderTierList";
@@ -31,7 +31,10 @@ function useWide() {
 }
 
 const actionClass =
-  "flex h-10 items-center gap-2 rounded-md bg-surface px-3.5 text-sm font-bold text-text ring-2 ring-border transition-colors hover:ring-primary/60 active:scale-95 disabled:opacity-50";
+  "flex h-10 items-center justify-center gap-2 rounded-md bg-surface px-3 text-sm font-bold text-text ring-2 ring-border transition-colors hover:ring-primary/60 active:scale-95 disabled:opacity-50 sm:px-3.5";
+
+/** Libellé masqué sur petit écran : l'icône suffit, le titre reste en infobulle. */
+const Label = ({ children }) => <span className="hidden sm:inline">{children}</span>;
 
 export default function TierListPage() {
   const { id } = useParams();
@@ -130,19 +133,21 @@ export default function TierListPage() {
     <div className="animate-fade-in px-4 pb-24 pt-[calc(env(safe-area-inset-top)+4.5rem)] sm:px-8 md:py-10 xl:grid xl:grid-cols-[minmax(0,1fr)_22rem] xl:items-start xl:gap-6">
       <div className="min-w-0">
       <header className="mb-5 max-w-5xl">
-        <div className="mb-2 flex items-center gap-2">
-          <span className="h-px w-6 bg-primary" />
-          <Link to="/tierlists" className="text-[0.65rem] font-semibold uppercase tracking-[0.28em] text-primary/80 hover:text-primary">
-            Tier list
-          </Link>
+        <Link
+          to="/tierlists"
+          className="mb-3 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-muted transition-colors hover:text-primary"
+        >
+          <ArrowLeft size={14} /> Tier lists
+        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <h1 className="t-impact text-3xl md:text-4xl">{list.title}</h1>
           {!list.isPublic && (
             <span className="flex items-center gap-1 rounded bg-white/10 px-1.5 py-0.5 text-[0.65rem] font-bold text-text">
               <EyeOff size={11} /> Brouillon, visible par toi seul
             </span>
           )}
         </div>
-        <h1 className="t-impact text-3xl md:text-4xl">{list.title}</h1>
-        <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-muted">
+        <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted">
           <Avatar src={resolveAvatar(list.author)} name={authorName} className="h-6 w-6" textClassName="text-[0.6rem]" />
           {list.author.handle ? (
             <Link to={`/u/${list.author.handle}`} className="font-semibold text-text hover:text-primary">
@@ -166,14 +171,17 @@ export default function TierListPage() {
         </div>
         {list.description && <p className="mt-3 max-w-2xl whitespace-pre-line text-sm text-text/85">{list.description}</p>}
 
-        <div className="mt-4 flex flex-wrap gap-2">
+        <div className="mt-4 flex flex-wrap items-center gap-2">
           {list.isPublic && (
-            <>
+            <div className="flex overflow-hidden rounded-md ring-2 ring-border">
               <button
                 onClick={() => vote(1)}
                 disabled={voting}
+                aria-pressed={list.myVote === 1}
                 title={list.isMine ? "Tu ne peux pas voter pour ta propre tier list" : "J'aime"}
-                className={`${actionClass} ${list.myVote === 1 ? "bg-primary/15 text-primary ring-primary/70" : ""}`}
+                className={`flex h-10 items-center gap-2 px-3.5 text-sm font-bold transition-colors disabled:opacity-50 ${
+                  list.myVote === 1 ? "bg-primary text-primary-fg" : "bg-surface text-text hover:text-primary"
+                }`}
               >
                 <ThumbsUp size={16} className={list.myVote === 1 ? "fill-current" : ""} />
                 <span className="tabular-nums">{list.likes}</span>
@@ -181,36 +189,46 @@ export default function TierListPage() {
               <button
                 onClick={() => vote(-1)}
                 disabled={voting}
+                aria-pressed={list.myVote === -1}
                 title={list.isMine ? "Tu ne peux pas voter pour ta propre tier list" : "Je n'aime pas"}
-                className={`${actionClass} ${list.myVote === -1 ? "bg-white/10 ring-white/40" : ""}`}
+                className={`flex h-10 items-center gap-2 border-l-2 border-border px-3.5 text-sm font-bold transition-colors disabled:opacity-50 ${
+                  list.myVote === -1 ? "bg-white/15 text-text" : "bg-surface text-muted hover:text-text"
+                }`}
               >
                 <ThumbsDown size={16} className={list.myVote === -1 ? "fill-current" : ""} />
                 <span className="tabular-nums">{list.dislikes}</span>
               </button>
-            </>
+            </div>
           )}
           {!list.isMine && (
             <button
               onClick={() => requireAccount() && navigate(`/tierlists/new?from=${list.id}`)}
-              className={actionClass}
+              title="Faire ma version"
+              className="flex h-10 items-center justify-center gap-2 rounded-md bg-primary px-3.5 text-sm font-bold text-primary-fg transition-[filter,transform] hover:brightness-110 active:scale-95"
             >
               <Copy size={16} /> Faire ma version
             </button>
           )}
-          <button onClick={exportImage} disabled={exporting} className={actionClass}>
-            {exporting ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
-            Image
-          </button>
-          {list.isMine && (
-            <button onClick={() => navigate(`/tierlists/${list.id}/edit`)} className={actionClass}>
-              <Pencil size={16} /> Modifier
+          <div className="ml-auto flex flex-wrap items-center gap-2">
+            <button onClick={exportImage} disabled={exporting} title="Enregistrer en image" className={actionClass}>
+              {exporting ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
+              <Label>Image</Label>
             </button>
-          )}
-          {list.canModerate && (
-            <button onClick={() => setConfirmDelete(true)} className={`${actionClass} hover:text-primary`}>
-              <Trash2 size={16} /> Supprimer
-            </button>
-          )}
+            {list.isMine && (
+              <button onClick={() => navigate(`/tierlists/${list.id}/edit`)} title="Modifier" className={actionClass}>
+                <Pencil size={16} /> <Label>Modifier</Label>
+              </button>
+            )}
+            {list.canModerate && (
+              <button
+                onClick={() => setConfirmDelete(true)}
+                title="Supprimer"
+                className={`${actionClass} hover:text-primary`}
+              >
+                <Trash2 size={16} /> <Label>Supprimer</Label>
+              </button>
+            )}
+          </div>
         </div>
       </header>
 
