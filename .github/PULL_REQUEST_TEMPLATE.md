@@ -9,5 +9,5 @@
 ## Avant de demander une relecture
 
 - [ ] `npm run lint`, `npm run test:unit` et `npm run build` passent
-- [ ] Un changement dans `electron/` a été testé dans l'application, pas seulement dans le navigateur
+- [ ] Un changement dans `crates/` ou `src-tauri/` a été testé dans l'application, pas seulement dans le navigateur
 - [ ] `MOBILE-FEATURES.md` est à jour si une fonctionnalité change sur mobile

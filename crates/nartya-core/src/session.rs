@@ -222,6 +222,27 @@ mod tests {
         assert!(s.remove("absent"));
     }
 
+    /// Refresh token en clair : 0600, dossier 0700, y compris sur une installation existante.
+    #[cfg(unix)]
+    #[test]
+    fn permissions_restreintes_sur_une_installation_existante() {
+        use std::os::unix::fs::PermissionsExt;
+        let mode = |p: &Path| fs::metadata(p).unwrap().permissions().mode() & 0o777;
+
+        let tmp = tempfile::tempdir().unwrap();
+        let dir = tmp.path().join("Nartya").join("shared");
+        fs::create_dir_all(&dir).unwrap();
+        fs::set_permissions(&dir, fs::Permissions::from_mode(0o755)).unwrap();
+        fs::write(dir.join(SESSION_FILE), "{}").unwrap();
+        fs::set_permissions(dir.join(SESSION_FILE), fs::Permissions::from_mode(0o644)).unwrap();
+
+        let s = SharedSession::init(tmp.path());
+        assert_eq!(mode(&s.dir), 0o700);
+        assert_eq!(mode(&s.file), 0o600);
+        assert!(s.set("nartya-auth", "x"));
+        assert_eq!(mode(&s.file), 0o600);
+    }
+
     #[test]
     fn fichier_chiffre_ou_corrompu_ignore() {
         let (_tmp, s) = session();

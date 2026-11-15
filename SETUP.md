@@ -5,7 +5,7 @@
 ```bash
 npm install
 cp .env.example .env
-npm run electron:dev
+npm run dev:tauri
 ```
 
 `.env.example` contient les valeurs publiques du projet Nartya : rien à renseigner. Une fois
@@ -14,16 +14,16 @@ l'API publique `https://anime.nartya.app` avec votre session, exactement comme l
 installée : catalogue, fiches, épisodes et lecture vidéo fonctionnent. Vos actions (favoris,
 progression…) sont enregistrées sur votre vrai compte.
 
-`npm run dev:web` lance la même chose dans le navigateur, sans Electron. Ouvrez l'app via
+`npm run dev:web` lance la même chose dans le navigateur, sans la coque Tauri. Ouvrez l'app via
 `localhost` ou `127.0.0.1` : ce sont les seules adresses locales où le captcha de connexion
 (Cloudflare Turnstile) s'affiche.
 
-`npm run electron:dev` et `npm run dev:web` choisissent l'API toute seuls : l'API publique, ou
+`npm run dev:tauri` et `npm run dev:web` choisissent l'API toute seuls : l'API publique, ou
 l'API locale si un dossier `api/` est présent à la racine (équipe Nartya). La variable
 `NARTYA_DEV_API` force une adresse :
 
 ```bash
-NARTYA_DEV_API=https://anime.nartya.app npm run electron:dev
+NARTYA_DEV_API=https://anime.nartya.app npm run dev:tauri
 ```
 
 La documentation de l'API est sur <https://nartya.app/api/>. Pour appeler à la main une route

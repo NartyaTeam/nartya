@@ -22,7 +22,7 @@ de debug.
 ## Architecture
 
 ```
-src/platform/     electron.js, capacitor.js, web.js : même interface, choisie au démarrage
+src/platform/     tauri.js, capacitor.js, web.js : même interface, choisie au démarrage
 src/mobile/       les trois écrans propres au mobile (coque à onglets, recherche, nouveautés)
 android/app/src/main/java/com/nartya/app/
   proxy/          proxy local et téléchargements

@@ -5,8 +5,7 @@
  * (`src/data/changelog.js`) y est embarqué, tronqué aux 15 versions les plus récentes.
  *
  * Usage : node scripts/gen-release-manifest.mjs <dir> [--version x.y.z] [--out chemin] [--channel beta]
- *   <dir> : dossier contenant les artefacts electron-builder (installeurs + latest*.yml), ou
- *           `release/tauri` pour la coque Tauri.
+ *   <dir> : dossier des installeurs, en pratique `release/tauri` (`npm run tauri:bundle`).
  *   --channel beta : écrit `manifest.beta.json`, que le hub lit si l'utilisateur a activé les
  *           versions bêta (la stable `manifest.json` n'est pas touchée).
  */

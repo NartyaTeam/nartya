@@ -22,7 +22,7 @@ export default [
     },
   },
   {
-    files: ["electron/**/*.js", "scripts/**/*.mjs", "test/**/*.mjs", "*.config.js"],
+    files: ["scripts/**/*.mjs", "test/**/*.mjs", "*.config.js"],
     languageOptions: { globals: globals.node },
   },
   {

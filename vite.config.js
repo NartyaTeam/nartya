@@ -6,7 +6,7 @@ import path from "path";
 const API_DEV_URL = process.env.NARTYA_DEV_API || "http://localhost:3000";
 
 /**
- * Build seulement (Electron `file://`, WebView) : en dev, le préambule React Refresh est un
+ * Build seulement (coque Tauri, WebView) : en dev, le préambule React Refresh est un
  * script inline. `img-src` et `connect-src` restent ouverts à `https:` (jaquettes et avatars
  * de nombreux hôtes) ; le proxy local écoute sur un port aléatoire du loopback.
  */

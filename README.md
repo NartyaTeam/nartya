@@ -29,18 +29,19 @@ Ce dépôt contient l'application cliente. Elle s'appuie sur deux services :
 
 - **Interface** : Vite, React 18, React Router (HashRouter), Zustand, Tailwind
 - **Lecteur** : ArtPlayer, hls.js, avec un proxy de lecture local
-- **Bureau** : Electron (Windows, macOS, Linux)
+- **Bureau** : Tauri 2 (Windows, macOS, Linux), cœur Rust partagé (`crates/nartya-core`)
 - **Mobile** : Capacitor (Android, iOS)
 - **Données et comptes** : Supabase (Postgres, RLS, OAuth Discord)
 
 ## Démarrer
 
-Prérequis : Node.js 20 ou plus récent.
+Prérequis : Node.js 20 ou plus récent, et la [chaîne Rust](https://rustup.rs/) pour la version bureau
+(plus les [dépendances système de Tauri](https://v2.tauri.app/start/prerequisites/) sur Linux).
 
 ```bash
 npm install
 cp .env.example .env
-npm run electron:dev   # fenêtre Electron
+npm run dev:tauri      # fenêtre de la coque Tauri
 ```
 
 Connectez-vous ensuite avec votre compte Nartya : l'app appelle l'API publique avec votre
@@ -54,7 +55,7 @@ npm run test:unit
 npm run build
 ```
 
-La lecture vidéo (résolution des sources et proxy local) ne fonctionne que dans Electron et
+La lecture vidéo (résolution des sources et proxy local) ne fonctionne que dans l'app bureau et
 dans les apps mobiles. Dans le navigateur, le reste de l'interface est utilisable.
 
 ### Android et iOS
@@ -73,15 +74,16 @@ Détails dans [docs/MOBILE.md](docs/MOBILE.md).
 ## Structure
 
 ```
-electron/        Processus principal : fenêtre, deep-link nartya://, proxy de lecture,
-                 téléchargements, cast
+crates/          Cœur Rust partagé (nartya-core : proxy de lecture, téléchargements, cast,
+                 session) et pont JNI Android
+src-tauri/       Coque Tauri : fenêtre, deep-link nartya://, captcha, OAuth, Hub
 src/
   api/           Appels à l'API et à Supabase
   components/    Composants d'interface
   config/        Adresses de l'instance, réglages de l'API
   pages/         Écrans
-  platform/      Adaptateurs Electron, Capacitor et navigateur
-  shared/        Code commun au renderer et au processus principal
+  platform/      Adaptateurs Tauri, Capacitor et navigateur
+  shared/        Code commun à l'interface et à l'API (extraction, recette)
   stores/        État global (Zustand)
   utils/, lib/   Logique sans interface
 android/, ios/   Projets natifs Capacitor

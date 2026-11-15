@@ -1,5 +1,5 @@
 /**
- * App Electron déjà lancée avec --remote-debugging-port=9222 : navigue dans la vraie UI et
+ * App Tauri déjà lancée en dev avec NARTYA_CDP_PORT=9222 : navigue dans la vraie UI et
  * inspecte le <video> après résolution.
  */
 const CDP_HTTP = process.env.NARTYA_CDP_URL || "http://127.0.0.1:9222";

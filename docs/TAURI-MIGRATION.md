@@ -393,3 +393,13 @@ Reste : essai réel des installeurs Linux et macOS (HLS/MSE, plein écran, captc
 Installeur `Nartya-1.40.1-win.exe` lancé en `/S` (comme le Hub) par-dessus l'Electron 1.40.1 installé, sans processus Nartya ouvert : Electron désinstallé au même emplacement (`%LOCALAPPDATA%\Programs\Nartya` ne contient plus que `Nartya.exe`, `ffmpeg.exe`, `uninstall.exe`), clé `Uninstall\Nartya` mise à jour (`DisplayName` « Nartya 1.40.1 », `DisplayIcon` = l'exe), `%APPDATA%\nartya` intact. Le binaire release se lance (~43 Mo pour le process hôte) et, avec la session du Hub, affiche « Qui est là ? » : pas d'écran de connexion.
 
 Non couvert : la migration du `localStorage` (l'Electron installé n'avait pas l'export, donc aucun `localstorage-export.json`), un Windows sans WebView2, Windows 10, la détection par le Hub dans un parcours complet (clé de registre conforme à ce qu'il lit).
+
+## Retrait d'Electron du dépôt (2026-11-15)
+
+Supprimés : `electron/` (4 955 lignes), `src/platform/electron.js`, `build/installer.nsh`, le bloc `build` d'electron-builder, les scripts `electron:*`, les dépendances `electron`, `electron-builder`, `electron-store`, `castv2-client`, `discord-rpc`, `dns-packet`, `multicast-dns`, `node-fetch` (`castv2` et `multicast-dns` restent en devDependencies pour `npm run test:cast:fake`). Développement : `npm run dev:tauri` (API locale si `api/` est présent, sinon publique).
+
+Tests : `proxy-range`, `shared-session-permissions`, `video-providers-live` et `video-providers-electron-smoke` supprimés ; la couverture vit dans le cœur (`stream/range.rs`, `session.rs`, `stream/extract.rs`, `stream/provider.rs`, `url_guard.rs`) et dans `npm run test:providers` (chaîne réelle). `video-providers` et `stream-anonymization` ne gardent que ce qui concerne l'interface et le contrat de l'API.
+
+Gardés exprès : `src-tauri/src/migrate.rs` (reprise du `localStorage` écrit par la dernière version Electron) et `src-tauri/installer-hooks.nsh` (désinstalle l'ancien Electron). À retirer quand plus aucun utilisateur n'est sur Electron.
+
+Reste : oauth et Hub dans le cœur, adaptateur de page unique, recette partagée JS/Rust.

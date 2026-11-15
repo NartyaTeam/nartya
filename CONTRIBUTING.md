@@ -11,8 +11,8 @@ npm run test:unit
 npm run build
 ```
 
-Les trois doivent passer. Un changement dans `electron/` se vérifie aussi en lançant
-l'application, le navigateur ne suffit pas.
+Les trois doivent passer. Un changement dans `crates/` ou `src-tauri/` se vérifie aussi avec
+`cargo test --workspace`, puis en lançant l'application : le navigateur ne suffit pas.
 
 ## Conventions
 

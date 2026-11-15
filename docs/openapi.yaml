@@ -56,7 +56,7 @@ info:
     ```bash
     npm install
     cp .env.example .env
-    npm run electron:dev
+    npm run dev:tauri
     ```
 
     Connectez-vous ensuite avec votre compte Nartya : l'app appelle l'API publique avec votre

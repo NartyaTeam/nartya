@@ -110,4 +110,24 @@ mod tests {
             .concat();
         assert_eq!(out, b"456789");
     }
+
+    #[tokio::test]
+    async fn cesse_de_lire_des_la_plage_complete() {
+        use std::sync::atomic::{AtomicUsize, Ordering};
+        use std::sync::Arc;
+
+        let produced = Arc::new(AtomicUsize::new(0));
+        let counter = produced.clone();
+        let upstream = stream::iter(0..10usize).map(move |i| {
+            counter.fetch_add(1, Ordering::SeqCst);
+            Ok::<_, ()>(Bytes::from(vec![i as u8; 100]))
+        });
+        let out: Vec<u8> = slice_stream(upstream, 0, 149)
+            .map(|r| r.unwrap())
+            .collect::<Vec<_>>()
+            .await
+            .concat();
+        assert_eq!(out.len(), 150);
+        assert_eq!(produced.load(Ordering::SeqCst), 2, "lecture arrêtée au 2e morceau");
+    }
 }

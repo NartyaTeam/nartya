@@ -13,7 +13,16 @@ import path from "node:path";
 import { execFileSync } from "node:child_process";
 import mdns from "multicast-dns";
 import castv2 from "castv2";
-import { localAddressFor } from "../electron/utils/lan-address.js";
+
+/** Première adresse IPv4 non interne (la TV de test doit être jointe depuis le réseau local). */
+function localAddressFor() {
+  for (const addrs of Object.values(os.networkInterfaces())) {
+    for (const a of addrs || []) {
+      if (a.family === "IPv4" && !a.internal && !a.address.startsWith("169.254.")) return a.address;
+    }
+  }
+  return "127.0.0.1";
+}
 
 const args = Object.fromEntries(
   process.argv.slice(2).map((a) => {
