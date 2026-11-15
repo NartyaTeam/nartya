@@ -211,7 +211,7 @@ function TemplateMenu({ onPick }) {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="flex h-10 items-center gap-2 rounded-md bg-surface px-3.5 text-sm font-bold text-text ring-2 ring-border transition-colors hover:ring-primary/60"
+        className="flex h-12 items-center gap-2 rounded-md bg-surface px-3.5 text-sm font-bold text-text ring-2 ring-border transition-colors hover:ring-primary/60"
       >
         <LayoutTemplate size={16} /> Modèles <ChevronDown size={14} className="text-muted" />
       </button>
@@ -370,6 +370,7 @@ export default function TierListEditorPage() {
   const [publishing, setPublishing] = useState(false);
   const [kind, setKind] = useState(() => (KINDS[params.get("kind")] ? params.get("kind") : "anime"));
   const [selected, setSelected] = useState(null);
+  const [trayOpen, setTrayOpen] = useState(true);
 
   useEffect(() => {
     if (!id && !fromId) return undefined;
@@ -666,7 +667,7 @@ export default function TierListEditorPage() {
             options={KIND_OPTIONS}
             value={kind}
             onChange={setKind}
-            className="shrink-0"
+            className="shrink-0 !h-12"
           />
           <div className="ml-auto flex items-center gap-2">
             {board.tiers.length < MAX_TIERS && (
@@ -675,7 +676,7 @@ export default function TierListEditorPage() {
                 onClick={() =>
                   setBoard((b) => ({ ...b, tiers: [...b.tiers, makeTier("", TIER_COLORS[b.tiers.length % TIER_COLORS.length])] }))
                 }
-                className="flex h-10 items-center gap-2 rounded-md bg-surface px-3.5 text-sm font-bold text-text ring-2 ring-border transition-colors hover:text-primary hover:ring-primary/60"
+                className="flex h-12 items-center gap-2 rounded-md bg-surface px-3.5 text-sm font-bold text-text ring-2 ring-border transition-colors hover:text-primary hover:ring-primary/60"
               >
                 <Plus size={16} /> Rangée
               </button>
@@ -712,30 +713,49 @@ export default function TierListEditorPage() {
           aria-label="Non classés"
           className="sticky bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-30 mt-4 rounded-md bg-surface shadow-2xl ring-2 ring-border md:bottom-3"
         >
-          <div className="flex items-center gap-2 px-3 pt-2 text-xs">
-            <Inbox size={14} className="text-primary" />
-            <span className="font-bold text-text">Non classés ({board.pool.length})</span>
-            <span className="min-w-0 truncate text-muted">
+          <div className="flex items-center gap-2 px-3 py-2 text-xs">
+            <Inbox size={14} className="shrink-0 text-primary" />
+            <span className="shrink-0 font-bold text-text">Non classés ({board.pool.length})</span>
+            <span className="min-w-0 flex-1 truncate text-muted">
               {current
                 ? `Clique une rangée ou tape sa touche (1${board.tiers.length > 1 ? `–${board.tiers.length >= 10 ? "9, 0" : board.tiers.length}` : ""}) · Échap pour annuler`
                 : board.pool.length
                   ? "Clique un élément puis une rangée, ou glisse-le."
-                  : `Ajoute des ${KINDS[kind].many} avec la recherche : ils arrivent ici.`}
+                  : ""}
             </span>
+            <button
+              type="button"
+              onClick={() => {
+                setSelected(null);
+                setTrayOpen((v) => !v);
+              }}
+              aria-expanded={trayOpen}
+              aria-label={trayOpen ? "Masquer les non classés" : "Afficher les non classés"}
+              title={trayOpen ? "Masquer" : "Afficher"}
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded text-muted transition-colors hover:bg-white/10 hover:text-text"
+            >
+              <ChevronDown size={16} className={`transition-transform ${trayOpen ? "" : "rotate-180"}`} />
+            </button>
           </div>
-          <div className={`flex px-1 pb-1 ${board.pool.length ? "min-h-[6.5rem]" : "min-h-[3rem]"}`}>
-            <DropZone
-              id={POOL}
-              items={board.pool}
-              onTap={(item) => setSelected((cur) => (cur === item.slug ? null : item.slug))}
-              highlight={active?.type === "pick" && overCid === POOL}
-              nowrap
-              small
-              selected={current}
-              className={board.pool.length ? "min-h-[5.5rem]" : "min-h-[2.5rem]"}
-              empty={<p className="m-auto px-4 text-center text-xs text-muted">Rien à classer pour l'instant.</p>}
-            />
-          </div>
+          {trayOpen && (
+            <div className={`flex px-1 pb-1 ${board.pool.length ? "min-h-[6.5rem]" : "min-h-[3rem]"}`}>
+              <DropZone
+                id={POOL}
+                items={board.pool}
+                onTap={(item) => setSelected((cur) => (cur === item.slug ? null : item.slug))}
+                highlight={active?.type === "pick" && overCid === POOL}
+                nowrap
+                small
+                selected={current}
+                className={board.pool.length ? "min-h-[5.5rem]" : "min-h-[2.5rem]"}
+                empty={
+                  <p className="m-auto px-4 text-center text-xs text-muted">
+                    Ajoute des {KINDS[kind].many} avec la recherche : ils arrivent ici.
+                  </p>
+                }
+              />
+            </div>
+          )}
         </section>
 
         {createPortal(
