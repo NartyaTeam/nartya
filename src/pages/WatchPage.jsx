@@ -162,9 +162,11 @@ export default function WatchPage() {
   // Dernier épisode de la dernière saison d'un anime qui ne diffuse plus : terminé. Un film
   // ou un OAV ne compte pas, on peut le voir sans avoir suivi la série.
   const catalogStatus = animeData?.anime?.status || null;
-  const airing = catalogStatus
-    ? /en\s*cours/i.test(catalogStatus)
-    : animeData?.anilist?.status === "RELEASING";
+  // Le catalogue peut dire « Terminé » alors qu'une saison diffuse encore : un seul signal « en cours » suffit.
+  const airing =
+    (catalogStatus ? /en\s*cours/i.test(catalogStatus) : false) ||
+    animeData?.anilist?.status === "RELEASING" ||
+    !!animeData?.anilist?.nextEpisode;
   const isFinale =
     !!animeData &&
     currentIndex >= 0 &&
