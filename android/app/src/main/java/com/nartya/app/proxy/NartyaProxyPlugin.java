@@ -17,6 +17,7 @@ import com.getcapacitor.annotation.PermissionCallback;
 
 import com.nartya.app.core.NartyaCore;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.Set;
@@ -44,6 +45,9 @@ public class NartyaProxyPlugin extends Plugin {
     private static JSObject coreInfo;
     // Téléchargements en cours, d'après les événements du cœur (service de premier plan).
     private static final Set<String> activeDownloads = ConcurrentHashMap.newKeySet();
+    // Fusion « playlist + segments » → video.mp4, une à la fois : elle écrit autant que l'épisode pèse.
+    private static final ExecutorService REMUX_EXECUTOR = Executors.newSingleThreadExecutor();
+    private static final Set<String> remuxing = ConcurrentHashMap.newKeySet();
 
     @Override
     public void load() {
@@ -71,6 +75,7 @@ public class NartyaProxyPlugin extends Plugin {
                             return;
                         }
                         coreInfo = started;
+                        remuxPendingDownloads();
                     }
                 }
                 call.resolve(coreInfo);
@@ -109,6 +114,42 @@ public class NartyaProxyPlugin extends Plugin {
         });
     }
 
+    /** Épisodes déjà terminés en playlist + segments (avant la fusion native) : rattrapés au démarrage. */
+    private static void remuxPendingDownloads() {
+        REMUX_EXECUTOR.execute(() -> {
+            try {
+                JSONArray items = new JSONObject(NartyaCore.nativeCall("downloads_list", "{}")).optJSONArray("items");
+                if (items == null) return;
+                for (int i = 0; i < items.length(); i++) {
+                    JSONObject item = items.optJSONObject(i);
+                    if (item != null) scheduleRemux(item);
+                }
+            } catch (Throwable ignored) {}
+        });
+    }
+
+    private static void scheduleRemux(JSONObject item) {
+        if (!"done".equals(item.optString("status"))
+                || "scan".equals(item.optString("type"))
+                || !"playlist.m3u8".equals(item.optString("file"))) return;
+        String id = item.optString("id");
+        if (id.isEmpty() || !remuxing.add(id)) return;
+        REMUX_EXECUTOR.execute(() -> {
+            try {
+                String args = new JSONObject().put("id", id).toString();
+                JSONObject target = new JSONObject(NartyaCore.nativeCall("downloads_remux_target", args));
+                if (!target.optBoolean("success", false)) return;
+                if (HlsRemuxer.remux(new java.io.File(target.getString("dir")))) {
+                    NartyaCore.nativeCall("downloads_remux_done", args);
+                }
+            } catch (Throwable ignored) {
+                // Best-effort : l'épisode reste lisible en playlist + segments.
+            } finally {
+                remuxing.remove(id);
+            }
+        });
+    }
+
     private static JSObject failure(Throwable e) {
         return new JSObject().put("success", false).put("error", String.valueOf(e.getMessage()));
     }
@@ -135,6 +176,7 @@ public class NartyaProxyPlugin extends Plugin {
                 DownloadForegroundService.update(context, item, activeDownloads.size());
             } catch (Exception ignored) {}
             if (wasActive && "done".equals(status)) DownloadForegroundService.notifyFinished(context, item);
+            scheduleRemux(item);
         } catch (Exception ignored) {}
     }
 

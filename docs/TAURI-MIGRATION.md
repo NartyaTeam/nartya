@@ -276,7 +276,7 @@ Travail restant pour passer à l'intégration :
 1. **`Host` par JNI** : les événements (`downloads:progress`) remontent par un rappel Java ; le cœur doit garder la `JavaVM` et rattacher ses fils.
 2. **Plugin Capacitor** : `NartyaProxyPlugin` appelle `NartyaCore` au lieu de `ProxyServer` / `Downloads` ; le service de premier plan des téléchargements (103 lignes) reste, il appelle le cœur.
 3. **Côté page** : le proxy Java reçoit aujourd'hui les recettes (`configs`) poussées par la page et la page construit les URL. Le cœur suit le modèle du bureau : la page ne voit jamais l'URL de l'hébergeur, elle reçoit une poignée par `resolveStream`. Android doit donc passer par `resolveStream` (comme `tauri.js`), ce qui est le vrai chantier du front.
-4. **ffmpeg** : pas d'exécutable embarqué sous Android ; la fusion HLS retombe sur « playlist + segments » (déjà géré par le cœur).
+4. **ffmpeg** : pas d'exécutable embarqué sous Android ; le cœur termine donc un épisode HLS en « playlist + segments », que `HlsRemuxer.java` (MediaExtractor + MediaMuxer, déchiffrement AES-128 compris) fusionne ensuite en `video.mp4` via `downloads_remux_target` / `downloads_remux_done`, aussi au démarrage pour les épisodes déjà téléchargés. Un échec laisse la playlist lisible. **Non vérifié sur appareil.**
 5. **Build** : une tâche Gradle qui lance `cargo ndk -t arm64-v8a -t armeabi-v7a -o android/app/src/main/jniLibs build -p nartya-android --release`.
 6. **Tests** : les tests Java du proxy (`ProxyServerTest`, la sonde instrumentée) sont remplacés par ceux du cœur.
 

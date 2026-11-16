@@ -249,7 +249,7 @@ async fn remux(ctx: &Ctx, ffmpeg: &Path, dir: &Path) -> DlResult<u64> {
     Ok(tokio::fs::metadata(&out).await?.len())
 }
 
-async fn cleanup(dir: &Path) {
+pub(super) async fn cleanup(dir: &Path) {
     let Ok(mut entries) = tokio::fs::read_dir(dir).await else {
         return;
     };

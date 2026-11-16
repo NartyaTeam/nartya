@@ -427,6 +427,38 @@ impl Downloads {
         json!({ "items": items })
     }
 
+    /// Épisode terminé en « playlist + segments » (pas de ffmpeg) : renvoie son dossier pour que
+    /// la coque le fusionne elle-même en `video.mp4` (Android : MediaExtractor + MediaMuxer).
+    pub fn remux_target(&self, id: &str) -> Value {
+        let Some(item) = self.get(id) else {
+            return json!({ "success": false, "error": "Entrée introuvable" });
+        };
+        let eligible = str_field(&item, "status") == Some("done")
+            && str_field(&item, "type") != Some("scan")
+            && str_field(&item, "file") == Some("playlist.m3u8");
+        match item_dir(&self.root(), id) {
+            Some(dir) if eligible => json!({ "success": true, "dir": dir.to_string_lossy() }),
+            _ => json!({ "success": false, "error": "Rien à fusionner" }),
+        }
+    }
+
+    /// Après une fusion réussie : l'entrée pointe sur `video.mp4`, segments et playlist supprimés.
+    pub async fn finish_remux(&self, id: &str) -> Value {
+        let Some(dir) = item_dir(&self.root(), id) else {
+            return json!({ "success": false, "error": "id invalide" });
+        };
+        let size = tokio::fs::metadata(dir.join("video.mp4"))
+            .await
+            .map(|m| m.len())
+            .unwrap_or(0);
+        if size == 0 || self.get(id).is_none() {
+            return json!({ "success": false, "error": "video.mp4 absent" });
+        }
+        hls::cleanup(&dir).await;
+        self.update(id, json!({ "file": "video.mp4", "sizeBytes": size }), true);
+        json!({ "success": true })
+    }
+
     async fn cache_image(&self, url: &str, dest: &Path) -> bool {
         let Ok(parsed) = Url::parse(url) else {
             return false;

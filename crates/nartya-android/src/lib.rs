@@ -169,6 +169,10 @@ pub fn call(command: &str, args: &str) -> Value {
             downloads.set_max_concurrent(args["n"].as_f64().unwrap_or(1.0));
             json!({ "success": true })
         }
+        "downloads_remux_target" => downloads.remux_target(&id),
+        "downloads_remux_done" => core
+            .runtime
+            .block_on(async move { downloads.finish_remux(&id).await }),
         "downloads_local_url" => {
             let rel = args["rel"].as_str().unwrap_or("video.mp4");
             let url = core
