@@ -86,6 +86,8 @@ export default defineConfig(({ mode }) => ({
     port: 5173,
     strictPort: true,
     host: true,
+    // Les builds Rust/Android écrivent dans target/ : le surveiller fait planter le watcher.
+    watch: { ignored: ["**/target/**", "**/src-tauri/gen/**"] },
     proxy: {
       "/api": {
         target: API_DEV_URL,
