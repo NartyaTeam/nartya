@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import { Check } from "lucide-react";
 import { createPortal } from "react-dom";
 
@@ -22,24 +23,31 @@ export function MobileSelectSheet({ open, title, options = [], value, onChange, 
           )}
         </div>
         <div className="px-2 pb-1">
-          {options.map((option) => {
+          {options.map((option, i) => {
             const active = option.value === value;
+            const section = option.group && option.group !== options[i - 1]?.group ? option.group : null;
             return (
-              <button
-                key={option.value}
-                type="button"
-                onClick={() => {
-                  onChange(option.value);
-                  onClose();
-                }}
-                className={`flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left text-[0.95rem] transition-colors active:bg-white/[0.06] ${
-                  active ? "font-semibold text-primary" : "text-text"
-                }`}
-              >
-                {option.icon}
-                <span className="min-w-0 flex-1 truncate">{option.label}</span>
-                {active && <Check size={18} className="shrink-0 text-primary" />}
-              </button>
+              <Fragment key={option.value}>
+                {section && (
+                  <p className={`px-3 pb-1 font-display text-[0.68rem] uppercase tracking-kana text-muted ${i > 0 ? "mt-2 border-t border-border/60 pt-3" : "pt-1"}`}>
+                    {section}
+                  </p>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    onChange(option.value);
+                    onClose();
+                  }}
+                  className={`flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left text-[0.95rem] transition-colors active:bg-white/[0.06] ${
+                    active ? "font-semibold text-primary" : "text-text"
+                  }`}
+                >
+                  {option.icon}
+                  <span className="min-w-0 flex-1 truncate">{option.label}</span>
+                  {active && <Check size={18} className="shrink-0 text-primary" />}
+                </button>
+              </Fragment>
             );
           })}
         </div>

@@ -20,6 +20,33 @@ const JOINED = {
   end: "before:-left-1.5 before:right-0 before:[clip-path:polygon(11px_0,100%_0,100%_100%,1px_100%)]",
 };
 
+/** Options regroupées par `group` (sections), dans l'ordre d'apparition ; une seule section sans titre sinon. */
+export function groupOptions(options) {
+  const sections = [];
+  for (const opt of options) {
+    const last = sections[sections.length - 1];
+    if (last && last.group === (opt.group || null)) last.items.push(opt);
+    else sections.push({ group: opt.group || null, items: [opt] });
+  }
+  return sections;
+}
+
+function renderItem(opt) {
+  return (
+    <RSelect.Item
+      key={opt.value}
+      value={opt.value}
+      className="relative flex cursor-pointer select-none items-center gap-2.5 rounded px-2.5 py-2 pr-8 text-sm text-text outline-none transition-colors data-[highlighted]:bg-text/10 data-[state=checked]:font-bold data-[state=checked]:text-primary"
+    >
+      {opt.icon}
+      <RSelect.ItemText>{opt.label}</RSelect.ItemText>
+      <RSelect.ItemIndicator className="absolute right-2.5">
+        <Check size={15} />
+      </RSelect.ItemIndicator>
+    </RSelect.Item>
+  );
+}
+
 export function Select({
   value,
   onValueChange,
@@ -69,19 +96,19 @@ export function Select({
           className="z-[300] min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-md border border-border bg-surface shadow-card ring-1 ring-black/40 animate-in fade-in-0 zoom-in-95 data-[side=top]:slide-in-from-bottom-1 data-[side=bottom]:slide-in-from-top-1"
         >
           <RSelect.Viewport className="max-h-72 p-1">
-            {options.map((opt) => (
-              <RSelect.Item
-                key={opt.value}
-                value={opt.value}
-                className="relative flex cursor-pointer select-none items-center gap-2.5 rounded px-2.5 py-2 pr-8 text-sm text-text outline-none transition-colors data-[highlighted]:bg-text/10 data-[state=checked]:font-bold data-[state=checked]:text-primary"
-              >
-                {opt.icon}
-                <RSelect.ItemText>{opt.label}</RSelect.ItemText>
-                <RSelect.ItemIndicator className="absolute right-2.5">
-                  <Check size={15} />
-                </RSelect.ItemIndicator>
-              </RSelect.Item>
-            ))}
+            {groupOptions(options).map(({ group, items }, i) =>
+              group ? (
+                <RSelect.Group key={group}>
+                  {i > 0 && <RSelect.Separator className="mx-1 my-1 h-px bg-border" />}
+                  <RSelect.Label className="px-2.5 pb-1 pt-2 font-display text-[0.68rem] uppercase tracking-kana text-muted">
+                    {group}
+                  </RSelect.Label>
+                  {items.map(renderItem)}
+                </RSelect.Group>
+              ) : (
+                items.map(renderItem)
+              )
+            )}
           </RSelect.Viewport>
         </RSelect.Content>
       </RSelect.Portal>

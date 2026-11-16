@@ -4,6 +4,7 @@ import { searchAnimes, getAnimePage, getSeasonEpisodes } from "@/api/animeApi";
 import { getOrFetch } from "@/hooks/useCachedResource";
 import { Select } from "@/components/ui/Select";
 import { hasPlayableSources } from "@/utils/videoSourceUtils";
+import { sortSeasonsForDisplay } from "@/utils/seasonSort";
 
 function isPlayable(ep) {
   if (!ep?.lecteurs) return false;
@@ -125,7 +126,7 @@ export default function PartySearchPanel({ onPlay, onEnqueue, onDequeue, queue =
               <Select
                 value={String(seasonId ?? "")}
                 onValueChange={(v) => selectSeason(anime.slug, v)}
-                options={anime.seasons.map((s) => ({ value: String(s.id), label: s.name }))}
+                options={sortSeasonsForDisplay(anime.seasons).map((s) => ({ value: String(s.id), label: s.name, group: s.group }))}
                 className="mt-1 w-full !h-8 !text-xs !pl-2.5 !pr-2"
               />
             ) : (

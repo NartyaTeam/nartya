@@ -157,7 +157,7 @@ export function SeasonsMobileToolbar({
         value={selectedSeason?.id || ""}
         onChange={(id) => onSelectSeason(seasons.find((season) => season.id === id))}
         onClose={() => setActiveSheet(null)}
-        options={seasons.map((season) => ({ value: season.id, label: season.name }))}
+        options={seasons.map((season) => ({ value: season.id, label: season.name, group: season.group }))}
       />
       <MobileSelectSheet
         open={activeSheet === "lang"}

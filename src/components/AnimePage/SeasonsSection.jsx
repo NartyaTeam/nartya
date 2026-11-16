@@ -361,7 +361,7 @@ export function SeasonsSection({
       )}
 
       <SeasonsMobileToolbar
-        seasons={seasons}
+        seasons={orderedSeasons}
         selectedSeason={selectedSeason}
         selectedLanguage={selectedLanguage}
         availableLanguages={availableLanguages}
@@ -415,7 +415,7 @@ export function SeasonsSection({
               value={selectedSeason?.id || ""}
               onValueChange={(id) => selectSeason(orderedSeasons.find((s) => s.id === id))}
               className="min-w-[9rem]"
-              options={orderedSeasons.map((s) => ({ value: s.id, label: s.name }))}
+              options={orderedSeasons.map((s) => ({ value: s.id, label: s.name, group: s.group }))}
             />
             {(availableLanguages.length ? availableLanguages : [selectedLanguage]).length > 0 && (
               <>
