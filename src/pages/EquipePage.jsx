@@ -1,204 +1,130 @@
-import { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Users, X, ArrowRight } from "lucide-react";
+import { MessageCircle } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import RoleBadge from "@/components/profile/RoleBadge";
 import { getTeamRoster, resolveAvatar } from "@/api/profile";
+import { openDiscord } from "@/lib/community";
 
 /** Par handle. Un membre absent a un traitement « staff » générique. */
 const TEAM_META = {
   zeleff_: {
     order: 0,
+    group: "dev",
     title: "Développeur principal",
     kanji: "朱",
     rgb: "255 113 62",
-    blurb:
-      "Le développeur principal de Nartya. Écrit le code, casse le code, répare le code — souvent le même jour, parfois entre deux épisodes qu'il regarde soi-disant « pour tester le lecteur ».",
   },
   "007": {
     order: 1,
+    group: "dev",
     title: "Développeur secondaire",
     kanji: "刀",
     rgb: "245 158 11",
-    blurb:
-      "Développeur secondaire, complice de code de Zeleff_ : aussi doué pour livrer des fonctionnalités que pour dénicher les bugs qu'on aurait préféré ne jamais croiser.",
   },
   "001": {
     order: 2,
+    group: "community",
     title: "Chef de projet & communauté",
     kanji: "光",
     rgb: "56 189 248",
-    blurb:
-      "Gère le Discord, les réseaux et l'image de Nartya — le visage public d'un projet mené par deux développeurs qui préfèrent rester dans leur terminal.",
   },
   end: {
     order: 3,
+    group: "community",
     title: "Responsable de la modération",
     kanji: "影",
     rgb: "168 85 247",
-    blurb: "Responsable de la modération. Rien ne lui échappe sur les commentaires.",
   },
 };
 
 const STAFF_FALLBACK = {
   order: 99,
+  group: "community",
   title: "Membre du staff",
   kanji: "星",
   rgb: "52 211 153",
-  blurb: "Membre du staff Nartya, présent pour que tout tourne rond — un commentaire signalé ou un bug remonté à la fois.",
 };
+
+const GROUPS = [
+  { key: "dev", title: "Développement", text: "Ceux qui écrivent, cassent et réparent l'application." },
+  { key: "community", title: "Communauté & modération", text: "Ceux qui font vivre le Discord et veillent sur les échanges." },
+];
 
 function metaFor(member) {
   return TEAM_META[member.handle] || STAFF_FALLBACK;
 }
 
-function TeamCard({ member, meta, onOpen }) {
+function MemberCard({ member, meta }) {
   const avatar = resolveAvatar(member);
-  return (
-    <button
-      type="button"
-      onClick={() => onOpen(member)}
-      className="group relative flex flex-col items-center gap-3 overflow-hidden rounded-md border-2 border-border bg-surface/40 p-6 text-center transition-[transform,box-shadow,border-color] duration-300 ease-out hover:-translate-y-1 hover:border-[color:rgb(var(--m-rgb)/0.5)] hover:shadow-[0_20px_40px_-24px_rgb(var(--m-rgb)/0.55)] focus-visible:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:rgb(var(--m-rgb))]"
-      style={{ "--m-rgb": meta.rgb }}
-    >
+  const body = (
+    <>
       <span
         aria-hidden="true"
-        className="pointer-events-none absolute -right-2 -top-3 font-display text-[5.5rem] font-black leading-none opacity-0 transition-opacity duration-300 group-hover:opacity-[0.07]"
+        className="pointer-events-none absolute -bottom-6 -right-2 select-none font-display text-[9rem] font-black leading-none opacity-[0.05] transition-opacity duration-300 group-hover:opacity-[0.1]"
         style={{ color: `rgb(${meta.rgb})` }}
       >
         {meta.kanji}
       </span>
+      <span
+        aria-hidden="true"
+        className="absolute inset-y-0 left-0 w-1"
+        style={{ background: `rgb(${meta.rgb})` }}
+      />
 
       <Avatar
         src={avatar}
         name={member.username}
-        className="h-20 w-20 rounded-full ring-2 ring-border/60 transition-[box-shadow] duration-300 group-hover:ring-[color:rgb(var(--m-rgb)/0.65)]"
-        textClassName="text-2xl"
-        style={{ boxShadow: `0 0 0 0 rgb(${meta.rgb} / 0)` }}
+        className="h-20 w-20 shrink-0 rounded-full sm:h-24 sm:w-24"
+        textClassName="text-3xl"
+        style={{ boxShadow: `0 0 0 3px rgb(${meta.rgb} / 0.45), 0 0 32px -8px rgb(${meta.rgb} / 0.55)` }}
       />
-      <div className="relative">
-        <p className="font-display text-base font-bold text-text">{member.username}</p>
+
+      <div className="relative min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+          <p className="font-display text-xl font-bold text-text">{member.username}</p>
+          <RoleBadge role={member.role} size="sm" />
+        </div>
         {member.handle && <p className="text-xs text-muted">@{member.handle}</p>}
+        <p className="mt-2 text-sm font-bold" style={{ color: `rgb(${meta.rgb})` }}>
+          {meta.title}
+        </p>
       </div>
-      <p className="text-xs font-semibold" style={{ color: `rgb(${meta.rgb})` }}>
-        {meta.title}
-      </p>
-      <RoleBadge role={member.role} size="sm" />
-    </button>
+    </>
+  );
+
+  const cls =
+    "group relative flex items-start gap-5 overflow-hidden rounded-md border-2 border-border bg-surface/40 p-5 pl-6 transition-[transform,border-color,box-shadow] duration-300 hover:-translate-y-0.5 hover:border-[color:rgb(var(--m-rgb)/0.5)] hover:shadow-[0_20px_40px_-26px_rgb(var(--m-rgb)/0.6)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:rgb(var(--m-rgb))] sm:p-6 sm:pl-7";
+  const style = { "--m-rgb": meta.rgb };
+
+  return member.handle ? (
+    <Link to={`/u/${member.handle}`} className={cls} style={style}>
+      {body}
+    </Link>
+  ) : (
+    <div className={cls} style={style}>
+      {body}
+    </div>
   );
 }
 
-function TeamMemberReveal({ member, meta, onClose }) {
-  const avatar = resolveAvatar(member);
-  const cardRef = useRef(null);
-  const [tilt, setTilt] = useState({ rx: 0, ry: 0, px: 50, py: 50 });
-  const reducedMotion = useRef(
-    typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
-  );
-
-  useEffect(() => {
-    const onKey = (e) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
-
-  // Sauf si l'utilisateur préfère moins de mouvement.
-  const handleMove = (e) => {
-    if (reducedMotion.current || !cardRef.current) return;
-    const rect = cardRef.current.getBoundingClientRect();
-    const px = (e.clientX - rect.left) / rect.width;
-    const py = (e.clientY - rect.top) / rect.height;
-    setTilt({ rx: (0.5 - py) * 14, ry: (px - 0.5) * 14, px: px * 100, py: py * 100 });
-  };
-  const handleLeave = () => setTilt({ rx: 0, ry: 0, px: 50, py: 50 });
-
-  return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      <div className="animate-fade-in-fast absolute inset-0 bg-black/75 backdrop-blur-sm" onClick={onClose} />
-      {/* Mesuré sur un wrapper stable : lire la position de l'élément qui pivote crée une boucle de rétroaction. `perspective` doit être sur le parent direct. */}
-      <div
-        ref={cardRef}
-        onMouseMove={handleMove}
-        onMouseLeave={handleLeave}
-        className="animate-pop-in motion-reduce:animate-fade-in-fast relative w-full max-w-sm"
-        style={{ perspective: 1200 }}
-      >
-        <div
-          className="relative overflow-hidden rounded-md border-2 border-border bg-surface p-8 text-center shadow-[0_40px_80px_-24px_rgba(0,0,0,0.7)] will-change-transform motion-reduce:!transform-none"
-          style={{
-            "--m-rgb": meta.rgb,
-            transform: `rotateX(${tilt.rx}deg) rotateY(${tilt.ry}deg)`,
-            transition: "transform 0.4s cubic-bezier(0.22,1,0.36,1)",
-          }}
-        >
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0 opacity-70 motion-reduce:hidden"
-            style={{
-              background: `radial-gradient(340px circle at ${tilt.px}% ${tilt.py}%, rgb(${meta.rgb} / 0.16), transparent 60%)`,
-            }}
-          />
-
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute -right-6 -top-8 select-none font-display text-[11rem] font-black leading-none opacity-[0.06]"
-            style={{ color: `rgb(${meta.rgb})` }}
-          >
-            {meta.kanji}
-          </span>
-
-          <button
-            onClick={onClose}
-            title="Fermer"
-            className="absolute right-4 top-4 text-muted transition-colors hover:text-text"
-          >
-            <X size={18} />
-          </button>
-
-          <div className="relative flex flex-col items-center gap-3">
-            <Avatar
-              src={avatar}
-              name={member.username}
-              className="h-24 w-24 rounded-full ring-4"
-              style={{ boxShadow: `0 0 0 4px rgb(${meta.rgb} / 0.35), 0 0 40px -6px rgb(${meta.rgb} / 0.5)` }}
-              textClassName="text-3xl"
-            />
-
-            <div>
-              <p className="font-display text-xl font-bold text-text">{member.username}</p>
-              {member.handle && <p className="text-xs text-muted">@{member.handle}</p>}
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-bold" style={{ color: `rgb(${meta.rgb})` }}>
-                {meta.title}
-              </span>
-              <RoleBadge role={member.role} size="sm" />
-            </div>
-
-            <p className="mt-1 text-sm leading-relaxed text-muted">{meta.blurb}</p>
-
-            <Link
-              to={member.handle ? `/u/${member.handle}` : "#"}
-              onClick={onClose}
-              className="mt-3 inline-flex items-center gap-1.5 text-sm font-bold transition-opacity hover:opacity-75"
-              style={{ color: `rgb(${meta.rgb})` }}
-            >
-              Voir le profil <ArrowRight size={14} />
-            </Link>
-          </div>
-        </div>
+function CardSkeleton() {
+  return (
+    <div className="flex items-start gap-5 rounded-md border-2 border-border bg-surface/40 p-6">
+      <div className="h-24 w-24 shrink-0 skeleton rounded-full" />
+      <div className="flex-1 space-y-2.5 pt-1">
+        <div className="h-5 w-32 skeleton rounded" />
+        <div className="h-3 w-24 skeleton rounded" />
+        <div className="h-3 w-full skeleton rounded" />
+        <div className="h-3 w-3/4 skeleton rounded" />
       </div>
-    </div>,
-    document.body
+    </div>
   );
 }
 
 export default function EquipePage() {
   const [roster, setRoster] = useState(null);
   const [error, setError] = useState(null);
-  const [opened, setOpened] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -220,14 +146,17 @@ export default function EquipePage() {
     : null;
 
   return (
-    <div className="animate-fade-in mx-auto max-w-4xl px-4 pb-10 pt-[calc(env(safe-area-inset-top)+4.5rem)] sm:px-8 md:py-10">
-      <div className="mb-8 flex items-center gap-3">
-        <Users size={26} className="text-primary" />
-        <div>
-          <h1 className="t-impact text-4xl sm:text-5xl">Équipe</h1>
-          <p className="mt-1 text-sm text-muted">Les personnes qui font tourner Nartya.</p>
-        </div>
-      </div>
+    <div className="animate-fade-in mx-auto max-w-5xl px-4 pb-16 pt-[calc(env(safe-area-inset-top)+4.5rem)] sm:px-8 md:py-12">
+      <header className="mb-12 max-w-2xl">
+        <p className="mb-3 flex items-center gap-2.5 text-[0.7rem] font-bold uppercase tracking-[0.25em] text-muted">
+          <span className="h-3.5 w-[6px] -skew-x-[14deg] bg-primary" />
+          Nartya
+        </p>
+        <h1 className="t-impact text-5xl sm:text-7xl">L'équipe</h1>
+        <p className="mt-4 text-base leading-relaxed text-muted">
+          Une petite équipe, beaucoup de passion. Voici les personnes qui font tourner Nartya au quotidien.
+        </p>
+      </header>
 
       {error && (
         <p className="py-16 text-center text-sm text-muted">
@@ -236,12 +165,9 @@ export default function EquipePage() {
       )}
 
       {!error && sorted === null && (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="flex flex-col items-center gap-3 rounded-md border-2 border-border bg-surface/40 p-6">
-              <div className="h-20 w-20 skeleton rounded-full" />
-              <div className="h-3 w-16 skeleton rounded" />
-            </div>
+        <div className="grid gap-4 md:grid-cols-2">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <CardSkeleton key={i} />
           ))}
         </div>
       )}
@@ -250,15 +176,35 @@ export default function EquipePage() {
         <p className="py-16 text-center text-sm text-muted">Aucun membre à afficher.</p>
       )}
 
-      {!error && sorted !== null && sorted.length > 0 && (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-          {sorted.map((member) => (
-            <TeamCard key={member.id} member={member} meta={metaFor(member)} onOpen={setOpened} />
-          ))}
-        </div>
-      )}
+      {!error &&
+        sorted !== null &&
+        GROUPS.map((group) => {
+          const members = sorted.filter((m) => metaFor(m).group === group.key);
+          if (!members.length) return null;
+          return (
+            <section key={group.key} className="mb-12">
+              <h2 className="section-title">{group.title}</h2>
+              <p className="mb-5 mt-2 text-sm text-muted">{group.text}</p>
+              <div className="grid gap-4 md:grid-cols-2">
+                {members.map((member) => (
+                  <MemberCard key={member.id} member={member} meta={metaFor(member)} />
+                ))}
+              </div>
+            </section>
+          );
+        })}
 
-      {opened && <TeamMemberReveal member={opened} meta={metaFor(opened)} onClose={() => setOpened(null)} />}
+      {!error && sorted !== null && (
+        <section className="flex flex-col items-start gap-4 rounded-md border-2 border-dashed border-border p-6 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="font-display text-lg font-bold text-text">Une question, un bug, une idée ?</h2>
+            <p className="mt-1 text-sm text-muted">Toute l'équipe répond sur le Discord de Nartya.</p>
+          </div>
+          <button type="button" onClick={openDiscord} className="btn-shu shrink-0">
+            <MessageCircle size={18} /> Rejoindre le Discord
+          </button>
+        </section>
+      )}
     </div>
   );
 }
