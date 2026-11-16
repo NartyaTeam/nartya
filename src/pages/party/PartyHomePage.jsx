@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Users, Plus, LogIn, Loader2, Play, Sparkles, MonitorUp, X, Globe, Lock } from "lucide-react";
+import { Users, Plus, LogIn, Loader2, Play, Sparkles, X, Globe, Lock } from "lucide-react";
 import { useParty } from "@/contexts/WatchPartyProvider";
 import { getHomeSections, getAnimePage } from "@/api/animeApi";
 import { getContinueWatching, hideAnimeFromResume } from "@/api/progress";
@@ -9,10 +9,8 @@ import { normalizePartyCode } from "@/utils/partyCode";
 import { listPublicPartyRooms } from "@/api/partyRoom";
 import { resolveAvatar } from "@/api/profile";
 import { partyCapacityForTier, premiumTier } from "@/lib/premium";
-import { platform } from "@/platform";
 import SegmentedControl from "@/components/ui/SegmentedControl";
 
-const canOpenWindow = platform.canOpenNewWindow;
 const PUBLIC_REFRESH_MS = 20000;
 
 /** « 12:34 », ou null si inconnu. */
@@ -244,15 +242,6 @@ export default function PartyHomePage() {
         </section>
       )}
 
-      {canOpenWindow && (
-        <button
-          type="button"
-          onClick={() => platform.openNewWindow()}
-          className="mt-4 flex items-center gap-2 text-xs text-muted transition-colors hover:text-text"
-        >
-          <MonitorUp size={14} /> Ouvrir une 2ᵉ fenêtre (test à deux sur cette machine)
-        </button>
-      )}
     </div>
   );
 }

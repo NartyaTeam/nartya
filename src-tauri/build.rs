@@ -36,7 +36,6 @@ const COMMANDS: &[&str] = &[
     "cast_control",
     "cast_stop",
     "party_input",
-    "open_new_window",
 ];
 
 fn main() {

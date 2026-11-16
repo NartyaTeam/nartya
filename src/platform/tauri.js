@@ -126,9 +126,6 @@ export const tauriPlatform = definePlatform({
   // Pas de vibration ni de partage système sur le bureau, même si la WebView expose l'API web.
   haptic: noop,
   share: async () => false,
-  // Seconde fenêtre (test à deux sur cette machine) ; `route` ouvre directement une page.
-  canOpenNewWindow: true,
-  openNewWindow: (route) => invoke("open_new_window", { route: route || null }),
   quit: () => invoke("app_quit"),
   focusWindow: () => invoke("app_focus"),
 });

@@ -253,12 +253,3 @@ pub fn party_input(
     hub.input(window.label(), input)
 }
 
-/// Seconde fenêtre de l'app, par exemple pour tester une watch party seul. `route` : page à
-/// ouvrir (`/party/AB12CD`).
-#[tauri::command(async)]
-pub fn open_new_window(app: AppHandle, route: Option<String>) -> Value {
-    match window::open_extra(&app, route.as_deref()) {
-        Ok(()) => json!({ "success": true }),
-        Err(e) => json!({ "success": false, "error": e.to_string() }),
-    }
-}

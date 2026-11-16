@@ -78,7 +78,6 @@ pub fn run() {
             commands::cast_control,
             commands::cast_stop,
             commands::party_input,
-            commands::open_new_window,
         ])
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::Destroyed = event {

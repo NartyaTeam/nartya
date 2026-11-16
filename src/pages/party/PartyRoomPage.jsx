@@ -2,12 +2,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Loader2, AlertTriangle, LogOut, Copy, Check, ListVideo,
-  Search, Tv, Users, Settings2, UserPlus, Globe, MonitorUp,
+  Search, Tv, Users, Settings2, UserPlus, Globe,
 } from "lucide-react";
 import { getSeasonEpisodes } from "@/api/animeApi";
 import { hasPlayableSources } from "@/utils/videoSourceUtils";
 import { toast } from "@/lib/toast";
-import { platform } from "@/platform";
 import { getEpisodeVideoUrl } from "@/utils/episodeVideoUtils";
 import { getOrFetch } from "@/hooks/useCachedResource";
 import { useAuthStore } from "@/stores/useAuthStore";
@@ -326,16 +325,6 @@ export default function PartyRoomPage() {
               {inviteCopied ? <Check size={14} className="text-accent" /> : <UserPlus size={14} />}
               {inviteCopied ? "Lien copié" : "Inviter"}
             </button>
-            {platform.canOpenNewWindow && (
-              <button
-                type="button"
-                onClick={() => platform.openNewWindow(`/party/${roomCode}`)}
-                title="Ouvrir une 2ᵉ fenêtre qui rejoint ce salon (test sur cette machine)"
-                className="flex h-7 w-7 items-center justify-center rounded-md text-muted transition-colors hover:bg-white/10 hover:text-white"
-              >
-                <MonitorUp size={15} />
-              </button>
-            )}
             {isHost && (
               <button
                 type="button"

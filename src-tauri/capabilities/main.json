@@ -2,7 +2,7 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "main",
   "description": "Fenêtre principale seulement : ni la fenêtre captcha ni une page tierce n'appellent ces commandes.",
-  "windows": ["main", "test-*"],
+  "windows": ["main"],
   "permissions": [
     "core:event:allow-listen",
     "core:event:allow-unlisten",
@@ -40,7 +40,6 @@
     "allow-cast-start",
     "allow-cast-control",
     "allow-cast-stop",
-    "allow-party-input",
-    "allow-open-new-window"
+    "allow-party-input"
   ]
 }
