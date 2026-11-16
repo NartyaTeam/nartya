@@ -1,4 +1,7 @@
-use std::time::Duration;
+use std::{
+    sync::atomic::{AtomicU32, Ordering},
+    time::Duration,
+};
 
 use tauri::{
     utils::config::Color, AppHandle, Manager, WebviewUrl, WebviewWindow, WebviewWindowBuilder,
@@ -81,6 +84,43 @@ pub fn create_main(app: &AppHandle, init_script: Option<String>) -> tauri::Resul
     let builder = builder.additional_browser_args(&browser_args());
 
     builder.build()
+}
+
+static EXTRA_WINDOWS: AtomicU32 = AtomicU32::new(0);
+
+/// Chemin d'une page de l'app, ou rien : jamais d'adresse libre.
+fn clean_route(route: &str) -> Option<String> {
+    let route = route.trim_start_matches('/');
+    let ok = !route.is_empty()
+        && route.len() <= 64
+        && route.chars().all(|c| c.is_ascii_alphanumeric() || matches!(c, '/' | '-' | '_'));
+    ok.then(|| route.to_string())
+}
+
+/// Fenêtre supplémentaire : même app, même session, mais ses propres états et son propre moteur.
+pub fn open_extra(app: &AppHandle, route: Option<&str>) -> tauri::Result<()> {
+    let n = EXTRA_WINDOWS.fetch_add(1, Ordering::SeqCst) + 1;
+    let url = match route.and_then(clean_route) {
+        Some(path) => WebviewUrl::App(path.into()),
+        None => WebviewUrl::default(),
+    };
+    let opener = app.clone();
+    let builder = WebviewWindowBuilder::new(app, format!("test-{n}"), url)
+        .title(format!("Nartya (fenêtre {})", n + 1))
+        .inner_size(1280.0, 800.0)
+        .background_color(Color(11, 11, 15, 255))
+        .on_navigation(move |url| {
+            if is_app_url(url) {
+                return true;
+            }
+            if is_http_url(url.as_str()) {
+                let _ = opener.opener().open_url(url.as_str(), None::<&str>);
+            }
+            false
+        });
+    #[cfg(windows)]
+    let builder = builder.additional_browser_args(&browser_args());
+    builder.build().map(|_| ())
 }
 
 /// Montre la fenêtre, puis livre le deep-link arrivé pendant le chargement. Pendant l'attente

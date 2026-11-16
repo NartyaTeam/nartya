@@ -2,13 +2,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Loader2, AlertTriangle, LogOut, Copy, Check, ListVideo,
-  Search, Tv, Users, Settings2, UserPlus, Globe,
+  Search, Tv, Users, Settings2, UserPlus, Globe, MonitorUp,
 } from "lucide-react";
 import { getSeasonEpisodes } from "@/api/animeApi";
-import { watchTick } from "@/api/progress";
 import { hasPlayableSources } from "@/utils/videoSourceUtils";
-import { partyCapacityForTier } from "@/lib/premium";
 import { toast } from "@/lib/toast";
+import { platform } from "@/platform";
 import { getEpisodeVideoUrl } from "@/utils/episodeVideoUtils";
 import { getOrFetch } from "@/hooks/useCachedResource";
 import { useAuthStore } from "@/stores/useAuthStore";
@@ -16,7 +15,6 @@ import { useParty } from "@/contexts/WatchPartyProvider";
 import VideoPlayer from "@/components/player/VideoPlayer";
 import PartyChat from "@/components/party/PartyChat";
 import PartySearchPanel from "@/components/party/PartySearchPanel";
-import { DEFAULT_OPTIONS } from "@/hooks/useWatchParty";
 import { SITE_URL } from "@/config/instance";
 import {
   LangChangingBanner,
@@ -28,54 +26,28 @@ import {
   WaitingBanner,
 } from "@/components/party/PartyRoomPanels";
 
-const HEARTBEAT_MS = 1500;
-// Même cadence que le lecteur seul : temps de visionnage, épisodes vus et « Reprendre ».
-const STATS_BEAT_MS = 60_000;
-// Sans `timeupdate`, un participant qui se reconnecte ne pourrait pas se réaligner.
-const PAUSED_BEAT_MS = 4000;
-// Avant d'extraire en autonomie.
-const PIN_WAIT_MS = 4000;
-const PIN_POLL_MS = 150;
-// Un `waiting` bref accompagne un simple seek.
-const STALL_GRACE_MS = 1200;
-// En dessous, le décalage n'est pas corrigé.
-const MIN_DRIFT_S = 0.12;
-
 function episodeLanguages(ep) {
   if (!ep?.lecteurs) return [];
-  return Object.keys(ep.lecteurs).filter((l) =>
-    hasPlayableSources(ep.lecteurs[l])
-  );
+  return Object.keys(ep.lecteurs).filter((l) => hasPlayableSources(ep.lecteurs[l]));
 }
 
+const epNumber = (e) => Number(e.episode ?? e.number);
+
+/**
+ * Affichage seulement : la synchro (hôte, horloge, dérive, attentes) vit dans le moteur du cœur.
+ * La page extrait la vidéo quand le moteur le demande et relaie ce que fait le lecteur.
+ */
 export default function PartyRoomPage() {
   const { code: codeParam } = useParams();
   const navigate = useNavigate();
   const party = useParty();
   const userId = useAuthStore((s) => s.session?.user?.id ?? null);
 
-  const { isHost, current, queue, inRoom, connecting, options, roomFull, roomNotFound } = party;
+  const { isHost, current, queue, inRoom, connecting, options, roomFull, roomNotFound, loadRequest } = party;
+  const capacityLabel = party.capacity == null ? "∞" : party.capacity;
 
-  const capacity = useMemo(() => {
-    const host = party.participants.find((p) => p.isHost);
-    return partyCapacityForTier(host?.premium);
-  }, [party.participants]);
-  const capacityLabel = capacity === Infinity ? "∞" : capacity;
-
-  const playerApiRef = useRef(null);
-  const isPlayingRef = useRef(false);
-  const lastBeatRef = useRef(0);
-  const statsBeatRef = useRef(0);
-  const prevWaitingRef = useRef(false);
-  const remoteRef = useRef(null);
-  const rateRef = useRef(1);
-  const stallTimerRef = useRef(null);
-  const stalledRef = useRef(false);
-  const sourcePinRef = useRef(null);
-  remoteRef.current = party.remoteState;
-  sourcePinRef.current = party.sourcePin;
-
-  const [episodes, setEpisodes] = useState([]);
+  // La liste porte la clé de son épisode : celle d'un autre anime ne doit jamais servir.
+  const [epData, setEpData] = useState({ key: null, list: [] });
   const [videoUrl, setVideoUrl] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -100,51 +72,61 @@ export default function PartyRoomPage() {
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const episodesKey = current?.slug && current?.season != null ? `${current.slug}:${current.season}` : null;
   useEffect(() => {
-    if (!current?.slug || current?.season == null) {
-      setEpisodes([]);
-      return;
-    }
+    if (!episodesKey) return undefined;
     let alive = true;
     getOrFetch(
-      `episodes:${current.slug}:${current.season}`,
+      `episodes:${episodesKey}`,
       () => getSeasonEpisodes(current.slug, current.season),
       5 * 60 * 1000
     )
-      .then((d) => alive && setEpisodes(d?.episodes || []))
-      .catch(() => alive && setEpisodes([]));
+      .then((d) => alive && setEpData({ key: episodesKey, list: d?.episodes || [] }))
+      .catch(() => alive && setEpData({ key: episodesKey, list: [] }));
     return () => { alive = false; };
-  }, [current?.slug, current?.season]);
+  }, [episodesKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const currentEpisode = useMemo(
-    () => episodes.find((e) => Number(e.episode ?? e.number) === Number(current?.ep)) || null,
-    [episodes, current?.ep]
-  );
+  const episodesReady = epData.key === episodesKey;
+  const episodes = useMemo(() => (episodesReady ? epData.list : []), [episodesReady, epData.list]);
+
+  useEffect(() => { party.setSeasonTotal(episodes.length); }, [episodes.length]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const currentIndex = useMemo(
-    () => episodes.findIndex((e) => Number(e.episode ?? e.number) === Number(current?.ep)),
+    () => episodes.findIndex((e) => epNumber(e) === Number(current?.ep)),
     [episodes, current?.ep]
   );
+  const currentEpisode = currentIndex >= 0 ? episodes[currentIndex] : null;
   const languages = useMemo(() => episodeLanguages(currentEpisode), [currentEpisode]);
   const queueIndex = useMemo(() => queue.findIndex((x) => x.id === current?.id), [queue, current?.id]);
   const hasPrev = queueIndex > 0;
   const hasNext = queueIndex >= 0 && queueIndex < queue.length - 1;
 
-  // Signalée à l'hôte.
   useEffect(() => {
-    if (!current || currentIndex < 0 || !currentEpisode) {
+    if (!current) {
       setVideoUrl(null);
-      // Introuvable une fois la liste chargée.
-      if (current && episodes.length > 0 && (currentIndex < 0 || !currentEpisode)) {
-        party.reportSourceStatus("error");
+      setLoading(false);
+      setError(null);
+    }
+  }, [current]);
+
+  // Extraction à la demande du moteur : une fois par ordre, dès que l'épisode est connu.
+  const startedRef = useRef(0);
+  const failedRef = useRef(0);
+  useEffect(() => {
+    if (!loadRequest || !current || loadRequest.mediaId !== current.id) return;
+    const { nonce, mediaId, pinnedSource } = loadRequest;
+    if (!currentEpisode) {
+      if (episodesReady && failedRef.current !== nonce) {
+        failedRef.current = nonce;
+        party.reportSource({ mediaId, status: "error" });
       }
       return;
     }
-    let cancelled = false;
+    if (startedRef.current === nonce) return;
+    startedRef.current = nonce;
     setLoading(true);
     setError(null);
     setVideoUrl(null);
-    party.reportSourceStatus("loading");
-    const mediaId = current.id;
     const extract = (selectedSource) =>
       getEpisodeVideoUrl(current.slug, current.season, currentIndex, current.lang, {
         episode: currentEpisode,
@@ -152,233 +134,20 @@ export default function PartyRoomPage() {
         selectedSource,
       });
     (async () => {
-      // Participant : le même hébergeur que l'hôte. Deux hébergeurs, ce sont deux montages :
-      // désynchro irrattrapable.
-      let pinned = null;
-      if (!isHost) {
-        const deadline = Date.now() + PIN_WAIT_MS;
-        while (Date.now() < deadline) {
-          if (sourcePinRef.current?.mediaId === mediaId) break;
-          await new Promise((r) => setTimeout(r, PIN_POLL_MS));
-          if (cancelled) return;
-        }
-        if (sourcePinRef.current?.mediaId === mediaId) pinned = sourcePinRef.current.sourceKey;
-      }
-      let res = await extract(pinned || "auto");
-      if (cancelled) return;
-      if (!res.success && pinned) {
-        // Mieux vaut une séance moins bien synchronisée que pas de vidéo.
-        res = await extract("auto");
-        if (cancelled) return;
-      }
+      let res = await extract(pinnedSource || "auto");
+      // Mieux vaut une séance moins bien synchronisée que pas de vidéo.
+      if (!res.success && pinnedSource) res = await extract("auto");
+      if (startedRef.current !== nonce) return;
       if (res.success) {
         setVideoUrl(res.videoUrl);
-        // Mémorisé par tous les rôles.
-        party.pinSource(res.usedSource);
-        party.reportSourceStatus("ready");
+        party.reportSource({ mediaId, status: "ready", sourceKey: res.usedSource });
       } else {
         setError(res.error || "Source indisponible pour cet épisode.");
-        party.reportSourceStatus("error");
+        party.reportSource({ mediaId, status: "error" });
       }
       setLoading(false);
     })();
-    return () => { cancelled = true; };
-  }, [current?.slug, current?.season, current?.ep, current?.lang, currentIndex, currentEpisode, episodes]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Hôte : pause pendant l'attente des sources.
-  useEffect(() => {
-    if (!isHost) return;
-    if (party.waitingForSources && playerApiRef.current) {
-      const t = playerApiRef.current.getCurrentTime?.() || 0;
-      playerApiRef.current.pause?.();
-      party.emitPlayback({ currentTime: t, isPlaying: false, force: true });
-    }
-  }, [party.waitingForSources, isHost]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Hôte : lecture dès que tout le monde est prêt.
-  useEffect(() => {
-    if (isHost && prevWaitingRef.current && !party.waitingForSources && videoUrl && playerApiRef.current) {
-      const t = playerApiRef.current.getCurrentTime?.() || 0;
-      playerApiRef.current.play?.();
-      party.emitPlayback({ currentTime: t, isPlaying: true, force: true });
-    }
-    prevWaitingRef.current = party.waitingForSources;
-  }, [party.waitingForSources, isHost, videoUrl]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Participant : `clockOffsetMs` donne l'heure de l'hôte ; sans lui, un décalage d'horloge se
-  // lirait comme de la dérive.
-  const setRate = useCallback((r) => {
-    if (rateRef.current === r) return;
-    rateRef.current = r;
-    playerApiRef.current?.setRate?.(r);
-  }, []);
-
-  const applyRemote = useCallback(
-    ({ notify = false } = {}) => {
-      const rs = remoteRef.current;
-      const api = playerApiRef.current;
-      if (!rs || !api || isHost) return;
-      const offset = party.clockOffsetMs || 0;
-      const elapsed = rs.isPlaying ? Math.max(0, Date.now() + offset - rs.sentAt) / 1000 : 0;
-      const target = rs.currentTime + elapsed;
-      const dur = api.getDuration() || 0;
-      const diff = target - (api.getCurrentTime() || 0); // > 0 : en retard
-      const tolerance = options.driftTolerance ?? DEFAULT_OPTIONS.driftTolerance;
-
-      if (Math.abs(diff) > tolerance && (dur === 0 || target < dur - 1)) {
-        setRate(1);
-        api.seek(target);
-        if (notify) api.notice?.("Resynchronisé sur l'hôte");
-      } else if (rs.isPlaying && Math.abs(diff) > Math.max(MIN_DRIFT_S, tolerance / 4)) {
-        // Rattrapage inaudible : lecture étirée ou comprimée de 5 %, plutôt qu'un saut.
-        setRate(diff > 0 ? 1.05 : 0.95);
-      } else {
-        setRate(1);
-      }
-      // Évite de rappeler play()/pause() à chaque battement.
-      if (rs.isPlaying) {
-        if (api.isPaused?.()) api.play();
-      } else if (!api.isPaused?.()) {
-        api.pause();
-      }
-    },
-    [isHost, options.driftTolerance, party.clockOffsetMs, setRate]
-  );
-
-  useEffect(() => { applyRemote(); }, [party.remoteState, applyRemote]);
-
-  // Hôte : émission de l'état de lecture
-  const handleTimeUpdate = useCallback(
-    (time, duration) => {
-      // Fait repartir un participant promu hôte.
-      party.reportLocalPlayback({ currentTime: time, isPlaying: !playerApiRef.current?.isPaused?.() });
-      // Chaque membre du salon, hôte ou non, voit l'épisode compter dans son profil.
-      if (
-        userId &&
-        current?.slug &&
-        duration > 0 &&
-        time > 1 &&
-        Date.now() - statsBeatRef.current >= STATS_BEAT_MS
-      ) {
-        statsBeatRef.current = Date.now();
-        watchTick({
-          slug: current.slug,
-          seasonId: current.season,
-          episodeNumber: Number(current.ep),
-          language: current.lang,
-          positionSeconds: time,
-          duration,
-          title: current.title,
-          cover: current.cover,
-          seasonTotal: episodes.length,
-          userId,
-        });
-      }
-      if (!isHost || !isPlayingRef.current) return;
-      party.updateHostState({ currentTime: time, isPlaying: true });
-      const now = Date.now();
-      if (now - lastBeatRef.current >= HEARTBEAT_MS) {
-        lastBeatRef.current = now;
-        party.emitPlayback({ currentTime: time, isPlaying: true, force: true });
-      }
-    },
-    [isHost, party, userId, current, episodes.length]
-  );
-  const handlePlay = useCallback(
-    (t) => {
-      // Participant : réalignement immédiat.
-      if (!isHost) return applyRemote({ notify: true });
-      isPlayingRef.current = true;
-      party.emitPlayback({ currentTime: t, isPlaying: true, force: true });
-    },
-    [isHost, party, applyRemote]
-  );
-  const handlePause = useCallback(
-    (t) => {
-      if (!isHost) return applyRemote({ notify: true });
-      isPlayingRef.current = false;
-      party.emitPlayback({ currentTime: t, isPlaying: false, force: true });
-    },
-    [isHost, party, applyRemote]
-  );
-  const handleSeek = useCallback(
-    (t) => {
-      if (!isHost) return applyRemote({ notify: true });
-      party.emitPlayback({ currentTime: t, isPlaying: isPlayingRef.current, force: true });
-    },
-    [isHost, party, applyRemote]
-  );
-
-  // Hôte en pause : battement lent.
-  useEffect(() => {
-    if (!isHost || !inRoom) return;
-    const id = setInterval(() => {
-      const api = playerApiRef.current;
-      if (!api || isPlayingRef.current) return;
-      party.emitPlayback({ currentTime: api.getCurrentTime?.() || 0, isPlaying: false, force: true });
-    }, PAUSED_BEAT_MS);
-    return () => clearInterval(id);
-  }, [isHost, inRoom, party]);
-
-  // Décrochage du flux : signalé seulement s'il dure.
-  const handleStall = useCallback(() => {
-    if (stallTimerRef.current || stalledRef.current) return;
-    stallTimerRef.current = setTimeout(() => {
-      stallTimerRef.current = null;
-      stalledRef.current = true;
-      party.reportSourceStatus("buffering");
-    }, STALL_GRACE_MS);
-  }, [party]);
-  const handleStallEnd = useCallback(() => {
-    if (stallTimerRef.current) {
-      clearTimeout(stallTimerRef.current);
-      stallTimerRef.current = null;
-    }
-    if (!stalledRef.current) return;
-    stalledRef.current = false;
-    party.reportSourceStatus("ready");
-  }, [party]);
-  useEffect(() => () => {
-    if (stallTimerRef.current) clearTimeout(stallTimerRef.current);
-  }, []);
-
-  // Navigation dans la file (hôte)
-  const goPrev = useCallback(() => {
-    if (isHost && hasPrev) party.setCurrent(queue[queueIndex - 1]);
-  }, [isHost, hasPrev, queue, queueIndex, party]);
-  const goNext = useCallback(() => {
-    if (isHost && hasNext) party.setCurrent(queue[queueIndex + 1]);
-  }, [isHost, hasNext, queue, queueIndex, party]);
-  const handleEnded = useCallback(() => {
-    if (isHost && hasNext) party.setCurrent(queue[queueIndex + 1]);
-  }, [isHost, hasNext, queue, queueIndex, party]);
-
-  // Avant de changer de langue.
-  const changeLang = useCallback(
-    (l) => {
-      if (!isHost || !current || l === current.lang) return;
-      party.emitLangChanging(l);
-      party.setCurrent({ ...current, lang: l, id: `${current.slug}:${current.season}:${current.ep}:${l}` });
-    },
-    [isHost, current, party]
-  );
-
-
-  // File et recherche (hôte)
-  const playNow = useCallback(
-    (d) => {
-      party.setQueue((q) => (q.some((x) => x.id === d.id) ? q : [...q, d]));
-      party.setCurrent(d);
-    },
-    [party]
-  );
-  const enqueue = useCallback(
-    (d) => {
-      party.setQueue((q) => (q.some((x) => x.id === d.id) ? q : [...q, d]));
-      if (!current) party.setCurrent(d);
-    },
-    [party, current]
-  );
+  }, [loadRequest, current, currentEpisode, currentIndex, episodes, episodesReady]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const copyCode = async () => {
     try {
@@ -406,20 +175,19 @@ export default function PartyRoomPage() {
     navigate("/party");
   };
 
-  const roomCode = party.code || codeParam;
-  const episodeLabel = current
-    ? `${current.title}${current.ep ? ` — Ép. ${current.ep}` : ""}`
-    : "";
+  const onPlayerError = useCallback(() => {
+    setError("La lecture a échoué.");
+    party.playerEvent("error", 0);
+  }, [party]);
 
-  const loadingParticipants = useMemo(
-    () =>
-      party.participants.filter(
-        (p) =>
-          p.clientId !== party.me.clientId &&
-          (party.sourceStatus[p.clientId] === "loading" || party.sourceStatus[p.clientId] === "buffering")
-      ),
-    [party.participants, party.sourceStatus, party.me.clientId]
-  );
+  const roomCode = party.code || codeParam;
+  const episodeLabel = current ? `${current.title}${current.ep ? ` — Ép. ${current.ep}` : ""}` : "";
+
+  if (!party.available) {
+    return (
+      <PartyRoomNotice kind="unavailable" code={codeParam} onBack={() => navigate("/party")} />
+    );
+  }
 
   if (roomNotFound || roomFull) {
     return (
@@ -434,15 +202,13 @@ export default function PartyRoomPage() {
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-bg text-text">
       <div className="flex min-w-0 flex-1 flex-col">
-        {isHost && party.waitingForSources && loadingParticipants.length > 0 && (
+        {isHost && party.waitingForSources && party.waitingFor.length > 0 && (
           <WaitingBanner
-            names={loadingParticipants.map((p) => p.username)}
-            onSkip={() => party.setOptions((o) => ({ ...o, waitOnSourceLoad: false, waitOnJoin: false }))}
+            names={party.waitingFor.map((p) => p.username)}
+            onSkip={() => party.setOptions({ waitOnSourceLoad: false, waitOnJoin: false })}
           />
         )}
-        {!isHost && party.langChanging && (
-          <LangChangingBanner info={party.langChanging} />
-        )}
+        {!isHost && party.langChanging && <LangChangingBanner info={party.langChanging} />}
 
         <div className="relative min-h-0 flex-1 overflow-hidden bg-black">
           {videoUrl ? (
@@ -455,27 +221,18 @@ export default function PartyRoomPage() {
               showEpisodes={false}
               hasPrev={isHost && hasPrev}
               hasNext={isHost && hasNext}
-              onPrev={goPrev}
-              onNext={goNext}
-              onLanguageChange={isHost ? changeLang : undefined}
-              onTimeUpdate={handleTimeUpdate}
-              onPlay={handlePlay}
-              onPause={handlePause}
-              onSeek={handleSeek}
-              onEnded={handleEnded}
-              onStall={handleStall}
-              onStallEnd={handleStallEnd}
-              onError={() => {
-                setError("La lecture a échoué.");
-                // Sinon l'hôte attendrait un participant dont la source ne se lit pas.
-                party.reportSourceStatus("error");
-              }}
-              onPlayerApi={(api) => {
-                playerApiRef.current = api;
-                rateRef.current = 1;
-                // Mis à l'heure du salon tout de suite.
-                if (api) applyRemote();
-              }}
+              onPrev={party.prev}
+              onNext={party.next}
+              onLanguageChange={isHost ? party.changeLang : undefined}
+              onTimeUpdate={party.playerTick}
+              onPlay={(t) => party.playerEvent("play", t)}
+              onPause={(t) => party.playerEvent("pause", t)}
+              onSeek={(t) => party.playerEvent("seek", t)}
+              onEnded={() => party.playerEvent("ended", 0)}
+              onStall={() => party.playerEvent("stall", 0)}
+              onStallEnd={() => party.playerEvent("stall_end", 0)}
+              onError={onPlayerError}
+              onPlayerApi={party.attachPlayer}
             />
           ) : (
             <div className="flex h-full flex-col items-center justify-center gap-3 text-center text-muted">
@@ -527,17 +284,15 @@ export default function PartyRoomPage() {
             {isHost && (
               <div className={tab === "search" ? "h-full" : "hidden"}>
                 <PartySearchPanel
-                  onPlay={playNow}
-                  onEnqueue={enqueue}
-                  onDequeue={(desc) => party.setQueue((q) => q.filter((x) => x.id !== desc.id))}
+                  onPlay={party.playNow}
+                  onEnqueue={party.enqueue}
+                  onDequeue={(desc) => party.dequeue(desc.id)}
                   queue={queue}
                 />
               </div>
             )}
             {tab === "queue" && <QueueList queue={queue} current={current} isHost={isHost} party={party} />}
-            {tab === "people" && (
-              <PeopleList participants={party.participants} sourceStatus={party.sourceStatus} />
-            )}
+            {tab === "people" && <PeopleList participants={party.participants} />}
           </div>
         </div>
       </div>
@@ -571,6 +326,16 @@ export default function PartyRoomPage() {
               {inviteCopied ? <Check size={14} className="text-accent" /> : <UserPlus size={14} />}
               {inviteCopied ? "Lien copié" : "Inviter"}
             </button>
+            {platform.canOpenNewWindow && (
+              <button
+                type="button"
+                onClick={() => platform.openNewWindow(`/party/${roomCode}`)}
+                title="Ouvrir une 2ᵉ fenêtre qui rejoint ce salon (test sur cette machine)"
+                className="flex h-7 w-7 items-center justify-center rounded-md text-muted transition-colors hover:bg-white/10 hover:text-white"
+              >
+                <MonitorUp size={15} />
+              </button>
+            )}
             {isHost && (
               <button
                 type="button"

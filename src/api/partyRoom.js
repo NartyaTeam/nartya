@@ -1,53 +1,58 @@
 import { supabase } from "@/lib/supabase";
 
-/** État persisté pour la relève d'hôte. Un échec ne casse jamais le salon. */
+const EMPTY_PLAYBACK = { currentTime: 0, isPlaying: false };
 
-export async function savePartyRoomState(code, { hostClientId, current, queue, playback, options }) {
+/**
+ * Appels de base demandés par le moteur (effet `rpc`). Un échec ne casse jamais le salon : le
+ * moteur reçoit `ok: false` et décide.
+ */
+export async function partyRpc(name, args = {}) {
   try {
-    await supabase.rpc("party_room_save_state", {
-      p_code: code,
-      p_host_client_id: hostClientId,
-      p_current: current ?? null,
-      p_queue: queue ?? [],
-      p_playback: playback ?? { currentTime: 0, isPlaying: false },
-      p_options: options ?? {},
-    });
-  } catch (_) {}
-}
-
-export async function getPartyRoomState(code) {
-  try {
-    const { data, error } = await supabase.rpc("party_room_get_state", { p_code: code });
-    if (error) return null;
-    const row = Array.isArray(data) ? data[0] : data;
-    if (!row) return null;
-    return {
-      current: row.current ?? null,
-      queue: Array.isArray(row.queue) ? row.queue : [],
-      playback: row.playback || { currentTime: 0, isPlaying: false },
-      options: row.options || {},
-      updatedAt: row.updated_at,
-    };
+    switch (name) {
+      case "get_state": {
+        const { data, error } = await supabase.rpc("party_room_get_state", { p_code: args.code });
+        if (error) return { ok: false };
+        const row = Array.isArray(data) ? data[0] : data;
+        if (!row) return { ok: true, data: null };
+        return {
+          ok: true,
+          data: {
+            current: row.current ?? null,
+            queue: Array.isArray(row.queue) ? row.queue : [],
+            playback: row.playback || EMPTY_PLAYBACK,
+            options: row.options || {},
+          },
+        };
+      }
+      case "save_state": {
+        const { error } = await supabase.rpc("party_room_save_state", {
+          p_code: args.code,
+          p_host_client_id: args.hostClientId,
+          p_current: args.current ?? null,
+          p_queue: args.queue ?? [],
+          p_playback: args.playback ?? EMPTY_PLAYBACK,
+          p_options: args.options ?? {},
+        });
+        return { ok: !error };
+      }
+      case "close": {
+        const { error } = await supabase.rpc("party_room_close", { p_code: args.code });
+        return { ok: !error };
+      }
+      case "publish": {
+        const { error } = await supabase.rpc("party_room_publish", {
+          p_code: args.code,
+          p_public: !!args.public,
+          p_participants: args.participants,
+        });
+        return { ok: !error };
+      }
+      default:
+        return { ok: false };
+    }
   } catch (_) {
-    return null;
+    return { ok: false };
   }
-}
-
-export async function closePartyRoom(code) {
-  try {
-    await supabase.rpc("party_room_close", { p_code: code });
-  } catch (_) {}
-}
-
-/** Hôte d'un salon public : rappelé régulièrement, sinon le salon sort de la liste. */
-export async function publishPartyRoom(code, isPublic, participants) {
-  try {
-    await supabase.rpc("party_room_publish", {
-      p_code: code,
-      p_public: !!isPublic,
-      p_participants: participants,
-    });
-  } catch (_) {}
 }
 
 export async function listPublicPartyRooms() {

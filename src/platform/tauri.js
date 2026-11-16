@@ -20,6 +20,14 @@ function listen(event, cb) {
   };
 }
 
+function windowLabel() {
+  return (
+    tauri.window?.getCurrentWindow?.().label ||
+    window.__TAURI_INTERNALS__?.metadata?.currentWindow?.label ||
+    "main"
+  );
+}
+
 function detectOs() {
   const ua = navigator.userAgent;
   if (/Windows/i.test(ua)) return "win32";
@@ -76,6 +84,13 @@ export const tauriPlatform = definePlatform({
     onDevices: (cb) => (typeof cb === "function" ? listen("cast:devices", cb) : noop),
     onStatus: (cb) => (typeof cb === "function" ? listen("cast:status", cb) : noop),
   },
+  // Moteur de watch party du cœur : la page lui envoie des faits (`input`) et exécute ses ordres.
+  party: {
+    input: (input) => invoke("party_input", { input }),
+    // Un nom d'événement par fenêtre : chaque fenêtre a son propre moteur.
+    onState: (cb) => (typeof cb === "function" ? listen(`party:state:${windowLabel()}`, cb) : noop),
+    onEffect: (cb) => (typeof cb === "function" ? listen(`party:effect:${windowLabel()}`, cb) : noop),
+  },
   hub: {
     // { version, lastSeen }, ou null sans hub.
     getInfo: () => invoke("hub_get_info"),
@@ -111,6 +126,9 @@ export const tauriPlatform = definePlatform({
   // Pas de vibration ni de partage système sur le bureau, même si la WebView expose l'API web.
   haptic: noop,
   share: async () => false,
+  // Seconde fenêtre (test à deux sur cette machine) ; `route` ouvre directement une page.
+  canOpenNewWindow: true,
+  openNewWindow: (route) => invoke("open_new_window", { route: route || null }),
   quit: () => invoke("app_quit"),
   focusWindow: () => invoke("app_focus"),
 });

@@ -72,3 +72,30 @@ impl Host for TauriHost {
         })
     }
 }
+
+/// Hôte d'un moteur de watch party : ses événements (`party:state:<fenêtre>`) ne concernent que la
+/// fenêtre qui l'a démarré, pour que deux fenêtres de l'app soient deux participants indépendants.
+pub struct WindowHost {
+    pub app: AppHandle,
+    pub label: String,
+}
+
+impl Host for WindowHost {
+    fn emit(&self, event: &str, payload: Value) {
+        // Un écouteur JS reçoit les événements adressés à n'importe quelle fenêtre : le nom
+        // porte la fenêtre, pour qu'une page n'exécute que les ordres de son propre moteur.
+        let _ = self.app.emit(&format!("{event}:{}", self.label), payload);
+    }
+
+    fn open_path(&self, _path: &Path) -> Result<(), String> {
+        Err("non pris en charge".into())
+    }
+
+    fn pick_folder(&self, _title: &str, _start: &Path) -> BoxFuture<'static, Option<PathBuf>> {
+        Box::pin(async { None })
+    }
+
+    fn ask_move_downloads(&self, _prompt: MovePrompt) -> BoxFuture<'static, MoveChoice> {
+        Box::pin(async { MoveChoice::Cancel })
+    }
+}

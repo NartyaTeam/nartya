@@ -240,3 +240,25 @@ pub fn discord_clear_presence(discord: State<'_, crate::discord::Discord>) -> Va
     discord.clear();
     json!({ "success": true })
 }
+
+// ---- Watch party
+
+/// Synchrone : les entrées doivent arriver au moteur dans l'ordre où la page les envoie.
+#[tauri::command]
+pub fn party_input(
+    window: tauri::WebviewWindow,
+    hub: State<'_, crate::party_hub::PartyHub>,
+    input: Value,
+) -> Result<(), String> {
+    hub.input(window.label(), input)
+}
+
+/// Seconde fenêtre de l'app, par exemple pour tester une watch party seul. `route` : page à
+/// ouvrir (`/party/AB12CD`).
+#[tauri::command(async)]
+pub fn open_new_window(app: AppHandle, route: Option<String>) -> Value {
+    match window::open_extra(&app, route.as_deref()) {
+        Ok(()) => json!({ "success": true }),
+        Err(e) => json!({ "success": false, "error": e.to_string() }),
+    }
+}

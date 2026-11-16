@@ -6,6 +6,7 @@ import SupporterBadge from "@/components/profile/SupporterBadge";
 /** Salon introuvable ou complet. */
 export function PartyRoomNotice({ kind, code, onBack }) {
   const full = kind === "full";
+  const unavailable = kind === "unavailable";
   const Icon = full ? Users : AlertTriangle;
   return (
     <div className="flex h-screen w-screen flex-col items-center justify-center gap-6 bg-bg px-8 text-center text-text">
@@ -13,13 +14,17 @@ export function PartyRoomNotice({ kind, code, onBack }) {
         <Icon size={30} />
       </span>
       <div>
-        <p className="eyebrow">{full ? "Salon complet" : "Salon introuvable"}</p>
+        <p className="eyebrow">
+          {unavailable ? "Indisponible" : full ? "Salon complet" : "Salon introuvable"}
+        </p>
         <h1 className="t-impact mt-2 text-4xl">
-          {full ? "Ce salon est plein" : "Personne dans ce salon"}
+          {unavailable ? "Watch party indisponible" : full ? "Ce salon est plein" : "Personne dans ce salon"}
         </h1>
       </div>
       <p className="max-w-md text-sm leading-relaxed text-muted">
-        {full ? (
+        {unavailable ? (
+          <>La watch party est disponible dans l'application de bureau Nartya.</>
+        ) : full ? (
           <>
             Ce salon a atteint le nombre maximum de participants autorisé par l'offre de son hôte.
             Demande à l'hôte de passer à une offre supérieure (Nartya + : 10 · Ultimate : illimité),
@@ -240,7 +245,7 @@ export function QueueList({ queue, current, isHost, party }) {
                   </button>
                   <button
                     type="button"
-                    onClick={() => party.setQueue((q) => q.filter((x) => x.id !== item.id))}
+                    onClick={() => party.dequeue(item.id)}
                     title="Retirer"
                     className="flex h-7 w-7 items-center justify-center rounded-md text-white/40 transition-colors hover:bg-white/10 hover:text-white"
                   >
@@ -256,11 +261,11 @@ export function QueueList({ queue, current, isHost, party }) {
   );
 }
 
-export function PeopleList({ participants, sourceStatus }) {
+export function PeopleList({ participants }) {
   return (
     <ul className="h-full space-y-1 overflow-y-auto overscroll-contain p-3">
       {participants.map((p) => {
-        const status = sourceStatus[p.clientId];
+        const status = p.sourceStatus;
         return (
           <li key={p.clientId} className="flex items-center gap-3 rounded-md px-2 py-2 hover:bg-white/5">
             <Avatar

@@ -1,11 +1,11 @@
 import { createContext, useContext } from "react";
-import { useWatchParty } from "@/hooks/useWatchParty";
+import { usePartyEngine } from "@/hooks/usePartyEngine";
 
 /** Partagé entre /party et /party/:code : sinon l'état du salon se perd à la navigation. */
 const WatchPartyContext = createContext(null);
 
 export function WatchPartyProvider({ children }) {
-  const party = useWatchParty();
+  const party = usePartyEngine();
   return <WatchPartyContext.Provider value={party}>{children}</WatchPartyContext.Provider>;
 }
 

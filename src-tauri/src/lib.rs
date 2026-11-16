@@ -3,12 +3,13 @@ mod commands;
 mod deep_link;
 mod host;
 mod migrate;
+mod party_hub;
 mod state;
 mod window;
 
 // Le cœur est partagé avec les autres coques ; les modules de la coque l'atteignent par ces chemins.
 pub use nartya_core::{
-    cast, config, discord, downloads, hub, oauth, session, stream, system, url_guard,
+    cast, config, discord, downloads, hub, oauth, party, session, stream, system, url_guard,
 };
 
 use std::sync::Arc;
@@ -76,7 +77,16 @@ pub fn run() {
             commands::cast_start,
             commands::cast_control,
             commands::cast_stop,
+            commands::party_input,
+            commands::open_new_window,
         ])
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::Destroyed = event {
+                if let Some(hub) = window.app_handle().try_state::<party_hub::PartyHub>() {
+                    hub.remove(window.label());
+                }
+            }
+        })
         .on_page_load(|webview, payload| {
             if webview.label() == "main"
                 && matches!(payload.event(), tauri::webview::PageLoadEvent::Finished)
@@ -137,6 +147,7 @@ pub fn run() {
             app.manage(tauri::async_runtime::block_on(async {
                 cast::Cast::new(host.clone(), proxy)
             }));
+            app.manage(party_hub::PartyHub::new(handle.clone()));
             app.manage(StreamSlot(service));
             app.manage(tauri::async_runtime::block_on(async {
                 downloads::Downloads::new(

@@ -29,10 +29,11 @@ test("les capacités optionnelles n'ont pas de valeur par défaut", () => {
 });
 
 test("le bureau déclare ses modules natifs, le mobile et le web non", () => {
-  for (const key of ["downloads", "session", "cast", "hub", "discord"]) {
+  for (const key of ["downloads", "session", "cast", "party", "hub", "discord"]) {
     assert.ok(tauriPlatform[key], `tauri.${key}`);
     assert.equal(webPlatform[key], null, `web.${key}`);
   }
   assert.ok(capacitorLazyPlatform.downloads);
   assert.equal(capacitorLazyPlatform.session, null);
+  assert.equal(capacitorLazyPlatform.party, null);
 });
