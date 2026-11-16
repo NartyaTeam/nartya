@@ -4,7 +4,9 @@ import { getMangaHomeSections } from "@/api/animeApi";
 import { platform } from "@/platform";
 import { Fox } from "@/components/brand/NartyaMark";
 import { useCachedResource } from "@/hooks/useCachedResource";
-import HeroCarousel from "@/components/home/HeroCarousel";
+import MangaSpotlight from "@/components/manga/MangaSpotlight";
+import LatestChapters from "@/components/manga/LatestChapters";
+import TopTenRow from "@/components/home/TopTenRow";
 import AnimeRow, { AnimeRowSkeleton } from "@/components/home/AnimeRow";
 import ContinueWatching from "@/components/home/ContinueWatching";
 import CommunityBanner from "@/components/home/CommunityBanner";
@@ -50,8 +52,8 @@ export default function MangaHomePage() {
   if (loading && !data) {
     return (
       <div>
-        <div className="px-4 pt-[calc(env(safe-area-inset-top)+0.75rem)] md:px-0 md:pt-0">
-          <div className="h-[48svh] min-h-[26rem] max-h-[30rem] w-full rounded-2xl skeleton md:h-[70vh] md:min-h-[500px] md:max-h-none md:rounded-none" />
+        <div className="px-4 pt-[calc(env(safe-area-inset-top)+0.75rem)] sm:px-8 md:pt-6">
+          <div className="h-[26rem] w-full rounded-lg skeleton md:h-[30rem]" />
         </div>
         <div className="space-y-10 py-10 md:space-y-12 md:py-12">
           <ContinueWatching defaultTab="scans" onlyScans />
@@ -63,25 +65,25 @@ export default function MangaHomePage() {
   }
 
   const rows = data?.rows || [];
+  const latest = rows.find((r) => r.key === "manga-latest");
+  const trending = rows.find((r) => r.key === "manga-trending");
+  const others = rows.filter((r) => r !== latest && r !== trending);
   return (
     <div className="animate-fade-in pb-24">
-      <HeroCarousel items={data?.hero || []} contentType="manga" />
+      <MangaSpotlight items={data?.hero || []} />
       <MobileMangaSearchBar />
-      <div className="relative z-10 mt-4 space-y-10 md:mt-0 md:pt-6 md:space-y-12">
+      <div className="relative z-10 mt-8 space-y-10 md:space-y-12">
         <ContinueWatching defaultTab="scans" onlyScans />
+        {latest && <LatestChapters title={latest.title} items={latest.items} />}
+        {trending && <TopTenRow title={trending.title} items={trending.items} openScans />}
         <FavoriteGenresRows media="manga" />
-        {rows.map((row, index) => (
+        {others.map((row, index) => (
           <div key={row.key}>
-            <AnimeRow
-              title={row.title}
-              items={row.items}
-              numbered={row.numbered}
-              variant="manga"
-            />
-            {index === 5 && <div className="mt-12"><CommunityBanner /></div>}
+            <AnimeRow title={row.title} items={row.items} variant="manga" />
+            {index === 2 && <div className="mt-12"><CommunityBanner /></div>}
           </div>
         ))}
-        {rows.length < 6 && <CommunityBanner />}
+        {others.length < 3 && <CommunityBanner />}
       </div>
     </div>
   );

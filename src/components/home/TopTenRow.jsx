@@ -1,7 +1,7 @@
 import { useRowCarousel, RowArrows } from "./useRowCarousel";
 import AnimeCard from "./AnimeCard";
 
-export default function TopTenRow({ title, items }) {
+export default function TopTenRow({ title, items, openScans = false }) {
   const top = (items || []).slice(0, 10);
   const { emblaRef, embla, canPrev, canNext } = useRowCarousel();
 
@@ -28,7 +28,7 @@ export default function TopTenRow({ title, items }) {
                 {i + 1}
               </span>
               <div className="-ml-3 w-[8.75rem] lg:w-[9.5rem] 2xl:w-[10.5rem]">
-                <AnimeCard anime={anime} />
+                <AnimeCard anime={anime} openScans={openScans} />
               </div>
             </div>
           ))}
