@@ -13,6 +13,8 @@ import {
   GalleryVertical,
   GalleryHorizontal,
   ArrowLeftRight,
+  ZoomIn,
+  ZoomOut,
 } from "lucide-react";
 import { getAnimePage, getAnimeScans, getScanChapters, scanPageUrl } from "@/api/animeApi";
 import { getScanProgress, saveScanProgress } from "@/api/scanProgress";
@@ -100,6 +102,24 @@ export default function ScanReaderPage() {
   const pinchRef = useRef(null);
   const panPrevRef = useRef(null);
   const resetZoom = useCallback(() => setZoom({ scale: 1, x: 0, y: 0 }), []);
+  // Souris et clavier : boutons, + / -, Ctrl+molette (le pinch du pavé tactile en fait partie).
+  const zoomBy = useCallback((factor) => {
+    setZoom((z) => {
+      const scale = clamp(z.scale * factor, ZOOM_MIN, ZOOM_MAX);
+      if (scale <= 1.02) return { scale: 1, x: 0, y: 0 };
+      const bound = (scale - 1) * 220;
+      return { scale, x: clamp(z.x, -bound, bound), y: clamp(z.y, -bound, bound) };
+    });
+  }, []);
+  useEffect(() => {
+    const onWheel = (e) => {
+      if (!e.ctrlKey) return;
+      e.preventDefault();
+      zoomBy(e.deltaY < 0 ? 1.15 : 1 / 1.15);
+    };
+    window.addEventListener("wheel", onWheel, { passive: false });
+    return () => window.removeEventListener("wheel", onWheel);
+  }, [zoomBy]);
   // En mode horizontal.
   const [vw, setVw] = useState(() => (typeof window !== "undefined" ? window.innerWidth : 0));
 
@@ -554,6 +574,18 @@ export default function ScanReaderPage() {
         case "F":
           toggleFullscreen();
           break;
+        case "+":
+        case "=":
+          e.preventDefault();
+          zoomBy(1.25);
+          break;
+        case "-":
+          e.preventDefault();
+          zoomBy(1 / 1.25);
+          break;
+        case "0":
+          resetZoom();
+          break;
         default:
           break;
       }
@@ -561,7 +593,7 @@ export default function ScanReaderPage() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nextPage, prevPage, nextChapter, prevChapter, rtl]);
+  }, [nextPage, prevPage, nextChapter, prevChapter, rtl, zoomBy, resetZoom]);
 
   const backToAnime = () => {
     if (document.fullscreenElement) document.exitFullscreen?.();
@@ -662,6 +694,22 @@ export default function ScanReaderPage() {
           className="flex h-9 w-9 items-center justify-center rounded-md text-white/80 transition-colors hover:bg-white/10 hover:text-white"
         >
           {mode === "vertical" ? <GalleryHorizontal size={18} /> : <GalleryVertical size={18} />}
+        </button>
+        <button
+          onClick={() => zoomBy(1 / 1.25)}
+          title="Dézoomer (-)"
+          aria-label="Dézoomer"
+          className="hidden h-9 w-9 items-center justify-center rounded-md text-white/80 transition-colors hover:bg-white/10 hover:text-white md:flex"
+        >
+          <ZoomOut size={18} />
+        </button>
+        <button
+          onClick={() => zoomBy(1.25)}
+          title="Zoomer (+)"
+          aria-label="Zoomer"
+          className="hidden h-9 w-9 items-center justify-center rounded-md text-white/80 transition-colors hover:bg-white/10 hover:text-white md:flex"
+        >
+          <ZoomIn size={18} />
         </button>
         <button
           onClick={toggleFullscreen}

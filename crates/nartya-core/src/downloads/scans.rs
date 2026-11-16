@@ -38,6 +38,16 @@ async fn page_once(ctx: &Ctx, url: &str, dest: &Path) -> DlResult<u64> {
     if !response.status().is_success() {
         return Err(DlError::Http(response.status().as_u16()));
     }
+    // Une page d'erreur servie en 200 ne doit pas être gardée comme une image : elle serait
+    // marquée « téléchargée » et resterait vide à la lecture.
+    let not_image = response
+        .headers()
+        .get(reqwest::header::CONTENT_TYPE)
+        .and_then(|v| v.to_str().ok())
+        .is_some_and(|ct| !ct.starts_with("image/") && !ct.starts_with("application/octet-stream"));
+    if not_image {
+        return Err(DlError::Other("la page reçue n'est pas une image".into()));
+    }
     let tmp = part_path(dest);
     let mut out = tokio::fs::File::create(&tmp).await?;
     let mut body = response.bytes_stream();
@@ -62,7 +72,8 @@ async fn page(ctx: &Ctx, url: &str, dest: &Path) -> DlResult<u64> {
             Err(e) => last = e,
         }
         if attempt < MAX_ATTEMPTS {
-            ctx.backoff(500 * u64::from(attempt)).await?;
+            // Plus long que pour une vidéo : six pages en parallèle déclenchent vite un 429 en mobile.
+            ctx.backoff(1500 * u64::from(attempt)).await?;
         }
     }
     Err(last)
