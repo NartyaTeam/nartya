@@ -1,31 +1,9 @@
-import { useCallback, useEffect, useState } from "react";
-import useEmblaCarousel from "embla-carousel-react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useRowCarousel, RowArrows } from "./useRowCarousel";
 import AnimeCard from "./AnimeCard";
-import { platform } from "@/platform";
 
 export default function TopTenRow({ title, items }) {
   const top = (items || []).slice(0, 10);
-  const [emblaRef, embla] = useEmblaCarousel({ active: !platform.isMobile, dragFree: true, containScroll: "trimSnaps", align: "start" });
-  const [canPrev, setCanPrev] = useState(false);
-  const [canNext, setCanNext] = useState(false);
-
-  const onSelect = useCallback(() => {
-    if (!embla) return;
-    setCanPrev(embla.canScrollPrev());
-    setCanNext(embla.canScrollNext());
-  }, [embla]);
-
-  useEffect(() => {
-    if (!embla) return;
-    onSelect();
-    embla.on("select", onSelect);
-    embla.on("reInit", onSelect);
-    return () => {
-      embla.off("select", onSelect);
-      embla.off("reInit", onSelect);
-    };
-  }, [embla, onSelect]);
+  const { emblaRef, embla, canPrev, canNext } = useRowCarousel();
 
   if (top.length === 0) return null;
 
@@ -35,22 +13,7 @@ export default function TopTenRow({ title, items }) {
         <h2 className="section-title">
           {title}
         </h2>
-        <div className="hidden gap-1 md:flex">
-          <button
-            onClick={() => embla?.scrollPrev()}
-            disabled={!canPrev}
-            className="flex h-8 w-8 items-center justify-center rounded text-muted transition-colors hover:bg-white/[0.06] hover:text-text disabled:pointer-events-none disabled:opacity-25"
-          >
-            <ChevronLeft size={18} />
-          </button>
-          <button
-            onClick={() => embla?.scrollNext()}
-            disabled={!canNext}
-            className="flex h-8 w-8 items-center justify-center rounded text-muted transition-colors hover:bg-white/[0.06] hover:text-text disabled:pointer-events-none disabled:opacity-25"
-          >
-            <ChevronRight size={18} />
-          </button>
-        </div>
+        <RowArrows embla={embla} canPrev={canPrev} canNext={canNext} />
       </div>
 
       <div className="select-none overflow-hidden px-4 sm:px-8" ref={emblaRef} data-carousel-viewport>
@@ -64,7 +27,7 @@ export default function TopTenRow({ title, items }) {
               >
                 {i + 1}
               </span>
-              <div className="-ml-3 w-[140px] lg:w-[150px]">
+              <div className="-ml-3 w-[8.75rem] lg:w-[9.5rem] 2xl:w-[10.5rem]">
                 <AnimeCard anime={anime} />
               </div>
             </div>

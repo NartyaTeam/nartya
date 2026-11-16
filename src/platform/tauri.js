@@ -43,7 +43,7 @@ export const tauriPlatform = definePlatform({
   getAnime4kCapabilities: () => invoke("get_anime4k_capabilities"),
   resolveStream: (payload) => invoke("resolve_stream", { payload: payload || {} }),
   getCaptchaToken: () => invoke("get_captcha_token"),
-  // Même index et mêmes dossiers qu'Electron : la bibliothèque hors ligne est partagée.
+  // Même index et mêmes dossiers que l'ancienne coque : la bibliothèque hors ligne est partagée.
   downloads: {
     list: () => invoke("downloads_list"),
     start: (payload) => invoke("downloads_start", { payload }),
@@ -65,7 +65,7 @@ export const tauriPlatform = definePlatform({
     /** `value` = valeur brute de `nartya-auth`, `null` si effacée. Retourne le désabonnement. */
     onChanged: (cb) => listen("session:changed", cb),
   },
-  // Le serveur LAN et la découverte mDNS vivent dans la coque ; mêmes événements qu'Electron.
+  // Le serveur LAN et la découverte mDNS vivent dans la coque ; mêmes événements que l'ancienne coque.
   cast: {
     discover: () => invoke("cast_discover"),
     addHost: (ip) => invoke("cast_add_host", { ip: String(ip || "") }),

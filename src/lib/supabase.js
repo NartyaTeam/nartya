@@ -15,7 +15,7 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
 
 /**
  * Session partagée avec le Hub (fichier commun, via le processus principal). Le miroir
- * localStorage sert au démarrage synchrone ; hors Electron, tout repose sur lui.
+ * localStorage sert au démarrage synchrone ; hors coque desktop, tout repose sur lui.
  */
 const hasBridge = () => !!platform.session;
 

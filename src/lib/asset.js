@@ -1,5 +1,5 @@
 /**
- * Relative à index.html : en `file://` (Electron packagé), un chemin absolu pointerait vers
+ * Relative à index.html : en `file://` (ancienne coque packagée), un chemin absolu pointerait vers
  * la racine du disque.
  */
 export function asset(name) {

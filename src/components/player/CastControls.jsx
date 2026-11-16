@@ -26,7 +26,7 @@ function fmt(s) {
 }
 
 /**
- * Electron uniquement.
+ * Coque desktop uniquement.
  * @param {() => {url:string, contentType?:string, title?:string, poster?:string}|null} getMedia
  * @param {() => number} getCurrentTime position locale, pour reprendre au même endroit
  * @param {({deviceId:string, startAt:number}) => boolean} [onMediaFailed] la TV ne lit pas

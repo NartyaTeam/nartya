@@ -186,13 +186,13 @@ function AnimeCard({
       </div>
 
       <h3
-        className={`mt-2.5 text-sm font-bold text-text transition-colors group-hover:text-primary ${
+        className={`mt-2.5 text-sm font-bold 2xl:text-base text-text transition-colors group-hover:text-primary ${
           titleLines === 2 ? "min-h-10 line-clamp-2 leading-5" : "line-clamp-1"
         }`}
       >
         {title}
       </h3>
-      <p className="mt-0.5 line-clamp-1 text-xs text-muted">
+      <p className="mt-0.5 line-clamp-1 text-xs text-muted 2xl:text-sm">
         {displayedGenres.join(" · ")}
       </p>
     </button>

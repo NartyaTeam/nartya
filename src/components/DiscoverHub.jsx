@@ -7,7 +7,7 @@ import { platform } from "@/platform";
 
 /**
  * Le hub porte les mises à jour : la modale revient à chaque lancement tant qu'il n'est pas
- * détecté, et rien n'est affiché si l'app est lancée par lui. Invisible hors Electron.
+ * détecté, et rien n'est affiché si l'app est lancée par lui. Invisible hors coque desktop.
  */
 
 const BENEFITS = [

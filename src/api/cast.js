@@ -1,4 +1,4 @@
-/** Hors Electron, tout renvoie des valeurs neutres. */
+/** Hors coque desktop, tout renvoie des valeurs neutres. */
 import { platform } from "@/platform";
 
 const api = () => platform.cast;

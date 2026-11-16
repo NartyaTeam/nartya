@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import useEmblaCarousel from "embla-carousel-react";
-import { BookOpen, ChevronLeft, ChevronRight, Clapperboard, Play, Sparkles, X } from "lucide-react";
+import { useRowCarousel, RowArrows } from "./useRowCarousel";
+import { BookOpen, Clapperboard, Play, Sparkles, X } from "lucide-react";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useSettingsStore } from "@/stores/useSettingsStore";
 import { useListsStore } from "@/stores/useListsStore";
@@ -14,7 +14,6 @@ import {
   advanceCompletedItemsAsync,
 } from "@/utils/watchHistory";
 import { getContinueReadingScans, hideScanFromResume } from "@/api/scanProgress";
-import { platform } from "@/platform";
 import { prewarmEpisode } from "@/utils/episodeVideoUtils";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 
@@ -242,31 +241,7 @@ export default function ContinueWatching({ defaultTab = null, onlyScans = false 
   const visibleItems =
     shownTab === "scans" ? scanItems : shownTab === "new" ? freshItems : resumeItems;
 
-  const [emblaRef, embla] = useEmblaCarousel({
-    active: !platform.isMobile,
-    dragFree: true,
-    containScroll: "trimSnaps",
-    align: "start",
-  });
-  const [canPrev, setCanPrev] = useState(false);
-  const [canNext, setCanNext] = useState(false);
-
-  const onSelect = useCallback(() => {
-    if (!embla) return;
-    setCanPrev(embla.canScrollPrev());
-    setCanNext(embla.canScrollNext());
-  }, [embla]);
-
-  useEffect(() => {
-    if (!embla) return;
-    onSelect();
-    embla.on("select", onSelect);
-    embla.on("reInit", onSelect);
-    return () => {
-      embla.off("select", onSelect);
-      embla.off("reInit", onSelect);
-    };
-  }, [embla, onSelect]);
+  const { emblaRef, embla, canPrev, canNext } = useRowCarousel();
 
   useEffect(() => {
     embla?.reInit();
@@ -344,22 +319,7 @@ export default function ContinueWatching({ defaultTab = null, onlyScans = false 
         <h2 className="section-title">
           {onlyScans ? "Continuer à lire" : "Reprendre"}
         </h2>
-        <div className="hidden gap-1 md:flex">
-          <button
-            onClick={() => embla?.scrollPrev()}
-            disabled={!canPrev}
-            className="flex h-8 w-8 items-center justify-center rounded text-muted transition-colors hover:bg-white/[0.06] hover:text-text disabled:pointer-events-none disabled:opacity-25"
-          >
-            <ChevronLeft size={18} />
-          </button>
-          <button
-            onClick={() => embla?.scrollNext()}
-            disabled={!canNext}
-            className="flex h-8 w-8 items-center justify-center rounded text-muted transition-colors hover:bg-white/[0.06] hover:text-text disabled:pointer-events-none disabled:opacity-25"
-          >
-            <ChevronRight size={18} />
-          </button>
-        </div>
+        <RowArrows embla={embla} canPrev={canPrev} canNext={canNext} />
       </div>
 
       {!onlyScans && tabs.length > 1 && (

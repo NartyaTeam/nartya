@@ -1,5 +1,5 @@
 /**
- * Sous `file://` (Electron) et dans la WebView Android, Cloudflare refuse le widget inline :
+ * Sous `file://` (ancienne coque) et dans la WebView Android, Cloudflare refuse le widget inline :
  * la plateforme passe par une page du site. Un échec renvoie `null` : Supabase fait la
  * validation réelle.
  */

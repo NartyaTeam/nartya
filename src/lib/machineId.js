@@ -1,4 +1,4 @@
-// Pour le ban machine. Null hors Electron.
+// Pour le ban machine. Null hors coque desktop.
 import { platform } from "@/platform";
 
 let cached;

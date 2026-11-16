@@ -12,6 +12,12 @@
   #root {
     height: 100%;
   }
+  /* Grands écrans (QHD/4K) : toute l'interface en rem grandit doucement : 16px à 1920, ~24px à 3840. */
+  @media (min-width: 1920px) {
+    html {
+      font-size: clamp(16px, calc(16px + (100vw - 1920px) * 0.0042), 26px);
+    }
+  }
   html {
     /* Aussi sur `html` : sur Android, l'étirement d'overscroll découvre son fond, blanc par défaut. */
     background-color: rgb(var(--bg));
@@ -123,7 +129,13 @@
   .carousel-section {
     content-visibility: auto;
     contain: layout paint style;
-    contain-intrinsic-size: auto 310px;
+    /* Proche de la hauteur réelle (cartes en rem) : un écart décale la page pendant le scroll. */
+    contain-intrinsic-size: auto 23rem;
+  }
+  @media (min-width: 1536px) {
+    .carousel-section {
+      contain-intrinsic-size: auto 25rem;
+    }
   }
   [data-carousel-viewport] {
     contain: layout paint;

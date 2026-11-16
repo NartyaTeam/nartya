@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { useSettingsStore } from "@/stores/useSettingsStore";
 import { platform } from "@/platform";
 
-/** Electron uniquement, avec un léger debounce. Réglage coupé : la présence est effacée. */
+/** Coque desktop uniquement, avec un léger debounce. Réglage coupé : la présence est effacée. */
 export function useDiscordPresence(params, deps = []) {
   const timer = useRef(null);
   const enabled = useSettingsStore((s) => s.discordPresence);

@@ -36,7 +36,7 @@ function HeroSlide({ anime, contentType, isActive, shouldLoad, onOpen, onPrimary
             src={bg}
             alt=""
             aria-hidden="true"
-            loading={isActive ? "eager" : "lazy"}
+            loading="eager"
             fetchpriority={isActive ? "high" : "low"}
             decoding="async"
             className="h-full w-full object-cover object-center"
@@ -50,11 +50,11 @@ function HeroSlide({ anime, contentType, isActive, shouldLoad, onOpen, onPrimary
       <div className="slash-rule absolute inset-x-0 bottom-0 z-[2] hidden md:block" />
       <div className="absolute inset-0 flex items-end">
         <div
-          className={`mx-auto w-full max-w-2xl px-5 pb-6 text-center md:mx-0 md:px-14 md:pb-20 md:text-left ${
+          className={`mx-auto w-full max-w-2xl px-5 pb-6 text-center md:mx-0 md:px-14 md:pb-20 2xl:max-w-3xl md:text-left ${
             isActive ? "animate-slide-up" : "opacity-0"
           }`}
         >
-          <p className="mb-3 flex items-center justify-center gap-2.5 text-[0.65rem] font-bold uppercase tracking-[0.25em] text-white/65 md:mb-4 md:justify-start md:text-[0.7rem] md:text-muted">
+          <p className="mb-3 flex items-center justify-center gap-2.5 text-[0.65rem] font-bold uppercase tracking-[0.25em] text-white/65 md:mb-4 md:justify-start md:text-[0.7rem] md:text-muted 2xl:text-sm">
             <span className="h-3.5 w-[6px] -skew-x-[14deg] bg-primary" />
             {isManga ? "Manga à la une" : anime.heroLabel || "À la une"}
           </p>
@@ -66,7 +66,7 @@ function HeroSlide({ anime, contentType, isActive, shouldLoad, onOpen, onPrimary
               loading={isActive ? "eager" : "lazy"}
               fetchpriority={isActive ? "high" : "low"}
               decoding="async"
-              className="mx-auto mb-4 h-20 w-[75%] md:mx-0 md:mb-5 md:h-32 md:w-[70%]"
+              className="mx-auto mb-4 h-20 w-[75%] md:mx-0 md:mb-5 md:h-32 md:w-[70%] 2xl:h-44"
               imageClassName="origin-center object-center md:origin-left md:object-left"
             />
           ) : (
@@ -77,7 +77,7 @@ function HeroSlide({ anime, contentType, isActive, shouldLoad, onOpen, onPrimary
             </h1>
           )}
 
-          <div className="mb-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 text-xs text-white/70 md:mb-4 md:justify-start md:gap-x-4 md:gap-y-2 md:text-sm md:text-muted">
+          <div className="mb-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 text-xs text-white/70 md:mb-4 md:justify-start md:gap-x-4 md:gap-y-2 md:text-sm md:text-muted 2xl:text-base">
             {anime.score != null && (
               <span className="flex items-center gap-1 font-semibold text-accent">
                 <Star size={14} className="fill-accent" />
@@ -91,25 +91,25 @@ function HeroSlide({ anime, contentType, isActive, shouldLoad, onOpen, onPrimary
             {isManga && anime.volumes && <span>{anime.volumes} vol.</span>}
             <span className="flex gap-2">
               {anime.genres?.slice(0, 3).map((g) => (
-                <span key={g} className="rounded bg-white/[0.08] px-2.5 py-0.5 text-xs text-text">
+                <span key={g} className="rounded bg-white/[0.08] px-2.5 py-0.5 text-xs text-text 2xl:text-sm">
                   {g}
                 </span>
               ))}
             </span>
           </div>
 
-          <p className={`mx-auto mb-4 line-clamp-2 max-w-xl text-xs leading-relaxed text-white/65 md:mx-0 md:mb-6 md:line-clamp-3 md:text-sm md:text-muted ${
+          <p className={`mx-auto mb-4 line-clamp-2 max-w-xl text-xs leading-relaxed text-white/65 md:mx-0 md:mb-6 md:line-clamp-3 md:text-sm md:text-muted 2xl:max-w-2xl 2xl:text-base ${
             isManga ? "hidden md:block" : ""
           }`}>
             {anime.description}
           </p>
 
           <div className="flex items-center gap-2.5 md:gap-3">
-            <button onClick={onPrimary} className="btn-shu h-11 min-w-0 flex-1 px-4 py-0 text-sm sm:flex-none md:h-auto md:px-6 md:py-3 md:text-base">
+            <button onClick={onPrimary} className="btn-shu h-11 min-w-0 flex-1 px-4 py-0 text-sm sm:flex-none md:h-auto md:px-6 md:py-3 md:text-base 2xl:px-8 2xl:text-lg">
               {isManga ? <BookOpen size={18} /> : <Play size={18} className="fill-current" />}
               {isManga ? "Lire" : "Regarder"}
             </button>
-            <button onClick={onOpen} className="btn-ghost h-11 min-w-0 flex-1 px-4 py-0 text-sm sm:flex-none md:h-auto md:px-6 md:py-3 md:text-base">
+            <button onClick={onOpen} className="btn-ghost h-11 min-w-0 flex-1 px-4 py-0 text-sm sm:flex-none md:h-auto md:px-6 md:py-3 md:text-base 2xl:px-8 2xl:text-lg">
               <Info size={18} />
               Détails
             </button>
