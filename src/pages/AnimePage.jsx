@@ -93,6 +93,8 @@ export default function AnimePage() {
   }, [slug]);
   const cover = seasonMeta?.cover || images?.poster || anime?.image || anilist?.cover;
   const banner = seasonMeta?.banner || images?.fanart || images?.banner || anilist?.banner;
+  // Les autres sources servent de repli si la première ne charge pas.
+  const bannerFallbacks = [images?.fanart, images?.banner, anilist?.banner];
   const clearLogo = isClearLogoUrl(images?.clearLogo) ? images.clearLogo : null;
   const synopsis = seasonMeta?.description || anime?.synopsis || anilist?.description || "";
   // Seule la troisième source peut être en anglais ; sans `descriptionLang`, rien.
@@ -340,7 +342,7 @@ export default function AnimePage() {
   return (
     <div className="animate-fade-in pb-16">
       <div className="relative h-[300px] w-full overflow-hidden md:h-[380px]">
-        <HeroBanner src={banner} placeholder={cover} />
+        <HeroBanner src={banner} sources={bannerFallbacks} placeholder={cover} />
         <div className="absolute inset-0 bg-gradient-to-t from-bg via-bg/50 to-bg/20" />
         <div className="absolute inset-0 bg-gradient-to-r from-bg/70 to-transparent" />
       </div>
