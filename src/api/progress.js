@@ -401,12 +401,14 @@ export async function getFavoritesProgress() {
 export async function getAnimeProgressMap(slug) {
   const { data, error } = await supabase
     .from("episode_progress")
-    .select("season_id, episode_number, progress_percent, completed")
+    .select("season_id, episode_number, episode_key, progress_percent, completed")
     .eq("anime_slug", slug);
   if (error || !data) return {};
   const map = {};
   for (const row of data) {
-    const k = `${row.season_id}:${row.episode_number}`;
+    // La colonne est entière (11.001 → 11) : le vrai numéro est dans `episode_key`.
+    const keyed = Number(String(row.episode_key || "").split(":").at(-2));
+    const k = `${row.season_id}:${Number.isFinite(keyed) ? keyed : row.episode_number}`;
     const prev = map[k];
     const cur = { progressPercent: Math.round(row.progress_percent || 0), completed: row.completed };
     if (!prev || cur.progressPercent > prev.progressPercent) map[k] = cur;

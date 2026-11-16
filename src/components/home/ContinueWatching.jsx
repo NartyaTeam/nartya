@@ -206,9 +206,8 @@ export default function ContinueWatching({ defaultTab = null, onlyScans = false 
   const resumeLimit = useSettingsStore((s) => s.resumeLimit);
   const [allItems, setItems] = useState(cachedItems);
   const [scanItems, setScanItems] = useState(cachedScanItems);
-  const [activeTab, setActiveTab] = useState(
-    defaultTab || (cachedItems.length ? "anime" : "scans")
-  );
+  // « Animés » d'abord, même si les scans arrivent avant : l'onglet bascule tout seul s'il est vide.
+  const [activeTab, setActiveTab] = useState(defaultTab || "anime");
   const reqId = useRef(0);
 
   // Un anime rangé dans « Terminé » ne revient ici que pour un épisode sorti depuis.

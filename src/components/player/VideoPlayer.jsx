@@ -343,7 +343,9 @@ export default function VideoPlayer({
         "wheel",
         (e) => {
           e.preventDefault();
-          art.volume = Math.min(1, Math.max(0, art.volume + (e.deltaY < 0 ? 0.05 : -0.05)));
+          // Arrondi au cran de 5 % : sans lui, les flottants dérivent (0,45 → 0,4500000001) et l'affichage tombe sur des impairs.
+          const next = Math.round((art.volume + (e.deltaY < 0 ? 0.05 : -0.05)) * 20) / 20;
+          art.volume = Math.min(1, Math.max(0, next));
         },
         { passive: false }
       );

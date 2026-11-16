@@ -26,7 +26,7 @@ const ANILIST_FORMATS = new Set(["OVA", "ONA", "SPECIAL", "TV_SHORT"]);
 
 const ORIGIN_OPTIONS = [
   { value: "", label: "Peu importe" },
-  { value: "manga", label: "Manga (Japon)" },
+  { value: "manga", label: "Manga" },
   { value: "webtoon", label: "Manhwa / Manhua" },
 ];
 
@@ -65,7 +65,7 @@ function Choice({ active, onClick, children }) {
       type="button"
       aria-pressed={active}
       onClick={onClick}
-      className={`rounded-md border-2 px-3 py-1.5 text-xs font-bold transition-colors ${
+      className={`inline-flex items-center justify-center rounded-md border-2 px-3 py-1.5 text-xs font-bold leading-4 transition-colors ${
         active
           ? "border-primary bg-primary/15 text-primary"
           : "border-border bg-surface/60 text-muted hover:border-text/35 hover:text-text"
