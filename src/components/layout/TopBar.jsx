@@ -41,6 +41,7 @@ export default function TopBar({ scrolled }) {
     pathname.startsWith("/u/") ||
     pathname === "/uptime" ||
     pathname === "/equipe" ||
+    pathname === "/party" ||
     pathname.startsWith("/tierlists");
   const [term, setTerm] = useState("");
   const [results, setResults] = useState([]);

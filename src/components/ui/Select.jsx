@@ -36,7 +36,7 @@ function renderItem(opt) {
     <RSelect.Item
       key={opt.value}
       value={opt.value}
-      className="relative flex cursor-pointer select-none items-center gap-2.5 rounded px-2.5 py-2 pr-8 text-sm text-text outline-none transition-colors data-[highlighted]:bg-text/10 data-[state=checked]:font-bold data-[state=checked]:text-primary"
+      className="relative flex cursor-pointer select-none items-center gap-2.5 rounded px-3 py-2.5 pr-9 text-sm leading-snug text-text outline-none transition-colors data-[highlighted]:bg-text/10 data-[state=checked]:font-bold data-[state=checked]:text-primary"
     >
       {opt.icon}
       <RSelect.ItemText>{opt.label}</RSelect.ItemText>
@@ -68,14 +68,14 @@ export function Select({
       <RSelect.Trigger
         title={title}
         aria-label={title}
-        className={`${SIZES[size] || SIZES.md} inline-flex cursor-pointer items-center gap-2 rounded-md pl-3.5 pr-3 text-sm font-medium text-text outline-none ring-2 transition-colors focus:ring-primary/60 data-[state=open]:ring-primary/60 data-[disabled]:cursor-not-allowed data-[disabled]:opacity-40 ${
+        className={`${SIZES[size] || SIZES.md} inline-flex cursor-pointer items-center justify-between gap-3 rounded-md pl-3.5 pr-3 text-left text-sm font-medium text-text outline-none ring-2 transition-colors focus:ring-primary/60 data-[state=open]:ring-primary/60 data-[disabled]:cursor-not-allowed data-[disabled]:opacity-40 ${
           filtering
             ? "bg-primary/10 ring-primary/45 hover:bg-primary/15"
             : "bg-surface ring-border hover:bg-surface-2 data-[disabled]:hover:bg-surface"
         } ${joined ? `${JOINED_BASE} ${JOINED[joined]}` : ""} ${className}`}
       >
         {selected?.icon}
-        <RSelect.Value placeholder={placeholder}>
+        <RSelect.Value placeholder={placeholder} className="min-w-0 truncate">
           {prefix ? (
             <span className="flex min-w-0 items-center gap-1.5">
               <span className={filtering ? "text-text/60" : "text-muted"}>{prefix}</span>
@@ -84,7 +84,7 @@ export function Select({
           ) : undefined}
         </RSelect.Value>
         <RSelect.Icon asChild>
-          <ChevronDown size={15} className="ml-auto text-muted" />
+          <ChevronDown size={15} className="ml-auto shrink-0 text-muted" />
         </RSelect.Icon>
       </RSelect.Trigger>
 
@@ -95,7 +95,7 @@ export function Select({
           sideOffset={6}
           className="z-[300] min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-md border border-border bg-surface shadow-card ring-1 ring-black/40 animate-in fade-in-0 zoom-in-95 data-[side=top]:slide-in-from-bottom-1 data-[side=bottom]:slide-in-from-top-1"
         >
-          <RSelect.Viewport className="max-h-72 p-1">
+          <RSelect.Viewport className="max-h-80 p-1.5">
             {groupOptions(options).map(({ group, items }, i) =>
               group ? (
                 <RSelect.Group key={group}>

@@ -15,6 +15,7 @@ export default function PartyChat({
   onSend,
   myClientId,
   docked = false,
+  hideHeader = false,
   subscribeReactions,
   onSendReaction,
 }) {
@@ -173,10 +174,12 @@ export default function PartyChat({
           ))}
         </div>
 
-        <div className="flex items-center gap-2 border-b border-white/10 px-4 py-3">
-          <MessageCircle size={16} className="text-primary" />
-          <span className="font-display text-base font-bold text-white">Chat</span>
-        </div>
+        {!hideHeader && (
+          <div className="flex items-center gap-2 border-b border-white/10 px-4 py-3">
+            <MessageCircle size={16} className="text-primary" />
+            <span className="font-display text-base font-bold text-white">Chat</span>
+          </div>
+        )}
         {messages}
         {inputBar}
       </div>

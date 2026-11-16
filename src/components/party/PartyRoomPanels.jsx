@@ -50,8 +50,8 @@ export function TabButton({ active, onClick, icon: Icon, children }) {
     <button
       type="button"
       onClick={onClick}
-      className={`flex items-center gap-1.5 rounded-t-md px-3 py-2 text-sm font-semibold transition-colors ${
-        active ? "bg-surface text-white" : "text-muted hover:text-white"
+      className={`flex flex-1 items-center justify-center gap-1.5 border-b-2 px-3 py-3 text-sm font-semibold transition-colors ${
+        active ? "border-primary text-white" : "border-transparent text-muted hover:text-white"
       }`}
     >
       <Icon size={15} /> {children}
@@ -59,7 +59,7 @@ export function TabButton({ active, onClick, icon: Icon, children }) {
   );
 }
 
-function LangBadge({ lang }) {
+export function LangBadge({ lang }) {
   return (
     <span className="inline-flex items-center gap-1.5 rounded bg-white/10 px-1.5 py-0.5">
       <Flag lang={lang} size={11} />
@@ -191,55 +191,26 @@ function OptionToggle({ label, description, checked, disabled, onChange }) {
   );
 }
 
-export function QueueList({ queue, current, isHost, party }) {
-  if (!queue.length) {
-    return (
-      <div className="flex h-full items-center justify-center px-4 text-center text-sm text-muted">
-        {isHost ? "File vide — ajoutez des épisodes depuis « Rechercher »." : "La file est vide."}
-      </div>
-    );
-  }
+/** « À suivre » : cartes horizontales sous le lecteur. */
+export function QueueStrip({ queue, isHost, party }) {
+  if (!queue.length) return null;
   return (
-    <ul className="h-full space-y-0.5 overflow-y-auto overscroll-contain p-2">
+    <ul className="no-scrollbar flex gap-3 overflow-x-auto overscroll-contain pb-1">
       {queue.map((item, i) => {
-        const playing = item.id === current?.id;
         const thumb = item.epThumb || item.cover;
         return (
-          <li
-            key={item.id || i}
-            className={`flex items-center gap-3 rounded-lg px-2 py-2 transition-all duration-200 ${
-              playing ? "scale-[0.96] bg-primary/10 ring-1 ring-primary/20" : "hover:bg-white/5"
-            }`}
-          >
-            <span className="w-5 shrink-0 text-center text-xs font-bold text-white/25">{i + 1}</span>
-            <div className="relative aspect-video h-14 shrink-0 overflow-hidden">
-              {thumb ? (
-                <img src={thumb} alt="" className="h-full w-full object-cover" />
-              ) : (
-                <span className="block h-full w-full bg-surface-2" />
-              )}
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold text-white">
-                {item.epTitle || `Épisode ${item.ep}`}
-              </p>
-              <p className="truncate text-xs text-white/40">{item.title}</p>
-              <div className="mt-1 flex items-center gap-2">
-                <LangBadge lang={item.lang} />
-                <span className="text-[10px] text-white/30">Ép. {item.ep}</span>
-              </div>
-            </div>
-            {playing ? (
-              <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider text-primary">
-                En cours
+          <li key={item.id || i} className="group w-52 shrink-0">
+            <div className="relative aspect-video overflow-hidden rounded-md bg-surface-2 ring-2 ring-border">
+              {thumb && <img src={thumb} alt="" loading="lazy" className="h-full w-full object-cover" />}
+              <span className="absolute left-1.5 top-1.5 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-white">
+                {item.ep ?? i + 1}
               </span>
-            ) : (
-              isHost && (
-                <div className="flex shrink-0 items-center gap-1">
+              {isHost && (
+                <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/55 opacity-0 transition-opacity group-hover:opacity-100">
                   <button
                     type="button"
                     onClick={() => party.setCurrent(item)}
-                    className="rounded-md bg-primary px-2.5 py-1 text-xs font-bold text-primary-fg transition-colors hover:bg-primary/90"
+                    className="rounded-md bg-primary px-3 py-1.5 text-xs font-bold text-primary-fg"
                   >
                     Lire
                   </button>
@@ -247,13 +218,17 @@ export function QueueList({ queue, current, isHost, party }) {
                     type="button"
                     onClick={() => party.dequeue(item.id)}
                     title="Retirer"
-                    className="flex h-7 w-7 items-center justify-center rounded-md text-white/40 transition-colors hover:bg-white/10 hover:text-white"
+                    className="flex h-8 w-8 items-center justify-center rounded-md bg-white/15 text-white hover:bg-white/25"
                   >
                     <X size={14} />
                   </button>
                 </div>
-              )
-            )}
+              )}
+            </div>
+            <p className="mt-1.5 truncate text-sm font-semibold text-white">
+              {item.epTitle || `Épisode ${item.ep}`}
+            </p>
+            <p className="truncate text-xs text-white/45">{item.title}</p>
           </li>
         );
       })}

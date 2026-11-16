@@ -1,27 +1,19 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Users, Plus, LogIn, Loader2, Play, Sparkles, X, Globe, Lock } from "lucide-react";
+import { Users, Plus, LogIn, Loader2, Globe, Lock, Link2, Play, MessageCircle } from "lucide-react";
 import { useParty } from "@/contexts/WatchPartyProvider";
-import { getHomeSections, getAnimePage } from "@/api/animeApi";
-import { getContinueWatching, hideAnimeFromResume } from "@/api/progress";
-import { enrichHistoryItems, applyCachedEnrichment, advanceCompletedItems } from "@/utils/watchHistory";
 import { normalizePartyCode } from "@/utils/partyCode";
 import { listPublicPartyRooms } from "@/api/partyRoom";
 import { resolveAvatar } from "@/api/profile";
 import { partyCapacityForTier, premiumTier } from "@/lib/premium";
-import SegmentedControl from "@/components/ui/SegmentedControl";
 
 const PUBLIC_REFRESH_MS = 20000;
 
-/** « 12:34 », ou null si inconnu. */
-function remainingLabel(item) {
-  if (!item.duration || item.duration <= 0) return null;
-  const left = Math.max(0, item.duration - item.positionSeconds);
-  if (left < 30) return null;
-  const m = Math.floor(left / 60);
-  const s = Math.floor(left % 60);
-  return `${m}:${String(s).padStart(2, "0")}`;
-}
+const STEPS = [
+  { Icon: Plus, title: "Crée un salon", text: "Privé ou public, en un clic." },
+  { Icon: Link2, title: "Partage le code", text: "Six caractères suffisent à tes potes." },
+  { Icon: Play, title: "Regardez ensemble", text: "Lecture synchronisée et chat intégré." },
+];
 
 export default function PartyHomePage() {
   const navigate = useNavigate();
@@ -29,8 +21,6 @@ export default function PartyHomePage() {
   const [joinCode, setJoinCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
-  const [resume, setResume] = useState([]);
-  const [recos, setRecos] = useState([]);
   const [isPublic, setIsPublic] = useState(false);
   const [publicRooms, setPublicRooms] = useState(null);
 
@@ -48,23 +38,10 @@ export default function PartyHomePage() {
     };
   }, []);
 
-  useEffect(() => {
-    getContinueWatching(12).then((base) => {
-      setResume(advanceCompletedItems(applyCachedEnrichment(base)));
-      enrichHistoryItems(base)
-        .then((enriched) => setResume(advanceCompletedItems(enriched)))
-        .catch(() => {});
-    }).catch(() => {});
-
-    getHomeSections()
-      .then((d) => setRecos((d?.rows?.[0]?.items || []).slice(0, 12)))
-      .catch(() => {});
-  }, []);
-
-  const goCreate = async (seed = null) => {
+  const goCreate = async () => {
     setError(null);
     setBusy(true);
-    const res = await party.createRoom({ seed, isPublic });
+    const res = await party.createRoom({ seed: null, isPublic });
     setBusy(false);
     if (res.success) navigate(`/party/${res.code}`);
     else setError(res.error || "Impossible de créer le salon.");
@@ -76,268 +53,139 @@ export default function PartyHomePage() {
     if (c.length === 6) navigate(`/party/${c}`);
   };
 
-  // Masqué en base, sans effacer l'historique.
-  const removeResume = async (item) => {
-    setResume((prev) => prev.filter((i) => i.slug !== item.slug));
-    await hideAnimeFromResume(item.slug);
-  };
-
-  const resumeSeed = (item) => ({
-    id: `${item.slug}:${item.seasonId}:${item.episodeNumber}:${item.language}`,
-    slug: item.slug,
-    season: item.seasonId,
-    ep: item.episodeNumber,
-    lang: item.language,
-    title: item.title,
-    cover: item.cover,
-    seasonName: item.seasonName || "",
-    epTitle: `Épisode ${item.episodeNumber}`,
-    epThumb: item.episodeImage || null,
-  });
-
-  // Première saison, épisode 1.
-  const startReco = async (card) => {
-    setBusy(true);
-    setError(null);
-    try {
-      const page = await getAnimePage(card.slug);
-      const season = page?.seasons?.[0];
-      if (!season) throw new Error("Pas de saison disponible.");
-      await goCreate({
-        id: `${card.slug}:${season.id}:1:vostfr`,
-        slug: card.slug,
-        season: season.id,
-        ep: 1,
-        lang: "vostfr",
-        title: page?.anime?.title?.trim() || card.title,
-        cover: page?.images?.poster || card.cover || "",
-        seasonName: season.name || "",
-        epTitle: "Épisode 1",
-      });
-    } catch (err) {
-      setBusy(false);
-      setError(err.message || "Impossible de démarrer cet anime.");
-    }
-  };
-
   return (
-    <div className="mx-auto max-w-6xl px-6 py-8">
-      <div className="mb-8 flex items-center gap-3">
-        <Users className="text-primary" size={28} />
-        <div>
-          <h1 className="t-impact text-4xl sm:text-5xl">Watch Party</h1>
-          <p className="text-sm text-muted">Regardez vos animes en même temps que vos potes.</p>
-        </div>
-      </div>
+    <div className="mx-auto max-w-5xl px-6 py-10 sm:py-14">
+      <header className="mb-10 text-center">
+        <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/15 text-primary">
+          <Users size={26} />
+        </span>
+        <h1 className="t-impact text-4xl sm:text-6xl">Watch Party</h1>
+        <p className="mx-auto mt-3 max-w-md text-sm text-muted sm:text-base">
+          Regardez vos animes en même temps que vos potes, parfaitement synchronisés.
+        </p>
+      </header>
 
-      <div className="mb-12 grid gap-4 md:grid-cols-2">
-        <div className="flex flex-col items-start gap-3 rounded-md border-2 border-border bg-surface p-6">
-          <div className="flex items-center gap-2 text-white">
-            <Plus size={18} className="text-primary" />
-            <span className="font-display text-lg font-bold">Créer un salon</span>
+      <div className="grid gap-5 md:grid-cols-5">
+        <section className="flex flex-col rounded-xl border-2 border-border bg-surface p-6 md:col-span-3">
+          <h2 className="font-display text-xl font-bold text-white">Créer un salon</h2>
+          <p className="mt-1 text-sm text-muted">Tu choisiras l'épisode une fois dans le salon.</p>
+
+          <div className="mt-5 grid grid-cols-2 gap-3">
+            <VisibilityOption
+              active={!isPublic}
+              onClick={() => setIsPublic(false)}
+              Icon={Lock}
+              title="Privé"
+              text="Uniquement avec le code"
+            />
+            <VisibilityOption
+              active={isPublic}
+              onClick={() => setIsPublic(true)}
+              Icon={Globe}
+              title="Public"
+              text="Visible par tous les membres"
+            />
           </div>
-          <p className="text-sm text-muted">
-            Lance un salon vide et choisis quoi regarder une fois dedans, ou pars d'une suggestion ci-dessous.
-          </p>
-          <div className="mt-1 flex flex-wrap items-center gap-3">
-            <button onClick={() => goCreate(null)} disabled={busy} className="btn-shu disabled:opacity-60">
-              {busy ? <Loader2 size={18} className="animate-spin" /> : <Plus size={18} />}
-              Créer un salon
-            </button>
-            <VisibilitySwitch isPublic={isPublic} onChange={setIsPublic} />
-          </div>
-          <p className="text-xs text-muted">
-            {isPublic
-              ? "Public : ton salon apparaît ci-dessous, n'importe quel membre peut le rejoindre."
-              : "Privé : seuls ceux qui ont le code peuvent entrer."}
-          </p>
-        </div>
+
+          <button onClick={goCreate} disabled={busy} className="btn-shu mt-6 w-full justify-center disabled:opacity-60">
+            {busy ? <Loader2 size={18} className="animate-spin" /> : <Plus size={18} />}
+            Créer le salon
+          </button>
+          {error && <p className="mt-3 text-sm text-primary">{error}</p>}
+        </section>
 
         <form
           onSubmit={goJoin}
-          className="flex flex-col items-start gap-3 rounded-md border-2 border-border bg-surface p-6"
+          className="flex flex-col rounded-xl border-2 border-border bg-surface p-6 md:col-span-2"
         >
-          <div className="flex items-center gap-2 text-white">
-            <LogIn size={18} className="text-primary" />
-            <span className="font-display text-lg font-bold">Rejoindre</span>
-          </div>
-          <p className="text-sm text-muted">Saisis le code que ton pote t'a partagé.</p>
-          <div className="flex w-full gap-2">
-            <input
-              value={joinCode}
-              onChange={(e) => setJoinCode(normalizePartyCode(e.target.value))}
-              placeholder="ABC123"
-              className="min-w-0 flex-1 rounded-md border border-border bg-bg px-4 py-2.5 text-center text-lg font-bold uppercase tracking-[0.3em] text-text placeholder:tracking-normal placeholder:text-base placeholder:font-normal placeholder:text-muted focus:border-primary/60 focus:outline-none"
-            />
-            <button type="submit" disabled={joinCode.length < 6} className="btn-ghost shrink-0 disabled:opacity-50">
-              Rejoindre
-            </button>
-          </div>
+          <h2 className="font-display text-xl font-bold text-white">Rejoindre</h2>
+          <p className="mt-1 text-sm text-muted">Colle le code reçu d'un ami.</p>
+          <input
+            value={joinCode}
+            onChange={(e) => setJoinCode(normalizePartyCode(e.target.value))}
+            placeholder="ABC123"
+            aria-label="Code du salon"
+            className="mt-5 w-full rounded-md border border-border bg-bg px-4 py-3 text-center text-xl font-bold uppercase tracking-[0.35em] text-text placeholder:text-base placeholder:font-normal placeholder:tracking-normal placeholder:text-muted focus:border-primary/60 focus:outline-none"
+          />
+          <button
+            type="submit"
+            disabled={joinCode.length < 6}
+            className="btn-ghost mt-auto w-full justify-center disabled:opacity-50 max-md:mt-4"
+          >
+            <LogIn size={18} />
+            Rejoindre
+          </button>
         </form>
       </div>
 
-      {error && <p className="mb-6 text-sm text-primary">{error}</p>}
+      <ol className="mt-5 grid gap-3 sm:grid-cols-3">
+        {STEPS.map(({ Icon, title, text }, i) => (
+          <li key={title} className="flex items-start gap-3 rounded-lg px-2 py-2">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface-2 text-primary">
+              <Icon size={16} />
+            </span>
+            <div>
+              <p className="text-sm font-semibold text-text">
+                <span className="mr-1.5 text-muted">{i + 1}.</span>
+                {title}
+              </p>
+              <p className="text-xs text-muted">{text}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
 
-      <section className="mb-10">
+      <section className="mt-12">
         <div className="mb-4 flex items-center gap-2">
           <Globe size={18} className="text-primary" />
           <h2 className="section-title !text-xl">Salons publics</h2>
-          {publicRooms?.length > 0 && <span className="text-sm text-muted">{publicRooms.length}</span>}
+          {publicRooms?.length > 0 && (
+            <span className="rounded-full bg-surface-2 px-2 py-0.5 text-xs font-semibold tabular-nums text-muted">
+              {publicRooms.length}
+            </span>
+          )}
         </div>
         {publicRooms === null ? (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="h-24 rounded-md skeleton" />
+          <div className="grid gap-3 sm:grid-cols-2">
+            {[0, 1].map((i) => (
+              <div key={i} className="h-24 rounded-lg skeleton" />
             ))}
           </div>
         ) : publicRooms.length === 0 ? (
-          <p className="rounded-md border-2 border-dashed border-border px-5 py-6 text-sm text-muted">
-            Aucun salon public pour l'instant. Crée le tien en mode Public pour que d'autres membres te rejoignent.
-          </p>
+          <div className="flex flex-col items-center gap-2 rounded-xl border-2 border-dashed border-border px-5 py-10 text-center">
+            <MessageCircle size={22} className="text-muted" />
+            <p className="text-sm text-muted">
+              Aucun salon public pour le moment. Crée le tien en mode Public pour que d'autres te rejoignent.
+            </p>
+          </div>
         ) : (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2">
             {publicRooms.map((room) => (
               <PublicRoomCard key={room.code} room={room} onJoin={() => navigate(`/party/${room.code}`)} />
             ))}
           </div>
         )}
       </section>
-
-      {resume.length > 0 && (
-        <section className="mb-10">
-          <div className="mb-4 flex items-center gap-2">
-            <h2 className="section-title !text-xl">Reprendre à plusieurs</h2>
-          </div>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-            {resume.map((item) => (
-              <ResumeCard
-                key={item.episodeKey}
-                item={item}
-                onClick={() => goCreate(resumeSeed(item))}
-                onRemove={removeResume}
-                busy={busy}
-              />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {recos.length > 0 && (
-        <section className="mb-10">
-          <div className="mb-4 flex items-center gap-2">
-            <Sparkles size={18} className="text-primary" />
-            <h2 className="section-title !text-xl">À regarder ensemble</h2>
-          </div>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-            {recos.map((card) => (
-              <PosterCard
-                key={card.slug}
-                cover={card.cover}
-                title={card.title}
-                subtitle={card.genres?.slice(0, 2).join(" · ")}
-                onClick={() => startReco(card)}
-              />
-            ))}
-          </div>
-        </section>
-      )}
-
     </div>
   );
 }
 
-function ResumeCard({ item, onClick, onRemove, busy }) {
-  const img = item.episodeImage || item.cover;
-  const remaining = remainingLabel(item);
-
+function VisibilityOption({ active, onClick, Icon, title, text }) {
   return (
-    <div className="group relative">
-      <button
-        onClick={() => onRemove(item)}
-        title="Retirer de Reprendre"
-        aria-label="Retirer de Reprendre"
-        className="absolute right-2 top-2 z-10 text-white opacity-0 drop-shadow-[0_2px_6px_rgba(0,0,0,0.8)] transition-all hover:scale-110 focus-visible:opacity-100 group-hover:opacity-100"
-      >
-        <X size={20} strokeWidth={2.5} />
-      </button>
-
-      <button onClick={onClick} disabled={busy} className="block w-full text-left disabled:pointer-events-none">
-        <div className="relative aspect-video overflow-hidden rounded-lg bg-surface-2 [transform:translateZ(0)]">
-          {img ? (
-            <img src={img} alt="" loading="lazy" className="h-full w-full object-cover" />
-          ) : (
-            <div className="h-full w-full skeleton" />
-          )}
-
-          <div className="absolute inset-0 flex items-center justify-center bg-black/45 opacity-0 transition-opacity duration-150 will-change-[opacity] group-hover:opacity-100">
-            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-fg">
-              <Play size={20} className="ml-0.5 fill-current" />
-            </span>
-          </div>
-
-          {remaining && (
-            <span className="absolute bottom-2 right-2 rounded bg-black/75 px-1.5 py-0.5 text-[0.7rem] font-semibold tabular-nums backdrop-blur-sm">
-              {remaining}
-            </span>
-          )}
-
-          <div className="absolute inset-x-0 bottom-0 h-1 bg-black/40">
-            <span
-              className="block h-full bg-primary"
-              style={{ width: `${Math.max(3, item.progressPercent)}%` }}
-            />
-          </div>
-        </div>
-
-        <h3 className="mt-2 line-clamp-1 text-sm font-semibold text-text transition-colors group-hover:text-primary">
-          {item.title || item.slug}
-        </h3>
-        <p className="mt-0.5 line-clamp-1 text-xs text-muted">
-          {item.seasonName ? `${item.seasonName} · ` : ""}Épisode {item.episodeNumber} ·{" "}
-          {item.language?.toUpperCase()}
-        </p>
-      </button>
-    </div>
-  );
-}
-
-function PosterCard({ cover, title, subtitle, onClick }) {
-  return (
-    <button onClick={onClick} className="group block w-full text-left">
-      <div className="relative aspect-[2/3] overflow-hidden rounded-lg bg-surface-2">
-        {cover ? (
-          <img src={cover} alt={title} loading="lazy" className="h-full w-full object-cover" />
-        ) : (
-          <div className="h-full w-full skeleton" />
-        )}
-        <div className="absolute inset-0 flex items-center justify-center bg-black/45 opacity-0 transition-opacity duration-150 will-change-[opacity] group-hover:opacity-100">
-          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-primary text-primary-fg">
-            <Play size={18} className="ml-0.5 fill-current" />
-          </span>
-        </div>
-      </div>
-      <h3 className="mt-2 line-clamp-1 text-sm font-semibold text-text transition-colors group-hover:text-primary">
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={`flex flex-col items-start gap-1 rounded-lg border-2 p-3 text-left transition-colors ${
+        active ? "border-primary bg-primary/10" : "border-border hover:border-primary/40"
+      }`}
+    >
+      <span className={`flex items-center gap-2 text-sm font-bold ${active ? "text-primary" : "text-text"}`}>
+        <Icon size={15} />
         {title}
-      </h3>
-      {subtitle && <p className="mt-0.5 line-clamp-1 text-xs text-muted">{subtitle}</p>}
+      </span>
+      <span className="text-xs text-muted">{text}</span>
     </button>
-  );
-}
-
-const VISIBILITY_OPTIONS = [
-  { value: "private", label: "Privé", Icon: Lock },
-  { value: "public", label: "Public", Icon: Globe },
-];
-
-function VisibilitySwitch({ isPublic, onChange }) {
-  return (
-    <SegmentedControl
-      label="Visibilité de la salle"
-      size="sm"
-      options={VISIBILITY_OPTIONS}
-      value={isPublic ? "public" : "private"}
-      onChange={(value) => onChange(value === "public")}
-    />
   );
 }
 
@@ -358,9 +206,9 @@ function PublicRoomCard({ room, onJoin }) {
       onClick={onJoin}
       disabled={full}
       title={full ? "Salon complet" : "Rejoindre le salon"}
-      className="group flex w-full items-center gap-3 rounded-md border-2 border-border bg-surface p-3 text-left transition-colors hover:border-primary/50 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-border"
+      className="group flex w-full items-center gap-3 rounded-xl border-2 border-border bg-surface p-3 text-left transition-colors hover:border-primary/50 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-border"
     >
-      <div className="relative h-20 w-14 shrink-0 overflow-hidden rounded bg-surface-2">
+      <div className="relative h-20 w-14 shrink-0 overflow-hidden rounded-md bg-surface-2">
         {current?.cover ? (
           <img src={current.cover} alt="" loading="lazy" className="h-full w-full object-cover" />
         ) : (
