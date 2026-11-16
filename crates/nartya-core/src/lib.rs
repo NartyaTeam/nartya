@@ -11,6 +11,7 @@ pub mod downloads;
 pub mod host;
 pub mod hub;
 pub mod oauth;
+pub mod party;
 pub mod session;
 pub mod stream;
 pub mod system;
