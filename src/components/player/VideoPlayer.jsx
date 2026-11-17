@@ -406,7 +406,7 @@ export default function VideoPlayer({
     });
     art.on("video:timeupdate", () => {
       if (!isCurrentMedia()) return;
-      cb.current.onTimeUpdate?.(art.currentTime || 0, art.duration || 0);
+      cb.current.onTimeUpdate?.(art.currentTime || 0, art.duration || 0, art.video?.playbackRate || 1);
     });
     // Charger une vidéo remet sa vitesse à `defaultPlaybackRate` : sans ce report, le x2
     // retombait à x1 à l'épisode suivant ou après une reconnexion, le menu affichant

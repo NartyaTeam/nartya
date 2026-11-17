@@ -93,6 +93,7 @@ export async function watchTick({
   cover = null,
   seasonTotal = null,
   userId = null,
+  rate = 1,
 }) {
   if (!slug || isGuestSession()) return [];
   try {
@@ -108,6 +109,7 @@ export async function watchTick({
       p_cover: cover,
       p_tz_offset: tzOffsetMinutes(),
       p_season_total: seasonTotal > 0 ? seasonTotal : null,
+      p_rate: Math.min(2, Math.max(1, Number(rate) || 1)),
     });
     expireProfileProgress(userId);
     invalidateResumeCache();

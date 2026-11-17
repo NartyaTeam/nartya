@@ -480,7 +480,7 @@ export default function WatchPage() {
   useEffect(() => () => setAchievementsInPlayback(false), [setAchievementsInPlayback]);
 
   const handleTimeUpdate = useCallback(
-    (time, duration) => {
+    (time, duration, rate = 1) => {
       positionRef.current = { time, duration };
       // Après un engagement réel, pas au chargement de la source.
       if (
@@ -523,6 +523,7 @@ export default function WatchPage() {
             cover: animeCover,
             seasonTotal: episodes.length,
             userId,
+            rate,
           }).then(celebrateAchievements);
         } else {
           // Durée inconnue : seul le temps de visionnage est crédité.
