@@ -15,6 +15,17 @@ function toBase64(blob) {
  * y est rangée, `"shared"` quand le partage a pris le relais (Android 9 et avant),
  * `"downloaded"` ailleurs.
  */
+export async function saveImageFromUrl(url, filename) {
+  if (platform.os === "android") {
+    // Le natif télécharge lui-même : un visuel de plusieurs Mo ne passe pas en base64 par le pont.
+    const { saved } = await platform.saveImage({ url, filename });
+    return saved ? "gallery" : "shared";
+  }
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return saveImage(await res.blob(), filename);
+}
+
 export async function saveImage(blob, filename) {
   if (platform.os === "android") {
     const { saved } = await platform.saveImage({

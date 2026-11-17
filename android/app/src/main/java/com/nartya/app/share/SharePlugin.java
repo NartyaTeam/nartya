@@ -18,7 +18,11 @@ import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 
@@ -84,17 +88,26 @@ public class SharePlugin extends Plugin {
     @PluginMethod
     public void saveImage(PluginCall call) {
         String data = call.getString("data");
+        String url = call.getString("url");
         String mimeType = call.getString("mimeType", "image/png");
         String filename = call.getString("filename", "nartya.png").replaceAll("[\\\\/:*?\"<>|]", "_");
-        if (data == null || data.isEmpty()) {
-            call.reject("Image vide");
-            return;
-        }
 
         byte[] bytes;
         try {
-            bytes = Base64.decode(data, Base64.DEFAULT);
-        } catch (IllegalArgumentException error) {
+            if (url != null && !url.isEmpty()) {
+                // Les visuels de la Galerie pèsent plusieurs Mo : les passer en base64 par le pont
+                // de la WebView échoue. Le natif les télécharge lui-même.
+                HttpURLConnection connection = openImage(url);
+                String type = connection.getContentType();
+                if (type != null && type.startsWith("image/")) mimeType = type.split(";")[0].trim();
+                bytes = readLimited(connection);
+            } else if (data != null && !data.isEmpty()) {
+                bytes = Base64.decode(data, Base64.DEFAULT);
+            } else {
+                call.reject("Image vide");
+                return;
+            }
+        } catch (Exception error) {
             call.reject("Image illisible", error);
             return;
         }
@@ -111,6 +124,35 @@ public class SharePlugin extends Plugin {
             call.resolve(result);
         } catch (Exception error) {
             call.reject("Enregistrement impossible", error);
+        }
+    }
+
+    private static final int MAX_IMAGE_BYTES = 40 * 1024 * 1024;
+
+    private static HttpURLConnection openImage(String value) throws Exception {
+        URL url = new URL(value);
+        if (!"https".equals(url.getProtocol())) throw new IllegalArgumentException("https requis");
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setConnectTimeout(15_000);
+        connection.setReadTimeout(30_000);
+        if (connection.getResponseCode() != 200) {
+            throw new IllegalStateException("HTTP " + connection.getResponseCode());
+        }
+        return connection;
+    }
+
+    private static byte[] readLimited(HttpURLConnection connection) throws Exception {
+        try (InputStream in = connection.getInputStream()) {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            byte[] buffer = new byte[64 * 1024];
+            int read;
+            while ((read = in.read(buffer)) != -1) {
+                out.write(buffer, 0, read);
+                if (out.size() > MAX_IMAGE_BYTES) throw new IllegalStateException("Image trop lourde");
+            }
+            return out.toByteArray();
+        } finally {
+            connection.disconnect();
         }
     }
 
