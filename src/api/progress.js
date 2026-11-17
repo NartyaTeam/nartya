@@ -19,8 +19,9 @@ function invalidateResumeCache() {
 }
 
 // Une fiche lisait la progression du même anime trois fois (dernier épisode vu, épisodes vus,
-// mentions des commentaires) : une seule lecture les sert toutes. Vidé à chaque écriture.
-const ANIME_ROWS_CACHE_MS = 10_000;
+// mentions des commentaires), et le lecteur une quatrième pour la position de reprise : une
+// seule lecture les sert toutes. Vidé à chaque écriture de cet appareil.
+const ANIME_ROWS_CACHE_MS = 2 * 60_000;
 const animeRowsCache = new Map();
 
 function getAnimeProgressRows(slug) {
@@ -28,7 +29,9 @@ function getAnimeProgressRows(slug) {
   if (hit && Date.now() - hit.ts < ANIME_ROWS_CACHE_MS) return hit.promise;
   const promise = supabase
     .from("episode_progress")
-    .select("user_id, season_id, episode_number, episode_key, language, progress_percent, completed, updated_at")
+    .select(
+      "user_id, season_id, episode_number, episode_key, language, position_seconds, duration, progress_percent, completed, updated_at"
+    )
     .eq("anime_slug", slug)
     .order("updated_at", { ascending: false })
     .then(({ data, error }) => {
@@ -164,13 +167,10 @@ export async function getEpisodeProgress(slug, seasonId, episodeNumber, language
   if (!userId) return null;
 
   const key = episodeKey(slug, seasonId, episodeNumber, language);
-  const { data, error } = await supabase
-    .from("episode_progress")
-    .select("position_seconds, duration, progress_percent, completed, updated_at")
-    .eq("user_id", dataOwnerId(userId))
-    .eq("episode_key", key)
-    .maybeSingle();
-  if (error || !data) return null;
+  const owner = dataOwnerId(userId);
+  // Déjà lue par la fiche dans la plupart des cas : le lecteur démarre sans attendre la base.
+  const data = (await getAnimeProgressRows(slug))?.find((row) => row.user_id === owner && row.episode_key === key);
+  if (!data) return null;
   return {
     positionSeconds: data.position_seconds || 0,
     duration: data.duration || 0,

@@ -7,6 +7,7 @@ import HeroBanner from "@/components/ui/HeroBanner";
 import { getAnimeScans } from "@/api/animeApi";
 import { animeCacheKey, ANIME_CACHE_OPTIONS, loadAnime } from "@/api/animeLoad";
 import { prefetchAnimeOpening } from "@/api/animePrefetch";
+import { prewarmEpisode } from "@/utils/episodeVideoUtils";
 import { getLastWatched } from "@/api/progress";
 import { revalidateKey, useCachedResource } from "@/hooks/useCachedResource";
 import { useDiscordPresence } from "@/hooks/useDiscordPresence";
@@ -327,6 +328,12 @@ export default function AnimePage() {
     navigate(`/watch/${streamingSlug}?${params.toString()}`);
   };
 
+  // Comme les cartes d'épisode : la source se résout pendant que la souris approche du clic.
+  const prewarmResume = (event) => {
+    if (!resume || event.pointerType !== "mouse") return;
+    prewarmEpisode(streamingSlug, resume.season, resume.episode, resume.language || defaultLanguage);
+  };
+
   // Pour ne pas reconstruire ses caches à chaque rendu.
   const mentionResolver = useMemo(
     () => animeMentionResolver(streamingSlug || slug, data?.seasons || []),
@@ -437,7 +444,7 @@ export default function AnimePage() {
         )}
 
         {resume && (
-          <button onClick={startWatching} className="btn-shu mt-5 w-full transition-transform active:scale-[0.98]">
+          <button onClick={startWatching} onPointerEnter={prewarmResume} className="btn-shu mt-5 w-full transition-transform active:scale-[0.98]">
             <Play size={18} className="shrink-0 fill-current" />
             <span className="inline-flex items-baseline gap-1.5 whitespace-nowrap">
               {resume.label}
@@ -507,7 +514,7 @@ export default function AnimePage() {
               )}
             </div>
             {resume && (
-              <button onClick={startWatching} className="btn-shu mt-3 w-44 px-4 md:w-52">
+              <button onClick={startWatching} onPointerEnter={prewarmResume} className="btn-shu mt-3 w-44 px-4 md:w-52">
                 <Play size={18} className="shrink-0 fill-current" />
                 <span className="inline-flex items-baseline gap-1.5 whitespace-nowrap">
                   {resume.label}
