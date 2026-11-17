@@ -5,6 +5,72 @@
  */
 export const CHANGELOG = [
   {
+    version: "1.41.0",
+    date: "17 novembre 2026",
+    items: [
+      {
+        type: "new",
+        text: "Nartya est reconstruit sur une nouvelle base, plus légère : l’installeur passe de 149 Mo à 38 Mo. Ton compte, tes profils et tes réglages sont conservés.",
+      },
+      {
+        type: "new",
+        text: "Watch Party refaite : un accueil et un salon façon Twitch, et c’est désormais le serveur qui décide de l’hôte et garde tout le monde synchronisé.",
+      },
+      {
+        type: "new",
+        text: "Tier lists : modes animes, personnages et musiques, vue en liste, recherche d’animes en menu déroulant, classement rapide au clavier (touches 1 à 9) et éditeur allégé.",
+      },
+      {
+        type: "new",
+        text: "Mangas : un nouvel accueil avec une sélection à la une, les derniers chapitres en liste et les tendances. Le lecteur de scans gagne le zoom à la souris et au clavier.",
+      },
+      {
+        type: "new",
+        text: "Discord : l’affiche de l’anime que tu regardes s’affiche en grand dans ta présence, avec le logo Nartya en petit.",
+      },
+      {
+        type: "new",
+        text: "Profils : le dernier profil utilisé se rouvre tout seul pendant 12 h, un profil unique s’ouvre directement, et un bouton rouge à côté de « Gérer les profils » te déconnecte.",
+      },
+      {
+        type: "new",
+        text: "La barre de recherche s’adapte à la page (animes, mangas, auteurs à part) et la page Équipe est refaite.",
+      },
+      {
+        type: "improved",
+        text: "Les fiches s’ouvrent bien plus vite : la liste d’épisodes et les scans partent avec la fiche, elles sont gardées sur disque, et « Reprendre » retrouve sa source dès le survol.",
+      },
+      {
+        type: "improved",
+        text: "L’accueil est gardé 6 h sur disque, affiche un hero plus varié et s’adapte aux grands écrans 4K. Le bouton Retour le rouvre instantanément, sans flash noir.",
+      },
+      {
+        type: "improved",
+        text: "Moins de requêtes inutiles : ta progression de lecture est envoyée par lots et les listes d’épisodes se chargent par petits groupes.",
+      },
+      {
+        type: "improved",
+        text: "Interface allégée : le sélecteur de sources, le bandeau de nouveauté et les cadeaux de palier disparaissent, et les interrupteurs et filtres sont harmonisés.",
+      },
+      {
+        type: "fixed",
+        text: "Les classements se rafraîchissent correctement et le statut « Terminé » n’est plus attribué à tort.",
+      },
+      {
+        type: "fixed",
+        text: "Un épisode regardé en x2 compte bien dans tes épisodes vus, les épisodes en x.001 sont marqués comme vus, et le volume se règle à la molette.",
+      },
+      {
+        type: "fixed",
+        text: "Fiches : la bannière retombe sur une autre source quand la première ne charge pas, et l’ordre des saisons suit celui de la fiche.",
+      },
+      {
+        type: "fixed",
+        text: "Le survol des cartes ne clignote plus.",
+      },
+    ],
+  },
+  {
     version: "1.40.1",
     date: "31 octobre 2026",
     items: [

@@ -1,6 +1,6 @@
 [package]
 name = "nartya"
-version = "1.40.1"
+version = "1.41.0"
 description = "Application de streaming d'anime"
 authors = ["NartyaTeam"]
 edition = "2021"

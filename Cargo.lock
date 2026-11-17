@@ -2481,7 +2481,7 @@ dependencies = [
 
 [[package]]
 name = "nartya"
-version = "1.40.1"
+version = "1.41.0"
 dependencies = [
  "axum",
  "nartya-core",
@@ -2502,7 +2502,7 @@ dependencies = [
 
 [[package]]
 name = "nartya-android"
-version = "1.40.1"
+version = "1.41.0"
 dependencies = [
  "jni",
  "nartya-core",
@@ -2513,7 +2513,7 @@ dependencies = [
 
 [[package]]
 name = "nartya-core"
-version = "1.40.1"
+version = "1.41.0"
 dependencies = [
  "axum",
  "base64 0.22.1",
