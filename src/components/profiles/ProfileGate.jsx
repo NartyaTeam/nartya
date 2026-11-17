@@ -9,7 +9,6 @@ import {
   profileErrorMessage,
   requestProfilePinReset,
 } from "@/api/accountProfiles";
-import { premiumTier } from "@/lib/premium";
 import { Fox } from "@/components/brand/NartyaMark";
 import SignOutModal from "@/components/SignOutModal";
 import ProfileAvatar from "./ProfileAvatar";
@@ -37,7 +36,6 @@ export default function ProfileGate() {
   const [notice, setNotice] = useState(null);
   const [signingOut, setSigningOut] = useState(false);
 
-  const tier = premiumTier(account);
   const canAdd = profiles.length < limit;
 
   const open = async (profile) => {
@@ -214,23 +212,19 @@ export default function ProfileGate() {
         </p>
       )}
 
-      <p className="mt-8 text-xs text-muted">
-        {profiles.length} / {limit} profils
-        {tier !== "ultimate" && !canAdd && (tier === "plus" ? " · 5 avec Ultimate" : " · 4 avec Nartya +, 5 avec Ultimate")}
-      </p>
-
-      <div className="mt-6 flex items-center gap-3">
+      <div className="mt-10 flex items-center gap-3">
         <button onClick={() => setManaging((m) => !m)} className={managing ? "btn-shu px-6 py-2.5" : "btn-ghost px-6 py-2.5"}>
           {managing ? "Terminé" : "Gérer les profils"}
         </button>
+        <button
+          onClick={() => setSigningOut(true)}
+          title="Se déconnecter"
+          aria-label="Se déconnecter"
+          className="btn-danger px-3.5 py-2.5"
+        >
+          <LogOut size={18} />
+        </button>
       </div>
-
-      <button
-        onClick={() => setSigningOut(true)}
-        className="mt-10 inline-flex items-center gap-2 text-xs text-muted hover:text-text"
-      >
-        <LogOut size={14} /> {account?.username ? `Se déconnecter de ${account.username}` : "Se déconnecter"}
-      </button>
 
       {editing && (
         <ProfileEditor

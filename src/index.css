@@ -213,6 +213,14 @@
   .btn-ghost:active {
     box-shadow: inset 0 0 0 2px rgb(250 250 250 / 0.28), 0 1px 0 rgb(250 250 250 / 0.16);
   }
+  .btn-danger {
+    @apply relative inline-flex items-center justify-center gap-2 rounded-md bg-red-600 px-4 py-3
+      font-bold text-white transition duration-150 hover:brightness-110 active:translate-y-[3px];
+    box-shadow: 0 4px 0 color-mix(in srgb, rgb(220 38 38) 58%, black);
+  }
+  .btn-danger:active {
+    box-shadow: 0 1px 0 color-mix(in srgb, rgb(220 38 38) 58%, black);
+  }
 }
 
 /* ArtPlayer impose `svg { fill }`, ce qui remplirait les icônes Lucide du lecteur. */
