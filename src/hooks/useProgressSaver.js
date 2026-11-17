@@ -15,7 +15,7 @@ export function useProgressSaver(
   const lastSaveRef = useRef(0);
 
   const saveProgress = useCallback(
-    (time, duration, { force = false } = {}) => {
+    (time, duration, { force = false, immediate = false } = {}) => {
       if (!userId || !seasonId || !Number.isFinite(epNumber) || !duration || time <= 1) return;
       const now = Date.now();
       if (!force && now - lastSaveRef.current < MIN_SAVE_GAP_MS) return;
@@ -30,7 +30,7 @@ export function useProgressSaver(
         title: animeTitle,
         cover: animeCover,
         userId,
-      }).catch(() => {});
+      }, { immediate });
     },
     [userId, slug, seasonId, epNumber, lang, animeTitle, animeCover]
   );
@@ -43,7 +43,7 @@ export function useProgressSaver(
   useEffect(() => {
     return () => {
       const { time, duration } = positionRef.current;
-      if (time > 0 && duration > 0) saveProgress(time, duration, { force: true });
+      if (time > 0 && duration > 0) saveProgress(time, duration, { force: true, immediate: true });
     };
   }, [saveProgress, positionRef]);
 
@@ -60,7 +60,7 @@ export function useProgressSaver(
   useEffect(() => {
     const flush = () => {
       const { time, duration } = positionRef.current;
-      saveProgress(time, duration, { force: true });
+      saveProgress(time, duration, { force: true, immediate: true });
     };
     const onVisibility = () => {
       if (document.visibilityState === "hidden") flush();
@@ -75,7 +75,7 @@ export function useProgressSaver(
 
   const flushBeforeNav = useCallback(() => {
     const { time, duration } = positionRef.current;
-    if (time > 0 && duration > 0) saveProgress(time, duration, { force: true });
+    if (time > 0 && duration > 0) saveProgress(time, duration, { force: true, immediate: true });
     positionRef.current = { time: 0, duration: 0 };
     lastSaveRef.current = 0;
   }, [saveProgress, positionRef]);

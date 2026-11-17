@@ -16,7 +16,7 @@
     "dev:tauri:local": "concurrently -k -n api,tauri -c magenta,cyan \"npm run api:dev\" \"wait-on -t 60000 http-get://localhost:3000/health && tauri dev\"",
     "dev:tauri:public": "tauri dev",
     "lint": "eslint .",
-    "test:unit": "node --test test/audio-track.test.mjs test/platform-contract.test.mjs test/shared-extract.test.mjs test/persisted-cache.test.mjs test/video-providers.test.mjs test/stream-anonymization.test.mjs test/version-gate.test.mjs test/hls-detection.test.mjs test/quality-levels.test.mjs test/download-recovery.test.mjs test/session-guards.test.mjs test/changelog.test.mjs test/android-release-manifest.test.mjs test/ios-release-manifest.test.mjs test/profile-session.test.mjs",
+    "test:unit": "node --test test/audio-track.test.mjs test/platform-contract.test.mjs test/shared-extract.test.mjs test/persisted-cache.test.mjs test/video-providers.test.mjs test/stream-anonymization.test.mjs test/version-gate.test.mjs test/hls-detection.test.mjs test/quality-levels.test.mjs test/download-recovery.test.mjs test/session-guards.test.mjs test/changelog.test.mjs test/android-release-manifest.test.mjs test/ios-release-manifest.test.mjs test/profile-session.test.mjs test/progress-batcher.test.mjs",
     "test:providers": "cargo run -p nartya-core --example providers_smoke",
     "test:providers:ui": "node test/video-providers-ui-smoke.mjs",
     "test:cast:fake": "node test/cast-fake-receiver.mjs",

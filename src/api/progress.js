@@ -180,50 +180,57 @@ export async function getEpisodeProgress(slug, seasonId, episodeNumber, language
   };
 }
 
-/** @param {string} [p.title] titre de l'anime, pour « Reprendre » */
-export async function saveEpisodeProgress({
-  slug,
-  seasonId,
-  episodeNumber,
-  language,
-  positionSeconds,
-  duration,
-  title = null,
-  cover = null,
-  userId,
-}) {
-  // `true` = rien à renvoyer plus tard (enregistré, ou volontairement ignoré).
-  if (!userId || isGuestSession()) return true;
-
+/** Ligne `episode_progress` d'une sauvegarde de lecture. */
+function progressRow({ slug, seasonId, episodeNumber, language, positionSeconds, duration, title = null, cover = null, userId }) {
   const pct = duration > 0 ? Math.min((positionSeconds / duration) * 100, 100) : 0;
-  const completed = pct >= COMPLETION_THRESHOLD;
+  return {
+    user_id: dataOwnerId(userId),
+    episode_key: episodeKey(slug, seasonId, episodeNumber, language),
+    anime_slug: slug,
+    anime_title: cleanTitle(title),
+    anime_cover: cover,
+    season_id: String(seasonId),
+    episode_number: storedEpisodeNumber(episodeNumber),
+    language,
+    position_seconds: positionSeconds,
+    duration,
+    progress_percent: pct,
+    completed: pct >= COMPLETION_THRESHOLD,
+    hidden_from_resume: false, // re-regarder réaffiche l'anime dans « Reprendre »
+    updated_at: new Date().toISOString(),
+  };
+}
 
-  const { error } = await supabase.from("episode_progress").upsert(
-    {
-      user_id: dataOwnerId(userId),
-      episode_key: episodeKey(slug, seasonId, episodeNumber, language),
-      anime_slug: slug,
-      anime_title: cleanTitle(title),
-      anime_cover: cover,
-      season_id: String(seasonId),
-      episode_number: storedEpisodeNumber(episodeNumber),
-      language,
-      position_seconds: positionSeconds,
-      duration,
-      progress_percent: pct,
-      completed,
-      hidden_from_resume: false, // re-regarder réaffiche l'anime dans « Reprendre »
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: "user_id,episode_key" }
-  );
+/**
+ * Plusieurs positions en une requête. Une même clé n'y figure qu'une fois (la dernière) : Postgres
+ * refuse qu'un upsert touche deux fois la même ligne.
+ * `true` = rien à renvoyer plus tard (enregistré, ou volontairement ignoré).
+ */
+export async function saveEpisodeProgressBatch(entries) {
+  if (isGuestSession()) return true;
+  const byKey = new Map();
+  for (const entry of entries) {
+    if (!entry?.userId) continue;
+    const row = progressRow(entry);
+    byKey.set(`${row.user_id}|${row.episode_key}`, row);
+  }
+  if (byKey.size === 0) return true;
+
+  const { error } = await supabase
+    .from("episode_progress")
+    .upsert([...byKey.values()], { onConflict: "user_id,episode_key" });
   if (error) {
     console.warn("[progress] save échouée:", error.message);
     return false;
   }
-  expireProfileProgress(userId);
+  expireProfileProgress(entries.find((e) => e?.userId)?.userId);
   invalidateResumeCache();
   return true;
+}
+
+/** @param {string} [p.title] titre de l'anime, pour « Reprendre » */
+export function saveEpisodeProgress(entry) {
+  return saveEpisodeProgressBatch([entry]);
 }
 
 /** Sans toucher à l'historique. */
