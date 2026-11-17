@@ -363,14 +363,29 @@ export async function getStudioPage(id) {
 }
 
 /** Recherche d'auteurs et de studios par leur nom, pour la barre de recherche. */
+const _peopleCache = new Map();
+
 export async function searchPeople(term, perPage = 3) {
+  const key = `${term?.trim().toLowerCase()}|${perPage}`;
   if (!term?.trim()) return [];
-  const data = await query(
+  if (_peopleCache.has(key)) return _peopleCache.get(key);
+  const request = loadPeople(term, perPage);
+  _peopleCache.set(key, request);
+  request.catch(() => _peopleCache.delete(key));
+  if (_peopleCache.size > 200) _peopleCache.delete(_peopleCache.keys().next().value);
+  return request;
+}
+
+async function loadPeople(term, perPage) {
+  // Hors de la file commune : une saisie ne doit pas attendre derrière les carrousels de
+  // la home. Une seule relance, la suggestion est périmée bien avant la troisième.
+  const data = await rawQuery(
     `query ($s: String, $n: Int) {
       staff: Page(perPage: $n) { staff(search: $s, sort: [SEARCH_MATCH, FAVOURITES_DESC]) { id name { full } image { medium } primaryOccupations } }
       studios: Page(perPage: $n) { studios(search: $s, sort: [SEARCH_MATCH, FAVOURITES_DESC]) { id name isAnimationStudio } }
     }`,
-    { s: term.trim(), n: perPage }
+    { s: term.trim(), n: perPage },
+    2
   );
   return [
     ...(data?.staff?.staff || []).map((p) => ({

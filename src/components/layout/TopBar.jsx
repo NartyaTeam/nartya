@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { platform } from "@/platform";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Search, X, Loader2, ArrowLeft, SlidersHorizontal } from "lucide-react";
@@ -24,9 +24,12 @@ export default function TopBar({ scrolled }) {
   const navigate = useNavigate();
   const displayTitle = useDisplayTitle();
   const { pathname, search } = useLocation();
+  // Côté scans, la barre ne cherche que des scans ; partout ailleurs, que des animes.
   const isMangaSearch =
     pathname === "/mangas" ||
-    (pathname === "/search" && new URLSearchParams(search).get("media") === "manga");
+    pathname.startsWith("/scan/") ||
+    (pathname === "/search" && new URLSearchParams(search).get("media") === "manga") ||
+    (pathname.startsWith("/anime/") && new URLSearchParams(search).get("tab") === "scans");
   const showBack =
     pathname.startsWith("/anime/") ||
     pathname.startsWith("/genre/") ||
@@ -44,8 +47,14 @@ export default function TopBar({ scrolled }) {
     pathname === "/party" ||
     pathname.startsWith("/tierlists");
   const [term, setTerm] = useState("");
-  const [results, setResults] = useState([]);
+  const [titles, setTitles] = useState([]);
+  const [people, setPeople] = useState([]);
   const [loading, setLoading] = useState(false);
+  const latestTerm = useRef("");
+  // Revenir en arrière dans la frappe (« fri » → « frie » → « fri ») reste instantané.
+  const titleCache = useRef(new Map());
+  // Auteurs et studios sous les titres : ils n'arrivent qu'une fois les titres affichés.
+  const results = useMemo(() => [...titles, ...people], [titles, people]);
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const boxRef = useRef(null);
@@ -81,7 +90,8 @@ export default function TopBar({ scrolled }) {
 
   useEffect(() => {
     setTerm("");
-    setResults([]);
+    setTitles([]);
+    setPeople([]);
     setOpen(false);
     setShowFilters(false);
     if (isMangaSearch) {
@@ -92,45 +102,53 @@ export default function TopBar({ scrolled }) {
   }, [isMangaSearch]);
 
   useEffect(() => {
-    if (!term.trim()) {
-      setResults([]);
+    const q = term.trim();
+    latestTerm.current = q;
+    if (!q) {
+      setTitles([]);
+      setPeople([]);
+      setLoading(false);
       return;
     }
+    const media = isMangaSearch ? "manga" : "anime";
     setLoading(true);
     const id = setTimeout(async () => {
       try {
-        let r;
-        // Auteurs et studios (AniList), à partir de 3 lettres pour ménager son quota.
-        const peopleRequest =
-          term.trim().length >= 3 ? searchPeople(term, 3).catch(() => []) : Promise.resolve([]);
-        if (isMangaSearch) {
-          r = (await searchAnimes(term, 8, "manga")).map((m) => ({ ...m, media: "manga" }));
-        } else {
-          // Un manga sans anime n'existe qu'au catalogue des scans : on le cherche aussi.
-          const [animes, mangas] = await Promise.all([
-            searchAnimes(term, 8, "anime"),
-            searchAnimes(term, 8, "manga").catch(() => []),
-          ]);
-          const seen = new Set(animes.map((a) => a.slug));
-          r = [
-            ...animes.map((a) => ({ ...a, media: "anime" })),
-            ...mangas.filter((m) => !seen.has(m.slug)).slice(0, 4).map((m) => ({ ...m, media: "manga" })),
-          ];
+        const key = `${media}|${q.toLowerCase()}`;
+        let found = titleCache.current.get(key);
+        if (!found) {
+          found = await searchAnimes(q, 8, media).catch(() => null);
+          if (found) titleCache.current.set(key, found);
+          if (titleCache.current.size > 100) titleCache.current.delete(titleCache.current.keys().next().value);
         }
-        const people = await peopleRequest;
-        r = [
-          ...r,
-          ...people.map((p) => ({ slug: `${p.kind}-${p.id}`, title: p.name, image: p.image, media: p.kind, id: p.id, detail: p.detail })),
-        ];
-        setResults(r);
+        found ||= [];
+        // Une réponse plus lente qu'une frappe suivante ne doit pas l'écraser.
+        if (latestTerm.current !== q) return;
+        setTitles(found.map((r) => ({ ...r, media })));
         setActiveIndex(-1);
         setOpen(true);
       } finally {
-        setLoading(false);
+        if (latestTerm.current === q) setLoading(false);
       }
-    }, 320);
+    }, 120);
     return () => clearTimeout(id);
   }, [term, isMangaSearch]);
+
+  useEffect(() => {
+    const q = term.trim();
+    setPeople([]);
+    // AniList est lent et plafonné : on attend que la frappe se calme.
+    if (q.length < 3) return;
+    const id = setTimeout(async () => {
+      const found = await searchPeople(q, 3).catch(() => []);
+      if (latestTerm.current !== q) return;
+      setPeople(
+        found.map((p) => ({ slug: `${p.kind}-${p.id}`, title: p.name, image: p.image, media: p.kind, id: p.id, detail: p.detail }))
+      );
+      setOpen(true);
+    }, 600);
+    return () => clearTimeout(id);
+  }, [term]);
 
   useEffect(() => {
     const onClick = (e) => {
@@ -348,12 +366,7 @@ export default function TopBar({ scrolled }) {
               const isPerson = a.media === "staff" || a.media === "studio";
               const prev = results[i - 1];
               const prevPerson = prev?.media === "staff" || prev?.media === "studio";
-              const header =
-                isPerson && !prevPerson
-                  ? "Auteurs et studios"
-                  : !isMangaSearch && a.media === "manga" && prev?.media !== "manga"
-                    ? "Scans"
-                    : null;
+              const header = isPerson && !prevPerson ? "Auteurs et studios" : null;
               return (
               <div key={`${a.media}:${a.slug}`}>
                 {header && (
