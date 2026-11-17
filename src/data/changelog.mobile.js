@@ -5,6 +5,52 @@
  */
 export const MOBILE_CHANGELOG = [
   {
+    version: "1.10.0",
+    date: "17 novembre 2026",
+    items: [
+      {
+        type: "new",
+        text: "La lecture et les téléchargements passent par un nouveau moteur, plus robuste. Les épisodes téléchargés sont fusionnés en un seul fichier vidéo et une notification t’avertit à la fin.",
+      },
+      {
+        type: "new",
+        text: "Watch Party refaite : un accueil et un salon façon Twitch, et c’est désormais le serveur qui décide de l’hôte et garde tout le monde synchronisé.",
+      },
+      {
+        type: "new",
+        text: "Tier lists : modes animes, personnages et musiques, vue en liste, recherche d’animes en menu déroulant et éditeur allégé.",
+      },
+      {
+        type: "new",
+        text: "Mangas : un nouvel accueil avec une sélection à la une, les derniers chapitres en liste et les tendances.",
+      },
+      {
+        type: "new",
+        text: "Profils : le dernier profil utilisé se rouvre tout seul pendant 12 h, et un profil unique s’ouvre directement.",
+      },
+      {
+        type: "improved",
+        text: "Les fiches s’ouvrent bien plus vite : la liste d’épisodes et les scans partent avec la fiche et sont gardés sur disque. L’accueil est gardé 6 h et le bouton Retour le rouvre instantanément.",
+      },
+      {
+        type: "improved",
+        text: "La recherche s’adapte à la page (animes, mangas, auteurs à part), et la page Équipe est refaite.",
+      },
+      {
+        type: "fixed",
+        text: "L’image enregistrée depuis la galerie d’une fiche se télécharge de nouveau correctement.",
+      },
+      {
+        type: "fixed",
+        text: "Un épisode regardé en x2 compte bien dans tes épisodes vus, et le statut « Terminé » n’est plus attribué à tort.",
+      },
+      {
+        type: "fixed",
+        text: "Fiches : la bannière retombe sur une autre source quand la première ne charge pas, et l’ordre des saisons suit celui de la fiche.",
+      },
+    ],
+  },
+  {
     version: "1.9.1",
     date: "31 octobre 2026",
     items: [
