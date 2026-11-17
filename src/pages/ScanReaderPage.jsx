@@ -652,6 +652,7 @@ export default function ScanReaderPage() {
         {canDownload && (
           <div className="flex h-9 w-9 items-center justify-center rounded-md text-white/80">
             <DownloadControl
+              compact
               download={localItem}
               onDownload={() => {
                 if (isGuest) return void toast.info(GUEST_FEATURE_MSG);

@@ -35,8 +35,8 @@ function isPastAirDate(dateValue) {
   return Date.now() > parsed.getTime();
 }
 
-/** Réutilisé pour les chapitres de scan. */
-export function DownloadControl({ download, resolving, onDownload, onCancel, onRemove }) {
+/** Réutilisé pour les chapitres de scan. `compact` : icône seule, pour une case de largeur fixe. */
+export function DownloadControl({ download, resolving, onDownload, onCancel, onRemove, compact = false }) {
   const status = download?.status;
 
   if (resolving || status === "queued" || status === "downloading") {
@@ -69,7 +69,7 @@ export function DownloadControl({ download, resolving, onDownload, onCancel, onR
         className="flex shrink-0 items-center gap-1.5 rounded-md px-2 py-1.5 text-xs text-accent transition-colors hover:bg-white/[0.06] hover:text-primary"
       >
         <Check size={15} />
-        <span className="hidden sm:inline">Hors ligne</span>
+        {!compact && <span className="hidden sm:inline">Hors ligne</span>}
       </button>
     );
   }
