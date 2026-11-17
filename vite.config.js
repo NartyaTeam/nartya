@@ -94,6 +94,8 @@ export default defineConfig(({ mode }) => ({
         changeOrigin: true,
         rewrite: (p) => p.replace(/^\/api/, ""),
         secure: false,
+        // Relais des watch parties (WebSocket).
+        ws: true,
       },
     },
   },

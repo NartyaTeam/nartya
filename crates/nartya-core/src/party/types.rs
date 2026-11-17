@@ -105,6 +105,10 @@ pub enum TransportStatus {
     Subscribed,
     Reconnecting,
     Lost,
+    /// Refus du serveur : salon inexistant, plein, ou connexion refusée (compte, bannissement).
+    NotFound,
+    Full,
+    Refused,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -232,8 +236,11 @@ pub enum Effect {
     Track {
         meta: Value,
     },
+    /// `host` : on se présente comme l'hôte (création, ou reconnexion de l'hôte) ; le serveur
+    /// tranche.
     Subscribe {
         channel: String,
+        host: bool,
     },
     Unsubscribe,
     Rpc {

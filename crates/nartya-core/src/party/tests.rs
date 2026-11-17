@@ -127,7 +127,7 @@ fn guest_with_episode() -> Engine {
 fn creation_ouvre_le_canal_puis_publie_l_etat() {
     let mut e = Engine::new();
     let out = open(&mut e, T0, "AB12CD", Intent::Create, "h", Some(desc(1)));
-    assert!(has(&out, |f| matches!(f, Effect::Subscribe { channel } if channel == "wp:AB12CD")));
+    assert!(has(&out, |f| matches!(f, Effect::Subscribe { channel, host: true } if channel == "wp:AB12CD")));
     assert_eq!(out.state.clone().unwrap().phase, Phase::Connecting);
 
     let out = subscribed(&mut e, T0 + 10);
@@ -154,13 +154,10 @@ fn delai_de_souscription_depasse() {
 #[test]
 fn salon_introuvable_apres_sonde() {
     let mut e = alone_guest();
-    // Seul dans le salon : la présence ne contient plus que nous.
-    // Seul dans le salon : la présence ne contient plus que nous, on est promu hôte.
+    // Seul, sans hôte désigné : personne ne se promeut, la sonde tranche.
     let out = presence(&mut e, T0 + 100, vec![member("g", T0, false, None)]);
-    let (restore, _) = rpcs(&out, "get_state").remove(0);
-    // Rien en base : un code tapé de travers ne crée pas de salon.
-    let out = e.handle(T0 + 150, Input::RpcResult { id: restore, ok: true, data: None });
-    assert!(rpcs(&out, "save_state").is_empty());
+    assert!(rpcs(&out, "get_state").is_empty());
+    assert_eq!(out.state.clone().unwrap().role, "guest");
     let out = e.poll(T0 + 10 + 2_500);
     let (id, _) = rpcs(&out, "get_state").remove(0);
     let out = e.handle(T0 + 2_600, Input::RpcResult { id, ok: true, data: None });
@@ -464,8 +461,8 @@ fn election_du_plus_ancien_et_releve_sans_retour_en_arriere() {
     );
     e.handle(T0 + 1_001, Input::PlayerTick { media_id: mid(1), position: 120.0, duration: 1400.0, paused: false });
 
-    // L'hôte part : le participant devient hôte sans relire la base.
-    let out = presence(&mut e, T0 + 3_000, vec![member("g", T0, false, None)]);
+    // L'hôte part, le serveur désigne le participant : il devient hôte sans relire la base.
+    let out = presence(&mut e, T0 + 3_000, vec![member("g", T0, true, None)]);
     let s = out.state.clone().unwrap();
     assert_eq!(s.role, "host");
     assert!(rpcs(&out, "get_state").is_empty());
@@ -482,7 +479,7 @@ fn releve_sans_etat_relit_la_base() {
     let mut e = Engine::new();
     open(&mut e, T0, "AB12CD", Intent::Join, "g", None);
     subscribed(&mut e, T0 + 10);
-    let out = presence(&mut e, T0 + 20, vec![member("g", T0, false, None)]);
+    let out = presence(&mut e, T0 + 20, vec![member("g", T0, true, None)]);
     let (id, _) = rpcs(&out, "get_state").remove(0);
     let row = json!({
         "current": desc(3), "queue": [desc(3)], "playback": { "currentTime": 42.0, "isPlaying": false },
@@ -906,4 +903,36 @@ fn duo_les_deux_moteurs_se_synchronisent() {
         "invité : pas de seek : {:?}",
         d.guest_fx
     );
+}
+
+#[test]
+fn un_invite_se_presente_sans_revendiquer_l_hote() {
+    let mut e = Engine::new();
+    let out = open(&mut e, T0, "AB12CD", Intent::Join, "g", None);
+    assert!(has(&out, |f| matches!(f, Effect::Subscribe { host: false, .. })));
+}
+
+#[test]
+fn refus_du_serveur() {
+    for (status, phase) in [
+        (TransportStatus::NotFound, Phase::NotFound),
+        (TransportStatus::Full, Phase::Full),
+        (TransportStatus::Refused, Phase::Lost),
+    ] {
+        let mut e = Engine::new();
+        open(&mut e, T0, "AB12CD", Intent::Join, "g", None);
+        let out = e.handle(T0 + 50, Input::Transport { status });
+        assert_eq!(out.state.clone().unwrap().phase, phase);
+        assert!(has(&out, |f| matches!(f, Effect::Unsubscribe)));
+    }
+}
+
+#[test]
+fn sans_hote_designe_personne_ne_prend_la_main() {
+    let mut e = guest_with_episode();
+    // L'hôte est coupé, le serveur lui laisse le temps de revenir : aucun hôte annoncé.
+    let out = presence(&mut e, T0 + 3_000, vec![member("g", T0, false, None), member("x", T0 - 50_000, false, None)]);
+    assert_eq!(out.state.clone().unwrap().role, "guest");
+    assert!(sends(&out, "current").is_empty());
+    assert!(out.state.unwrap().phase == Phase::InRoom);
 }

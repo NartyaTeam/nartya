@@ -2,6 +2,34 @@
 
 Statut : moteur implémenté et testé (2026-11-16, `crates/nartya-core/src/party/`, 39 tests). Branché sur Tauri (commande `party_input`, `platform.party`, `usePartyEngine`, `PartyRoomPage` réduite à l'affichage), pas encore testé à plusieurs clients. Android : `platform.party` reste `null`, la party n'y est pas proposée.
 
+## Transport : relais du serveur (2026-11-17)
+
+Le canal Supabase Realtime `wp:<code>` est remplacé par un WebSocket vers l'API
+(`wss://<api>/party/ws`, `api/src/party-relay.js`). Avant, quiconque connaissait le code pouvait
+émettre `playback`, `current` ou un `epoch` énorme et prendre la main, ou écrire dans le chat sous le
+nom d'un autre.
+
+- **Connexion** : premier message `{ t: "hello", token, code, clientId, claimHost, avatar }`. Le
+  jeton Supabase est vérifié (`auth.getUser`), comptes anonymes et bannis refusés. Pseudo, avatar
+  et abonnement viennent du profil ; l'avatar annoncé n'est gardé que s'il est celui du profil.
+- **Salon** : un code inconnu n'est ouvert que par `claimHost` (création) ou s'il existe en base
+  depuis moins de 6 h (reprise après un redémarrage du serveur). Sinon `not_found`. Capacité selon
+  l'abonnement de l'hôte (5, 10, illimité), sauf pour le propriétaire : `full`.
+- **Hôte** : désigné par le serveur, annoncé par `isHostClaim` dans la présence. Le moteur ne s'élit
+  plus jamais lui-même. Départ volontaire (`bye`) : relève immédiate (autre onglet du même compte,
+  sinon le plus ancien) ; coupure : 8 s pour revenir.
+- **Messages** : `playback`, `current`, `queue`, `options`, `source_pin`, `lang_changing`,
+  `clock_pong` ne sont relayés que depuis l'hôte. Les autres (`request_sync`, `clock_ping`,
+  `source_*`, `chat`, `reaction`) reçoivent l'identité de l'émetteur écrite par le serveur. Tout le
+  reste est jeté. Débit : 40 messages / 5 s par connexion, chat 8 / 10 s, 500 caractères.
+- **Serveur → client** : `welcome` (→ `transport: subscribed`), `presence`, `msg`, `error`
+  (`not_found`, `full`, `auth`, `forbidden` sont définitifs ; le reste se retente, 6 fois au plus).
+- **Effets** : `subscribe` porte `host` (revendication d'hôte), `track` n'a plus d'usage.
+  Entrées `transport` en plus : `not_found`, `full`, `refused`.
+
+Les anciens clients (Electron 1.40.1) restent sur Realtime : ils ne voient pas les salons du
+relais. Une fois Tauri publié, le canal `wp:*` pourra être fermé côté Realtime.
+
 ## Pourquoi
 
 Toute la logique vit aujourd'hui dans `src/hooks/useWatchParty.js` (803 lignes) et
@@ -150,8 +178,7 @@ Ajouts rétro-compatibles (champs ignorés par les anciens clients) :
 - `rev` sur `current` / `queue` / `options` : un participant détecte un trou et envoie `request_sync`.
 - `epoch` : incrémenté à chaque élection d'hôte ; un message d'un `epoch` périmé est ignoré.
 
-La sécurité réelle (empêcher un non-hôte d'émettre) ne peut pas venir du moteur côté client :
-elle demande le serveur autoritaire (étape 4 de la feuille de route).
+La sécurité réelle (empêcher un non-hôte d'émettre) vient du relais du serveur (voir « Transport »).
 
 ## Ce que le moteur absorbe
 
@@ -213,6 +240,6 @@ elle demande le serveur autoritaire (étape 4 de la feuille de route).
 - **Chat.** 8 messages par 10 s par expéditeur (à l'émission comme à la réception), 500 caractères.
 - **Compatibilité.** `current` est envoyé en enveloppe `{ descriptor, rev, epoch }` **et** avec les
   champs du descripteur à la racine, pour qu'un client non migré le lise toujours.
-- **Limites connues.** Les messages d'autorité portent l'époque, mais n'identifient pas l'émetteur :
-  un client malveillant peut toujours monter son `epoch`. Seul le serveur autoritaire règle ça.
+- **Limites connues.** Réglé par le relais (voir « Transport ») : l'époque n'est plus une
+  protection, seul l'hôte désigné par le serveur peut émettre les messages d'autorité.
 

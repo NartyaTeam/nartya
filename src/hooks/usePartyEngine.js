@@ -7,13 +7,22 @@ import { generatePartyCode, normalizePartyCode, isValidPartyCode } from "@/utils
 import { partyRpc } from "@/api/partyRoom";
 import { watchTick } from "@/api/progress";
 import { resolveAvatar } from "@/api/profile";
+import { getAbsoluteApiBaseUrl } from "@/config/config";
 
 /**
  * Pont entre la page et le moteur de watch party du cœur (`nartya-core/src/party`, contrat dans
- * `docs/WATCHPARTY-CONTRACT.md`). Il ne décide de rien : il relaie le transport Realtime vers le
+ * `docs/WATCHPARTY-CONTRACT.md`). Il ne décide de rien : il relaie les messages du serveur vers le
  * moteur, exécute ses ordres sur le lecteur et expose son instantané à l'affichage.
  */
 const MAX_CHAT = 200;
+const MAX_RECONNECTS = 6;
+
+/** Refus définitifs du serveur ; le reste (coupure, serveur indisponible) se retente. */
+const REFUSALS = { not_found: "not_found", full: "full", auth: "refused", forbidden: "refused" };
+
+function partySocketUrl() {
+  return `${getAbsoluteApiBaseUrl().replace(/^http/i, "ws")}/party/ws`;
+}
 
 export const DEFAULT_OPTIONS = {
   isPublic: false,
@@ -81,43 +90,82 @@ export function usePartyEngine() {
     [engine]
   );
 
-  // ---------- transport Realtime ----------
+  // ---------- transport : relais du serveur ----------
 
   const closeChannel = useCallback(() => {
-    const channel = channelRef.current;
+    const conn = channelRef.current;
     channelRef.current = null;
-    if (!channel) return;
-    try { channel.untrack(); } catch (_) {}
-    supabase.removeChannel(channel);
+    if (!conn) return;
+    clearTimeout(conn.retryTimer);
+    const ws = conn.ws;
+    if (!ws) return;
+    try {
+      if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ t: "bye" }));
+      ws.close(1000);
+    } catch (_) {}
   }, []);
 
   const openChannel = useCallback(
-    (name) => {
+    (name, claimHost) => {
       closeChannel();
-      const channel = supabase.channel(name, {
-        config: { broadcast: { self: false }, presence: { key: clientIdRef.current } },
-      });
-      channelRef.current = channel;
-      const pushPresence = () => {
-        if (channelRef.current !== channel) return;
-        const members = Object.values(channel.presenceState())
-          .map((metas) => metas[0])
-          .filter(Boolean)
-          .map((m) => ({ ...m, username: m.username || "", joinedAt: Number(m.joinedAt) || 0 }));
-        input({ type: "presence", members });
-      };
-      channel
-        .on("broadcast", { event: "*" }, ({ event, payload }) => {
-          input({ type: "message", event, payload });
-        })
-        .on("presence", { event: "sync" }, pushPresence)
-        .subscribe((status) => {
-          if (channelRef.current !== channel) return;
-          if (status === "SUBSCRIBED") input({ type: "transport", status: "subscribed" });
-          else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
-            input({ type: "transport", status: "reconnecting" });
+      const conn = { code: name.replace(/^wp:/, ""), ws: null, failures: 0, retryTimer: null, done: false };
+      channelRef.current = conn;
+      const live = () => channelRef.current === conn;
+
+      const connect = (asHost) => {
+        if (!live()) return;
+        const ws = new WebSocket(partySocketUrl());
+        conn.ws = ws;
+        ws.onopen = async () => {
+          const { data } = await supabase.auth.getSession();
+          if (!live() || conn.ws !== ws || ws.readyState !== WebSocket.OPEN) return;
+          ws.send(
+            JSON.stringify({
+              t: "hello",
+              token: data?.session?.access_token || "",
+              code: conn.code,
+              clientId: clientIdRef.current,
+              claimHost: !!asHost,
+              avatar: meRef.current.avatar || null,
+            })
+          );
+        };
+        ws.onmessage = (ev) => {
+          if (!live() || conn.ws !== ws) return;
+          let msg;
+          try {
+            msg = JSON.parse(ev.data);
+          } catch (_) {
+            return;
           }
-        });
+          if (msg.t === "welcome") {
+            conn.failures = 0;
+            input({ type: "transport", status: "subscribed" });
+          } else if (msg.t === "presence") {
+            input({ type: "presence", members: msg.members || [] });
+          } else if (msg.t === "msg") {
+            input({ type: "message", event: msg.event, payload: msg.payload });
+          } else if (msg.t === "error") {
+            const status = REFUSALS[msg.code];
+            if (status) {
+              conn.done = true;
+              input({ type: "transport", status });
+            }
+          }
+        };
+        ws.onclose = () => {
+          if (!live() || conn.ws !== ws || conn.done) return;
+          conn.failures += 1;
+          if (conn.failures > MAX_RECONNECTS) {
+            input({ type: "transport", status: "lost" });
+            return;
+          }
+          input({ type: "transport", status: "reconnecting" });
+          const delay = Math.min(8000, 500 * 2 ** (conn.failures - 1));
+          conn.retryTimer = setTimeout(() => connect(snapRef.current.role === "host"), delay);
+        };
+      };
+      connect(claimHost);
     },
     [closeChannel, input]
   );
@@ -129,17 +177,21 @@ export function usePartyEngine() {
       const player = playerRef.current;
       switch (fx.type) {
         case "subscribe":
-          openChannel(fx.channel);
+          openChannel(fx.channel, !!fx.host);
           break;
         case "unsubscribe":
           closeChannel();
           break;
         case "track":
-          channelRef.current?.track(fx.meta);
+          // La présence (identité, hôte) est tenue par le serveur.
           break;
-        case "send":
-          channelRef.current?.send({ type: "broadcast", event: fx.event, payload: fx.payload });
+        case "send": {
+          const ws = channelRef.current?.ws;
+          if (ws?.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ t: "send", event: fx.event, payload: fx.payload }));
+          }
           break;
+        }
         case "rpc":
           partyRpc(fx.name, fx.args).then((res) =>
             input({ type: "rpc_result", id: fx.id, ok: !!res.ok, data: res.data ?? null })
@@ -219,7 +271,7 @@ export function usePartyEngine() {
     };
   }, [engine]);
 
-  // Quitter la page ferme le salon côté moteur et côté Realtime.
+  // Quitter la page ferme le salon côté moteur et côté serveur.
   useEffect(
     () => () => {
       input({ type: "close" });

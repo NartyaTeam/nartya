@@ -312,7 +312,7 @@ impl Engine {
             self.queue = seed.iter().cloned().collect();
             self.current = seed;
         }
-        self.out.push(Effect::Subscribe { channel: format!("{CHANNEL_PREFIX}{code}") });
+        self.out.push(Effect::Subscribe { channel: format!("{CHANNEL_PREFIX}{code}"), host: self.is_host });
         self.dirty = true;
     }
 
@@ -380,6 +380,18 @@ impl Engine {
             TransportStatus::Lost => {
                 self.out.push(Effect::Unsubscribe);
                 self.teardown(Phase::Lost, Some("Connexion au salon impossible.".into()));
+            }
+            TransportStatus::NotFound => {
+                self.out.push(Effect::Unsubscribe);
+                self.teardown(Phase::NotFound, None);
+            }
+            TransportStatus::Full => {
+                self.out.push(Effect::Unsubscribe);
+                self.teardown(Phase::Full, None);
+            }
+            TransportStatus::Refused => {
+                self.out.push(Effect::Unsubscribe);
+                self.teardown(Phase::Lost, Some("Le salon a refusé la connexion.".into()));
             }
         }
     }
@@ -452,9 +464,9 @@ impl Engine {
             self.out.push(Effect::Track { meta: self.track_meta(&me) });
         }
 
-        if !am_host {
-            let cap = capacity_for(host.as_ref().and_then(|h| h.premium.as_deref()));
-            if let Some(cap) = cap {
+        // Sans hôte (relève en cours côté serveur), on ne connaît pas la capacité.
+        if let Some(host) = host.as_ref().filter(|_| !am_host) {
+            if let Some(cap) = capacity_for(host.premium.as_deref()) {
                 let idx = self.ordered().iter().position(|m| m.client_id == me.client_id);
                 if idx.is_some_and(|i| i >= cap) {
                     self.out.push(Effect::Unsubscribe);
@@ -472,9 +484,9 @@ impl Engine {
         v
     }
 
+    /// L'hôte est désigné par le serveur du salon ; aucun client ne s'élit lui-même.
     fn effective_host(&self) -> Option<&Member> {
-        let ordered = self.ordered();
-        ordered.iter().find(|m| m.is_host_claim).or_else(|| ordered.first()).copied()
+        self.ordered().into_iter().find(|m| m.is_host_claim)
     }
 
     fn promote(&mut self, now: u64, me: &Me) {
