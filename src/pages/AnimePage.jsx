@@ -6,6 +6,7 @@ import { clipTitle, titleSizeClass } from "@/utils/displayTitle";
 import HeroBanner from "@/components/ui/HeroBanner";
 import { getAnimeScans } from "@/api/animeApi";
 import { animeCacheKey, ANIME_CACHE_OPTIONS, loadAnime } from "@/api/animeLoad";
+import { prefetchAnimeOpening } from "@/api/animePrefetch";
 import { getLastWatched } from "@/api/progress";
 import { revalidateKey, useCachedResource } from "@/hooks/useCachedResource";
 import { useDiscordPresence } from "@/hooks/useDiscordPresence";
@@ -57,6 +58,14 @@ export default function AnimePage() {
     10 * 60 * 1000,
     ANIME_CACHE_OPTIONS
   );
+
+  // Épisodes et scans partent avec la fiche plutôt qu'après elle.
+  const urlSeason = searchParams.get("season");
+  useEffect(() => {
+    prefetchAnimeOpening(slug, { lite: liteMode, seasonId: urlSeason });
+    // La saison de l'URL ne compte qu'à l'ouverture : la changer ensuite passe par la section.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slug, liteMode]);
 
   // Fiche servie sans les données AniList (note, tags, relations) : le serveur les complète en
   // quelques secondes, on relit donc la fiche, deux fois au plus.

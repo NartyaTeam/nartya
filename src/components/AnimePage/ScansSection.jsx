@@ -417,15 +417,7 @@ export function ScansSection({ slug, scans = [], animeTitle, animeCover, onRepor
           className="mx-auto flex max-w-3xl animate-fade-in flex-col gap-2 scroll-mt-32"
         >
           {Array.from({ length: pages }, (_, i) => i + 1).map((p) => (
-            <img
-              key={p}
-              src={scanPageUrl(imageBase, active.oeuvre, folder, p)}
-              alt={`Page ${p}`}
-              loading="lazy"
-              decoding="async"
-              draggable={false}
-              className="cv-auto block w-full"
-            />
+            <ScanPage key={p} src={scanPageUrl(imageBase, active.oeuvre, folder, p)} page={p} />
           ))}
 
           <div className="flex items-center justify-between gap-3 pt-4">
@@ -447,5 +439,32 @@ export function ScansSection({ slug, scans = [], animeTitle, animeCover, onRepor
         </div>
       )}
     </section>
+  );
+}
+
+/**
+ * Une page sans hauteur avant chargement tient « dans l'écran » : le navigateur chargeait
+ * alors tout le chapitre d'un coup (25 pages, 8 Mo). La réserve de place laisse le
+ * chargement paresseux ne prendre que les pages proches.
+ */
+function ScanPage({ src, page }) {
+  const [ratio, setRatio] = useState(null);
+  const first = page <= 2;
+  return (
+    <div className="w-full bg-surface/40" style={ratio ? undefined : { aspectRatio: "2 / 3" }}>
+      <img
+        src={src}
+        alt={`Page ${page}`}
+        loading={first ? "eager" : "lazy"}
+        fetchpriority={page === 1 ? "high" : "auto"}
+        decoding="async"
+        draggable={false}
+        onLoad={(event) => {
+          const image = event.currentTarget;
+          if (image.naturalWidth) setRatio(image.naturalWidth / image.naturalHeight);
+        }}
+        className="block w-full"
+      />
+    </div>
   );
 }
