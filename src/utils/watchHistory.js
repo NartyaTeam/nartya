@@ -1,4 +1,5 @@
 import { getSeasonEpisodes, getAllEpisodes } from "@/api/animeApi";
+import { EPISODES_FETCH_CONCURRENCY, mapLimit } from "@/lib/mapLimit";
 
 /** Clé `${slug}:${seasonId}` : l'enrichissement revient sans scintillement sur une page. */
 // -> { images: Map<number,string>, airDates: Map<number,string>, seasonName, numbers: number[] }
@@ -158,8 +159,10 @@ export async function enrichHistoryItems(items) {
       groups.set(key, { slug: item.slug, seasonId: item.seasonId });
     }
   }
-  await Promise.all(
-    [...groups.values()].map(async ({ slug, seasonId }) => {
+  await mapLimit(
+    [...groups.values()],
+    EPISODES_FETCH_CONCURRENCY,
+    async ({ slug, seasonId }) => {
       try {
         const data = await getSeasonEpisodes(slug, seasonId);
         const images = new Map();
@@ -182,7 +185,7 @@ export async function enrichHistoryItems(items) {
       } catch {
         /* repli dans mapItem (cover + libellé dérivé) */
       }
-    })
+    }
   );
   return items.map(mapItem);
 }

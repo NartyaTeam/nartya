@@ -1,6 +1,7 @@
 import { supabase } from "@/lib/supabase";
 import { getSeasonEpisodes, postFn } from "@/api/animeApi";
 import { isPremiumActive, premiumTier } from "@/lib/premium";
+import { EPISODES_FETCH_CONCURRENCY, mapLimit } from "@/lib/mapLimit";
 
 /** Tokens de la colonne `accent_color`. */
 const THEMES = {
@@ -341,8 +342,10 @@ export async function getEpisodeMeta(items) {
   }
 
   const now = Date.now();
-  await Promise.all(
-    [...groups.values()].map(async ({ slug, seasonId, items: seasonItems }) => {
+  await mapLimit(
+    [...groups.values()],
+    EPISODES_FETCH_CONCURRENCY,
+    async ({ slug, seasonId, items: seasonItems }) => {
       const data = await getSeasonEpisodes(slug, seasonId).catch(() => null);
       const episodes = data?.episodes || [];
       const season = data?.seasonName || seasonLabelFromId(seasonId);
@@ -361,7 +364,7 @@ export async function getEpisodeMeta(items) {
         metas[key] = meta;
         episodeMetaCache.set(key, { meta, ts: now });
       }
-    })
+    }
   );
   return metas;
 }
