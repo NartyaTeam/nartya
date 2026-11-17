@@ -6,6 +6,7 @@ import TopBar from "./TopBar";
 import ScrollToTopButton from "./ScrollToTopButton";
 import ReleaseNotifier from "@/components/ReleaseNotifier";
 import { useScrollRestoration } from "@/hooks/useScrollRestoration";
+import { useInstantBackNavigation } from "@/hooks/useInstantBackNavigation";
 import AppBackdrop from "./AppBackdrop";
 
 const DEFAULT_GLOW = "radial-gradient(80% 50% at 80% -10%, rgb(var(--primary) / 0.14), transparent 60%)";
@@ -14,6 +15,7 @@ export default function AppLayout() {
   const [scrolled, setScrolled] = useState(false);
   const mainRef = useRef(null);
   useScrollRestoration(mainRef);
+  useInstantBackNavigation();
 
   return (
     <div className="flex h-full w-full overflow-hidden bg-bg">
