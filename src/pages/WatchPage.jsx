@@ -217,11 +217,12 @@ export default function WatchPage() {
       type: "watching",
       animeTitle,
       animeSlug: slug,
+      animeCover,
       episodeNumber: epNumber,
       seasonNumber,
       episodeTitle: currentEpisode?.title,
     },
-    [animeTitle, slug, epNumber, seasonNumber, currentEpisode?.title]
+    [animeTitle, slug, animeCover, epNumber, seasonNumber, currentEpisode?.title]
   );
 
   const [videoUrl, setVideoUrl] = useState(null);

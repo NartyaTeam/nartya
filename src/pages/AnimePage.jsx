@@ -259,8 +259,8 @@ export default function AnimePage() {
   };
 
   useDiscordPresence(
-    { type: "anime", animeTitle: title, animeSlug: streamingSlug || slug },
-    [title, streamingSlug, slug]
+    { type: "anime", animeTitle: title, animeSlug: streamingSlug || slug, animeCover: cover },
+    [title, streamingSlug, slug, cover]
   );
 
   // Signalement contextuel : chaque section fournit son contexte. Réservé aux membres connectés.

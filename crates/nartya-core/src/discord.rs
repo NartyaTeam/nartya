@@ -75,6 +75,13 @@ fn text(value: &Value) -> Option<String> {
     }
 }
 
+/// Discord n'affiche que des URL http(s) d'au plus 256 caractères ; sinon on garde le logo.
+fn poster_url(value: &Value) -> Option<String> {
+    let url = value.as_str()?.trim();
+    let valid = (url.starts_with("https://") || url.starts_with("http://")) && url.len() <= 256;
+    valid.then(|| url.to_string())
+}
+
 fn now_ms() -> u64 {
     std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
@@ -173,13 +180,22 @@ pub fn build_activity(params: &Value, start_ms: u64) -> Value {
             buttons(false),
         ),
     };
+    let assets = match poster_url(&params["animeCover"]) {
+        Some(poster) => json!({
+            "large_image": poster,
+            "large_text": large_text.unwrap_or_else(|| "Nartya — Streaming Anime".into()),
+            "small_image": LOGO_URL,
+            "small_text": "Nartya",
+        }),
+        None => json!({
+            "large_image": LOGO_URL,
+            "large_text": large_text.unwrap_or_else(|| "Nartya — Streaming Anime".into()),
+        }),
+    };
     json!({
         "details": details,
         "state": state,
-        "assets": {
-            "large_image": LOGO_URL,
-            "large_text": large_text.unwrap_or_else(|| "Nartya — Streaming Anime".into()),
-        },
+        "assets": assets,
         "buttons": buttons,
         "timestamps": { "start": start_ms },
         "instance": false,
@@ -387,6 +403,20 @@ mod tests {
         assert_eq!(s1["details"], "Regarde un anime");
         let no_ep = build_activity(&json!({ "type": "watching", "episodeTitle": "Film" }), 1);
         assert_eq!(no_ep["state"], "Film");
+    }
+
+    #[test]
+    fn affiche_en_grande_image_logo_en_petite() {
+        let a = build_activity(&json!({
+            "type": "watching", "animeCover": "https://img.example/poster.jpg"
+        }), 1);
+        assert_eq!(a["assets"]["large_image"], "https://img.example/poster.jpg");
+        assert_eq!(a["assets"]["small_image"], LOGO_URL);
+        for bad in [json!("/local/poster.jpg"), json!(""), json!(null), json!(format!("https://x/{}", "a".repeat(260)))] {
+            let a = build_activity(&json!({ "type": "anime", "animeCover": bad }), 1);
+            assert_eq!(a["assets"]["large_image"], LOGO_URL);
+            assert!(a["assets"].get("small_image").is_none());
+        }
     }
 
     #[test]
