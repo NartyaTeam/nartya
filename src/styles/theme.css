@@ -17,8 +17,7 @@
 }
 
 /* Classe sur :root : coupe le grain et neutralise animations et transitions. */
-.reduce-motion .grain-overlay,
-.theme-no-grain .grain-overlay {
+.reduce-motion .grain-overlay {
   display: none;
 }
 .reduce-motion *,

@@ -1,6 +1,5 @@
 import { create } from "zustand";
 import { applyTheme, applyReduceMotion, DEFAULT_PRESET, DEFAULT_CUSTOM_COLOR } from "@/utils/theme";
-import { validateTheme } from "@/lib/themeFormat";
 import { SELECTABLE_SOURCE_KEYS } from "@/utils/videoSourceUtils";
 
 /** Persisté par machine. Un nouveau réglage s'ajoute dans DEFAULTS, sans autre câblage. */
@@ -15,7 +14,6 @@ const DEFAULTS = {
   playbackQuality: "auto", // "auto" (ABR) | "1080" | "720" | "480" | "360", HLS uniquement
   themePreset: DEFAULT_PRESET, // clé de THEME_PRESETS, ou "custom"
   customColor: DEFAULT_CUSTOM_COLOR, // teinte hex quand themePreset === "custom"
-  activeTheme: null, // thème communautaire installé (objet validé par themeFormat), prioritaire sur le preset
   autoSkip: true,
   skipButtonEnabled: true,
   autoSkipOpEd: false,
@@ -50,11 +48,6 @@ function load() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return { ...DEFAULTS };
     const stored = { ...DEFAULTS, ...JSON.parse(raw) };
-    // Un thème stocké est revalidé : un fichier modifié à la main ne passe pas.
-    if (stored.activeTheme) {
-      const checked = validateTheme(stored.activeTheme);
-      stored.activeTheme = checked.ok ? { ...checked.theme, id: stored.activeTheme.id ?? null } : null;
-    }
     if (stored.prioritySource !== "auto" && !isKnownSourceKey(stored.prioritySource)) {
       stored.prioritySource = DEFAULTS.prioritySource;
     }
@@ -78,7 +71,7 @@ export const useSettingsStore = create((set, get) => ({
     if (!(key in DEFAULTS)) return;
     set({ [key]: value });
     persist(get());
-    if (key === "themePreset" || key === "customColor" || key === "activeTheme") applyTheme(get());
+    if (key === "themePreset" || key === "customColor") applyTheme(get());
     if (key === "reduceMotion") applyReduceMotion(value);
   },
 

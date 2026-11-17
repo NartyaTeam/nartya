@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { NavLink, useLocation } from "react-router-dom";
-import { Heart, User, LogIn, LogOut, ArrowLeftRight, Clapperboard, Download, Settings, ListChecks, HelpCircle, CalendarDays, Bug, Trophy, Compass, Sparkles, ChevronDown, UserPlus, BookOpen, Search, Library, MessagesSquare, Activity, Users, History, LayoutList, Palette } from "lucide-react";
+import { Heart, User, LogIn, LogOut, ArrowLeftRight, Clapperboard, Download, Settings, ListChecks, HelpCircle, CalendarDays, Bug, Trophy, Compass, Sparkles, ChevronDown, UserPlus, BookOpen, Search, Library, MessagesSquare, Activity, Users, History, LayoutList } from "lucide-react";
 import BugReportModal from "@/components/BugReportModal";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useNetworkStore } from "@/stores/useNetworkStore";
@@ -27,7 +27,7 @@ const TRANS = "250ms cubic-bezier(0.4,0,0.2,1)";
 
 // Pour ouvrir le bon groupe. Le préfixe le plus long l'emporte.
 const GROUP_ROUTES = {
-  parcourir: ["/", "/mangas", "/recherche", "/planning", "/prochainement", "/party", "/tierlists", "/leaderboard", "/themes"],
+  parcourir: ["/", "/mangas", "/recherche", "/planning", "/prochainement", "/party", "/tierlists", "/leaderboard"],
   bibliotheque: ["/favorites", "/my-lists", "/history", "/downloads"],
   profil: ["/profile", "/communaute"],
   studio: ["/reports", "/uptime", "/faq"],
@@ -263,7 +263,6 @@ export default function Sidebar() {
                 )}
                 <Item to="/tierlists" icon={LayoutList} label="Tier lists" expanded={expanded} nested />
                 <Item to="/leaderboard" icon={Trophy} label="Classement" expanded={expanded} nested />
-                <Item to="/themes" icon={Palette} label="Thèmes" expanded={expanded} nested />
               </Group>
             )}
 
