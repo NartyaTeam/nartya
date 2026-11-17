@@ -16,6 +16,7 @@ import {
   readLastSeenChangelogVersion,
 } from "@/lib/changelog";
 import { compareVersions } from "@/lib/semver";
+import { RUST_INTRO_DONE_EVENT, rustIntroPending } from "@/components/RustIntro";
 
 /**
  * Version installée comparée à la dernière vue (localStorage). Sur Android, une installation
@@ -42,7 +43,17 @@ export default function WhatsNew() {
     if (!session || !profile) return;
     let cancelled = false;
 
+    // L'annonce Rust passe avant le Quoi de neuf.
+    const waitForIntro = () =>
+      rustIntroPending()
+        ? new Promise((resolve) =>
+            window.addEventListener(RUST_INTRO_DONE_EVENT, resolve, { once: true }),
+          )
+        : null;
+
     (async () => {
+      await waitForIntro();
+      if (cancelled) return;
       let current;
       try {
         current = await platform.getVersion();

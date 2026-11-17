@@ -73,6 +73,7 @@ const ProfileArtPreviewPage = import.meta.env.DEV
 // Les composants propres au desktop n'alourdissent pas le mobile.
 const DiscordPresence = lazy(() => import("@/components/DiscordPresence"));
 const WhatsNew = lazy(() => import("@/components/WhatsNew"));
+const RustIntro = lazy(() => import("@/components/RustIntro"));
 const DiscoverHub = lazy(() => import("@/components/DiscoverHub"));
 const AnnouncementNotifier = lazy(() => import("@/components/AnnouncementNotifier"));
 const AnnouncementsPanel = lazy(() => import("@/components/announcements/AnnouncementsPanel"));
@@ -269,6 +270,7 @@ export default function App() {
     <UpdatePolicyProvider value={versionGate}>
       <WatchPartyProvider>
       <Suspense fallback={null}>
+        <RustIntro />
         <WhatsNew />
       </Suspense>
       {!platform.isMobile && (
