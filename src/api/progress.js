@@ -15,6 +15,32 @@ let resumeCache = { userId: null, rows: null, ts: 0, promise: null };
 
 function invalidateResumeCache() {
   resumeCache = { userId: null, rows: null, ts: 0, promise: null };
+  animeRowsCache.clear();
+}
+
+// Une fiche lisait la progression du même anime trois fois (dernier épisode vu, épisodes vus,
+// mentions des commentaires) : une seule lecture les sert toutes. Vidé à chaque écriture.
+const ANIME_ROWS_CACHE_MS = 10_000;
+const animeRowsCache = new Map();
+
+function getAnimeProgressRows(slug) {
+  const hit = animeRowsCache.get(slug);
+  if (hit && Date.now() - hit.ts < ANIME_ROWS_CACHE_MS) return hit.promise;
+  const promise = supabase
+    .from("episode_progress")
+    .select("user_id, season_id, episode_number, episode_key, language, progress_percent, completed, updated_at")
+    .eq("anime_slug", slug)
+    .order("updated_at", { ascending: false })
+    .then(({ data, error }) => {
+      if (error || !data) {
+        animeRowsCache.delete(slug);
+        return null;
+      }
+      return data;
+    });
+  animeRowsCache.set(slug, { ts: Date.now(), promise });
+  if (animeRowsCache.size > 20) animeRowsCache.delete(animeRowsCache.keys().next().value);
+  return promise;
 }
 
 async function getResumeRows() {
@@ -345,15 +371,10 @@ export async function getContinueWatching(limit = 12) {
 
 export async function getLastWatched(slug, userId) {
   if (!userId || !slug) return null;
-  const { data, error } = await supabase
-    .from("episode_progress")
-    .select("season_id, episode_number, language, progress_percent, completed, updated_at")
-    .eq("user_id", dataOwnerId(userId))
-    .eq("anime_slug", slug)
-    .order("updated_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  if (error || !data) return null;
+  const owner = dataOwnerId(userId);
+  // Lignes triées de la plus récente à la plus ancienne.
+  const data = (await getAnimeProgressRows(slug))?.find((row) => row.user_id === owner);
+  if (!data) return null;
   return {
     seasonId: data.season_id,
     episodeNumber: data.episode_number,
@@ -401,11 +422,8 @@ export async function getFavoritesProgress() {
 
 /** Indexée par `${seasonId}:${episodeNumber}`, toutes langues confondues. */
 export async function getAnimeProgressMap(slug) {
-  const { data, error } = await supabase
-    .from("episode_progress")
-    .select("season_id, episode_number, episode_key, progress_percent, completed")
-    .eq("anime_slug", slug);
-  if (error || !data) return {};
+  const data = await getAnimeProgressRows(slug);
+  if (!data) return {};
   const map = {};
   for (const row of data) {
     // La colonne est entière (11.001 → 11) : le vrai numéro est dans `episode_key`.

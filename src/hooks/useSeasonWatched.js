@@ -25,10 +25,18 @@ export function useSeasonWatched({
   // Ancre du Maj-clic de plage.
   const lastToggledRef = useRef(null);
 
+  // Sur l'identifiant et pas l'objet session, que chaque renouvellement de jeton remplace.
+  const userId = session?.user?.id ?? null;
   useEffect(() => {
-    if (!session || !slug) return setProgressMap({});
-    getAnimeProgressMap(slug).then(setProgressMap).catch(() => {});
-  }, [session, slug]);
+    if (!userId || !slug) return setProgressMap({});
+    let alive = true;
+    getAnimeProgressMap(slug)
+      .then((map) => alive && setProgressMap(map))
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [userId, slug]);
 
   // Maj+clic applique le même état à toute la plage depuis l'ancre.
   const toggleWatched = (clickedIndex, shiftKey) => {
