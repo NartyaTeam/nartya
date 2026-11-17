@@ -4,6 +4,7 @@ import { authOwnedByHub } from "@/lib/hubAuth";
 import { getCaptchaToken } from "@/lib/captcha";
 import { countPasswordLeaks } from "@/lib/passwordSafety";
 import { platform } from "@/platform";
+import { forgetRememberedProfile } from "@/lib/profileSession";
 import { postFn } from "@/api/animeApi";
 import {
   classifySession,
@@ -555,6 +556,8 @@ export const useAuthStore = create((set, get) => ({
     } catch (_) {}
     // Scope local : le scope global par défaut révoquerait les sessions des autres appareils.
     await supabase.auth.signOut({ scope: "local" });
+    // La prochaine connexion redemande « Qui est là ? ».
+    forgetRememberedProfile();
     set({
       session: null,
       user: null,

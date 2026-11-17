@@ -14,6 +14,11 @@ import {
   updateOpenProfile,
   clearProfileSession,
   onProfileSessionExpired,
+  rememberProfile,
+  profileToAutoOpen,
+  forgetRememberedProfile,
+  requestProfilePick,
+  takeProfilePickRequest,
 } from "@/lib/profileSession";
 
 /**
@@ -47,9 +52,18 @@ export const useProfilesStore = create((set, get) => ({
       status: open ? "ready" : "loading",
       error: null,
     });
+    const pickAsked = takeProfilePickRequest();
     try {
-      await get().refresh();
-      if (!open) set({ status: "picking" });
+      const profiles = await get().refresh();
+      if (open) return;
+      const auto = pickAsked ? null : profileToAutoOpen(profiles, accountId);
+      if (auto) {
+        const res = await get()
+          .enter(auto)
+          .catch(() => null);
+        if (res?.ok) return;
+      }
+      set({ status: "picking" });
     } catch (e) {
       // Liste illisible (réseau, serveur pas encore à jour) : l'app s'ouvre sur le profil
       // principal, comme avant les profils. Un refus de la base ramènera « Qui est là ? ».
@@ -71,6 +85,7 @@ export const useProfilesStore = create((set, get) => ({
     const res = await enterAccountProfile(profile.id, pin);
     if (!res?.ok) return { ok: false, error: res?.error, retryAfter: res?.retry_after ?? null };
     setProfileSession({ accountId: get().accountId, token: res.token, profile: res.profile });
+    rememberProfile(get().accountId, res.profile.id);
     if (get().reloadAfterEnter) {
       window.location.reload();
       return { ok: true };
@@ -87,6 +102,8 @@ export const useProfilesStore = create((set, get) => ({
       /* le jeton expirera de lui-même */
     }
     clearProfileSession();
+    forgetRememberedProfile();
+    requestProfilePick();
     window.location.reload();
   },
 
@@ -95,6 +112,7 @@ export const useProfilesStore = create((set, get) => ({
     const { status, accountId } = get();
     if (!accountId || status === "picking" || status === "loading") return;
     clearProfileSession();
+    forgetRememberedProfile();
     set({ status: "picking", active: null, reloadAfterEnter: true });
     get()
       .refresh()
@@ -129,3 +147,17 @@ export const useProfilesStore = create((set, get) => ({
 }));
 
 onProfileSessionExpired(() => useProfilesStore.getState().expire());
+
+// Tant qu'un profil est ouvert, l'heure de dernière utilisation avance : c'est elle qui décide
+// si le prochain lancement le rouvre directement.
+const TOUCH_MS = 5 * 60 * 1000;
+if (typeof window !== "undefined") {
+  const touch = () => {
+    if (useProfilesStore.getState().status === "ready") rememberProfile();
+  };
+  setInterval(touch, TOUCH_MS);
+  window.addEventListener("pagehide", touch);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") touch();
+  });
+}
