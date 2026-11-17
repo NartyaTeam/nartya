@@ -83,9 +83,10 @@ const wanted = {
 mkdirSync(path("release/tauri"), { recursive: true });
 for (const w of wanted) {
   const dir = path(`target/release/bundle/${w.dir}`);
-  const found = existsSync(dir) && readdirSync(dir).find((f) => f.endsWith(w.ext));
+  // Le dossier garde les installeurs des versions précédentes : on ne prend que celui de cette version.
+  const found = existsSync(dir) && readdirSync(dir).find((f) => f.endsWith(w.ext) && f.includes(`_${version}_`));
   if (!found) {
-    console.error(`[bundle] installeur attendu introuvable dans ${dir} (*${w.ext})`);
+    console.error(`[bundle] installeur de la ${version} introuvable dans ${dir} (*_${version}_*${w.ext})`);
     process.exit(1);
   }
   const out = path(`release/tauri/${w.out}`);
