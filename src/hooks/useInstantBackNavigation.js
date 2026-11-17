@@ -3,15 +3,15 @@ import { useLocation, useNavigationType } from "react-router-dom";
 
 /**
  * Les pages entrent avec un fondu de 0,6 s (`animate-fade-in`) : sur « Retour », la page d'avant
- * réapparaissait presque transparente et semblait mettre du temps à répondre. Pendant une
- * navigation en arrière, `html[data-nav-pop]` coupe ces fondus (cf. index.css) ; l'attribut
- * retombe juste après, pour que les fenêtres ouvertes ensuite gardent le leur.
+ * réapparaissait presque transparente et semblait mettre du temps à répondre. Après un retour,
+ * `--fade-delay` vaut -1 s : les fondus démarrent à leur état final, sans changer d'animation
+ * (en retirer le nom les relancerait depuis zéro, d'où un flash noir). Toute navigation vers
+ * l'avant rend aux pages leur fondu.
  */
-const POP_WINDOW_MS = 900;
+const SKIP_FADE = "-1s";
 
 // Le premier affichage de l'app est lui aussi de type POP : il garde son fondu.
 let first = true;
-let timer = null;
 
 export function useInstantBackNavigation() {
   const location = useLocation();
@@ -22,10 +22,8 @@ export function useInstantBackNavigation() {
       first = false;
       return;
     }
-    if (navType !== "POP") return;
-    const root = document.documentElement;
-    root.setAttribute("data-nav-pop", "");
-    clearTimeout(timer);
-    timer = setTimeout(() => root.removeAttribute("data-nav-pop"), POP_WINDOW_MS);
+    const style = document.documentElement.style;
+    if (navType === "POP") style.setProperty("--fade-delay", SKIP_FADE);
+    else style.removeProperty("--fade-delay");
   }, [location.key, navType]);
 }

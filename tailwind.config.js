@@ -76,8 +76,9 @@ export default {
         },
       },
       animation: {
-        "fade-in": "fade-in 0.6s ease both",
-        "fade-in-fast": "fade-in 0.28s ease both",
+        // Le délai négatif (--fade-delay, posé au retour) place le fondu directement à son état final.
+        "fade-in": "fade-in 0.6s ease var(--fade-delay, 0s) both",
+        "fade-in-fast": "fade-in 0.28s ease var(--fade-delay, 0s) both",
         "slide-up": "slide-up 0.7s cubic-bezier(0.16,1,0.3,1) both",
         "ken-burns": "ken-burns 18s ease-out both",
         "marquee-down": "marquee-down 40s linear infinite",

@@ -223,12 +223,6 @@
   }
 }
 
-/* « Retour » : la page d'avant réapparaît tout de suite, sans fondu (cf. useInstantBackNavigation). */
-html[data-nav-pop] .animate-fade-in,
-html[data-nav-pop] .animate-fade-in-fast {
-  animation: none;
-}
-
 /* ArtPlayer impose `svg { fill }`, ce qui remplirait les icônes Lucide du lecteur. */
 .art-video-player svg.lucide {
   fill: none;

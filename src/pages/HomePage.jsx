@@ -14,15 +14,20 @@ import CommunityBanner from "@/components/home/CommunityBanner";
 import { platform } from "@/platform";
 
 /**
- * Montée à l'approche de l'écran, jamais démontée : un montage au fil du scroll ferait
- * scintiller les rangées.
+ * Rangées sous la première vue : sur mobile, montées à l'approche de l'écran ; sur ordinateur,
+ * montées l'une après l'autre juste après le premier affichage (ou plus tôt si elles approchent),
+ * car les monter toutes d'un coup retardait l'accueil de plusieurs centaines de ms. Jamais
+ * démontées : un montage au fil du scroll ferait scintiller les rangées.
  */
-function DeferredHomeSection({ children, height = 320 }) {
+const DESKTOP_EAGER_SECTIONS = 2;
+const DESKTOP_STAGGER_MS = 90;
+
+function DeferredHomeSection({ children, height = 320, order = 0 }) {
   const anchorRef = useRef(null);
-  const [mounted, setMounted] = useState(!platform.isMobile);
+  const [mounted, setMounted] = useState(!platform.isMobile && order < DESKTOP_EAGER_SECTIONS);
 
   useEffect(() => {
-    if (!platform.isMobile || mounted) return;
+    if (mounted) return;
     const node = anchorRef.current;
     if (!node || typeof IntersectionObserver === "undefined") {
       setMounted(true);
@@ -32,11 +37,18 @@ function DeferredHomeSection({ children, height = 320 }) {
       ([entry]) => {
         if (entry.isIntersecting) setMounted(true);
       },
-      { rootMargin: "600px 0px" }
+      { rootMargin: platform.isMobile ? "600px 0px" : "900px 0px" }
     );
     observer.observe(node);
-    return () => observer.disconnect();
-  }, [mounted]);
+    // Ordinateur : le reste suit sans attendre le scroll, une rangée à la fois.
+    const timer = platform.isMobile
+      ? null
+      : setTimeout(() => setMounted(true), 200 + (order - DESKTOP_EAGER_SECTIONS) * DESKTOP_STAGGER_MS);
+    return () => {
+      observer.disconnect();
+      clearTimeout(timer);
+    };
+  }, [mounted, order]);
 
   return (
     <div
@@ -130,15 +142,15 @@ export default function HomePage() {
         <GenresRow />
         <ContinueWatching />
         <CommunityPicksRow />
-        <DeferredHomeSection height={300}>
+        <DeferredHomeSection height={300} order={0}>
           <ForYouRow />
         </DeferredHomeSection>
         <FavoriteGenresRows />
 
-        {sections.map((section) => {
+        {sections.map((section, index) => {
           const height = section.key === "premium" || section.key === "community" ? 220 : 320;
           return (
-            <DeferredHomeSection key={section.key} height={height}>
+            <DeferredHomeSection key={section.key} height={height} order={index + 1}>
               {section}
             </DeferredHomeSection>
           );
