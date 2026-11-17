@@ -4,6 +4,8 @@ import AnimeCard from "./AnimeCard";
 import NewEpisodeCard from "./NewEpisodeCard";
 
 /** `variant="episode"` : cartes « nouvel épisode ». */
+const itemKey = (a, variant) => (variant === "episode" ? `${a.slug}-${a.season}` : a.slug ?? a.id);
+
 export default function AnimeRow({ title, items, numbered = false, variant }) {
   const { emblaRef, embla, canPrev, canNext } = useRowCarousel();
 
@@ -12,7 +14,7 @@ export default function AnimeRow({ title, items, numbered = false, variant }) {
     const seen = new Set();
     const out = [];
     for (const a of items || []) {
-      const key = variant === "episode" ? `${a.slug}-${a.season}` : a.slug ?? a.id;
+      const key = itemKey(a, variant);
       if (key == null || seen.has(key)) continue;
       seen.add(key);
       out.push(a);
@@ -33,7 +35,7 @@ export default function AnimeRow({ title, items, numbered = false, variant }) {
         <div className="flex gap-4" data-carousel-track>
           {uniqueItems.map((anime, i) => (
             <div
-              key={variant === "episode" ? `${anime.slug}-${anime.season}` : anime.id}
+              key={itemKey(anime, variant)}
               className="min-w-0 shrink-0 grow-0 basis-[9.25rem] sm:basis-[10rem] lg:basis-[10.75rem] 2xl:basis-[11.5rem]"
               data-carousel-card
             >
