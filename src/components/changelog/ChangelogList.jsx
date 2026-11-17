@@ -62,7 +62,16 @@ export default function ChangelogList({ entries, card = false, showHeader = true
                   style={{ animationDelay: `${Math.min(entryIndex * 4 + itemIndex, 10) * 45}ms` }}
                 >
                   <Tag meta={meta} premium={!!item.premiumOnly} />
-                  <p className="min-w-0 flex-1 text-sm leading-snug text-text/90">{item.text}</p>
+                  <div className="min-w-0 flex-1">
+                    {item.title ? (
+                      <>
+                        <p className="text-sm font-semibold leading-snug">{item.title}</p>
+                        {item.text && <p className="mt-0.5 text-[0.8rem] leading-snug text-muted">{item.text}</p>}
+                      </>
+                    ) : (
+                      <p className="text-sm leading-snug text-text/90">{item.text}</p>
+                    )}
+                  </div>
                 </li>
               );
             })}

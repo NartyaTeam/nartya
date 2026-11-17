@@ -8,6 +8,7 @@ export const SITE_URL = "https://nartya.app";
 export const SITE_HOST = new URL(SITE_URL).host;
 export const API_URL = "https://anime.nartya.app";
 export const DISCORD_INVITE = "https://discord.gg/q5MHWyBXNm";
+export const GITHUB_URL = "https://github.com/NartyaTeam/nartya";
 export const CONTACT_EMAIL = "contact@nartya.app";
 // Clé publique Cloudflare Turnstile, liée aux domaines du site.
 export const TURNSTILE_SITEKEY = "0x4AAAAAAEFfyKPirwZPGekW";

@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
-import { X } from "lucide-react";
+import { History, X } from "lucide-react";
 import { Fox } from "@/components/brand/NartyaMark";
 import ChangelogList from "@/components/changelog/ChangelogList";
+import ReleaseNotes from "@/components/changelog/ReleaseNotes";
+import GithubIcon from "@/components/icons/GithubIcon";
+import { GITHUB_URL } from "@/config/instance";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { platform } from "@/platform";
 import { isPremiumActive } from "@/lib/premium";
@@ -33,6 +36,7 @@ export default function WhatsNew() {
   const [open, setOpen] = useState(false);
   const [entries, setEntries] = useState([]);
   const [version, setVersion] = useState(null);
+  const [showOlder, setShowOlder] = useState(false);
 
   useEffect(() => {
     if (!session || !profile) return;
@@ -97,16 +101,7 @@ export default function WhatsNew() {
 
   if (!open) return null;
 
-  const counts = { new: 0, improved: 0, fixed: 0 };
-  for (const e of entries) for (const i of e.items) counts[i.type] = (counts[i.type] || 0) + 1;
-  const plural = (n, one, many) => `${n} ${n > 1 ? many : one}`;
-  const summary = [
-    counts.new && plural(counts.new, "nouveauté", "nouveautés"),
-    counts.improved && plural(counts.improved, "amélioration", "améliorations"),
-    counts.fixed && plural(counts.fixed, "correction", "corrections"),
-  ]
-    .filter(Boolean)
-    .join(" · ");
+  const [latest, ...older] = entries;
 
   return (
     <Dialog.Root open={open} onOpenChange={handleOpenChange}>
@@ -116,7 +111,7 @@ export default function WhatsNew() {
           className={
             isMobile
               ? "fixed inset-x-0 bottom-0 z-[101] flex max-h-[88dvh] flex-col overflow-hidden rounded-t-xl border-t-2 border-border bg-surface shadow-card animate-sheet-up"
-              : "fixed left-1/2 top-1/2 z-[101] flex max-h-[80vh] w-[92vw] max-w-md -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-md border-2 border-border bg-surface shadow-card animate-in fade-in-0 zoom-in-95"
+              : "fixed left-1/2 top-1/2 z-[101] flex max-h-[80vh] w-[92vw] max-w-xl -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-md border-2 border-border bg-surface shadow-card animate-in fade-in-0 zoom-in-95"
           }
         >
           <header className="relative shrink-0 overflow-hidden border-b-2 border-border bg-gradient-to-br from-primary/25 via-surface to-surface px-5 py-4">
@@ -127,7 +122,11 @@ export default function WhatsNew() {
                 V{version}
               </span>
             </div>
-            {summary && <p className="relative mt-1.5 text-xs text-muted">{summary}</p>}
+            {(latest.tagline || latest.date) && (
+              <p className="relative mt-1.5 text-xs text-muted">
+                {[latest.tagline, latest.date].filter(Boolean).join(" · ")}
+              </p>
+            )}
             <Dialog.Description className="sr-only">Nouveautés de la version {version}</Dialog.Description>
             <Dialog.Close
               aria-label="Fermer"
@@ -138,11 +137,36 @@ export default function WhatsNew() {
           </header>
 
           <div className="overflow-y-auto px-5 py-4">
-            <ChangelogList entries={entries} showHeader={entries.length > 1} />
+            <ReleaseNotes key={latest.version} entry={latest} />
+            {showOlder && older.length > 0 && (
+              <div className="mt-5 border-t-2 border-border pt-4">
+                <ChangelogList entries={older} showHeader />
+              </div>
+            )}
           </div>
 
-          <footer className="shrink-0 border-t-2 border-border px-5 pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-3 text-right md:pb-3">
-            <Dialog.Close className={isMobile ? "btn-shu w-full justify-center !py-2.5 text-sm" : "btn-shu !px-5 !py-2 text-sm"}>
+          <footer className="flex shrink-0 items-center justify-between gap-3 border-t-2 border-border px-5 pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-3 md:pb-3">
+            <div className="flex min-w-0 items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => platform.openExternal(GITHUB_URL)}
+                title="Nartya est open source : voir le code sur GitHub"
+                className="inline-flex items-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-semibold text-muted transition-colors hover:bg-text/10 hover:text-text"
+              >
+                <GithubIcon className="h-4 w-4 shrink-0" /> GitHub
+              </button>
+              {older.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setShowOlder((v) => !v)}
+                  className="inline-flex items-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-semibold text-muted transition-colors hover:bg-text/10 hover:text-text"
+                >
+                  <History size={14} className="shrink-0" />
+                  <span className="truncate">{showOlder ? "Masquer les précédentes" : "Versions précédentes"}</span>
+                </button>
+              )}
+            </div>
+            <Dialog.Close className={isMobile ? "btn-shu !py-2.5 text-sm" : "btn-shu !px-5 !py-2 text-sm"}>
               Super, merci !
             </Dialog.Close>
           </footer>
