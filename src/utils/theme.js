@@ -1,6 +1,8 @@
+import { themeToVars, hexToTriplet as strictHexToTriplet, foregroundHexFor, THEME_COLORS } from "@/lib/themeFormat";
+
 /**
- * Surcharge sur `:root` les variables de `src/styles/theme.css` : seul l'accent et ses dérivées
- * changent.
+ * Surcharge sur `:root` les variables de `src/styles/theme.css`. Sans thème communautaire, seul
+ * l'accent et ses dérivées changent ; avec un thème, toute la palette.
  */
 
 // Encre sur teinte claire, blanc sur teinte sombre.
@@ -43,8 +45,21 @@ export function tripletToCss(triplet) {
   return `rgb(${(triplet || "").split(" ").join(",")})`;
 }
 
-export function applyTheme({ themePreset, customColor } = {}) {
+/** Variables posées par un thème communautaire : retirées en bloc quand il est désinstallé. */
+const THEME_VARS = [...THEME_COLORS.map((c) => c.cssVar), "--primary-fg"];
+
+export function applyTheme({ themePreset, customColor, activeTheme } = {}) {
   if (typeof document === "undefined") return;
+
+  const root = document.documentElement;
+  if (activeTheme) {
+    for (const [name, value] of Object.entries(themeToVars(activeTheme))) root.style.setProperty(name, value);
+    root.style.setProperty("--primary-fg", strictHexToTriplet(foregroundHexFor(activeTheme.colors.primary)));
+    root.classList.toggle("theme-no-grain", activeTheme.grain === false);
+    return;
+  }
+  for (const name of THEME_VARS) root.style.removeProperty(name);
+  root.classList.remove("theme-no-grain");
 
   let palette = THEME_PRESETS[themePreset] || THEME_PRESETS[DEFAULT_PRESET];
   if (themePreset === "custom") {
@@ -54,7 +69,6 @@ export function applyTheme({ themePreset, customColor } = {}) {
     };
   }
 
-  const root = document.documentElement;
   root.style.setProperty("--primary", palette.primary);
   root.style.setProperty("--primary-fg", foregroundFor(palette.primary));
   root.style.setProperty("--accent", palette.accent);

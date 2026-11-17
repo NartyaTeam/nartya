@@ -1,4 +1,5 @@
-import { CloudRain, Check, Gauge, Languages, Sparkles, Sunset } from "lucide-react";
+import { Link } from "react-router-dom";
+import { CloudRain, Palette, Check, Gauge, Languages, Sparkles, Sunset } from "lucide-react";
 import { useSettingsStore } from "@/stores/useSettingsStore";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { isPremiumActive } from "@/lib/premium";
@@ -113,6 +114,16 @@ export default function AppearanceSection({ number }) {
             {customColor}
           </button>
         </div>
+      </SettingRow>
+
+      <SettingRow
+        icon={Palette}
+        label="Thèmes de la communauté"
+        description="Installe le thème d'un autre membre ou crée le tien."
+      >
+        <Link to="/themes" className="btn-ghost px-4 py-2 text-sm">
+          Ouvrir les thèmes
+        </Link>
       </SettingRow>
 
       <SettingRow

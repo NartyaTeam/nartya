@@ -57,6 +57,7 @@ const AchievementsPage = lazy(() => import("@/pages/AchievementsPage"));
 const PublicProfilePage = lazy(() => import("@/pages/PublicProfilePage"));
 const LeaderboardPage = lazy(() => import("@/pages/LeaderboardPage"));
 const CommunautePage = lazy(() => import("@/pages/CommunautePage"));
+const ThemesPage = lazy(() => import("@/pages/ThemesPage"));
 const SettingsPage = lazy(() => import("@/pages/SettingsPage"));
 const FAQPage = lazy(() => import("@/pages/FAQPage"));
 const EquipePage = lazy(() => import("@/pages/EquipePage"));
@@ -337,6 +338,7 @@ export default function App() {
         <Route path="/conseiller" element={<Navigate to="/recherche" replace />} />
         <Route path="/leaderboard" element={<LeaderboardPage />} />
         <Route path="/tierlists" element={<TierListsPage />} />
+        <Route path="/themes" element={<ThemesPage />} />
         <Route
           path="/tierlists/new"
           element={
