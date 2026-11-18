@@ -5,6 +5,7 @@
     "category": "Video",
     "resources": { "resources/ffmpeg": "ffmpeg" },
     "linux": {
+      "appimage": { "bundleMediaFramework": true },
       "deb": {
         "depends": ["gstreamer1.0-plugins-good", "gstreamer1.0-plugins-bad", "gstreamer1.0-libav"]
       }
