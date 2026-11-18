@@ -521,7 +521,7 @@ export default function PartyRoomPage() {
 
       {isHost && (
         <div
-          className={`fixed inset-0 z-50 items-center justify-center bg-black/70 p-4 backdrop-blur-sm sm:p-8 ${
+          className={`fixed inset-0 z-[100] items-center justify-center bg-black/70 p-4 backdrop-blur-sm sm:p-8 ${
             pickerOpen ? "flex" : "hidden"
           }`}
           onMouseDown={(e) => e.target === e.currentTarget && setPickerOpen(false)}
