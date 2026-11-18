@@ -3,6 +3,11 @@
     "targets": ["appimage", "deb"],
     "icon": ["icons/icon.png"],
     "category": "Video",
-    "resources": { "resources/ffmpeg": "ffmpeg" }
+    "resources": { "resources/ffmpeg": "ffmpeg" },
+    "linux": {
+      "deb": {
+        "depends": ["gstreamer1.0-plugins-good", "gstreamer1.0-plugins-bad", "gstreamer1.0-libav"]
+      }
+    }
   }
 }

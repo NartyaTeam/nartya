@@ -1,6 +1,6 @@
 [package]
 name = "nartya-core"
-version = "1.41.0"
+version = "1.41.1"
 description = "Cœur de Nartya : proxy local, résolution des flux, téléchargements, Cast, Discord, session partagée"
 authors = ["NartyaTeam"]
 edition = "2021"

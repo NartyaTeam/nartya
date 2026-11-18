@@ -1,6 +1,7 @@
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
+import { API_URL } from "./src/config/instance.js";
 
 // Locale par défaut, publique sans le dossier `api/`.
 const API_DEV_URL = process.env.NARTYA_DEV_API || "http://localhost:3000";
@@ -10,8 +11,11 @@ const API_DEV_URL = process.env.NARTYA_DEV_API || "http://localhost:3000";
  * script inline. `img-src` et `connect-src` restent ouverts à `https:` (jaquettes et avatars
  * de nombreux hôtes) ; le proxy local écoute sur un port aléatoire du loopback.
  */
-function contentSecurityPolicy(supabaseUrl) {
+function contentSecurityPolicy(supabaseUrl, apiUrl) {
+  // `https:` ne couvre pas `wss:` : les WebSocket (Supabase Realtime, relais des watch parties)
+  // doivent être listés un par un.
   const supabaseWs = supabaseUrl ? supabaseUrl.replace(/^http/, "ws") : "";
+  const apiWs = apiUrl ? apiUrl.replace(/^http/, "ws") : "";
   const policy = {
     "default-src": ["'self'"],
     "script-src": ["'self'", "https://challenges.cloudflare.com"],
@@ -24,6 +28,7 @@ function contentSecurityPolicy(supabaseUrl) {
       "'self'",
       "https:",
       supabaseWs,
+      apiWs,
       "http://127.0.0.1:*",
       "ipc:",
       "http://ipc.localhost",
@@ -41,7 +46,7 @@ function contentSecurityPolicy(supabaseUrl) {
     .join("; ");
 }
 
-function cspPlugin(supabaseUrl) {
+function cspPlugin(supabaseUrl, apiUrl) {
   return {
     name: "nartya-csp",
     apply: "build",
@@ -51,7 +56,7 @@ function cspPlugin(supabaseUrl) {
           tag: "meta",
           attrs: {
             "http-equiv": "Content-Security-Policy",
-            content: contentSecurityPolicy(supabaseUrl),
+            content: contentSecurityPolicy(supabaseUrl, apiUrl),
           },
           injectTo: "head-prepend",
         },
@@ -60,8 +65,13 @@ function cspPlugin(supabaseUrl) {
   };
 }
 
+const viteEnv = (mode) => loadEnv(mode, process.cwd(), "VITE_");
+
 export default defineConfig(({ mode }) => ({
-  plugins: [react(), cspPlugin(loadEnv(mode, process.cwd(), "VITE_").VITE_SUPABASE_URL)],
+  plugins: [
+    react(),
+    cspPlugin(viteEnv(mode).VITE_SUPABASE_URL, viteEnv(mode).VITE_API_URL || API_URL),
+  ],
   base: "./",
   resolve: {
     alias: {

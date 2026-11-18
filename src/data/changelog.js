@@ -5,6 +5,25 @@
  */
 export const CHANGELOG = [
   {
+    version: "1.41.1",
+    date: "18 novembre 2026",
+    tagline: "Correctifs après le passage à la nouvelle base.",
+    items: [
+      {
+        type: "fixed",
+        icon: "users",
+        title: "Watch Party",
+        text: "Créer ou rejoindre un salon fonctionne de nouveau.",
+      },
+      {
+        type: "fixed",
+        icon: "zap",
+        title: "Linux",
+        text: "Fin de la fenêtre noire au lancement sur certaines configurations.",
+      },
+    ],
+  },
+  {
     version: "1.41.0",
     date: "17 novembre 2026",
     tagline: "Première version sur la nouvelle base Tauri.",
