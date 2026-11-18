@@ -5,6 +5,33 @@
  */
 export const MOBILE_CHANGELOG = [
   {
+    version: "1.11.0",
+    date: "18 novembre 2026",
+    tagline: "La Watch Party arrive sur mobile.",
+    items: [
+      {
+        type: "new",
+        highlight: true,
+        icon: "users",
+        title: "Watch Party sur mobile",
+        text: "Crée ou rejoins un salon depuis le menu Plus.",
+      },
+      {
+        type: "improved",
+        highlight: true,
+        icon: "home",
+        title: "Pages plus propres",
+        text: "Mangas, tier lists, historique, hors ligne retravaillés.",
+      },
+      {
+        type: "improved",
+        icon: "zap",
+        title: "Tier lists",
+        text: "Les rangées se déplacent en place.",
+      },
+    ],
+  },
+  {
     version: "1.10.1",
     date: "18 novembre 2026",
     tagline: "Lecture et téléchargements sur un nouveau moteur.",
