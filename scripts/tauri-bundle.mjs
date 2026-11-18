@@ -96,3 +96,24 @@ for (const w of wanted) {
   writeFileSync(`${out}.sha256`, `${sha256}  ${w.out}\n`);
   console.log(`[bundle] ${out}\n[bundle] ${(bytes.length / 1048576).toFixed(1)} Mo, sha256 ${sha256}`);
 }
+
+// Le Hub installe l'app Mac depuis un zip du .app (il ne sait pas monter un .dmg).
+if (process.platform === "darwin") {
+  const appDir = path("target/release/bundle/macos");
+  const app = existsSync(appDir) && readdirSync(appDir).find((f) => f.endsWith(".app"));
+  if (!app) {
+    console.error(`[bundle] .app introuvable dans ${appDir}`);
+    process.exit(1);
+  }
+  const name = `Nartya-${version}-mac-${arch}.zip`;
+  const out = path(`release/tauri/${name}`);
+  // ditto garde les liens symboliques et les droits du bundle, contrairement à un zip classique.
+  const zip = spawnSync("ditto", ["-c", "-k", "--sequesterRsrc", "--keepParent", join(appDir, app), out], {
+    stdio: "inherit",
+  });
+  if (zip.status !== 0) process.exit(zip.status ?? 1);
+  const bytes = readFileSync(out);
+  const sha256 = createHash("sha256").update(bytes).digest("hex");
+  writeFileSync(`${out}.sha256`, `${sha256}  ${name}\n`);
+  console.log(`[bundle] ${out}\n[bundle] ${(bytes.length / 1048576).toFixed(1)} Mo, sha256 ${sha256}`);
+}
