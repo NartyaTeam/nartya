@@ -189,10 +189,12 @@ export default function ScanReaderPage() {
   const pageSrc = (p) => (readLocal && localUrls[p - 1]) || scanPageUrl(imageBase, oeuvre, folder, p);
   const metaRef = useRef(meta);
   metaRef.current = meta;
-  const pageRatiosRef = useRef(new Map());
+  // Ratio réel de chaque page, en state : la hauteur réservée doit suivre dès qu'une image
+  // charge, sinon les pages changent de taille au (dé)montage et le défilement boucle.
+  const [pageRatios, setPageRatios] = useState({});
 
   useEffect(() => {
-    pageRatiosRef.current.clear();
+    setPageRatios({});
     resetZoom();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [oeuvre, chapter]);
@@ -757,7 +759,7 @@ export default function ScanReaderPage() {
             {Array.from({ length: pages }, (_, i) => i + 1).map((p) => {
               const idx = p - 1;
               const shouldMount = Math.abs(idx - currentPage) <= 3;
-              const knownRatio = pageRatiosRef.current.get(idx);
+              const knownRatio = pageRatios[idx];
               const zoomed = idx === currentPage && zoom.scale !== 1;
               return (
                 <div
@@ -772,7 +774,7 @@ export default function ScanReaderPage() {
                           zIndex: 10,
                           transform: `translate(${zoom.x}px, ${zoom.y}px) scale(${zoom.scale})`,
                         }
-                      : !shouldMount
+                      : !shouldMount || !knownRatio
                         ? { aspectRatio: knownRatio || "2 / 3" }
                         : undefined
                   }
@@ -788,10 +790,11 @@ export default function ScanReaderPage() {
                       onLoad={(event) => {
                         const image = event.currentTarget;
                         if (image.naturalWidth && image.naturalHeight) {
-                          pageRatiosRef.current.set(idx, `${image.naturalWidth} / ${image.naturalHeight}`);
+                          const ratio = `${image.naturalWidth} / ${image.naturalHeight}`;
+                          setPageRatios((prev) => (prev[idx] === ratio ? prev : { ...prev, [idx]: ratio }));
                         }
                       }}
-                      className="block w-full"
+                      className={knownRatio ? "block w-full" : "block h-full w-full object-contain"}
                     />
                   ) : null}
                 </div>
