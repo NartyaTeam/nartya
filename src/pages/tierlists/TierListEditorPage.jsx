@@ -251,9 +251,13 @@ function EditableRow({ tier, index, placing, canDelete, canAdd, highlight, onCha
   return (
     <div
       ref={setNodeRef}
-      style={{ transform: CSS.Translate.toString(transform), transition, zIndex: isDragging ? 20 : undefined }}
-      className={`relative flex min-h-[calc(4.5rem*1.4+4px)] border-b-2 border-black last:border-b-0 sm:min-h-[calc(5.25rem*1.4+4px)] ${
-        isDragging ? "opacity-80 shadow-2xl" : ""
+      style={{
+        transform: CSS.Translate.toString(transform),
+        transition: isDragging ? "box-shadow 150ms ease" : transition,
+        zIndex: isDragging ? 30 : undefined,
+      }}
+      className={`relative flex min-h-[calc(4.5rem*1.4+4px)] border-b-2 border-black bg-black last:border-b-0 sm:min-h-[calc(5.25rem*1.4+4px)] ${
+        isDragging ? "shadow-[0_18px_40px_-8px_rgba(0,0,0,0.85)] ring-2 ring-primary" : ""
       }`}
     >
       <label
@@ -488,7 +492,7 @@ export default function TierListEditorPage() {
         : type === "item"
           ? [...board.pool, ...board.tiers.flatMap((t) => t.items)].find((it) => it.slug === a.id)
           : null;
-    setActive({ type, item, tier: type === "row" ? board.tiers.find((t) => ROW + t.id === a.id) : null });
+    setActive({ type, item });
   };
 
   const onDragOver = ({ active: a, over }) => {
@@ -511,6 +515,10 @@ export default function TierListEditorPage() {
       return withItems(next, to, [...target.slice(0, index), item, ...target.slice(index)]);
     });
   };
+
+  // Une rangée se déplace telle quelle, à la verticale, sans aperçu flottant.
+  const rowAxis = ({ active: a, transform }) =>
+    a?.data.current?.type === "row" ? { ...transform, x: 0 } : transform;
 
   const endDrag = () => {
     setActive(null);
@@ -624,7 +632,7 @@ export default function TierListEditorPage() {
   }
 
   return (
-    <div className="animate-fade-in px-4 pb-24 pt-[calc(env(safe-area-inset-top)+1.5rem)] sm:px-8 md:py-8">
+    <div className="animate-fade-in px-4 pb-24 pt-[calc(env(safe-area-inset-top)+3.75rem)] sm:px-8 md:py-8">
       <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0">
           <h1 className="t-impact truncate text-3xl md:text-4xl">
@@ -659,6 +667,7 @@ export default function TierListEditorPage() {
         onDragOver={onDragOver}
         onDragEnd={onDragEnd}
         onDragCancel={endDrag}
+        modifiers={[rowAxis]}
       >
         <div className="relative z-20 flex flex-wrap items-center gap-2">
           <AnimePicker kind={kind} has={has} onAdd={addItems} className="min-w-[14rem] flex-1" />
@@ -711,7 +720,7 @@ export default function TierListEditorPage() {
 
         <section
           aria-label="Non classés"
-          className="sticky bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-30 mt-4 rounded-md bg-surface shadow-2xl ring-2 ring-border md:bottom-3"
+          className="sticky bottom-[calc(0.5rem+env(safe-area-inset-bottom))] z-30 mt-4 rounded-md bg-surface shadow-2xl ring-2 ring-border md:bottom-3"
         >
           <div className="flex items-center gap-2 px-3 py-2 text-xs">
             <Inbox size={14} className="shrink-0 text-primary" />
@@ -762,12 +771,6 @@ export default function TierListEditorPage() {
           <DragOverlay dropAnimation={null}>
             {active?.item ? (
               <TierPoster item={active.item} className="rotate-3 shadow-2xl ring-2 ring-primary" />
-            ) : active?.tier ? (
-              <div className="flex h-12 w-72 items-center rounded-md shadow-2xl ring-2 ring-primary" style={{ background: active.tier.color }}>
-                <span className="px-3 text-sm font-bold" style={{ color: readableTextColor(active.tier.color) }}>
-                  {active.tier.label || "Rangée"}
-                </span>
-              </div>
             ) : null}
           </DragOverlay>,
           document.body

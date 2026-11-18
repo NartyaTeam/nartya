@@ -60,7 +60,7 @@ export default function SegmentedControl({
       role="radiogroup"
       aria-label={label}
       onKeyDown={handleKeyDown}
-      className={`relative flex w-fit max-w-full items-stretch rounded-md bg-surface p-1 ring-2 ring-border ${SIZES[size] || SIZES.md} ${className}`}
+      className={`relative flex w-full max-w-full items-stretch sm:w-fit rounded-md bg-surface p-1 ring-2 ring-border ${SIZES[size] || SIZES.md} ${className}`}
     >
       {thumb && (
         <span

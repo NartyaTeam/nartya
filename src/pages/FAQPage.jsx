@@ -276,9 +276,9 @@ export default function FAQPage() {
   };
 
   return (
-    <div className="animate-fade-in mx-auto max-w-3xl px-4 pb-10 pt-[calc(env(safe-area-inset-top)+4.5rem)] sm:px-8 md:py-10">
+    <div className="animate-fade-in mx-auto max-w-3xl px-4 pb-10 pt-[calc(env(safe-area-inset-top)+1.5rem)] sm:px-8 md:py-10">
       <div className="mb-6 flex items-center gap-3">
-        <HelpCircle size={26} className="text-primary" />
+        <HelpCircle size={26} className="hidden text-primary sm:block" />
         <div>
           <h1 className="t-impact text-4xl md:text-5xl">Foire aux questions</h1>
           <p className="mt-1 text-sm text-muted">

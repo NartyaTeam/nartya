@@ -293,7 +293,7 @@ export default function PlanningPage() {
     <div className="animate-fade-in mx-auto max-w-[1600px] px-4 pb-16 pt-[calc(env(safe-area-inset-top)+1.5rem)] sm:px-6 sm:pt-24 md:px-10">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div className="flex items-center gap-3">
-          <CalendarDays size={26} className="text-primary" />
+          <CalendarDays size={26} className="hidden text-primary sm:block" />
           <div>
             <h1 className="t-impact text-4xl sm:text-5xl">Calendrier</h1>
             <p className="mt-1 text-sm text-muted">
@@ -350,7 +350,7 @@ export default function PlanningPage() {
         </p>
       ) : (
         <>
-          <div className="sticky top-0 z-10 -mx-4 mb-8 border-b border-border bg-bg/85 px-4 backdrop-blur-md sm:-mx-6 sm:top-16 sm:px-6 md:-mx-10 md:px-10">
+          <div className="sticky top-0 z-30 -mx-4 mb-8 border-b border-border bg-bg/95 px-4 pt-[calc(env(safe-area-inset-top)+0.75rem)] sm:z-10 sm:bg-bg/85 sm:pt-0 backdrop-blur-md sm:-mx-6 sm:top-16 sm:px-6 md:-mx-10 md:px-10">
             <div className="no-scrollbar -mb-px flex gap-1 overflow-x-auto">
               {days.map((day) => {
                 const isToday = day.index === todayIndex();

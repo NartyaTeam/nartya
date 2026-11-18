@@ -146,7 +146,7 @@ export default function EquipePage() {
     : null;
 
   return (
-    <div className="animate-fade-in mx-auto max-w-5xl px-4 pb-16 pt-[calc(env(safe-area-inset-top)+4.5rem)] sm:px-8 md:py-12">
+    <div className="animate-fade-in mx-auto max-w-5xl px-4 pb-16 pt-[calc(env(safe-area-inset-top)+3.75rem)] sm:px-8 md:py-12">
       <header className="mb-12 max-w-2xl">
         <p className="mb-3 flex items-center gap-2.5 text-[0.7rem] font-bold uppercase tracking-[0.25em] text-muted">
           <span className="h-3.5 w-[6px] -skew-x-[14deg] bg-primary" />

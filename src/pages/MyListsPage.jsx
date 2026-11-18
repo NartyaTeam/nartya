@@ -321,7 +321,7 @@ export default function MyListsPage() {
   const total = rows?.length || 0;
 
   return (
-    <div className="animate-fade-in px-4 pb-24 pt-[calc(env(safe-area-inset-top)+4.5rem)] sm:px-8 md:py-10">
+    <div className="animate-fade-in px-4 pb-24 pt-[calc(env(safe-area-inset-top)+1.5rem)] sm:px-8 md:py-10">
       <header className="mb-6">
         <div className="flex items-end justify-between gap-4">
           <div>

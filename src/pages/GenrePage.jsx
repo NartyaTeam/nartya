@@ -17,9 +17,9 @@ export default function GenrePage() {
   })();
 
   return (
-    <div className="animate-fade-in mx-auto max-w-[1600px] px-4 pb-10 pt-[calc(env(safe-area-inset-top)+4.5rem)] sm:px-8">
+    <div className="animate-fade-in mx-auto max-w-[1600px] px-4 pb-10 pt-[calc(env(safe-area-inset-top)+3.75rem)] sm:px-8">
       <div className="mb-8 flex items-center gap-3">
-        <Tag size={24} className="text-primary" />
+        <Tag size={24} className="hidden text-primary sm:block" />
         <div>
           <h1 className="t-impact text-4xl sm:text-5xl">{decoded}</h1>
           <p className="mt-1 text-sm text-muted">Animes du genre « {decoded} ».</p>

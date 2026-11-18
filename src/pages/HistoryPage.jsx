@@ -135,7 +135,7 @@ export default function HistoryPage() {
   };
 
   return (
-    <div className="animate-fade-in px-4 pb-24 pt-[calc(env(safe-area-inset-top)+4.5rem)] sm:px-8 md:py-10">
+    <div className="animate-fade-in px-4 pb-24 pt-[calc(env(safe-area-inset-top)+1.5rem)] sm:px-8 md:py-10">
       <header className="mb-6">
         <div className="mb-2 flex items-center gap-2">
           <span className="h-px w-6 bg-primary" />
@@ -147,7 +147,7 @@ export default function HistoryPage() {
         </p>
         <div className="mt-5 flex flex-col gap-2.5 sm:flex-row sm:items-center">
           <MediaTabs value={media} onChange={setMedia} counts={counts} />
-          <div className="flex h-11 flex-1 items-center gap-2.5 rounded-md bg-surface px-3.5 ring-2 ring-border transition-colors focus-within:ring-primary/70 md:h-10 md:max-w-xs">
+          <div className="flex h-11 shrink-0 items-center gap-2.5 rounded-md bg-surface px-3.5 ring-2 sm:flex-1 ring-border transition-colors focus-within:ring-primary/70 md:h-10 md:max-w-xs">
             <Search size={16} className="shrink-0 text-muted" />
             <input
               value={query}

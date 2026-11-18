@@ -320,7 +320,7 @@ export default function LeaderboardPage() {
   const podiumOrder = [podium[1], podium[0], podium[2]].filter(Boolean);
 
   return (
-    <div className="animate-fade-in relative mx-auto max-w-4xl px-4 pb-24 pt-[calc(env(safe-area-inset-top)+4.5rem)] sm:px-8 md:py-10">
+    <div className="animate-fade-in relative mx-auto max-w-4xl px-4 pb-24 pt-[calc(env(safe-area-inset-top)+1.5rem)] sm:px-8 md:py-10">
       <Fox className="pointer-events-none absolute -right-10 top-0 h-80 w-80 -rotate-6 select-none text-white/[0.035]" />
 
       <div className="relative md:text-center">

@@ -221,7 +221,7 @@ export default function AchievementsPage() {
         <div className="absolute inset-0 bg-gradient-to-r from-bg via-bg/50 to-transparent sm:via-bg/35" />
         <div className="absolute inset-0 bg-gradient-to-t from-bg via-transparent to-transparent" />
 
-        <div className="relative z-10 flex h-full flex-col justify-between px-4 pb-7 pt-[calc(env(safe-area-inset-top)+4.5rem)] sm:px-6 sm:py-6 md:px-14 md:py-8">
+        <div className="relative z-10 flex h-full flex-col justify-between px-4 pb-7 pt-[calc(env(safe-area-inset-top)+1.5rem)] sm:px-6 sm:py-6 md:px-14 md:py-8">
           <button
             type="button"
             onClick={() => navigate("/profile")}

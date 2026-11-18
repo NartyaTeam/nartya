@@ -1,6 +1,10 @@
 import { useMemo, useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
+  Compass,
+  Film,
+  Wifi,
+  WifiOff,
   Download,
   Trash2,
   Play,
@@ -226,6 +230,18 @@ function ScanRow({ it, selecting, selected, onToggleSelect, onPlay, onRetry, onC
 }
 
 /** Sert aussi d'écran d'accueil quand l'app démarre sans connexion. */
+function Stat({ icon: Icon, value, label }) {
+  return (
+    <div className="flex min-w-0 flex-col items-center gap-0.5 px-2">
+      <span className="flex items-center gap-1.5 text-lg font-bold tabular-nums text-text">
+        <Icon size={15} className="text-primary" />
+        {value}
+      </span>
+      <span className="text-[0.7rem] uppercase tracking-[0.14em] text-muted">{label}</span>
+    </div>
+  );
+}
+
 export default function DownloadsPage() {
   const navigate = useNavigate();
   const online = useNetworkStore((s) => s.online);
@@ -364,6 +380,8 @@ export default function DownloadsPage() {
     () => items.reduce((sum, it) => sum + (it.sizeBytes || 0), 0),
     [items]
   );
+  const videoCount = items.filter((it) => it.type !== "scan" && it.status === "completed").length;
+  const scanCount = items.filter((it) => it.type === "scan" && it.status === "completed").length;
   const failedCount = useMemo(
     () => items.filter((it) => FAILED_STATUSES.has(it.status)).length,
     [items]
@@ -390,51 +408,74 @@ export default function DownloadsPage() {
 
   return (
     <div className="animate-fade-in px-4 pb-8 pt-[calc(env(safe-area-inset-top)+1.5rem)] sm:px-8 sm:py-8">
-      <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="t-impact text-4xl md:text-5xl">Téléchargements</h1>
-          <p className="mt-1 text-sm text-muted">
-            Vos épisodes disponibles hors ligne, sur cet appareil.
-          </p>
+      <header className="mb-6">
+        <div className="mb-2 flex items-center gap-2">
+          <span className="h-px w-6 bg-primary" />
+          <p className="text-[0.65rem] font-semibold uppercase tracking-[0.28em] text-primary/80">Hors ligne</p>
         </div>
-        {items.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2">
-            {failedCount > 0 && (
-              <button
-                onClick={purgeAllFailed}
-                title="Retirer toutes les entrées en échec, quel que soit l'anime"
-                className="flex items-center gap-1.5 rounded-md bg-surface px-3 py-1.5 text-sm text-primary ring-1 ring-border transition-colors hover:bg-primary/10"
-              >
-                <Eraser size={15} />
-                Purger les échecs
-                <span className="tabular-nums opacity-70">({failedCount})</span>
-              </button>
-            )}
-            <span className="flex items-center gap-2 rounded-md bg-surface px-3 py-1.5 text-sm text-muted ring-1 ring-border">
-              <HardDrive size={15} />
-              {formatSize(totalSize)}
-            </span>
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h1 className="t-impact text-4xl md:text-5xl">Téléchargements</h1>
+            <p className="mt-1.5 max-w-xl text-sm text-muted">
+              Tes épisodes et chapitres gardés sur cet appareil, lisibles sans connexion.
+            </p>
+          </div>
+          {failedCount > 0 && (
+            <button
+              onClick={purgeAllFailed}
+              title="Retirer toutes les entrées en échec, quel que soit l'anime"
+              className="flex h-10 items-center gap-1.5 rounded-md bg-surface px-3 text-sm font-semibold text-primary ring-2 ring-border transition-colors hover:bg-primary/10"
+            >
+              <Eraser size={15} />
+              Purger les échecs
+              <span className="tabular-nums opacity-70">({failedCount})</span>
+            </button>
+          )}
+        </div>
+
+        {downloadsAvailable() && (
+          <div className="mt-5 grid grid-cols-3 divide-x divide-border/70 rounded-md bg-surface/80 py-3 ring-2 ring-border">
+            <Stat icon={HardDrive} value={totalSize ? formatSize(totalSize) : "0 Mo"} label="utilisés" />
+            <Stat icon={Film} value={videoCount} label={videoCount > 1 ? "épisodes" : "épisode"} />
+            <Stat icon={BookOpen} value={scanCount} label={scanCount > 1 ? "chapitres" : "chapitre"} />
           </div>
         )}
-      </div>
+        <p
+          className={`mt-3 flex items-center gap-2 text-xs font-semibold ${online ? "text-muted" : "text-primary"}`}
+        >
+          {online ? <Wifi size={13} /> : <WifiOff size={13} />}
+          {online ? "Connecté : les téléchargements en cours avancent." : "Hors connexion : seuls les contenus téléchargés sont lisibles."}
+        </p>
+      </header>
 
       {!downloadsAvailable() ? (
         <p className="rounded-md border-2 border-border bg-surface p-6 text-center text-sm text-muted">
           Le téléchargement n'est disponible que dans l'application de bureau.
         </p>
       ) : items.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-md border-2 border-dashed border-border py-20 text-center">
-          <Download size={32} className="text-muted" />
-          <p className="font-display text-lg">Aucun épisode téléchargé</p>
-          <p className="max-w-sm text-sm text-muted">
+        <div className="relative flex flex-col items-center overflow-hidden rounded-md bg-surface/60 px-6 py-14 text-center ring-2 ring-border">
+          <div className="pointer-events-none absolute -top-24 left-1/2 h-48 w-48 -translate-x-1/2 rounded-full bg-primary/15 blur-3xl" />
+          <span className="relative flex h-16 w-16 items-center justify-center rounded-md bg-primary/10 text-primary ring-2 ring-primary/30">
+            <Download size={28} />
+          </span>
+          <p className="t-impact relative mt-5 text-2xl">Rien pour l'instant</p>
+          <p className="relative mt-2 max-w-sm text-sm text-muted">
             {online
-              ? "Ouvrez un anime et utilisez le bouton de téléchargement sur un épisode pour le regarder hors ligne."
-              : "Reconnectez-vous pour télécharger des épisodes, puis retrouvez-les ici hors ligne."}
+              ? "Sur la fiche d'un anime, touche l'icône de téléchargement d'un épisode ou d'un chapitre : il apparaîtra ici, prêt pour le train ou l'avion."
+              : "Reconnecte-toi pour télécharger des épisodes, puis retrouve-les ici hors ligne."}
           </p>
+          {online && (
+            <button
+              onClick={() => navigate("/recherche")}
+              className="relative mt-6 flex h-11 items-center gap-2 rounded-md bg-primary px-5 text-sm font-bold text-primary-fg transition-[filter,transform] hover:brightness-110 active:scale-95"
+            >
+              <Compass size={17} /> Parcourir le catalogue
+            </button>
+          )}
         </div>
       ) : (
-        <div className="overflow-hidden rounded-md ring-2 ring-border">
-          {groups.map((g, gi) => {
+        <div className="space-y-3">
+          {groups.map((g) => {
             const isCollapsed = !!collapsed[g.slug];
             const failedInGroup = g.episodes.filter((it) => FAILED_STATUSES.has(it.status));
             const selecting = selectGroup === g.slug;
@@ -444,13 +485,13 @@ export default function DownloadsPage() {
             const tab = tabOf(g);
             const visible = tab === "video" ? g.videos : g.scans;
             return (
-              <div key={g.slug} className={gi > 0 ? "border-t border-border/60" : ""}>
+              <div key={g.slug} className="overflow-hidden rounded-md bg-surface/60 ring-2 ring-border">
                 <div className="flex items-center gap-1 px-2 py-1.5 transition-colors hover:bg-white/[0.03]">
                   <button
                     onClick={() => toggleCollapse(g.slug)}
                     className="flex min-w-0 flex-1 items-center gap-3 rounded-md px-2 py-1 text-left"
                   >
-                    <div className="h-12 w-9 shrink-0 overflow-hidden rounded-md bg-surface-2">
+                    <div className="h-16 w-11 shrink-0 overflow-hidden rounded bg-surface-2 ring-2 ring-border">
                       {g.cover ? (
                         <img src={g.cover} alt="" className="h-full w-full object-cover" />
                       ) : (
@@ -460,7 +501,7 @@ export default function DownloadsPage() {
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <h2 className="line-clamp-1 text-sm font-semibold text-text">{g.title}</h2>
+                      <h2 className="line-clamp-1 text-[0.95rem] font-bold text-text">{g.title}</h2>
                       <p className="mt-0.5 text-xs text-muted">
                         {g.done} {label}
                         {g.done > 1 ? "s" : ""}

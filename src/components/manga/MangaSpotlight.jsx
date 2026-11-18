@@ -42,7 +42,7 @@ export default function MangaSpotlight({ items }) {
 
   return (
     <section
-      className="px-4 pt-4 sm:px-8 md:pt-6"
+      className="px-4 pt-[calc(env(safe-area-inset-top)+0.75rem)] sm:px-8 md:pt-6"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
@@ -110,7 +110,7 @@ export default function MangaSpotlight({ items }) {
         </div>
 
         {slides.length > 1 && (
-          <div className="relative flex gap-2 overflow-x-auto border-t border-border/70 bg-bg/60 px-5 py-3 no-scrollbar md:px-12">
+          <div className="relative flex gap-2.5 overflow-x-auto border-t border-border/70 bg-bg/60 px-5 py-3 no-scrollbar [&>*:first-child]:ml-auto [&>*:last-child]:mr-auto md:px-12 md:[&>*:first-child]:ml-0">
             {slides.map((s, i) => (
               <button
                 key={s.slug}

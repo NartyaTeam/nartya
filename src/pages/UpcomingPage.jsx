@@ -98,7 +98,7 @@ export default function UpcomingPage() {
 
   return (
     <div
-      className="relative min-h-full overflow-hidden px-4 pb-24 pt-[calc(env(safe-area-inset-top)+4.5rem)] sm:px-8 md:p-8"
+      className="relative min-h-full overflow-hidden px-4 pb-24 pt-[calc(env(safe-area-inset-top)+1.5rem)] sm:px-8 md:p-8"
       style={{ touchAction: "pan-y pinch-zoom" }}
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}

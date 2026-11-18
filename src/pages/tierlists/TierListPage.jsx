@@ -130,7 +130,7 @@ export default function TierListPage() {
   const kind = kindOfTiers(list.tiers, list.pool);
 
   return (
-    <div className="animate-fade-in px-4 pb-24 pt-[calc(env(safe-area-inset-top)+4.5rem)] sm:px-8 md:py-10 xl:grid xl:grid-cols-[minmax(0,1fr)_22rem] xl:items-start xl:gap-6 2xl:grid-cols-[minmax(0,1fr)_26rem]">
+    <div className="animate-fade-in px-4 pb-24 pt-[calc(env(safe-area-inset-top)+3.75rem)] sm:px-8 md:py-10 xl:grid xl:grid-cols-[minmax(0,1fr)_22rem] xl:items-start xl:gap-6 2xl:grid-cols-[minmax(0,1fr)_26rem]">
       <div className="min-w-0">
       <header className="mb-5">
         <Link

@@ -119,7 +119,7 @@ export default function TierListsPage() {
   };
 
   return (
-    <div className="animate-fade-in px-4 pb-24 pt-[calc(env(safe-area-inset-top)+4.5rem)] sm:px-8 md:py-10">
+    <div className="animate-fade-in px-4 pb-24 pt-[calc(env(safe-area-inset-top)+1.5rem)] sm:px-8 md:py-10">
       <header className="mb-6">
         <div className="mb-2 flex items-center gap-2">
           <span className="h-px w-6 bg-primary" />
@@ -141,7 +141,7 @@ export default function TierListsPage() {
         </div>
 
         <div className="mt-5 flex flex-col gap-2.5 lg:flex-row lg:items-center">
-          <div className="flex h-11 min-w-0 flex-1 items-center gap-2.5 rounded-md bg-surface px-3.5 ring-2 ring-border transition-colors focus-within:ring-primary/70 md:h-10">
+          <div className="flex h-11 min-w-0 shrink-0 items-center gap-2.5 rounded-md bg-surface px-3.5 ring-2 lg:flex-1 ring-border transition-colors focus-within:ring-primary/70 md:h-10">
             <Search size={16} className="shrink-0 text-muted" />
             <input
               value={query}
@@ -161,7 +161,7 @@ export default function TierListsPage() {
               </button>
             )}
           </div>
-          <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap sm:items-center">
             <SegmentedControl label="Affichage" options={VIEWS} value={view} onChange={changeView} />
             <SegmentedControl
               label="Tier lists à afficher"

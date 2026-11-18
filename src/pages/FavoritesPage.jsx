@@ -97,7 +97,7 @@ export default function FavoritesPage() {
   };
 
   return (
-    <div className="animate-fade-in px-4 pb-24 pt-[calc(env(safe-area-inset-top)+4.5rem)] sm:px-8 md:py-10">
+    <div className="animate-fade-in px-4 pb-24 pt-[calc(env(safe-area-inset-top)+1.5rem)] sm:px-8 md:py-10">
       <header className="mb-7 md:mb-8">
         <div className="flex items-end justify-between gap-4">
           <div>
