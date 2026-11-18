@@ -4,6 +4,7 @@ import android.media.MediaCodec;
 import android.media.MediaExtractor;
 import android.media.MediaFormat;
 import android.media.MediaMuxer;
+import android.os.Build;
 import android.os.StatFs;
 
 import java.io.BufferedOutputStream;
@@ -233,8 +234,11 @@ final class HlsRemuxer {
                     extractor.advance();
                     continue;
                 }
-                long needed = extractor.getSampleSize();
-                if (needed > buffer.capacity()) buffer = ByteBuffer.allocate((int) Math.min(needed * 2, Integer.MAX_VALUE - 8));
+                // getSampleSize n'existe qu'à partir d'Android 9 ; en dessous, le tampon de 2 Mo suffit aux segments HLS.
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    long needed = extractor.getSampleSize();
+                    if (needed > buffer.capacity()) buffer = ByteBuffer.allocate((int) Math.min(needed * 2, Integer.MAX_VALUE - 8));
+                }
                 int size = extractor.readSampleData(buffer, 0);
                 if (size < 0) break;
                 info.set(
