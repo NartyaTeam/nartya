@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-import { Users, Plus, LogIn, Loader2, Globe, Lock, Link2, Play, MessageCircle } from "lucide-react";
+import { Users, Plus, LogIn, Loader2, Globe, Lock, Link2, Play, MessageCircle, X } from "lucide-react";
 import { useParty } from "@/contexts/WatchPartyProvider";
 import { normalizePartyCode } from "@/utils/partyCode";
 import { listPublicPartyRooms } from "@/api/partyRoom";
@@ -23,6 +24,7 @@ export default function PartyHomePage() {
   const [error, setError] = useState(null);
   const [isPublic, setIsPublic] = useState(false);
   const [publicRooms, setPublicRooms] = useState(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -54,23 +56,57 @@ export default function PartyHomePage() {
   };
 
   return (
-    <div className="mx-auto max-w-5xl px-6 py-10 sm:py-14">
-      <header className="mb-10 text-center">
-        <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/15 text-primary">
+    <div className="mx-auto max-w-5xl px-4 pb-24 pt-[calc(env(safe-area-inset-top)+1.5rem)] sm:px-6 sm:py-14">
+      <header className="mb-6 sm:mb-10 sm:text-center">
+        <span className="mx-auto mb-4 hidden h-14 w-14 items-center justify-center rounded-full bg-primary/15 text-primary sm:flex">
           <Users size={26} />
         </span>
-        <h1 className="t-impact text-4xl sm:text-6xl">Watch Party</h1>
-        <p className="mx-auto mt-3 max-w-md text-sm text-muted sm:text-base">
+        <div className="mb-2 flex items-center gap-2 sm:hidden">
+          <span className="h-px w-6 bg-primary" />
+          <p className="text-[0.65rem] font-semibold uppercase tracking-[0.28em] text-primary/80">Entre potes</p>
+        </div>
+        <div className="flex items-end justify-between gap-3">
+          <h1 className="t-impact text-4xl sm:mx-auto sm:text-6xl">Watch Party</h1>
+          <button
+            type="button"
+            onClick={() => setSheetOpen(true)}
+            className="flex h-10 shrink-0 items-center gap-1.5 rounded-md bg-primary px-3.5 text-sm font-bold text-primary-fg active:scale-95 sm:hidden"
+          >
+            <Plus size={17} /> Créer
+          </button>
+        </div>
+        <p className="mt-1.5 max-w-md text-sm text-muted sm:mx-auto sm:mt-3 sm:text-base">
           Regardez vos animes en même temps que vos potes, parfaitement synchronisés.
         </p>
       </header>
 
-      <div className="grid gap-5 md:grid-cols-5">
-        <section className="flex flex-col rounded-xl border-2 border-border bg-surface p-6 md:col-span-3">
-          <h2 className="font-display text-xl font-bold text-white">Créer un salon</h2>
-          <p className="mt-1 text-sm text-muted">Tu choisiras l'épisode une fois dans le salon.</p>
+      <form onSubmit={goJoin} className="flex gap-2 sm:hidden">
+        <div className="flex h-11 min-w-0 flex-1 items-center gap-2.5 rounded-md bg-surface px-3.5 ring-2 ring-border focus-within:ring-primary/70">
+          <Link2 size={16} className="shrink-0 text-muted" />
+          <input
+            value={joinCode}
+            onChange={(e) => setJoinCode(normalizePartyCode(e.target.value))}
+            placeholder="Code d'un ami"
+            aria-label="Code du salon"
+            className="min-w-0 flex-1 bg-transparent text-sm font-bold uppercase tracking-[0.2em] outline-none placeholder:font-normal placeholder:normal-case placeholder:tracking-normal placeholder:text-muted"
+          />
+        </div>
+        <button
+          type="submit"
+          disabled={joinCode.length < 6}
+          className="flex h-11 shrink-0 items-center gap-1.5 rounded-md bg-surface px-3.5 text-sm font-bold text-text ring-2 ring-border disabled:opacity-50"
+        >
+          <LogIn size={16} /> Rejoindre
+        </button>
+      </form>
 
-          <div className="mt-5 grid grid-cols-2 gap-3">
+      <div className="hidden grid-cols-1 gap-3 sm:grid sm:gap-5 md:grid-cols-5">
+        <section className="relative flex min-w-0 flex-col overflow-hidden rounded-xl border-2 border-border bg-surface p-4 sm:p-6 md:col-span-3">
+          <div aria-hidden className="pointer-events-none absolute -right-16 -top-20 h-48 w-48 rounded-full bg-primary/20 blur-3xl sm:hidden" />
+          <h2 className="relative font-display text-lg font-bold text-white sm:text-xl">Créer un salon</h2>
+          <p className="mt-1 hidden text-sm text-muted sm:block">Tu choisiras l'épisode une fois dans le salon.</p>
+
+          <div className="relative mt-3 grid grid-cols-2 gap-2.5 sm:mt-5 sm:gap-3">
             <VisibilityOption
               active={!isPublic}
               onClick={() => setIsPublic(false)}
@@ -87,7 +123,7 @@ export default function PartyHomePage() {
             />
           </div>
 
-          <button onClick={goCreate} disabled={busy} className="btn-shu mt-6 w-full justify-center disabled:opacity-60">
+          <button onClick={goCreate} disabled={busy} className="btn-shu relative mt-4 w-full justify-center disabled:opacity-60 sm:mt-6">
             {busy ? <Loader2 size={18} className="animate-spin" /> : <Plus size={18} />}
             Créer le salon
           </button>
@@ -96,29 +132,32 @@ export default function PartyHomePage() {
 
         <form
           onSubmit={goJoin}
-          className="flex flex-col rounded-xl border-2 border-border bg-surface p-6 md:col-span-2"
+          className="flex min-w-0 flex-col rounded-xl border-2 border-border bg-surface p-4 sm:p-6 md:col-span-2"
         >
-          <h2 className="font-display text-xl font-bold text-white">Rejoindre</h2>
-          <p className="mt-1 text-sm text-muted">Colle le code reçu d'un ami.</p>
+          <h2 className="font-display text-lg font-bold text-white sm:text-xl">Rejoindre</h2>
+          <p className="mt-1 hidden text-sm text-muted sm:block">Colle le code reçu d'un ami.</p>
+          <div className="mt-3 flex gap-2 sm:mt-0 sm:contents">
           <input
             value={joinCode}
             onChange={(e) => setJoinCode(normalizePartyCode(e.target.value))}
             placeholder="ABC123"
             aria-label="Code du salon"
-            className="mt-5 w-full rounded-md border border-border bg-bg px-4 py-3 text-center text-xl font-bold uppercase tracking-[0.35em] text-text placeholder:text-base placeholder:font-normal placeholder:tracking-normal placeholder:text-muted focus:border-primary/60 focus:outline-none"
+            className="min-w-0 flex-1 rounded-md border border-border bg-bg px-3 py-2.5 text-center text-lg sm:mt-5 sm:w-full sm:flex-none sm:px-4 sm:py-3 sm:text-xl font-bold uppercase tracking-[0.35em] text-text placeholder:text-base placeholder:font-normal placeholder:tracking-normal placeholder:text-muted focus:border-primary/60 focus:outline-none"
           />
           <button
             type="submit"
             disabled={joinCode.length < 6}
-            className="btn-ghost mt-auto w-full justify-center disabled:opacity-50 max-md:mt-4"
+            aria-label="Rejoindre le salon"
+            className="btn-ghost shrink-0 justify-center disabled:opacity-50 max-sm:!px-4 sm:mt-4 sm:w-full md:mt-auto"
           >
             <LogIn size={18} />
-            Rejoindre
+            <span className="hidden sm:inline">Rejoindre</span>
           </button>
+          </div>
         </form>
       </div>
 
-      <ol className="mt-5 grid gap-3 sm:grid-cols-3">
+      <ol className="mt-5 hidden gap-3 sm:grid sm:grid-cols-3">
         {STEPS.map(({ Icon, title, text }, i) => (
           <li key={title} className="flex items-start gap-3 rounded-lg px-2 py-2">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface-2 text-primary">
@@ -135,7 +174,7 @@ export default function PartyHomePage() {
         ))}
       </ol>
 
-      <section className="mt-12">
+      <section className="mt-7 sm:mt-12">
         <div className="mb-4 flex items-center gap-2">
           <Globe size={18} className="text-primary" />
           <h2 className="section-title !text-xl">Salons publics</h2>
@@ -157,6 +196,13 @@ export default function PartyHomePage() {
             <p className="text-sm text-muted">
               Aucun salon public pour le moment. Crée le tien en mode Public pour que d'autres te rejoignent.
             </p>
+            <button
+              type="button"
+              onClick={() => setSheetOpen(true)}
+              className="mt-2 flex h-10 items-center gap-1.5 rounded-md bg-primary px-4 text-sm font-bold text-primary-fg active:scale-95 sm:hidden"
+            >
+              <Plus size={16} /> Créer mon salon
+            </button>
           </div>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2">
@@ -166,6 +212,39 @@ export default function PartyHomePage() {
           </div>
         )}
       </section>
+
+      {sheetOpen && createPortal(
+        <div className="fixed inset-0 z-[200] flex items-end bg-black/60 backdrop-blur-sm sm:hidden" onClick={() => !busy && setSheetOpen(false)}>
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full animate-fade-in rounded-t-xl border-t-2 border-border bg-surface px-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-3"
+          >
+            <span className="mx-auto mb-3 block h-1 w-10 rounded-full bg-white/15" />
+            <div className="flex items-center justify-between">
+              <h2 className="font-display text-lg font-bold text-white">Créer un salon</h2>
+              <button
+                type="button"
+                onClick={() => setSheetOpen(false)}
+                aria-label="Fermer"
+                className="flex h-8 w-8 items-center justify-center rounded-md text-muted active:bg-white/10"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <p className="mt-0.5 text-sm text-muted">Tu choisiras l'épisode une fois dans le salon.</p>
+            <div className="mt-4 grid grid-cols-2 gap-2.5">
+              <VisibilityOption active={!isPublic} onClick={() => setIsPublic(false)} Icon={Lock} title="Privé" text="Uniquement avec le code" />
+              <VisibilityOption active={isPublic} onClick={() => setIsPublic(true)} Icon={Globe} title="Public" text="Visible par tous les membres" />
+            </div>
+            <button onClick={goCreate} disabled={busy} className="btn-shu mt-4 w-full justify-center disabled:opacity-60">
+              {busy ? <Loader2 size={18} className="animate-spin" /> : <Plus size={18} />}
+              Créer le salon
+            </button>
+            {error && <p className="mt-3 text-sm text-primary">{error}</p>}
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }
@@ -176,7 +255,7 @@ function VisibilityOption({ active, onClick, Icon, title, text }) {
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`flex flex-col items-start gap-1 rounded-lg border-2 p-3 text-left transition-colors ${
+      className={`flex min-w-0 flex-col items-start gap-1 rounded-lg border-2 p-3 text-left transition-colors ${
         active ? "border-primary bg-primary/10" : "border-border hover:border-primary/40"
       }`}
     >

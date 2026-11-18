@@ -284,8 +284,8 @@ export default function PartyRoomPage() {
   };
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-bg text-text">
-      <div className="flex min-w-0 flex-1 flex-col">
+    <div className="flex h-[100dvh] w-screen flex-col overflow-hidden bg-bg text-text md:h-screen md:flex-row">
+      <div className="flex min-w-0 shrink-0 flex-col md:flex-1 md:shrink">
         {isHost && party.waitingForSources && party.waitingFor.length > 0 && (
           <WaitingBanner
             names={party.waitingFor.map((p) => p.username)}
@@ -294,7 +294,7 @@ export default function PartyRoomPage() {
         )}
         {!isHost && party.langChanging && <LangChangingBanner info={party.langChanging} />}
 
-        <div className="relative min-h-0 flex-1 overflow-hidden bg-black">
+        <div className="relative aspect-video shrink-0 overflow-hidden bg-black md:aspect-auto md:min-h-0 md:flex-1 md:shrink">
           {videoUrl ? (
             <VideoPlayer
               videoUrl={videoUrl}
@@ -328,7 +328,7 @@ export default function PartyRoomPage() {
                   className="absolute inset-0 h-full w-full scale-110 object-cover opacity-20 blur-2xl"
                 />
               )}
-              <div className="relative flex flex-col items-center gap-3">
+              <div className="relative flex flex-col items-center gap-2 md:gap-3">
                 {loading ? (
                   <>
                     <Loader2 className="animate-spin text-primary" size={32} />
@@ -346,19 +346,19 @@ export default function PartyRoomPage() {
                   </>
                 ) : (
                   <>
-                    <span className="flex h-20 w-20 items-center justify-center rounded-full bg-white/5 ring-1 ring-white/10">
+                    <span className="hidden h-20 w-20 items-center justify-center rounded-full bg-white/5 ring-1 ring-white/10 md:flex">
                       <Tv size={34} className="text-white/40" />
                     </span>
-                    <h2 className="t-impact text-3xl sm:text-4xl">
+                    <h2 className="t-impact text-2xl sm:text-4xl">
                       {isHost ? "Qu'est-ce qu'on regarde ?" : "Le salon est prêt"}
                     </h2>
-                    <p className="max-w-sm text-sm text-muted">
+                    <p className="hidden max-w-sm text-sm text-muted sm:block">
                       {isHost
                         ? "Choisis un anime, la lecture sera synchronisée pour tout le monde."
                         : "En attente que l'hôte lance un épisode…"}
                     </p>
                     {isHost && (
-                      <button onClick={() => setPickerOpen(true)} className="btn-shu mt-2">
+                      <button onClick={() => setPickerOpen(true)} className="btn-shu mt-1 md:mt-2">
                         <Search size={17} /> Choisir un anime
                       </button>
                     )}
@@ -384,21 +384,21 @@ export default function PartyRoomPage() {
             overlayNode
           )}
 
-        <div className="max-h-[38vh] shrink-0 space-y-4 overflow-y-auto border-t border-border bg-bg px-5 py-4">
+        <div className="max-h-[38vh] shrink-0 space-y-3 overflow-y-auto border-t border-border bg-bg px-4 py-3 md:space-y-4 md:px-5 md:py-4">
           <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
             <div className="relative shrink-0">
               <Avatar
                 src={hostPerson?.avatar}
                 name={hostPerson?.username || "?"}
-                className="h-12 w-12 rounded-full ring-2 ring-primary"
+                className="h-10 w-10 rounded-full ring-2 ring-primary md:h-12 md:w-12"
                 textClassName="text-base"
               />
               <span className="absolute -bottom-1 left-1/2 flex -translate-x-1/2 items-center gap-0.5 rounded bg-primary px-1 text-[9px] font-extrabold uppercase text-primary-fg">
                 <Radio size={9} /> Live
               </span>
             </div>
-            <div className="min-w-0 flex-1 basis-60">
-              <h1 className="truncate font-display text-lg font-bold text-white">
+            <div className="min-w-0 flex-1 basis-40 md:basis-60">
+              <h1 className="truncate font-display text-base font-bold text-white md:text-lg">
                 {current ? current.epTitle || episodeLabel : "Salon en préparation"}
               </h1>
               <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted">
@@ -441,7 +441,7 @@ export default function PartyRoomPage() {
         </div>
       </div>
 
-      <aside className="flex w-[360px] shrink-0 flex-col border-l border-border bg-surface">
+      <aside className="flex min-h-0 w-full flex-1 flex-col border-t border-border bg-surface md:w-[360px] md:flex-none md:border-l md:border-t-0">
         <div className="flex items-center gap-2 border-b border-border px-3 py-2.5">
           <button
             type="button"

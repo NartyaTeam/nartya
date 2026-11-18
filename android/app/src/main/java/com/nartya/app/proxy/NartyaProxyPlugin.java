@@ -156,6 +156,15 @@ public class NartyaProxyPlugin extends Plugin {
 
     /** Événements du cœur, sur un de ses fils : la page, la notification de premier plan, la fin. */
     private static void handleCoreEvent(String event, String payloadJson) {
+        if ("party:state".equals(event) || "party:effect".equals(event)) {
+            // Watch party : relayée telle quelle, la page lit le JSON.
+            NartyaProxyPlugin plugin = activePlugin;
+            if (plugin != null) {
+                plugin.notifyListeners("party:state".equals(event) ? "partyState" : "partyEffect",
+                        new JSObject().put("json", payloadJson));
+            }
+            return;
+        }
         if (!"downloads:progress".equals(event)) return;
         try {
             JSONObject item = new JSONObject(payloadJson);

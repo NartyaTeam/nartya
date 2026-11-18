@@ -5,7 +5,7 @@
 
 use std::{
     path::{Path, PathBuf},
-    sync::{Arc, OnceLock},
+    sync::{Arc, Mutex, OnceLock},
 };
 
 use jni::{
@@ -16,6 +16,7 @@ use jni::{
 use nartya_core::{
     downloads::{self, Downloads},
     host::{BoxFuture, MoveChoice, MovePrompt},
+    party::Party,
     stream::{self, Parts, ResolveRequest, StreamService},
     Host,
 };
@@ -26,6 +27,9 @@ pub struct Core {
     pub parts: Parts,
     pub service: Option<Arc<StreamService>>,
     pub downloads: Arc<Downloads>,
+    pub host: Arc<dyn Host>,
+    /// Moteur de watch party, démarré à la première entrée de la page.
+    pub party: Mutex<Option<Party>>,
 }
 
 static CORE: OnceLock<Core> = OnceLock::new();
@@ -102,7 +106,7 @@ pub fn start_with_host(data_dir: &Path, host: Arc<dyn Host>) -> &'static Core {
         let (parts, service) = runtime.block_on(stream::start(root.clone()));
         let downloads = runtime.block_on(async {
             Downloads::new(
-                host,
+                host.clone(),
                 downloads::Init {
                     data_dir: data_dir.to_path_buf(),
                     doc,
@@ -119,6 +123,8 @@ pub fn start_with_host(data_dir: &Path, host: Arc<dyn Host>) -> &'static Core {
             parts,
             service,
             downloads,
+            host,
+            party: Mutex::new(None),
         }
     })
 }
@@ -180,6 +186,19 @@ pub fn call(command: &str, args: &str) -> Value {
                 .as_ref()
                 .and_then(|s| s.proxy.local_url(&id, rel));
             json!({ "url": url })
+        }
+        "party_input" => {
+            let Ok(mut party) = core.party.lock() else {
+                return json!({ "success": false, "error": "Moteur indisponible" });
+            };
+            let party = party.get_or_insert_with(|| {
+                let _guard = core.runtime.enter();
+                Party::start(core.host.clone())
+            });
+            match party.input_json(args) {
+                Ok(()) => json!({ "success": true }),
+                Err(error) => json!({ "success": false, "error": error }),
+            }
         }
         _ => json!({ "success": false, "error": "Commande inconnue" }),
     }

@@ -60,6 +60,17 @@ function ensureCore() {
 const coreReady = async () => isAndroid && (await ensureCore());
 const coreCall = (command, args = {}) => NartyaProxy.coreCall({ command, args });
 
+/** Événement du cœur relayé en JSON brut par le plugin natif. */
+function onCoreJson(name, cb) {
+  if (typeof cb !== "function") return noop;
+  const handle = NartyaProxy.addListener(name, (event) => {
+    try {
+      cb(JSON.parse(event?.json ?? "null"));
+    } catch (_) {}
+  });
+  return () => void handle.then((listener) => listener.remove()).catch(() => {});
+}
+
 function adoptProxy(port, token) {
   if (!Number.isInteger(port) || port <= 0) throw new Error("Port du proxy natif invalide");
   if (!token || typeof token !== "string") throw new Error("Jeton du proxy natif manquant");
@@ -573,6 +584,18 @@ export const capacitorPlatform = definePlatform({
     },
   },
   session: null,
+  // Moteur de watch party du cœur Rust, même contrat que la coque de bureau.
+  party: isAndroid
+    ? {
+        input: async (input) => {
+          if (!(await coreReady())) throw new Error("Cœur indisponible");
+          const res = await coreCall("party_input", input || {});
+          if (res?.success === false) throw new Error(res.error || "Entrée refusée");
+        },
+        onState: (cb) => onCoreJson("partyState", cb),
+        onEffect: (cb) => onCoreJson("partyEffect", cb),
+      }
+    : null,
   cast: null,
   hub: null,
   discord: {

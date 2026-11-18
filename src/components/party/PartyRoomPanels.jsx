@@ -199,7 +199,7 @@ export function QueueStrip({ queue, isHost, party }) {
       {queue.map((item, i) => {
         const thumb = item.epThumb || item.cover;
         return (
-          <li key={item.id || i} className="group w-52 shrink-0">
+          <li key={item.id || i} className="group w-36 shrink-0 md:w-52">
             <div className="relative aspect-video overflow-hidden rounded-md bg-surface-2 ring-2 ring-border">
               {thumb && <img src={thumb} alt="" loading="lazy" className="h-full w-full object-cover" />}
               <span className="absolute left-1.5 top-1.5 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-white">

@@ -35,5 +35,6 @@ test("le bureau déclare ses modules natifs, le mobile et le web non", () => {
   }
   assert.ok(capacitorLazyPlatform.downloads);
   assert.equal(capacitorLazyPlatform.session, null);
-  assert.equal(capacitorLazyPlatform.party, null);
+  // Android porte le moteur de watch party du cœur Rust.
+  assert.equal(typeof capacitorLazyPlatform.party?.input, "function");
 });

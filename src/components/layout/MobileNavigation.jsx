@@ -4,6 +4,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import {
   BookOpen,
   CalendarDays,
+  Clapperboard,
   Download,
   Heart,
   HelpCircle,
@@ -149,6 +150,7 @@ export default function MobileNavigation({ searchPath = "/recherche", forceVisib
       [
         online && { to: "/mangas", icon: BookOpen, label: "Mangas" },
         online && { to: "/prochainement", icon: Sparkles, label: "À venir" },
+        online && session && { to: "/party", icon: Clapperboard, label: "Watch Party" },
         online && { to: "/tierlists", icon: LayoutList, label: "Tier lists" },
         online && { to: "/leaderboard", icon: Trophy, label: "Classement" },
         online && session && { to: "/favorites", icon: Heart, label: "Favoris" },

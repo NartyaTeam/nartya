@@ -52,6 +52,18 @@ const downloadListener = (key) => (...args) => {
   };
 };
 
+function partyListener(key, args) {
+  let unsubscribe = null;
+  let cancelled = false;
+  implementation().then((platform) => {
+    if (!cancelled) unsubscribe = platform.party[key](...args);
+  });
+  return () => {
+    cancelled = true;
+    unsubscribe?.();
+  };
+}
+
 export const capacitorLazyPlatform = definePlatform({
   name: `capacitor-${nativeOs}`,
   os: nativeOs,
@@ -74,6 +86,14 @@ export const capacitorLazyPlatform = definePlatform({
     onProgress: downloadListener("onProgress"),
   },
   session: null,
+  party:
+    nativeOs === "android"
+      ? {
+          input: (...args) => implementation().then((platform) => platform.party.input(...args)),
+          onState: (...args) => partyListener("onState", args),
+          onEffect: (...args) => partyListener("onEffect", args),
+        }
+      : null,
   cast: null,
   hub: null,
   discord: {

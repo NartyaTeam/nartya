@@ -13,6 +13,7 @@ const PRIMARY_ROUTES = new Set(["/", "/search", "/planning", "/downloads", "/pro
 const MORE_ROUTES = new Set([
   "/mangas",
   "/prochainement",
+  "/party",
   "/tierlists",
   "/leaderboard",
   "/favorites",
