@@ -5,8 +5,8 @@
  */
 export const MOBILE_CHANGELOG = [
   {
-    version: "1.10.0",
-    date: "17 novembre 2026",
+    version: "1.10.1",
+    date: "18 novembre 2026",
     tagline: "Lecture et téléchargements sur un nouveau moteur.",
     items: [
       {
@@ -77,6 +77,18 @@ export const MOBILE_CHANGELOG = [
         icon: "trophy",
         title: "Bannière de fiche",
         text: "Bascule sur une autre source si la première ne charge pas.",
+      },
+      {
+        type: "fixed",
+        icon: "book",
+        title: "Lecture des scans",
+        text: "La page ne tremble plus et la fin du chapitre ne reste plus noire.",
+      },
+      {
+        type: "fixed",
+        icon: "history",
+        title: "Anciens téléphones",
+        text: "La fusion des épisodes téléchargés ne plante plus sous Android 8 et avant.",
       },
     ],
   },
