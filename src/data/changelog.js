@@ -19,7 +19,7 @@ export const CHANGELOG = [
         type: "fixed",
         icon: "zap",
         title: "Linux",
-        text: "Fin de la fenêtre noire au lancement sur certaines configurations.",
+        text: "Lancer un épisode ne rend plus la fenêtre noire sur Fedora, Nobara et les distributions proches.",
       },
     ],
   },
