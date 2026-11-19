@@ -5,6 +5,19 @@
  */
 export const CHANGELOG = [
   {
+    version: "1.41.2",
+    date: "19 novembre 2026",
+    tagline: "Correctif Mac.",
+    items: [
+      {
+        type: "fixed",
+        icon: "zap",
+        title: "Mac",
+        text: "L'app s'ouvre de nouveau normalement au lieu de rester sur un écran noir.",
+      },
+    ],
+  },
+  {
     version: "1.41.1",
     date: "18 novembre 2026",
     tagline: "Correctifs après le passage à la nouvelle base.",

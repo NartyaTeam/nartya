@@ -23,6 +23,10 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      # .env est ignoré par git : sans lui, le front part sans Supabase et l'app reste sur un écran noir.
+      - name: Config publique de l'instance
+        shell: bash
+        run: cp .env.example .env
       - name: Install
         run: npm ci
       - name: Audit des dépendances de production
@@ -42,6 +46,10 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      # .env est ignoré par git : sans lui, le front part sans Supabase et l'app reste sur un écran noir.
+      - name: Config publique de l'instance
+        shell: bash
+        run: cp .env.example .env
       - name: Install
         run: npm ci
       - name: Build front (embarqué dans la coque)
@@ -56,6 +64,10 @@ jobs:
         run: cargo test --workspace
       - name: Build de la coque
         run: cargo build -p nartya
+      # .env est ignoré par git : sans lui, le front part sans Supabase et l'app reste sur un écran noir.
+      - name: Config publique de l'instance
+        shell: bash
+        run: cp .env.example .env
       - name: Installeur Windows (NSIS)
         run: npm run tauri:bundle
       - uses: actions/upload-artifact@v4
@@ -87,6 +99,10 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev libssl-dev libxdo-dev patchelf gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-libav
+      # .env est ignoré par git : sans lui, le front part sans Supabase et l'app reste sur un écran noir.
+      - name: Config publique de l'instance
+        shell: bash
+        run: cp .env.example .env
       - name: Install
         run: npm ci
       - name: Build front (embarqué dans la coque)
@@ -101,6 +117,10 @@ jobs:
         run: cargo test --workspace
       - name: Build de la coque
         run: cargo build -p nartya
+      # .env est ignoré par git : sans lui, le front part sans Supabase et l'app reste sur un écran noir.
+      - name: Config publique de l'instance
+        shell: bash
+        run: cp .env.example .env
       - name: Installeurs (.dmg ou AppImage et .deb)
         env:
           NO_STRIP: "true"
@@ -141,6 +161,10 @@ jobs:
         with:
           distribution: temurin
           java-version: "21"
+      # .env est ignoré par git : sans lui, le front part sans Supabase et l'app reste sur un écran noir.
+      - name: Config publique de l'instance
+        shell: bash
+        run: cp .env.example .env
       - name: Install (build web nécessaire à cap sync)
         run: npm ci
       - name: Build front (assets embarqués dans le shell Android)

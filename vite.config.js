@@ -67,7 +67,17 @@ function cspPlugin(supabaseUrl, apiUrl) {
 
 const viteEnv = (mode) => loadEnv(mode, process.cwd(), "VITE_");
 
-export default defineConfig(({ mode }) => ({
+// Sans ces variables, le client Supabase lève dès le chargement et l'app reste sur un écran noir.
+function requireSupabaseEnv(mode) {
+  if (mode !== "production") return;
+  const env = viteEnv(mode);
+  const missing = ["VITE_SUPABASE_URL", "VITE_SUPABASE_ANON_KEY"].filter((k) => !env[k]);
+  if (missing.length) {
+    throw new Error(`${missing.join(", ")} manquant : copier .env.example vers .env avant le build.`);
+  }
+}
+
+export default defineConfig(({ mode }) => (requireSupabaseEnv(mode), {
   plugins: [
     react(),
     cspPlugin(viteEnv(mode).VITE_SUPABASE_URL, viteEnv(mode).VITE_API_URL || API_URL),
